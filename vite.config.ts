@@ -10,7 +10,7 @@ export default defineConfig({
     vue(),
     AutoImport({
       dts: true,
-      imports: ['vue', 'vue-router', '@vueuse/core', 'pinia'],
+      imports: ['vue', 'vue-router', '@vueuse/core', 'pinia', 'vue-i18n'],
       include: [
         /\.[tj]sx?$/, // .ts, .tsx, .js, .jsx
         /\.vue$/,

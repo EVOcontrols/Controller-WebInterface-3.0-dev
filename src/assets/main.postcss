@@ -1,0 +1,63 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@font-face {
+  font-family: 'Gilroy';
+  src: url('../fonts/Gilroy-Regular.otf');
+  font-display: block;
+  font-weight: normal;
+}
+@font-face {
+  font-family: 'Gilroy';
+  src: url('../fonts/Gilroy-Medium.otf');
+  font-display: block;
+  font-weight: 500;
+}
+@font-face {
+  font-family: 'Gilroy';
+  src: url('../fonts/Gilroy-SemiBold.otf');
+  font-display: block;
+  font-weight: 600;
+}
+@font-face {
+  font-family: 'Roboto';
+  src: url('../fonts/Roboto-Medium.ttf');
+  font-display: block;
+  font-weight: 500;
+}
+
+html,
+body,
+#app {
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+  position: relative;
+}
+
+#app,
+button,
+input,
+textarea,
+select,
+h1,
+h2,
+h3,
+h4,
+h5 {
+  @apply text-sm text-[#adebff] font-medium leading-[1.143] font-gilroy;
+}
+*,
+input::placeholder,
+textarea::placeholder {
+  transition-property: color, opacity, background-color, box-shadow, fill, border-color;
+  transition-duration: 0.3s;
+  transition-timing-function: ease;
+}
+input,
+button,
+button:focus,
+textarea {
+  outline: none !important;
+}

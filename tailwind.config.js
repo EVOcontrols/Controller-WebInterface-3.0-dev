@@ -2,7 +2,12 @@
 export default {
   content: ['./index.html', './src/**/*.{vue,js,ts,jsx,tsx}', './src/assets/img/tailwind/*.svg'],
   theme: {
-    extend: {},
+    extend: {
+      fontFamily: {
+        gilroy: ['Gilroy'],
+        roboto: ['Roboto'],
+      },
+    },
   },
   plugins: [],
 };
