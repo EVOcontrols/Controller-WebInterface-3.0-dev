@@ -16,7 +16,8 @@ const { locale } = useI18n();
 watch(
   lang,
   () => {
-    locale.value = lang.value === 'ru' ? 'ru' : 'en';
+    const currentLang = lang.value === 'ru' ? 'ru' : 'en';
+    locale.value = currentLang;
   },
   { immediate: true },
 );
