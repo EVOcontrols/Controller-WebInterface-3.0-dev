@@ -1,5 +1,3 @@
-import './assets/main.postcss';
-
 import { createApp } from 'vue';
 import { createPinia } from 'pinia';
 
