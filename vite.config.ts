@@ -18,6 +18,7 @@ export default defineConfig({
       ],
       defaultExportByFilename: true,
       vueTemplate: true,
+      dirs: ['./src/stores'],
     }),
   ],
   resolve: {

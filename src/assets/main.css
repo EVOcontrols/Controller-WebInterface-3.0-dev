@@ -40,21 +40,16 @@ body,
 button,
 input,
 textarea,
-select,
-h1,
-h2,
-h3,
-h4,
-h5 {
-  @apply text-sm text-[#adebff] font-medium leading-[1.143] font-gilroy;
+select {
+  @apply text-[0.813rem] text-[#adebff] font-medium leading-[1.154] font-gilroy transition-[color,opacity,background-color,box-shadow,fill,border-color] duration-300;
 }
-*,
+/* *,
 input::placeholder,
 textarea::placeholder {
   transition-property: color, opacity, background-color, box-shadow, fill, border-color;
   transition-duration: 0.3s;
   transition-timing-function: ease;
-}
+} */
 input,
 button,
 button:focus,

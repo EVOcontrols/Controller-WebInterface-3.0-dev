@@ -1,6 +1,8 @@
 import { useIndexStore } from '@/stores';
 import { createRouter, createWebHistory } from 'vue-router';
 
+const commonPageTitle = 'EVO controls';
+
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
@@ -8,6 +10,9 @@ const router = createRouter({
       path: '/login',
       name: 'login',
       component: () => import('@/views/LoginPage.vue'),
+      meta: {
+        title: `${commonPageTitle} | Login`,
+      },
     },
     {
       path: '/panel',
@@ -42,6 +47,11 @@ router.beforeEach((to) => {
   if (to.name === 'login' && isAuth) {
     return { name: 'widgets' };
   }
+});
+
+router.afterEach((to, from) => {
+  window.document.title = (to.meta?.title as string) || 'EVO controls';
+  Object.assign(to.meta, { previous: from.name });
 });
 
 export default router;
