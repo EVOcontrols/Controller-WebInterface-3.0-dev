@@ -31,7 +31,7 @@ svg rect {
 }
 .success-toast svg {
   & rect {
-    @apply text-[#12374f];
+    @apply text-[#74FFDE];
   }
   &:hover rect {
     @apply text-[#B9FFDD];

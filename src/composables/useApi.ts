@@ -85,9 +85,15 @@ export function useApi() {
     abortController?.abort();
   }
 
+  watch(notConnected, () => {
+    if (notConnected.value) {
+      abort();
+    }
+  });
+
   onBeforeUnmount(() => {
     abort();
   });
 
-  return { api };
+  return { api, abort, isAborted };
 }

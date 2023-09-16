@@ -25,6 +25,8 @@ const indexStore = useIndexStore();
 
 const { newToast } = storeToRefs(indexStore);
 
+const route = useRoute();
+
 const toasts = ref<Toast[]>([]);
 
 watch(newToast, () => {
@@ -42,4 +44,11 @@ watch(newToast, () => {
 function closeToast(index: number) {
   toasts.value.splice(index, 1);
 }
+
+watch(
+  () => route.name,
+  () => {
+    toasts.value = [];
+  },
+);
 </script>

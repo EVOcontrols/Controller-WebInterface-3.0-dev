@@ -27,6 +27,7 @@ import { useI18n } from 'vue-i18n';
 import { useIndexStore } from './stores';
 import ToastsContainer from './components/toast/ToastsContainer.vue';
 import { useToast } from './composables/useToast';
+import { useCheckControllerAccessibility } from './composables/useCheckControllerAccessibility';
 
 const indexStore = useIndexStore();
 
@@ -66,6 +67,8 @@ watch(notConnected, () => {
     );
   }
 });
+
+useCheckControllerAccessibility();
 
 const { t } = useI18n({
   messages: {

@@ -166,9 +166,10 @@ async function login() {
     indexStore.setIsAuth({ token: r.data.token, role: r.data.role });
     router.push({ name: 'widgets' });
   } catch (error) {
-    if (notConnected.value) return;
-    isFieldError.value = { login: true, password: true };
-    toast.error(t('msg.wrong.header'), t('msg.wrong.text'));
+    if (!notConnected.value) {
+      isFieldError.value = { login: true, password: true };
+      toast.error(t('msg.wrong.header'), t('msg.wrong.text'));
+    }
   }
   isDisabled.value = false;
 }

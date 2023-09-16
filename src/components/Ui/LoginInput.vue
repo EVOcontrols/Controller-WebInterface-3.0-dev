@@ -207,7 +207,6 @@ function selectEvent() {
 
 function gotFocus() {
   if (!inputEl.value) return;
-  console.log('gotFocus');
   if (inputEl.value.selectionStart === inputEl.value.selectionEnd) {
     caretEnd.value = null;
   }
