@@ -17,7 +17,7 @@
         {{ t('title') }}
       </div>
       <form
-        @submit.prevent
+        @submit.prevent="login"
         autocomplete="off"
       >
         <div
@@ -102,8 +102,11 @@ import logo from '@/assets/img/logo.svg?raw';
 import openEye from '@/assets/img/open-eye.svg?raw';
 import closedEye from '@/assets/img/closed-eye.svg?raw';
 import LoginInput from '@/components/Ui/LoginInput.vue';
+import { useToast } from '@/composables/useToast';
 
 const indexStore = useIndexStore();
+
+const { toast } = useToast();
 
 const isFieldError = ref({
   login: false,
@@ -140,6 +143,10 @@ const isPasswordVisible = ref(false);
 const isDisabled = ref(false);
 
 const isPasswordFocus = ref(false);
+
+function login() {
+  toast.warning(t('msg.disconnected.header'), t('msg.disconnected.text'), 0);
+}
 
 const { locale } = useI18n();
 const { t } = useI18n({

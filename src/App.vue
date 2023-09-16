@@ -1,11 +1,13 @@
 <template>
   <RouterView />
+  <ToastsContainer />
 </template>
 
 <script setup lang="ts">
 import '@/assets/main.postcss';
 import { useI18n } from 'vue-i18n';
 import { useIndexStore } from './stores';
+import ToastsContainer from './components/toast/ToastsContainer.vue';
 
 const indexStore = useIndexStore();
 
