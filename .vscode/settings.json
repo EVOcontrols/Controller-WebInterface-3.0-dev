@@ -1,8 +1,4 @@
 {
-  "files.associations": {
-    "*.css": "tailwindcss",
-    "*.postcss": "tailwindcss"
-  },
   "tailwindCSS.includeLanguages": {
     "svg": "html"
   }

@@ -41,7 +41,7 @@ button,
 input,
 textarea,
 select {
-  @apply text-[0.813rem] text-[#adebff] font-medium leading-[1.154] font-gilroy transition-[color,opacity,background-color,box-shadow,fill,border-color] duration-300;
+  @apply font-gilroy text-[0.813rem] font-medium leading-[1.154] text-[#adebff] transition-[color,opacity,background-color,box-shadow,fill,border-color] duration-300;
 }
 /* *,
 input::placeholder,
@@ -55,4 +55,46 @@ button,
 button:focus,
 textarea {
   outline: none !important;
+}
+.vuesax-ph {
+  &::placeholder {
+    transition: color 0.15s ease;
+  }
+  &:focus::placeholder {
+    color: transparent !important;
+  }
+}
+@keyframes blink {
+  from,
+  to {
+    background-color: #84b5e3;
+  }
+  50% {
+    background-color: transparent;
+  }
+}
+.blinking-cursor {
+  position: relative;
+  &::after {
+    content: '';
+    color: white;
+    animation: 1s blink step-end infinite;
+    display: inline-block;
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 1rem;
+    width: 1px;
+    background-color: #84b5e3;
+  }
+}
+
+.scale-y-150-enter-active,
+.scale-y-150-leave-active {
+  transition: transform 0.15s ease;
+  transform-origin: center;
+}
+.scale-y-150-enter-from,
+.scale-y-150-leave-to {
+  transform: scaleY(0);
 }
