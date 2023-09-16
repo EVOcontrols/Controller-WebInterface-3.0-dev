@@ -4,7 +4,7 @@
   >
     <div
       class="group flex flex-1 flex-col items-center justify-center"
-      :class="{ error: isError }"
+      :class="{ error: isError && !isDisabled && !notConnected, off: isDisabled || notConnected }"
     >
       <div class="flex flex-row">
         <span
@@ -29,7 +29,7 @@
             class="w-72"
             :inputType="inputType"
             :isPasswordVisible="isPasswordVisible"
-            :isDisabled="isDisabled"
+            :isDisabled="isDisabled || notConnected"
             :isError="isFieldError[inputType]"
             :placeholder="t(`placeholder.${inputType}`)"
             :setFocusTrigger="inputType === 'password' ? setFocusTrigger : 0"
@@ -40,7 +40,7 @@
 
           <span
             class="absolute bottom-0 right-full top-0 my-auto mr-4 h-1.5 w-1.5 scale-0 transform rounded bg-[#f83068] shadow-[0_0_0.25rem_0_#f83068] transition-transform on:scale-100"
-            :class="{ on: isFieldError[inputType] }"
+            :class="{ on: isFieldError[inputType] && !isDisabled && !notConnected }"
           ></span>
           <button
             v-if="inputType === 'password'"
@@ -52,6 +52,7 @@
                 setFocusTrigger++;
               }
             "
+            :disabled="isDisabled || notConnected"
           >
             <Transition
               mode="out-in"
@@ -61,7 +62,11 @@
                 v-html="isPasswordVisible ? openEye : closedEye"
                 :key="isPasswordVisible ? 'openEye' : 'closedEye'"
                 class="w-[1.125rem] h-[1.125rem] block group/icon"
-                :class="{ on: isPasswordFocus, error: isFieldError.password, off: isDisabled }"
+                :class="{
+                  on: isPasswordFocus && !isFieldError.password,
+                  error: isFieldError.password,
+                  off: isDisabled || notConnected,
+                }"
               ></span>
             </Transition>
           </button>
@@ -69,7 +74,7 @@
         <div class="w-full text-center">
           <button
             class="rounded-lg h-[2.563rem] w-[10.125rem] bg-[#2d72fa] mt-[1.125rem] font-semibold text-sm leading-[1.214] hover:bg-[#3e7df9] active:bg-[#174cb6] disabled:bg-[#0e2b45] disabled:text-[#3e688e]"
-            :disabled="isDisabled || (isFieldError.login && isFieldError.password)"
+            :disabled="isDisabled || (isFieldError.login && isFieldError.password) || notConnected"
           >
             {{ t('btn') }}
           </button>
@@ -103,10 +108,17 @@ import openEye from '@/assets/img/open-eye.svg?raw';
 import closedEye from '@/assets/img/closed-eye.svg?raw';
 import LoginInput from '@/components/Ui/LoginInput.vue';
 import { useToast } from '@/composables/useToast';
+import { useApi } from '@/composables/useApi';
+import { md5 } from '@/plugins/md5';
+import router from '@/router';
 
 const indexStore = useIndexStore();
 
+const { notConnected } = storeToRefs(indexStore);
+
 const { toast } = useToast();
+
+const { api } = useApi();
 
 const isFieldError = ref({
   login: false,
@@ -144,8 +156,21 @@ const isDisabled = ref(false);
 
 const isPasswordFocus = ref(false);
 
-function login() {
-  toast.warning(t('msg.disconnected.header'), t('msg.disconnected.text'), 0);
+async function login() {
+  isDisabled.value = true;
+  try {
+    const r = await api.post('login', {
+      name: credentials.value.login,
+      password: md5(credentials.value.password).toLowerCase(),
+    });
+    indexStore.setIsAuth({ token: r.data.token, role: r.data.role });
+    router.push({ name: 'widgets' });
+  } catch (error) {
+    if (notConnected.value) return;
+    isFieldError.value = { login: true, password: true };
+    toast.error(t('msg.wrong.header'), t('msg.wrong.text'));
+  }
+  isDisabled.value = false;
 }
 
 const { locale } = useI18n();
@@ -160,8 +185,6 @@ const { t } = useI18n({
       btn: 'Log in',
       msg: {
         wrong: { header: 'Wrong login or password', text: 'Please try to log in again' },
-        disconnected: { header: 'The device offline', text: 'Check connection' },
-        connected: { header: 'The device online', text: 'Please try to log in again' },
       },
     },
     ru: {
@@ -173,8 +196,6 @@ const { t } = useI18n({
       btn: 'Войти',
       msg: {
         wrong: { header: 'Неправильный логин или пароль', text: 'Повторите авторизацию' },
-        disconnected: { header: 'Соединение отсутствует', text: 'Проверьте подключение' },
-        connected: { header: 'Соединение восстановлено', text: 'Повторите авторизацию' },
       },
     },
   },

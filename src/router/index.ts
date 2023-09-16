@@ -36,7 +36,6 @@ const router = createRouter({
 
 router.beforeEach((to) => {
   if (!router.hasRoute(to.name as string)) {
-    console.log('no route');
     return { name: 'widgets' };
   }
   const indexStore = useIndexStore();

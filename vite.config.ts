@@ -18,12 +18,28 @@ export default defineConfig({
       ],
       defaultExportByFilename: true,
       vueTemplate: true,
-      dirs: ['./src/stores'],
+      dirs: ['./src/stores', './src/typings'],
     }),
   ],
   resolve: {
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url)),
+    },
+  },
+  server: {
+    host: true,
+    proxy: {
+      '^/(api|misc/)': {
+        target: 'http://192.168.0.30',
+        configure: (proxy) => {
+          proxy.on('proxyReq', (proxyReq) => {
+            if (proxyReq.method === 'POST') {
+              const length = proxyReq.getHeader('content-length') as string;
+              proxyReq.setHeader('Content-Length', length);
+            }
+          });
+        },
+      },
     },
   },
 });

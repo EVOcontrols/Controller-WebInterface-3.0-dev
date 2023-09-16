@@ -1,7 +1,13 @@
 import type { Toast } from '@/typings/common';
 
 export const useIndexStore = defineStore('indexStore', () => {
-  const isAuth = ref(false);
+  const authToken = useStorage<string>('authToken', '');
+
+  const userRole = useStorage<'user' | 'admin' | undefined>('userRole', undefined, undefined, {
+    mergeDefaults: (val: any) => (val === 'user' || val === 'admin' ? val : undefined),
+  });
+
+  const isAuth = ref(!!authToken.value && !!userRole.value);
 
   const lang = useStorage<'en' | 'ru'>('lang', 'en');
 
@@ -9,10 +15,12 @@ export const useIndexStore = defineStore('indexStore', () => {
 
   const toastIdForDeleting = ref<number | undefined>();
 
-  const isNc = ref(false);
+  const notConnected = ref(false);
 
-  function setIsAuth(value: boolean) {
-    isAuth.value = value;
+  function setIsAuth(cred: { token: string; role: 'user' | 'admin' } | undefined) {
+    isAuth.value = !!cred;
+    authToken.value = cred?.token || '';
+    userRole.value = cred?.role || 'user';
   }
 
   function setLang(value: 'en' | 'ru') {
@@ -27,20 +35,22 @@ export const useIndexStore = defineStore('indexStore', () => {
     toastIdForDeleting.value = id;
   }
 
-  function setIsNc(value: boolean) {
-    isNc.value = value;
+  function setIsNotConnected(isNotConnected: boolean) {
+    notConnected.value = isNotConnected;
   }
 
   return {
     isAuth,
+    authToken,
+    userRole,
     lang,
     newToast,
     toastIdForDeleting,
-    isNc,
+    notConnected,
     setIsAuth,
     setLang,
     addNewToast,
     deleteToast,
-    setIsNc,
+    setIsNotConnected,
   };
 });
