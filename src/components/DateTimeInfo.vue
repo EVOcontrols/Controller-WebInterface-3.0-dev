@@ -40,7 +40,9 @@
             </span>
             <span
               class="text-[#a0d5ff] text-sm"
-              :class="{ 'cursor-pointer': p === 'id' }"
+              :class="{ 'cursor-pointer': p === 'id' && isSupported }"
+              :title="p === 'id' && isSupported ? 'Copy' : ''"
+              @click="p === 'id' && isSupported ? copy(infoData[p]) : ''"
             >
               {{ infoData[p] }}
             </span>
@@ -62,6 +64,8 @@ const indexStore = useIndexStore();
 const { lang, notConnected } = storeToRefs(indexStore);
 
 const { api, isAborted, abort } = useApi();
+
+const { copy, isSupported } = useClipboard();
 
 const infoData = ref({
   id: '',
