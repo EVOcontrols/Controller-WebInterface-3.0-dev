@@ -15,7 +15,7 @@
     >
       <div
         v-if="notConnected && route.name !== 'login'"
-        class="fixed top-0 bottom-0 left-0 right-0 z-[100] bg-[#001d34b2]"
+        class="fixed top-0 bottom-0 left-0 right-0 z-[40] bg-[#001d34b2]"
       ></div>
     </Transition>
   </div>

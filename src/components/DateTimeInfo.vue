@@ -28,7 +28,7 @@
     <div class="ml-4 relative group">
       <span v-html="info"></span>
       <div
-        class="absolute left-0 -top-5 pl-8 invisible opacity-0 group-hover:visible group-hover:opacity-100 transition-[visibility,opacity]"
+        class="absolute left-0 -top-5 pl-8 invisible opacity-0 group-hover:visible group-hover:opacity-100 transition-[visibility,opacity] z-[1]"
       >
         <div class="rounded-xl bg-[#1b4569] px-6 py-3 whitespace-nowrap">
           <div
@@ -38,7 +38,10 @@
             <span class="font-semibold text-[#77c3ff] text-sm mr-1">
               {{ t(`info.${p}`) }}
             </span>
-            <span class="text-[#a0d5ff] text-sm">
+            <span
+              class="text-[#a0d5ff] text-sm"
+              :class="{ 'cursor-pointer': p === 'id' }"
+            >
               {{ infoData[p] }}
             </span>
           </div>

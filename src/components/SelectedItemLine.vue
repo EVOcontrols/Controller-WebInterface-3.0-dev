@@ -1,23 +1,32 @@
 <template>
   <div
-    class="h-0.5 rounded-t bg-[#158ef8] absolute bottom-0"
-    :class="{ 'transition-[left,width]': hasTransition, hidden: !hasTransition }"
-    ref="el"
-    :style="{
-      left: left + 'px',
-      width: width + 'px',
-    }"
-  ></div>
+    ref="bgEl"
+    class="absolute bottom-0 w-full rounded-t"
+    :class="{ 'bg-[#0b3d68] h-0.5': props.withBg }"
+  >
+    <div
+      class="h-0.5 rounded-t bg-[#158ef8] absolute bottom-0"
+      :class="{ 'transition-[left,width]': hasTransition, hidden: !hasTransition }"
+      ref="lineEl"
+      :style="{
+        left: left + 'px',
+        width: width + 'px',
+      }"
+    ></div>
+  </div>
 </template>
 
 <script setup lang="ts">
 const props = defineProps<{
   activeItemIndex: number;
+  withBg?: boolean;
 }>();
 
-const el = ref<HTMLElement | null>(null);
+const lineEl = ref<HTMLElement | null>(null);
 
-const parentEl = computed(() => el.value?.parentElement);
+const bgEl = ref<HTMLElement | null>(null);
+
+const parentEl = computed(() => bgEl.value?.parentElement);
 
 const { width: parentWidth } = useElementSize(parentEl);
 
@@ -41,7 +50,7 @@ async function setSizes() {
   await new Promise((resolve) => setTimeout(resolve, 0));
   if (!parentEl.value) return;
   const children = [...parentEl.value.children].filter(
-    (child) => !child.isSameNode(el.value),
+    (child) => !child.isSameNode(bgEl.value),
   ) as HTMLElement[];
   const child = children[props.activeItemIndex];
   left.value = child.offsetLeft;

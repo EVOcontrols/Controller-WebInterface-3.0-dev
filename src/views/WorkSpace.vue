@@ -21,7 +21,10 @@
           >
             {{ t(`menuItems.${item}`) }}
           </RouterLink>
-          <SelectedItemLine :activeItemIndex="menuItems.indexOf(activeMenuItem)" />
+          <SelectedItemLine
+            :activeItemIndex="menuItems.indexOf(activeMenuItem)"
+            :withBg="true"
+          />
         </div>
       </div>
       <div class="w-40">
@@ -29,9 +32,11 @@
       </div>
       <button
         class="group text-[#638bae] hover:text-[#adebff] flex flex-row items-center mr-10 font-semibold text-[0.938rem] leading-[1.2] tracking-[0.03em]"
+        :disabled="isDisabled"
+        @click="logout"
       >
         <span
-          v-html="logout"
+          v-html="logoutIcon"
           class="mr-2"
         ></span>
         {{ t('logout') }}
@@ -43,12 +48,14 @@
 
 <script setup lang="ts">
 import logo from '@/assets/img/logo.svg?raw';
-import logout from '@/assets/img/logout.svg?raw';
+import logoutIcon from '@/assets/img/logout.svg?raw';
 import DateTimeInfo from '@/components/DateTimeInfo.vue';
 import SelectedItemLine from '@/components/SelectedItemLine.vue';
 import LangNcSwitcher from '@/components/dev/LangNcSwitcher.vue';
 
 const route = useRoute();
+
+const { api } = useApi();
 
 const menuItems = ['panel', 'functions', 'settings'] as const;
 
@@ -65,6 +72,17 @@ const activeMenuItem = computed<(typeof menuItems)[number]>(() => {
 });
 
 const isDev = import.meta.env.DEV;
+
+const isDisabled = ref(false);
+
+async function logout() {
+  isDisabled.value = true;
+  try {
+    await api.post('logout');
+  } catch (error) {
+    isDisabled.value = false;
+  }
+}
 
 const { t } = useI18n({
   messages: {
