@@ -33,6 +33,16 @@ const router = createRouter({
             },
           ],
         },
+        {
+          path: 'functions',
+          name: 'functions',
+          component: () => import('@/views/functions/FunctionsWrapper.vue'),
+        },
+        {
+          path: 'settings',
+          name: 'settings',
+          component: () => import('@/views/settings/SettingsWrapper.vue'),
+        },
       ],
     },
     {

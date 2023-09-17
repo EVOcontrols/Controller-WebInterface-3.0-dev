@@ -18,7 +18,7 @@ export default defineConfig({
       ],
       defaultExportByFilename: true,
       vueTemplate: true,
-      dirs: ['./src/stores', './src/typings'],
+      dirs: ['./src/**/*'],
     }),
   ],
   resolve: {

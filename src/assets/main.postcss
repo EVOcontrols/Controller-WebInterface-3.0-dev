@@ -40,8 +40,15 @@ body,
 button,
 input,
 textarea,
+a,
 select {
   @apply font-gilroy text-[0.813rem] font-medium leading-[1.154] text-[#adebff] transition-[color,opacity,background-color,box-shadow,fill,border-color] duration-300;
+}
+
+a,
+button,
+select {
+  @apply select-none;
 }
 /* *,
 input::placeholder,
