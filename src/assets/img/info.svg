@@ -1,0 +1,10 @@
+<svg fill="none" xmlns="http://www.w3.org/2000/svg"
+  class="[&>*]:transition-colors w-[1.125rem] h-[1.125rem]" viewBox="0 0 21 21">
+    <path opacity=".3" clip-rule="evenodd"
+      d="M10.5 19.25a8.75 8.75 0 100-17.5 8.75 8.75 0 000 17.5z"
+      class="fill-[#1D5F7A] group-hover:fill-[#57B4DA]" />
+    <rect x="9.625" y="8.75" width="1.75" height="6.125" rx=".875"
+      class="fill-[#1D5F7A] group-hover:fill-[#57B4DA]" />
+    <rect x="9.625" y="6.125" width="1.75" height="1.75" rx=".875"
+      class="fill-[#1D5F7A] group-hover:fill-[#57B4DA]" />
+</svg>

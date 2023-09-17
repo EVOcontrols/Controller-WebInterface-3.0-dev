@@ -15,15 +15,23 @@ const router = createRouter({
       },
     },
     {
-      path: '/panel',
-      name: 'panel',
-      component: () => import('@/views/PanelPage.vue'),
+      path: '/c',
+      name: 'c',
+      component: () => import('@/views/WorkSpace.vue'),
       redirect: { name: 'widgets' },
       children: [
         {
-          path: 'widgets',
-          name: 'widgets',
-          component: () => import('@/views/panel/WidgetsPage.vue'),
+          path: 'panel',
+          name: 'panel',
+          component: () => import('@/views/panel/PanelWrapper.vue'),
+          redirect: { name: 'widgets' },
+          children: [
+            {
+              path: '',
+              name: 'widgets',
+              component: () => import('@/views/panel/WidgetsPage.vue'),
+            },
+          ],
         },
       ],
     },
