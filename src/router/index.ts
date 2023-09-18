@@ -42,6 +42,19 @@ const router = createRouter({
           path: 'settings',
           name: 'settings',
           component: () => import('@/views/settings/SettingsWrapper.vue'),
+          redirect: { name: 'common-settings' },
+          children: [
+            {
+              path: 'common',
+              name: 'common-settings',
+              component: () => import('@/views/settings/CommonSettings.vue'),
+            },
+            {
+              path: 'devices',
+              name: 'devices-settings',
+              component: () => import('@/views/settings/DevicesSettings.vue'),
+            },
+          ],
         },
       ],
     },

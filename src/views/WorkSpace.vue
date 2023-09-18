@@ -42,6 +42,11 @@
         {{ t('logout') }}
       </button>
     </div>
+    <h1
+      class="font-semibold text-[#8dc5f6] text-[1.625rem] leading-[1.192] tracking-[0.02em] mt-6 mx-10"
+    >
+      {{ t('menuItems.' + activeMenuItem) }}
+    </h1>
     <RouterView class="flex-1" />
   </div>
 </template>

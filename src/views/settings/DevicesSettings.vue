@@ -1,5 +1,5 @@
 <template>
-  <div class="mt-4"></div>
+  <div></div>
 </template>
 
 <script lang="ts" setup></script>
