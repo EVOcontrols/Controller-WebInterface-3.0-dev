@@ -4,7 +4,7 @@
     v-if="fields"
   >
     <div
-      v-for="(params, topic) in fields"
+      v-for="(rows, topic) in fields"
       :key="topic"
       class="mt-8 pb-10 px-8"
     >
@@ -12,30 +12,35 @@
         {{ t(`${topic}.param`) }}
       </h2>
       <div
-        v-for="(field, param) in params"
-        :key="param"
-        :class="{
-          'flex flex-row gap-x-3': field.orientation === 'h',
-        }"
+        v-for="(params, rowIndex) in rows"
+        :key="rowIndex"
       >
         <div
-          class="text-[#6d9cc5] text-sm leading-[1.143]"
+          v-for="(field, param) in params"
+          :key="param"
           :class="{
-            'flex flex-row items-center gap-x-[0.875rem]': field.orientation === 'h',
+            'flex flex-row gap-x-3': field.orientation === 'h',
           }"
         >
-          {{ t(`${topic}.fields.${field.param}.param`) }}
-          <ButtonGroup
-            v-if="field.type === 'btn-group'"
-            :buttons="
-              field.values.map((v) => ({
-                text: t(`${topic}.fields.${field.param}.values.${v}`),
-                value: v,
-              }))
-            "
-            :value="field.value"
-            @change="field.value = $event"
-          />
+          <div
+            class="text-[#6d9cc5] text-sm leading-[1.143]"
+            :class="{
+              'flex flex-row items-center gap-x-[0.875rem]': field.orientation === 'h',
+            }"
+          >
+            {{ t(`${topic}.fields.${field.param}.param`) }}
+            <ButtonGroup
+              v-if="field.type === 'btn-group'"
+              :buttons="
+                field.values.map((v) => ({
+                  text: t(`${topic}.fields.${field.param}.values.${v}`),
+                  value: v,
+                }))
+              "
+              :value="field.value"
+              @change="field.value = $event"
+            />
+          </div>
         </div>
       </div>
     </div>
@@ -66,7 +71,7 @@ type Fields = {
           type: 'btn-group';
           values: Readonly<CommonControllerSettings[P][P2][]>;
         });
-  }[keyof CommonControllerSettings[P]][];
+  }[keyof CommonControllerSettings[P]][][];
 };
 
 const { api } = useApi();
@@ -76,119 +81,131 @@ const fields = ref<Fields | undefined>();
 function setFields(settings: ControllerSettings) {
   fields.value = {
     lan: [
-      {
-        param: 'addr-mode',
-        type: 'btn-group',
-        values: lanAddrModes,
-        orientation: 'h',
-        value: settings.lan['addr-mode'],
-      },
-      {
-        param: 'ip-addr',
-        type: 'text',
-        orientation: 'v',
-        value: settings.lan['ip-addr'],
-      },
-      {
-        param: 'ip-mask',
-        type: 'text',
-        orientation: 'v',
-        value: settings.lan['ip-mask'],
-      },
-      {
-        param: 'ip-gate',
-        type: 'text',
-        orientation: 'v',
-        value: settings.lan['ip-gate'],
-      },
-      {
-        param: 'serv-port',
-        type: 'text',
-        orientation: 'v',
-        value: settings.lan['serv-port'],
-      },
+      [
+        {
+          param: 'addr-mode',
+          type: 'btn-group',
+          values: lanAddrModes,
+          orientation: 'h',
+          value: settings.lan['addr-mode'],
+        },
+      ],
+      [
+        {
+          param: 'ip-addr',
+          type: 'text',
+          orientation: 'v',
+          value: settings.lan['ip-addr'],
+        },
+        {
+          param: 'ip-mask',
+          type: 'text',
+          orientation: 'v',
+          value: settings.lan['ip-mask'],
+        },
+        {
+          param: 'ip-gate',
+          type: 'text',
+          orientation: 'v',
+          value: settings.lan['ip-gate'],
+        },
+        {
+          param: 'serv-port',
+          type: 'text',
+          orientation: 'v',
+          value: settings.lan['serv-port'],
+        },
+      ],
     ],
     cloud: [
-      {
-        param: 'mode',
-        type: 'btn-group',
-        values: cloudModes,
-        orientation: 'h',
-        value: settings.cloud.mode,
-      },
-      {
-        param: 'main-url',
-        type: 'text',
-        orientation: 'v',
-        value: settings.cloud['main-url'],
-      },
-      {
-        param: 'main-port',
-        type: 'number',
-        orientation: 'v',
-        value: settings.cloud['main-port'],
-      },
-      {
-        param: 'interval',
-        type: 'number',
-        orientation: 'v',
-        value: settings.cloud.interval,
-      },
+      [
+        {
+          param: 'mode',
+          type: 'btn-group',
+          values: cloudModes,
+          orientation: 'h',
+          value: settings.cloud.mode,
+        },
+        {
+          param: 'main-url',
+          type: 'text',
+          orientation: 'v',
+          value: settings.cloud['main-url'],
+        },
+        {
+          param: 'main-port',
+          type: 'number',
+          orientation: 'v',
+          value: settings.cloud['main-port'],
+        },
+        {
+          param: 'interval',
+          type: 'number',
+          orientation: 'v',
+          value: settings.cloud.interval,
+        },
+      ],
     ],
     rtc: [
-      {
-        param: 'source',
-        type: 'btn-group',
-        values: rtcSources,
-        orientation: 'h',
-        value: settings.rtc.source,
-      },
-      {
-        param: 'ntp1-url',
-        type: 'text',
-        orientation: 'v',
-        value: settings.rtc['ntp1-url'],
-      },
-      {
-        param: 'time-zone',
-        type: 'number',
-        orientation: 'v',
-        value: settings.rtc['time-zone'],
-      },
-      {
-        param: 'interval',
-        type: 'number',
-        orientation: 'v',
-        value: settings.rtc.interval,
-      },
+      [
+        {
+          param: 'source',
+          type: 'btn-group',
+          values: rtcSources,
+          orientation: 'h',
+          value: settings.rtc.source,
+        },
+        {
+          param: 'ntp1-url',
+          type: 'text',
+          orientation: 'v',
+          value: settings.rtc['ntp1-url'],
+        },
+        {
+          param: 'time-zone',
+          type: 'number',
+          orientation: 'v',
+          value: settings.rtc['time-zone'],
+        },
+        {
+          param: 'interval',
+          type: 'number',
+          orientation: 'v',
+          value: settings.rtc.interval,
+        },
+      ],
     ],
     'root-login': [
-      {
-        param: 'root-name',
-        type: 'text',
-        orientation: 'v',
-        value: settings.login['root-name'],
-      },
-      {
-        param: 'root-pass',
-        type: 'text',
-        orientation: 'v',
-        value: settings.login['root-pass'],
-      },
+      [
+        {
+          param: 'root-name',
+          type: 'text',
+          orientation: 'v',
+          value: settings.login['root-name'],
+        },
+        {
+          param: 'root-pass',
+          type: 'text',
+          orientation: 'v',
+          value: settings.login['root-pass'],
+        },
+      ],
     ],
     'user-login': [
-      {
-        param: 'user-name',
-        type: 'text',
-        orientation: 'v',
-        value: settings.login['user-name'],
-      },
-      {
-        param: 'user-pass',
-        type: 'text',
-        orientation: 'v',
-        value: settings.login['user-pass'],
-      },
+      [
+        {
+          param: 'user-name',
+          type: 'text',
+          orientation: 'v',
+          value: settings.login['user-name'],
+        },
+        {
+          param: 'user-pass',
+          type: 'text',
+          orientation: 'v',
+          value: settings.login['user-pass'],
+        },
+      ],
     ],
   };
 }

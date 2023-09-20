@@ -8,3 +8,15 @@ export type Toast = {
   timeout: number;
   widthInRem: number;
 };
+
+export type InputFieldStatus = 'valid' | 'invalid' | 'empty' | 'not-allowed';
+
+export type InputFieldParams =
+  | {
+      valueType: 'string';
+      value?: string;
+    }
+  | {
+      valueType: 'number';
+      value?: number;
+    };
