@@ -42,12 +42,28 @@
         {{ t('logout') }}
       </button>
     </div>
-    <h1
-      class="font-semibold text-[#8dc5f6] text-[1.625rem] leading-[1.192] tracking-[0.02em] mt-6 mx-10"
+    <Transition
+      name="fade-150"
+      mode="out-in"
     >
-      {{ t('menuItems.' + activeMenuItem) }}
-    </h1>
-    <RouterView class="flex-1" />
+      <h1
+        class="font-semibold text-[#8dc5f6] text-[1.625rem] leading-[1.192] tracking-[0.02em] mt-6 mx-10"
+        :key="activeMenuItem"
+      >
+        {{ t('menuItems.' + activeMenuItem) }}
+      </h1>
+    </Transition>
+    <router-view v-slot="{ Component }">
+      <transition
+        name="fade-150"
+        mode="out-in"
+      >
+        <component
+          :is="Component"
+          class="flex-1"
+        />
+      </transition>
+    </router-view>
   </div>
 </template>
 

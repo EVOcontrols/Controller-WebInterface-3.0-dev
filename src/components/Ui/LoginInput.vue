@@ -1,14 +1,17 @@
 <template>
   <div class="relative">
     <input
-      :type="inputType === 'login' || isPasswordVisible ? 'text' : 'password'"
+      :type="inputType === 'login' ? 'text' : 'password'"
       autocorrect="off"
       autocapitalize="off"
       aria-invalid="false"
       class="absolute left-0 top-0 z-[2] h-full w-full pl-4 text-sm opacity-0"
-      :class="{ 'top-10 opacity-100': inputType === 'password1', 'pl-5': isInputFocus }"
+      :class="{
+        'top-10 opacity-100': inputType === 'password1',
+        '!pl-5': isInputFocus && hasFocusOffset,
+      }"
       v-model="value"
-      name="type"
+      :name="name"
       :autocomplete="autocomplete"
       :disabled="isDisabled"
       @focus="gotFocus"
@@ -28,6 +31,7 @@
         {
           focus: isInputFocus,
           [errorPadding]: isError,
+          '!pl-5': isInputFocus && hasFocusOffset,
         },
       ]"
       v-html="visibleValue"
@@ -37,7 +41,8 @@
       :class="[
         phColor,
         {
-          'pl-5 !opacity-0': isInputFocus,
+          '!opacity-0': isInputFocus,
+          '!pl-5': isInputFocus && hasFocusOffset,
           [errorPadding]: isError,
         },
       ]"
@@ -66,6 +71,8 @@ const props = withDefaults(
     errorPadding?: string;
     isSuccess?: boolean;
     setFocusTrigger?: number;
+    name?: string;
+    hasFocusOffset?: boolean;
   }>(),
   {
     initValue: '',
@@ -77,6 +84,8 @@ const props = withDefaults(
     placeholderColor: 'text-[#4B7CA8]',
     errorPadding: '',
     isSuccess: false,
+    name: 'type',
+    hasFocusOffset: true,
   },
 );
 
@@ -229,9 +238,9 @@ function onBlur() {
   @apply relative block
       h-10 w-full overflow-hidden rounded-lg px-4 text-sm
       font-medium leading-10 outline-none transition-all duration-150;
-  &.focus {
+  /* &.focus {
     @apply pl-5;
-  }
+  } */
 }
 .disabled-bg {
   background: rgba(8, 13, 27, 0.42);

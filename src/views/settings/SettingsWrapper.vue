@@ -1,5 +1,5 @@
 <template>
-  <div class="mt-6 mb-8 rounded-xl bg-[#08253d] mx-10 flex flex-col">
+  <div class="mt-6 mb-8 rounded-xl bg-[#08253d] mx-10 flex flex-col overflow-hidden">
     <div class="h-[3.313rem] pl-8 border-b-2 border-[#0b3d68] flex">
       <div class="h-full flex flex-row gap-x-6 relative">
         <RouterLink
@@ -16,8 +16,15 @@
         />
       </div>
     </div>
-    <div class="flex-1 overflow-auto">
-      <RouterView />
+    <div class="flex-1 overflow-auto scrollbar-4">
+      <router-view v-slot="{ Component }">
+        <transition
+          name="fade-150"
+          mode="out-in"
+        >
+          <component :is="Component" />
+        </transition>
+      </router-view>
     </div>
   </div>
 </template>

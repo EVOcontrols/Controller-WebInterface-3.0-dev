@@ -2,15 +2,14 @@
   <input
     ref="inputEl"
     :type="inputType || 'text'"
-    class="p-3 border border-gray-300 rounded outline-none focus:bg-gray-50 text-center w-20"
+    class="rounded-lg h-[2.563rem] bg-[#0f304b] px-4 text-[#84b5e3] text-sm leading-[1.143] focus:bg-[#113b5e] placeholder:text-[#5183b1] error:bg-[#451f3e] error:text-[#f83068]"
     :class="[
       {
-        'text-red-500':
+        error:
           status === 'invalid' ||
           localStatus === 'invalid' ||
           status === 'not-allowed' ||
           localStatus === 'not-allowed',
-        '!py-1': isSmall,
       },
     ]"
     spellcheck="false"
@@ -37,7 +36,6 @@ const props = withDefaults(
   defineProps<{
     init: T;
     status?: InputFieldStatus;
-    isSmall?: true;
     minMax?: [number | undefined, number | undefined];
     required?: boolean;
     maxLength?: number;
@@ -46,12 +44,12 @@ const props = withDefaults(
     changeOnBlurOnly?: boolean;
     notAllowedValues?: (number | string)[];
     notAllowedTitle?: string;
-    inputType?: 'email';
+    inputType?: 'password';
     placeholder?: string;
     disabled?: boolean;
   }>(),
   {
-    autoSelect: undefined,
+    autoSelect: false,
   },
 );
 
