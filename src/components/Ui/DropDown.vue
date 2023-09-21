@@ -25,10 +25,16 @@
             class="absolute left-0 min-w-full shadow-[0_0_0.25rem_0_#08253d]"
             :class="topPositionClass"
             v-if="isOpen"
+            ref="bodyEl"
           >
             <slot
               name="body"
               :isOpen="isOpen"
+              :onSelect="
+                () => {
+                  isOpen = false;
+                }
+              "
             ></slot>
           </div>
         </Transition>
@@ -45,6 +51,8 @@ const isOpen = ref(false);
 const wrapperEl = ref<HTMLElement | null>(null);
 
 const triggerEl = ref<HTMLElement | null>(null);
+
+const bodyEl = ref<HTMLElement | null>(null);
 
 const isTriggerElVisible = useElementVisibility(triggerEl);
 
@@ -75,6 +83,22 @@ function onClick() {
         : 'top-full mt-2.5';
   }
   isOpen.value = !isOpen.value;
+  nextTick(() => {
+    setTimeout(() => {
+      if (isOpen.value && bodyEl.value) {
+        const onEl = bodyEl.value.querySelector('.on') as HTMLElement;
+        const onElScrollParent = getScrollParent(onEl);
+        if (!onElScrollParent || !onEl) return;
+        onElScrollParent.scrollTo({
+          top:
+            onEl.offsetTop -
+            onElScrollParent.offsetTop -
+            onElScrollParent.clientHeight / 2 +
+            onEl.clientHeight / 2,
+        });
+      }
+    }, 0);
+  });
 }
 
 function getScrollParent(node: HTMLElement | null) {
@@ -92,7 +116,6 @@ function getScrollParent(node: HTMLElement | null) {
 onMounted(() => {
   if (wrapperEl.value) {
     scrollableParent.value = getScrollParent(wrapperEl.value);
-    console.log(triggerEl.value, scrollableParent.value);
   }
 });
 </script>

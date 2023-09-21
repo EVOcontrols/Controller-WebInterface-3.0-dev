@@ -107,6 +107,7 @@ async function getDateTime() {
   let timeout = 1000;
   try {
     const r = await api.get('get_time');
+    indexStore.setControllerDateTime(r.data);
     parseTime(r.data);
     if (r.data.hour === 0 && r.data.min === 0 && r.data.sec < 20) {
       parseDate(r.data);
@@ -135,6 +136,7 @@ async function getInfoData() {
     infoData.value.id = r.data.id;
     parseTime(r.data.time);
     parseDate(r.data.time);
+    indexStore.setControllerDateTime(r.data.time);
     getDateTimeTimer = setTimeout(getDateTime, 5000);
   } catch (error) {
     if (isAborted.value) {

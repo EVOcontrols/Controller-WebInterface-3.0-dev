@@ -1,5 +1,14 @@
 import { toastTypes } from '@/data/common';
 
+export type ControllerDateTime = {
+  hour: number;
+  min: number;
+  sec: number;
+  day: number;
+  mon: number;
+  year: number;
+};
+
 export type Toast = {
   id: number;
   type: (typeof toastTypes)[number];

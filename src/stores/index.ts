@@ -1,4 +1,4 @@
-import type { Toast } from '@/typings/common';
+import type { ControllerDateTime, Toast } from '@/typings/common';
 
 export const useIndexStore = defineStore('indexStore', () => {
   const authToken = useStorage<string>('authToken', '');
@@ -16,6 +16,8 @@ export const useIndexStore = defineStore('indexStore', () => {
   const toastIdForDeleting = ref<number | undefined>();
 
   const notConnected = ref(false);
+
+  const controllerDateTime = shallowRef<ControllerDateTime | undefined>();
 
   function setIsAuth(cred: { token: string; role: 'user' | 'admin' } | undefined) {
     isAuth.value = !!cred;
@@ -39,6 +41,10 @@ export const useIndexStore = defineStore('indexStore', () => {
     notConnected.value = isNotConnected;
   }
 
+  function setControllerDateTime(dateTime: ControllerDateTime) {
+    controllerDateTime.value = dateTime;
+  }
+
   return {
     isAuth,
     authToken,
@@ -47,10 +53,12 @@ export const useIndexStore = defineStore('indexStore', () => {
     newToast,
     toastIdForDeleting,
     notConnected,
+    controllerDateTime,
     setIsAuth,
     setLang,
     addNewToast,
     deleteToast,
     setIsNotConnected,
+    setControllerDateTime,
   };
 });

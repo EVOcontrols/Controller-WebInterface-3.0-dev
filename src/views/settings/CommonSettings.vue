@@ -45,29 +45,45 @@
             />
             <DropDown
               v-else-if="field.param === 'time-zone'"
-              class="table-cell"
+              class="table-cell text-[0.813rem]"
             >
               <template #trigger-element="{ onClick }">
                 <button
-                  class="rounded-lg h-[2.438rem] w-[11.438rem] bg-[#0f304b] flex flex-row items-center justify-between"
+                  class="rounded-lg h-[2.438rem] w-[11.438rem] bg-[#0f304b] flex flex-row items-center justify-between pl-[0.875rem] pr-[2.125rem]"
                   @click="onClick"
-                ></button>
+                >
+                  <span class="font-roboto text-[#8dc5f6]">
+                    {{ timeZones[field.value + 12]?.tz }}
+                  </span>
+                  <span class="font-roboto text-[#2b9bff] lowercase">
+                    {{ timeZones[field.value + 12]?.time }}
+                  </span>
+                </button>
               </template>
-              <template #body="{ isOpen }">
+              <template #body="{ isOpen, onSelect }">
                 <div
                   class="w-full rounded-lg bg-[#0f304b] flex flex-col py-[0.31rem]"
                   v-if="isOpen"
                 >
                   <div class="max-h-[11.563rem] overflow-auto scrollbar-3 px-1.5">
                     <div
-                      v-for="t in 26"
-                      :key="t"
-                      class="flex flex-row justify-between h-[2.188rem] hover:bg-[#134d7d] shrink-0 items-center pl-2 pr-3 rounded hover:pl-3 transition-[background-color,padding] select-none cursor-pointer"
+                      v-for="t in timeZones"
+                      :key="t.tz"
+                      class="flex flex-row justify-between h-[2.188rem] hover:bg-[#134d7d] shrink-0 items-center pl-2 pr-3 rounded hover:pl-3 transition-[background-color,padding] select-none cursor-pointer on:bg-[#134d7d]"
+                      :class="{ on: t.value === field.value }"
+                      @click="
+                        () => {
+                          field.value = t.value;
+                          onSelect();
+                        }
+                      "
                     >
-                      <span class="font-roboto text-[#8dc5f6]">{{
-                        `UTC${t > 13 ? '+' : ''}${t - 13}`
-                      }}</span>
-                      <span class="font-roboto text-[#2b9bff]">14:41</span>
+                      <span class="font-roboto text-[#8dc5f6]">
+                        {{ t.tz }}
+                      </span>
+                      <span class="font-roboto text-[#2b9bff] lowercase">
+                        {{ t.time }}
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -158,6 +174,7 @@ import LoginInput from '@/components/Ui/LoginInput.vue';
 import openEye from '@/assets/img/open-eye.svg?raw';
 import closedEye from '@/assets/img/closed-eye.svg?raw';
 import DropDown from '@/components/Ui/DropDown.vue';
+import { DateTime } from 'luxon';
 
 type CommonControllerSettings = Pick<ControllerSettings, 'lan' | 'cloud' | 'rtc'> & {
   'root-login': Pick<ControllerSettings['login'], 'root-name' | 'root-pass'> & {
@@ -188,6 +205,10 @@ type Fields = {
 
 const { api } = useApi();
 
+const indexStore = useIndexStore();
+
+const { controllerDateTime, lang } = storeToRefs(indexStore);
+
 const isPasswordVisible = ref<Record<string, boolean>>({});
 
 const isPasswordFocus = ref<Record<string, boolean>>({});
@@ -199,7 +220,27 @@ const isPasswordMismatch = computed<Record<string, boolean>>(() => ({
     fields.value?.['user-login'][2][0].value !== fields.value?.['user-login'][1][0].value,
 }));
 
+const settingsInit = ref<ControllerSettings>();
+
 const fields = ref<Fields | undefined>();
+
+const timeZones = computed(() => {
+  const t = controllerDateTime.value;
+  const settings = settingsInit.value;
+  if (!t || !settings) return [];
+  return [...new Array(26)].map((_, i) => {
+    const dt = DateTime.fromFormat(`${t.hour}:${t.min}:${t.sec}`, 'H:m:s').plus({
+      hours: i - 12 - settings.rtc['time-zone'],
+    });
+    const time = dt.toFormat(lang.value === 'ru' ? 'HH:mm' : 'hh:mm');
+    const meridiem = lang.value === 'en' ? dt.toFormat('a') : '';
+    return {
+      tz: `UTC${i > 12 ? '+' : ''}${i - 12}`,
+      time: `${time} ${meridiem}`.trim(),
+      value: i - 12,
+    };
+  });
+});
 
 function setFields(settings: ControllerSettings) {
   fields.value = {
@@ -585,6 +626,7 @@ onMounted(async () => {
   try {
     const r = await api.get('get_config');
     setFields(r.data);
+    settingsInit.value = r.data;
   } catch (error) {
     //
   }
