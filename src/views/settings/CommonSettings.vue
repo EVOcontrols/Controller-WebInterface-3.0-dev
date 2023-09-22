@@ -99,7 +99,7 @@
                   inputType="password"
                   :isPasswordVisible="!!isPasswordVisible[field.param]"
                   :isDisabled="false"
-                  :isError="!!isPasswordMismatch[field.param]"
+                  :isError="!!isPasswordMismatch[field.param] || !!isPasswordMissed[field.param]"
                   :name="field.param"
                   placeholder=""
                   autocomplete="new-password"
@@ -126,8 +126,11 @@
                       :key="isPasswordVisible[field.param] ? 'openEye' : 'closedEye'"
                       class="w-[1.125rem] h-[1.125rem] block group/icon"
                       :class="{
-                        on: isPasswordFocus[field.param] && !isPasswordMismatch[field.param],
-                        error: isPasswordMismatch[field.param],
+                        on:
+                          isPasswordFocus[field.param] &&
+                          !isPasswordMismatch[field.param] &&
+                          !isPasswordMissed[field.param],
+                        error: isPasswordMismatch[field.param] || isPasswordMissed[field.param],
                       }"
                     ></span>
                   </Transition>
@@ -150,8 +153,13 @@
                 "
                 class="table-cell"
                 :class="[field.widthClass]"
-                :validation-type="field.validationType"
+                :input-type="field.validationType"
                 :status="field.status"
+                :required="
+                  field.isRequired ||
+                  (field.param === 'root-name' && !!wasChanged.settings?.login?.['root-pass']) ||
+                  (field.param === 'user-name' && !!wasChanged.settings?.login?.['user-pass'])
+                "
                 @valueChanged="field.value = $event.value"
                 @statusChanged="field.status = $event"
               />
@@ -172,7 +180,10 @@
       <SaveButton
         :isSaving="isSaving"
         :is-disabled="
-          isEmpty(wasChanged) || haveErrors || Object.values(isPasswordMismatch).find((m) => m)
+          isEmpty(wasChanged) ||
+          haveErrors ||
+          Object.values(isPasswordMismatch).find((m) => m) ||
+          Object.values(isPasswordMissed).find((m) => m)
         "
         @click="save"
       />
@@ -215,6 +226,7 @@ type Fields = {
           widthClass: string;
           status: InputFieldStatus;
           validationType?: ('ip' | 'url')[] | ['int'];
+          isRequired?: boolean;
         }
       : {
           type: 'btn-group';
@@ -242,21 +254,18 @@ const isPasswordMismatch = computed<Record<string, boolean>>(() => ({
     fields.value?.['user-login'][2][0].value !== fields.value?.['user-login'][1][0].value,
 }));
 
+const isPasswordMissed = computed<Record<string, boolean>>(() => ({
+  'root-pass':
+    !!wasChanged.value.settings?.login?.['root-name'] &&
+    !wasChanged.value.settings?.login?.['root-pass'],
+  'user-pass':
+    !!wasChanged.value.settings?.login?.['user-name'] &&
+    !wasChanged.value.settings?.login?.['user-pass'],
+}));
+
 const fields = ref<Fields | undefined>();
 
 const fieldsInit = ref<Fields | undefined>();
-
-// const fieldsInitValues = computed(() =>
-//   (Object.keys(fieldsInit.value || {}) as (keyof CommonControllerSettings)[]).reduce(
-//     (acc, topic) => {
-//       return {
-//         ...acc,
-//         [topic]: flatten(fieldsInit.value?.[topic]||[])
-//       }
-//     },
-//     {} as PartialDeep<ControllerSettings>,
-//   ),
-// );
 
 const wasChanged = ref<{
   settings?: PartialDeep<ControllerSettings>;
@@ -306,8 +315,14 @@ function getChangesAndErrors() {
             param.value !== init[topic][rowIndex][paramIndex].value
           ) {
             if (/^(root|user)-name$/.test(param.param)) {
-              set(changes, ['settings', 'login', param.param], param.value);
-            } else {
+              if (param.value) {
+                set(changes, ['settings', 'login', param.param], param.value);
+              }
+            } else if (
+              param.type === 'btn-group' ||
+              param.type !== 'number' ||
+              param.status !== 'empty'
+            ) {
               set(changes, ['settings', topic, param.param], param.value);
             }
           }
@@ -330,7 +345,7 @@ function getChangesAndErrors() {
   return { changes, isErrors };
 }
 
-watchThrottled(
+watchDebounced(
   [fields, fieldsInit],
   () => {
     const changesAndErrors = getChangesAndErrors();
@@ -338,7 +353,7 @@ watchThrottled(
     haveErrors.value = changesAndErrors.isErrors;
     // console.log(wasChanged.value);
   },
-  { throttle: 300, deep: true },
+  { debounce: 10, deep: true },
 );
 
 function setFields(settings: ControllerSettings) {
@@ -362,6 +377,7 @@ function setFields(settings: ControllerSettings) {
           widthClass: 'w-[14.25rem]',
           status: 'valid',
           validationType: ['ip'],
+          isRequired: true,
         },
         {
           param: 'ip-mask',
@@ -371,6 +387,7 @@ function setFields(settings: ControllerSettings) {
           widthClass: 'w-[14.25rem]',
           status: 'valid',
           validationType: ['ip'],
+          isRequired: true,
         },
         {
           param: 'ip-gate',
@@ -380,6 +397,7 @@ function setFields(settings: ControllerSettings) {
           widthClass: 'w-[14.25rem]',
           status: 'valid',
           validationType: ['ip'],
+          isRequired: true,
         },
         {
           param: 'serv-port',

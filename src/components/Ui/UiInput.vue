@@ -1,15 +1,10 @@
 <template>
   <input
-    ref="inputEl"
-    :type="inputType || 'text'"
+    type="text"
     class="rounded-lg h-[2.563rem] bg-[#0f304b] px-4 text-[#84b5e3] text-sm leading-[1.143] focus:bg-[#113b5e] placeholder:text-[#5183b1] error:bg-[#451f3e] error:text-[#f83068]"
     :class="[
       {
-        error:
-          status === 'invalid' ||
-          localStatus === 'invalid' ||
-          status === 'not-allowed' ||
-          localStatus === 'not-allowed',
+        error: status === 'invalid' || status === 'not-allowed',
       },
     ]"
     spellcheck="false"
@@ -17,20 +12,15 @@
     :required="required"
     :maxlength="maxLength"
     :autofocus="autofocus"
-    :title="status === 'not-allowed' || localStatus === 'not-allowed' ? notAllowedTitle : ''"
     :placeholder="placeholder"
     :disabled="disabled"
     autocomplete="off"
     @focus="onFocus"
-    @blur="blurHandler"
-    @keydown="keydownHandler"
   />
 </template>
 
 <script setup lang="ts" generic="T extends InputFieldParams">
 import type { InputFieldParams, InputFieldStatus } from '@/typings/common';
-import { useFocus } from '@vueuse/core';
-import { onBeforeUnmount, ref, watch } from 'vue';
 
 const props = withDefaults(
   defineProps<{
@@ -41,13 +31,10 @@ const props = withDefaults(
     maxLength?: number;
     autofocus?: boolean;
     autoSelect?: boolean;
-    changeOnBlurOnly?: boolean;
     notAllowedValues?: (number | string)[];
-    notAllowedTitle?: string;
-    inputType?: 'password';
     placeholder?: string;
     disabled?: boolean;
-    validationType?: ('ip' | 'url')[] | ['int'];
+    inputType?: ('ip' | 'url')[] | ['int'];
   }>(),
   {
     autoSelect: false,
@@ -64,18 +51,8 @@ let lastInitValue: any = props.init;
 
 const valueInit = ref<string>(props.init.value?.toString() || '');
 
-const localStatus = ref<InputFieldStatus>(props.status || 'empty');
-
-const inputEl = ref<HTMLInputElement | undefined>();
-
-const { focused } = useFocus(inputEl);
-
 function setStatus(status: InputFieldStatus) {
-  if (props.changeOnBlurOnly) {
-    localStatus.value = status;
-  } else {
-    emit('statusChanged', status);
-  }
+  emit('statusChanged', status);
 }
 
 function isIp(v: string) {
@@ -91,8 +68,8 @@ function isUrl(v: string) {
 }
 
 function isFitValidationType(v: string) {
-  if (!props.validationType) return true;
-  return props.validationType.some((t) => {
+  if (!props.inputType) return true;
+  return props.inputType.some((t) => {
     return t === 'ip' ? isIp(v) : isUrl(v);
   });
 }
@@ -105,14 +82,17 @@ function valueChangedHandler() {
       setStatus('not-allowed');
       return;
     }
-    if (!isFitValidationType(v)) {
+    if (v && !isFitValidationType(v)) {
       setStatus('invalid');
       return;
     }
-    if (!props.changeOnBlurOnly) {
-      lastInitValue = v;
-      emit('valueChanged', { ...props.init, value: v } as T);
+    if (props.required && !v) {
+      setStatus('invalid');
+      emit('valueChanged', { ...props.init, value: '' } as T);
+      return;
     }
+    lastInitValue = v;
+    emit('valueChanged', { ...props.init, value: v } as T);
   } else if (v) {
     const parsed = parseFloat(v.replace(/,/, '.'));
     if (isNaN(parsed)) {
@@ -131,80 +111,44 @@ function valueChangedHandler() {
       setStatus('not-allowed');
       return;
     }
-    if (props.validationType?.[0] === 'int' && parseInt(v).toString() !== v) {
+    if (props.inputType?.[0] === 'int' && parseInt(v).toString() !== v) {
       setStatus('invalid');
       return;
     }
-    if (!props.changeOnBlurOnly) {
-      lastInitValue = parsed;
-      emit('valueChanged', { ...props.init, value: parsed } as T);
-    }
+    lastInitValue = parsed;
+    emit('valueChanged', { ...props.init, value: parsed } as T);
   }
   setStatus(v ? 'valid' : 'empty');
 }
 
-watch(
+watchDebounced(
   valueInit,
   () => {
     valueChangedHandler();
   },
-  { immediate: true },
+  { immediate: true, debounce: 10 },
 );
 
-watch(
-  () => props.notAllowedValues,
+watchDebounced(
+  [() => props.notAllowedValues, () => props.required],
   () => {
     valueChangedHandler();
   },
+  { debounce: 10 },
 );
 
-watch(
+watchDebounced(
   () => props.init,
   () => {
     if (props.init.value === lastInitValue) return;
     lastInitValue = props.init.value;
     valueInit.value = props.init.value?.toString() || '';
   },
+  { debounce: 10 },
 );
-
-function blurHandler() {
-  if (props.changeOnBlurOnly) {
-    if (localStatus.value === 'valid' || (localStatus.value === 'empty' && !props.required)) {
-      const value =
-        props.init.valueType === 'string'
-          ? valueInit.value
-          : parseFloat(valueInit.value.replace(/,/, '.'));
-      lastInitValue = value;
-      emit('valueChanged', {
-        ...props.init,
-        value,
-      } as T);
-    } else {
-      valueInit.value = props.init.value?.toString() || '';
-    }
-  }
-}
 
 function onFocus(e: FocusEvent) {
   if (props.autoSelect === false) return;
   (e.target as HTMLInputElement)?.select();
 }
-
-function keydownHandler(e: Event) {
-  if (!(e instanceof KeyboardEvent)) return;
-  if (e.code === 'Enter' || e.code === 'NumpadEnter') {
-    if (props.changeOnBlurOnly) {
-      (e.target as HTMLInputElement).blur();
-    }
-  } else if (e.ctrlKey && (e.code === 'KeyZ' || e.code === 'KeyY')) {
-    e.preventDefault();
-    e.stopPropagation();
-  }
-}
-
-onBeforeUnmount(() => {
-  if (focused.value) {
-    blurHandler();
-  }
-});
 </script>

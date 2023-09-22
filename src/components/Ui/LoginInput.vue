@@ -24,7 +24,7 @@
       required
     />
     <div
-      class="input-field vuesax-ph"
+      class="input-field vuesax-ph transition-colors"
       :class="[
         bgColor,
         color,
@@ -237,7 +237,7 @@ function onBlur() {
 .input-field {
   @apply relative block
       h-10 w-full overflow-hidden rounded-lg px-4 text-sm
-      font-medium leading-10 outline-none transition-all duration-150;
+      font-medium leading-10 outline-none transition-all;
   /* &.focus {
     @apply pl-5;
   } */
