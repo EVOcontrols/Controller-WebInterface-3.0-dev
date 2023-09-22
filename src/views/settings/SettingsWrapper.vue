@@ -16,7 +16,7 @@
         />
       </div>
     </div>
-    <div class="flex-1 overflow-auto scrollbar-4">
+    <div class="flex-1 overflow-hidden">
       <router-view v-slot="{ Component }">
         <transition
           name="fade-150"

@@ -2,7 +2,7 @@ export const lanAddrModes = ['dhcp', 'static'] as const;
 
 export const cloudModes = ['none', 'ethernet', 'gsm'] as const;
 
-export const rtcSources = ['ntp', 'gsm', 'cloud'] as const;
+export const rtcSources = ['ntp', 'cloud'] as const;
 
 export const oneWiresModes = ['off', 'rom', 'sens', 'gpio'] as const;
 

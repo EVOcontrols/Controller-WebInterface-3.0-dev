@@ -47,6 +47,7 @@ const props = withDefaults(
     inputType?: 'password';
     placeholder?: string;
     disabled?: boolean;
+    validationType?: ('ip' | 'url')[] | ['int'];
   }>(),
   {
     autoSelect: false,
@@ -77,12 +78,35 @@ function setStatus(status: InputFieldStatus) {
   }
 }
 
+function isIp(v: string) {
+  return /^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/.test(
+    v,
+  );
+}
+
+function isUrl(v: string) {
+  return /^(https?:\/\/)?((([-a-z0-9]{1,63}\.)*?[a-z0-9]([-a-z0-9]{0,253}[a-z0-9])?\.[a-z]{2,63})|((\d{1,3}\.){3}\d{1,3}))(:\d{1,5})?((\/|\?)((%[0-9a-f]{2})|[-\w\\+\\.\\?\\/@~#&=])*)?$/.test(
+    v,
+  );
+}
+
+function isFitValidationType(v: string) {
+  if (!props.validationType) return true;
+  return props.validationType.some((t) => {
+    return t === 'ip' ? isIp(v) : isUrl(v);
+  });
+}
+
 function valueChangedHandler() {
   // console.log('valueChangedHandler');
   const v = valueInit.value;
   if (props.init.valueType === 'string') {
     if (props.notAllowedValues?.includes(v)) {
       setStatus('not-allowed');
+      return;
+    }
+    if (!isFitValidationType(v)) {
+      setStatus('invalid');
       return;
     }
     if (!props.changeOnBlurOnly) {
@@ -105,6 +129,10 @@ function valueChangedHandler() {
     }
     if (props.notAllowedValues?.includes(parsed)) {
       setStatus('not-allowed');
+      return;
+    }
+    if (props.validationType?.[0] === 'int' && parseInt(v).toString() !== v) {
+      setStatus('invalid');
       return;
     }
     if (!props.changeOnBlurOnly) {

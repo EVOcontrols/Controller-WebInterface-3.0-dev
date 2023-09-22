@@ -137,3 +137,15 @@ textarea {
 .fade-300-leave-to {
   opacity: 0;
 }
+
+.appear-top-150-enter-active,
+.appear-top-150-leave-active {
+  transition: transform 0.15s ease;
+}
+
+.appear-top-150-enter-from {
+  transform: translateY(100%);
+}
+.appear-top-150-leave-to {
+  transform: translateY(-100%);
+}

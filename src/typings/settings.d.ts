@@ -64,3 +64,5 @@ export type ControllerSettings = {
     'min-delay': number;
   };
 };
+
+export type TempUnit = 'c' | 'f'; // Celsius or fahrenheit

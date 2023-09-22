@@ -1,180 +1,198 @@
 <template>
-  <div
-    class="flex flex-col"
-    v-if="fields"
-  >
-    <div
-      v-for="(rows, topic) in fields"
-      :key="topic"
-      class="mt-8 mx-8 flex flex-col gap-y-6 border-b border-[#0b3d68] last:border-none"
-      :class="[topic === 'rtc' ? 'pb-4' : 'pb-10']"
-    >
-      <h2 class="font-semibold text-xl leading-[1.2]">
-        {{ t(`${topic}.param`) }}
-      </h2>
-      <div :class="[topic === 'rtc' ? 'table w-max border-spacing-y-6' : 'flex flex-col gap-y-6']">
+  <div class="h-full flex flex-col">
+    <div class="flex flex-col flex-1 overflow-auto scrollbar-4">
+      <div
+        v-for="(rows, topic) in fields"
+        :key="topic"
+        class="mt-8 mx-8 flex flex-col gap-y-6 border-b border-[#0b3d68] last:border-none"
+        :class="[topic === 'rtc' ? 'pb-4' : 'pb-10']"
+      >
+        <h2 class="font-semibold text-xl leading-[1.2]">
+          {{ t(`${topic}.param`) }}
+        </h2>
         <div
-          v-for="(params, rowIndex) in rows"
-          :key="rowIndex"
-          :class="[topic === 'rtc' ? 'table-row-group' : 'flex flex-row gap-x-3']"
+          :class="[topic === 'rtc' ? 'table w-max border-spacing-y-6' : 'flex flex-col gap-y-6']"
         >
           <div
-            v-for="(field, param) in params"
-            :key="param"
-            class="text-[#6d9cc5] text-sm leading-[1.143]"
-            :class="[
-              field.orientation === 'h'
-                ? 'flex-row items-center gap-x-[0.875rem]'
-                : 'flex-col items-start gap-y-1.5',
-              topic === 'rtc' ? 'table-row' : 'flex',
-            ]"
+            v-for="(params, rowIndex) in rows"
+            :key="rowIndex"
+            :class="[topic === 'rtc' ? 'table-row-group' : 'flex flex-row gap-x-3']"
           >
-            <span :class="[topic === 'rtc' ? 'table-cell pr-5 align-middle' : '']">
-              {{ t(`${topic}.fields.${field.param}.param`) }}
-            </span>
-            <ButtonGroup
-              v-if="field.type === 'btn-group'"
-              :buttons="
-                field.values.map((v) => ({
-                  text: t(`${topic}.fields.${field.param}.values.${v}`),
-                  value: v,
-                }))
-              "
-              :value="field.value"
-              @change="field.value = $event"
-            />
-            <DropDown
-              v-else-if="field.param === 'time-zone'"
-              class="table-cell text-[0.813rem]"
+            <div
+              v-for="(field, param) in params"
+              :key="param"
+              class="text-[#6d9cc5] text-sm leading-[1.143]"
+              :class="[
+                field.orientation === 'h'
+                  ? 'flex-row items-center gap-x-[0.875rem]'
+                  : 'flex-col items-start gap-y-1.5',
+                topic === 'rtc' ? 'table-row' : 'flex',
+              ]"
             >
-              <template #trigger-element="{ onClick }">
-                <button
-                  class="rounded-lg h-[2.438rem] w-[11.438rem] bg-[#0f304b] flex flex-row items-center justify-between pl-[0.875rem] pr-[2.125rem]"
-                  @click="onClick"
-                >
-                  <span class="font-roboto text-[#8dc5f6]">
-                    {{ timeZones[field.value + 12]?.tz }}
-                  </span>
-                  <span class="font-roboto text-[#2b9bff] lowercase">
-                    {{ timeZones[field.value + 12]?.time }}
-                  </span>
-                </button>
-              </template>
-              <template #body="{ isOpen, onSelect }">
-                <div
-                  class="w-full rounded-lg bg-[#0f304b] flex flex-col py-[0.31rem]"
-                  v-if="isOpen"
-                >
-                  <div class="max-h-[11.563rem] overflow-auto scrollbar-3 px-1.5">
-                    <div
-                      v-for="t in timeZones"
-                      :key="t.tz"
-                      class="flex flex-row justify-between h-[2.188rem] hover:bg-[#134d7d] shrink-0 items-center pl-2 pr-3 rounded hover:pl-3 transition-[background-color,padding] select-none cursor-pointer on:bg-[#134d7d]"
-                      :class="{ on: t.value === field.value }"
-                      @click="
-                        () => {
-                          field.value = t.value;
-                          onSelect();
-                        }
-                      "
-                    >
-                      <span class="font-roboto text-[#8dc5f6]">
-                        {{ t.tz }}
-                      </span>
-                      <span class="font-roboto text-[#2b9bff] lowercase">
-                        {{ t.time }}
-                      </span>
+              <span :class="[topic === 'rtc' ? 'table-cell pr-5 align-middle' : '']">
+                {{ t(`${topic}.fields.${field.param}.param`) }}
+              </span>
+              <ButtonGroup
+                v-if="field.type === 'btn-group'"
+                :buttons="
+                  field.values.map((v) => ({
+                    text: t(`${topic}.fields.${field.param}.values.${v}`),
+                    value: v,
+                  }))
+                "
+                :value="field.value"
+                @change="field.value = $event"
+              />
+              <DropDown
+                v-else-if="field.param === 'time-zone'"
+                class="table-cell text-[0.813rem]"
+              >
+                <template #trigger-element="{ onClick }">
+                  <button
+                    class="rounded-lg h-[2.438rem] w-[11.438rem] bg-[#0f304b] flex flex-row items-center justify-between pl-[0.875rem] pr-[2.125rem]"
+                    @click="onClick"
+                  >
+                    <span class="font-roboto text-[#8dc5f6]">
+                      {{ timeZones[field.value + 12]?.tz }}
+                    </span>
+                    <span class="font-roboto text-[#2b9bff] lowercase">
+                      {{ timeZones[field.value + 12]?.time }}
+                    </span>
+                  </button>
+                </template>
+                <template #body="{ isOpen, onSelect }">
+                  <div
+                    class="w-full rounded-lg bg-[#0f304b] flex flex-col py-[0.31rem]"
+                    v-if="isOpen"
+                  >
+                    <div class="max-h-[11.563rem] overflow-auto scrollbar-3 px-1.5">
+                      <div
+                        v-for="t in timeZones"
+                        :key="t.tz"
+                        class="flex flex-row justify-between h-[2.188rem] hover:bg-[#134d7d] shrink-0 items-center pl-2 pr-3 rounded hover:pl-3 transition-[background-color,padding] select-none cursor-pointer on:bg-[#134d7d]"
+                        :class="{ on: t.value === field.value }"
+                        @click="
+                          () => {
+                            field.value = t.value;
+                            onSelect();
+                          }
+                        "
+                      >
+                        <span class="font-roboto text-[#8dc5f6]">
+                          {{ t.tz }}
+                        </span>
+                        <span class="font-roboto text-[#2b9bff] lowercase">
+                          {{ t.time }}
+                        </span>
+                      </div>
                     </div>
                   </div>
-                </div>
-              </template>
-            </DropDown>
-            <div
-              v-else-if="field.type === 'password'"
-              class="relative table-cell"
-              :class="[field.widthClass]"
-            >
-              <LoginInput
-                class="w-72"
-                inputType="password"
-                :isPasswordVisible="!!isPasswordVisible[field.param]"
-                :isDisabled="false"
-                :isError="!!isPasswordMismatch[field.param]"
-                :name="field.param"
-                placeholder=""
-                autocomplete="new-password"
-                :hasFocusOffset="false"
-                @change="field.value = $event"
-                @focus="isPasswordFocus[field.param] = true"
-                @blur="isPasswordFocus[field.param] = false"
-              />
-              <button
-                type="button"
-                class="absolute bottom-0 right-3 top-0 my-auto z-[3] w-[1.125rem] h-[1.125rem]"
-                @click="
-                  () => {
-                    isPasswordVisible[field.param] = !isPasswordVisible[field.param];
-                  }
-                "
+                </template>
+              </DropDown>
+              <div
+                v-else-if="field.type === 'password'"
+                class="relative table-cell"
+                :class="[field.widthClass]"
               >
-                <Transition
-                  mode="out-in"
-                  name="scale-y-150"
+                <LoginInput
+                  class="w-72"
+                  inputType="password"
+                  :isPasswordVisible="!!isPasswordVisible[field.param]"
+                  :isDisabled="false"
+                  :isError="!!isPasswordMismatch[field.param]"
+                  :name="field.param"
+                  placeholder=""
+                  autocomplete="new-password"
+                  :hasFocusOffset="false"
+                  @change="field.value = $event"
+                  @focus="isPasswordFocus[field.param] = true"
+                  @blur="isPasswordFocus[field.param] = false"
+                />
+                <button
+                  type="button"
+                  class="absolute bottom-0 right-3 top-0 my-auto z-[3] w-[1.125rem] h-[1.125rem]"
+                  @click="
+                    () => {
+                      isPasswordVisible[field.param] = !isPasswordVisible[field.param];
+                    }
+                  "
                 >
-                  <span
-                    v-html="isPasswordVisible[field.param] ? openEye : closedEye"
-                    :key="isPasswordVisible[field.param] ? 'openEye' : 'closedEye'"
-                    class="w-[1.125rem] h-[1.125rem] block group/icon"
-                    :class="{
-                      on: isPasswordFocus[field.param] && !isPasswordMismatch[field.param],
-                      error: isPasswordMismatch[field.param],
-                    }"
-                  ></span>
+                  <Transition
+                    mode="out-in"
+                    name="scale-y-150"
+                  >
+                    <span
+                      v-html="isPasswordVisible[field.param] ? openEye : closedEye"
+                      :key="isPasswordVisible[field.param] ? 'openEye' : 'closedEye'"
+                      class="w-[1.125rem] h-[1.125rem] block group/icon"
+                      :class="{
+                        on: isPasswordFocus[field.param] && !isPasswordMismatch[field.param],
+                        error: isPasswordMismatch[field.param],
+                      }"
+                    ></span>
+                  </Transition>
+                </button>
+                <Transition name="fade-150">
+                  <div
+                    class="absolute left-full ml-3 top-0 bottom-0 whitespace-nowrap my-auto flex items-center text-[#f83068]"
+                    v-if="isPasswordMismatch[field.param]"
+                  >
+                    Password mismatch
+                  </div>
                 </Transition>
-              </button>
-              <Transition name="fade-150">
-                <div
-                  class="absolute left-full ml-3 top-0 bottom-0 whitespace-nowrap my-auto flex items-center text-[#f83068]"
-                  v-if="isPasswordMismatch[field.param]"
-                >
-                  Password mismatch
-                </div>
-              </Transition>
+              </div>
+              <UiInput
+                v-else
+                :init="
+                  field.type === 'string'
+                    ? { valueType: 'string', value: field.value as string }
+                    : { valueType: 'number', value: field.value as number }
+                "
+                class="table-cell"
+                :class="[field.widthClass]"
+                :validation-type="field.validationType"
+                :status="field.status"
+                @valueChanged="field.value = $event.value"
+                @statusChanged="field.status = $event"
+              />
+              <span
+                class="text-[#4b7ca8] text-sm leading-[1.143] ml-3"
+                v-if="topic === 'rtc' && field.param === 'interval'"
+              >
+                {{ t('ms') }}
+              </span>
             </div>
-            <UiInput
-              v-else
-              :init="
-                field.type === 'string'
-                  ? { valueType: 'string', value: field.value as string }
-                  : { valueType: 'number', value: field.value as number }
-              "
-              class="table-cell"
-              :class="[field.widthClass]"
-              @valueChanged="field.value = $event.value"
-            />
-            <span
-              class="text-[#4b7ca8] text-sm leading-[1.143] ml-3"
-              v-if="topic === 'rtc' && field.param === 'interval'"
-            >
-              {{ t('minutes') }}
-            </span>
           </div>
         </div>
       </div>
+    </div>
+    <div
+      class="h-[3.625rem] flex flex-row justify-end items-center border-t-2 border-[#0b3d68] pr-8"
+    >
+      <SaveButton
+        :isSaving="isSaving"
+        :is-disabled="
+          isEmpty(wasChanged) || haveErrors || Object.values(isPasswordMismatch).find((m) => m)
+        "
+        @click="save"
+      />
     </div>
   </div>
 </template>
 
 <script lang="ts" setup>
-import { type ControllerSettings } from '@/typings/settings';
+import { type ControllerSettings, type TempUnit } from '@/typings/settings';
 import ButtonGroup from '@/components/Ui/ButtonGroup.vue';
 import UiInput from '@/components/Ui/UiInput.vue';
-import { type IsStringLiteral } from 'type-fest';
+import { type IsStringLiteral, type PartialDeep } from 'type-fest';
 import LoginInput from '@/components/Ui/LoginInput.vue';
 import openEye from '@/assets/img/open-eye.svg?raw';
 import closedEye from '@/assets/img/closed-eye.svg?raw';
 import DropDown from '@/components/Ui/DropDown.vue';
 import { DateTime } from 'luxon';
+import SaveButton from '@/components/Ui/SaveButton.vue';
+import { cloneDeep, isEmpty, set } from 'lodash';
+import type { InputFieldStatus } from '@/typings/common';
 
 type CommonControllerSettings = Pick<ControllerSettings, 'lan' | 'cloud' | 'rtc'> & {
   'root-login': Pick<ControllerSettings['login'], 'root-name' | 'root-pass'> & {
@@ -195,6 +213,8 @@ type Fields = {
       ? {
           type: 'string' | 'number' | 'password';
           widthClass: string;
+          status: InputFieldStatus;
+          validationType?: ('ip' | 'url')[] | ['int'];
         }
       : {
           type: 'btn-group';
@@ -209,6 +229,8 @@ const indexStore = useIndexStore();
 
 const { controllerDateTime, lang } = storeToRefs(indexStore);
 
+const { toast } = useToast();
+
 const isPasswordVisible = ref<Record<string, boolean>>({});
 
 const isPasswordFocus = ref<Record<string, boolean>>({});
@@ -220,17 +242,40 @@ const isPasswordMismatch = computed<Record<string, boolean>>(() => ({
     fields.value?.['user-login'][2][0].value !== fields.value?.['user-login'][1][0].value,
 }));
 
-const settingsInit = ref<ControllerSettings>();
-
 const fields = ref<Fields | undefined>();
+
+const fieldsInit = ref<Fields | undefined>();
+
+// const fieldsInitValues = computed(() =>
+//   (Object.keys(fieldsInit.value || {}) as (keyof CommonControllerSettings)[]).reduce(
+//     (acc, topic) => {
+//       return {
+//         ...acc,
+//         [topic]: flatten(fieldsInit.value?.[topic]||[])
+//       }
+//     },
+//     {} as PartialDeep<ControllerSettings>,
+//   ),
+// );
+
+const wasChanged = ref<{
+  settings?: PartialDeep<ControllerSettings>;
+  files?: { showFunctionsCount?: number; tempUnit?: TempUnit; lang?: 'ru' | 'en' };
+}>({});
+
+const haveErrors = ref(false);
+
+const isSaving = ref(false);
 
 const timeZones = computed(() => {
   const t = controllerDateTime.value;
-  const settings = settingsInit.value;
-  if (!t || !settings) return [];
+  const tzInit = fieldsInit.value?.rtc
+    .find((f) => f.find((p) => p.param === 'time-zone'))
+    ?.find((p) => p.param === 'time-zone')?.value as number;
+  if (!t || !tzInit) return [];
   return [...new Array(26)].map((_, i) => {
     const dt = DateTime.fromFormat(`${t.hour}:${t.min}:${t.sec}`, 'H:m:s').plus({
-      hours: i - 12 - settings.rtc['time-zone'],
+      hours: i - 12 - tzInit,
     });
     const time = dt.toFormat(lang.value === 'ru' ? 'HH:mm' : 'hh:mm');
     const meridiem = lang.value === 'en' ? dt.toFormat('a') : '';
@@ -241,6 +286,60 @@ const timeZones = computed(() => {
     };
   });
 });
+
+function getChangesAndErrors() {
+  const changes: {
+    settings?: PartialDeep<ControllerSettings>;
+    files?: { showFunctionsCount?: number; tempUnit?: TempUnit; lang?: 'ru' | 'en' };
+  } = {};
+  let isErrors = false;
+  const currentFields = fields.value;
+  const init = fieldsInit.value;
+  if (init && currentFields) {
+    (Object.keys(currentFields) as (keyof CommonControllerSettings)[]).forEach((topic) => {
+      currentFields[topic].forEach((row, rowIndex) =>
+        row.forEach((param, paramIndex) => {
+          if (/^(root|user)-pass$/.test(param.param) && param.value) {
+            set(changes, ['settings', 'login', param.param], md5(param.value));
+          } else if (
+            !/^(root|user)-pass-repeat$/.test(param.param) &&
+            param.value !== init[topic][rowIndex][paramIndex].value
+          ) {
+            if (/^(root|user)-name$/.test(param.param)) {
+              set(changes, ['settings', 'login', param.param], param.value);
+            } else {
+              set(changes, ['settings', topic, param.param], param.value);
+            }
+          }
+          if (!isErrors && param.type !== 'btn-group') {
+            isErrors = param.status === 'invalid' || param.status === 'not-allowed';
+          }
+        }),
+      );
+    });
+    if (changes.settings?.login?.['root-pass'] && !changes.settings.login['root-name']) {
+      set(
+        changes,
+        ['settings', 'login', 'root-name'],
+        init['root-login']
+          .find((row) => row.find((p) => p.param === 'root-name'))
+          ?.find((p) => p.param === 'root-name')?.value,
+      );
+    }
+  }
+  return { changes, isErrors };
+}
+
+watchThrottled(
+  [fields, fieldsInit],
+  () => {
+    const changesAndErrors = getChangesAndErrors();
+    wasChanged.value = changesAndErrors.changes;
+    haveErrors.value = changesAndErrors.isErrors;
+    // console.log(wasChanged.value);
+  },
+  { throttle: 300, deep: true },
+);
 
 function setFields(settings: ControllerSettings) {
   fields.value = {
@@ -261,6 +360,8 @@ function setFields(settings: ControllerSettings) {
           orientation: 'v',
           value: settings.lan['ip-addr'],
           widthClass: 'w-[14.25rem]',
+          status: 'valid',
+          validationType: ['ip'],
         },
         {
           param: 'ip-mask',
@@ -268,6 +369,8 @@ function setFields(settings: ControllerSettings) {
           orientation: 'v',
           value: settings.lan['ip-mask'],
           widthClass: 'w-[14.25rem]',
+          status: 'valid',
+          validationType: ['ip'],
         },
         {
           param: 'ip-gate',
@@ -275,13 +378,17 @@ function setFields(settings: ControllerSettings) {
           orientation: 'v',
           value: settings.lan['ip-gate'],
           widthClass: 'w-[14.25rem]',
+          status: 'valid',
+          validationType: ['ip'],
         },
         {
           param: 'serv-port',
-          type: 'string',
+          type: 'number',
           orientation: 'v',
           value: settings.lan['serv-port'],
           widthClass: 'w-[4.875rem]',
+          status: 'valid',
+          validationType: ['int'],
         },
       ],
     ],
@@ -302,6 +409,8 @@ function setFields(settings: ControllerSettings) {
           orientation: 'v',
           value: settings.cloud['main-url'],
           widthClass: 'w-[14.25rem]',
+          status: 'valid',
+          validationType: ['ip', 'url'],
         },
         {
           param: 'main-port',
@@ -309,6 +418,8 @@ function setFields(settings: ControllerSettings) {
           orientation: 'v',
           value: settings.cloud['main-port'],
           widthClass: 'w-[4.875rem]',
+          status: 'valid',
+          validationType: ['int'],
         },
         {
           param: 'interval',
@@ -316,6 +427,8 @@ function setFields(settings: ControllerSettings) {
           orientation: 'v',
           value: settings.cloud.interval,
           widthClass: 'w-[6.438rem]',
+          status: 'valid',
+          validationType: ['int'],
         },
       ],
     ],
@@ -336,6 +449,7 @@ function setFields(settings: ControllerSettings) {
           orientation: 'h',
           value: settings.rtc['time-zone'],
           widthClass: '',
+          status: 'valid',
         },
       ],
       [
@@ -345,6 +459,8 @@ function setFields(settings: ControllerSettings) {
           orientation: 'h',
           value: settings.rtc['ntp1-url'],
           widthClass: 'w-[14.25rem]',
+          status: 'valid',
+          validationType: ['ip', 'url'],
         },
       ],
       [
@@ -354,6 +470,8 @@ function setFields(settings: ControllerSettings) {
           orientation: 'h',
           value: settings.rtc.interval,
           widthClass: 'w-[3.563rem]',
+          status: 'valid',
+          validationType: ['int'],
         },
       ],
     ],
@@ -365,6 +483,7 @@ function setFields(settings: ControllerSettings) {
           orientation: 'v',
           value: settings.login['root-name'],
           widthClass: 'w-[17.938rem]',
+          status: 'valid',
         },
       ],
       [
@@ -374,6 +493,7 @@ function setFields(settings: ControllerSettings) {
           orientation: 'v',
           value: '',
           widthClass: 'w-[17.938rem]',
+          status: 'valid',
         },
       ],
       [
@@ -383,6 +503,7 @@ function setFields(settings: ControllerSettings) {
           orientation: 'v',
           value: '',
           widthClass: 'w-[17.938rem]',
+          status: 'valid',
         },
       ],
     ],
@@ -394,6 +515,7 @@ function setFields(settings: ControllerSettings) {
           orientation: 'v',
           value: settings.login['user-name'],
           widthClass: 'w-[17.938rem]',
+          status: 'valid',
         },
       ],
       [
@@ -403,6 +525,7 @@ function setFields(settings: ControllerSettings) {
           orientation: 'v',
           value: '',
           widthClass: 'w-[17.938rem]',
+          status: 'valid',
         },
       ],
       [
@@ -412,10 +535,51 @@ function setFields(settings: ControllerSettings) {
           orientation: 'v',
           value: '',
           widthClass: 'w-[17.938rem]',
+          status: 'valid',
         },
       ],
     ],
   };
+  fieldsInit.value = cloneDeep(fields.value);
+}
+
+async function save() {
+  isSaving.value = true;
+  try {
+    await api.post('set_config', wasChanged.value.settings);
+    const newIp = wasChanged.value.settings?.lan?.['ip-addr'];
+    const newPort = wasChanged.value.settings?.lan?.['serv-port'];
+    if (newIp || newPort) {
+      const initIp = fieldsInit.value?.lan
+        .find((row) => row.find((p) => p.param === 'ip-addr'))
+        ?.find((p) => p.param === 'ip-addr')?.value as string;
+      const initPort = fieldsInit.value?.lan
+        .find((row) => row.find((p) => p.param === 'serv-port'))
+        ?.find((p) => p.param === 'serv-port')?.value as number;
+      window.location.host = `${newIp || initIp}:${newPort || initPort}`;
+      return;
+    }
+    const newFieldsInit = cloneDeep(fields.value);
+    (['root-login', 'user-login'] as (keyof CommonControllerSettings)[]).forEach((topic) => {
+      newFieldsInit?.[topic].find((row) =>
+        row.forEach((p) => {
+          if (
+            p.param === 'root-pass' ||
+            p.param === 'root-pass-repeat' ||
+            p.param === 'user-pass' ||
+            p.param === 'user-pass-repeat'
+          ) {
+            p.value = '';
+          }
+        }),
+      );
+      fieldsInit.value = newFieldsInit;
+    });
+  } catch (error) {
+    toast.error(t('toast.error.header'), t('toast.error.text'));
+    console.log(error);
+  }
+  isSaving.value = false;
 }
 
 const { t } = useI18n({
@@ -518,6 +682,14 @@ const { t } = useI18n({
         },
       },
       minutes: 'minutes',
+      ms: 'ms',
+      toast: {
+        success: 'Saved',
+        error: {
+          header: 'Error',
+          text: 'Check entered values',
+        },
+      },
     },
     ru: {
       lan: {
@@ -617,6 +789,14 @@ const { t } = useI18n({
         },
       },
       minutes: 'минут',
+      ms: 'мс',
+      toast: {
+        success: 'Сохранено',
+        error: {
+          header: 'Ошибка',
+          text: 'Проверьте введённые значения',
+        },
+      },
     },
   },
 });
@@ -626,7 +806,6 @@ onMounted(async () => {
   try {
     const r = await api.get('get_config');
     setFields(r.data);
-    settingsInit.value = r.data;
   } catch (error) {
     //
   }
