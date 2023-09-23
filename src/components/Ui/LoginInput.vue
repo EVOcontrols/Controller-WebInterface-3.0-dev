@@ -1,7 +1,7 @@
 <template>
   <div class="relative">
     <input
-      :type="inputType === 'login' ? 'text' : 'password'"
+      :type="inputType === 'login' || isInputFocus ? 'text' : 'password'"
       autocorrect="off"
       autocapitalize="off"
       aria-invalid="false"
@@ -32,10 +32,15 @@
           focus: isInputFocus,
           [errorPadding]: isError,
           '!pl-5': isInputFocus && hasFocusOffset,
+          '!pr-10': inputType === 'password',
         },
       ]"
-      v-html="visibleValue"
-    />
+    >
+      <div
+        v-html="visibleValue"
+        class="w-full overflow-hidden whitespace-nowrap"
+      ></div>
+    </div>
     <div
       class="z-1 absolute left-0 top-0 h-full w-full pl-4 text-sm font-medium leading-10 transition-all duration-300"
       :class="[
