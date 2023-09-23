@@ -180,12 +180,7 @@
     >
       <SaveButton
         :isSaving="isSaving"
-        :is-disabled="
-          isEmpty(changesAndErrors.changes.settings) ||
-          changesAndErrors.isErrors ||
-          Object.values(isPasswordMismatch).find((m) => m) ||
-          Object.values(isPasswordMissed).find((m) => m)
-        "
+        :is-disabled="isSaveButtonDisabled"
         @click="save"
       />
     </div>
@@ -215,6 +210,8 @@ type CommonControllerSettings = Pick<ControllerSettings, 'lan' | 'cloud' | 'rtc'
   };
 };
 
+type PasswordFieldName = `${'root' | 'user'}-pass${'-repeat' | ''}`;
+
 type Fields = {
   [P in keyof CommonControllerSettings]: {
     [P2 in keyof CommonControllerSettings[P]]: {
@@ -222,8 +219,13 @@ type Fields = {
       param: P2;
       value: CommonControllerSettings[P][P2] | undefined;
     } & (IsStringLiteral<CommonControllerSettings[P][P2]> extends false
-      ? {
-          type: 'string' | 'number' | 'password';
+      ? (P2 extends PasswordFieldName
+          ? {
+              type: 'password';
+            }
+          : {
+              type: 'string' | 'number';
+            }) & {
           widthClass: string;
           status: InputFieldStatus;
           validationType?: ('ip' | 'url')[] | ['int'];
@@ -253,14 +255,14 @@ const isPasswordVisible = ref<Record<string, boolean>>({});
 
 const isPasswordFocus = ref<Record<string, boolean>>({});
 
-const isPasswordMismatch = computed<Record<string, boolean>>(() => ({
+const isPasswordMismatch = computed<Partial<Record<PasswordFieldName, boolean>>>(() => ({
   'root-pass-repeat':
     fields.value?.['root-login'][2][0].value !== fields.value?.['root-login'][1][0].value,
   'user-pass-repeat':
     fields.value?.['user-login'][2][0].value !== fields.value?.['user-login'][1][0].value,
 }));
 
-const isPasswordMissed = computed<Record<string, boolean>>(() => ({
+const isPasswordMissed = computed<Partial<Record<PasswordFieldName, boolean>>>(() => ({
   'root-pass':
     !!changesAndErrors.value.changes.settings?.login?.['root-name'] &&
     !changesAndErrors.value.changes.settings?.login?.['root-pass'],
@@ -268,6 +270,16 @@ const isPasswordMissed = computed<Record<string, boolean>>(() => ({
     !!changesAndErrors.value.changes.settings?.login?.['user-name'] &&
     !changesAndErrors.value.changes.settings?.login?.['user-pass'],
 }));
+
+const isSaveButtonDisabled = computed(
+  () =>
+    isEmpty(changesAndErrors.value.changes.settings) ||
+    changesAndErrors.value.isErrors ||
+    isPasswordMismatch.value['root-pass-repeat'] ||
+    isPasswordMismatch.value['user-pass-repeat'] ||
+    isPasswordMissed.value['root-pass'] ||
+    isPasswordMissed.value['user-pass'],
+);
 
 const fields = ref<Fields | undefined>();
 
@@ -305,11 +317,11 @@ const changesAndErrors = computed(() => {
   const init = fieldsInit.value;
   if (init && currentFields) {
     (Object.keys(currentFields) as (keyof CommonControllerSettings)[]).forEach((topic) => {
-      if (isErrors) return;
+      // if (isErrors) return;
       currentFields[topic].forEach((row, rowIndex) => {
-        if (isErrors) return;
+        // if (isErrors) return;
         row.forEach((param, paramIndex) => {
-          if (isErrors) return;
+          // if (isErrors) return;
           if (/^(root|user)-pass$/.test(param.param) && param.value) {
             set(changes, ['settings', 'login', param.param], md5(param.value));
           } else if (
