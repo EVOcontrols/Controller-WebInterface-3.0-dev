@@ -131,45 +131,65 @@
                     ></span>
                   </Transition>
                 </button>
-                <Transition name="fade-150">
-                  <div
-                    class="absolute left-full ml-3 top-0 bottom-0 whitespace-nowrap my-auto flex items-center text-[#f83068]"
-                    v-if="isPasswordMismatch[field.param]"
-                  >
-                    {{ t('errors.password.mismatch') }}
-                  </div>
-                  <div
-                    class="absolute left-full ml-3 top-0 bottom-0 whitespace-nowrap my-auto flex items-center text-[#f83068]"
-                    v-else-if="isPasswordMissed[field.param]"
-                  >
-                    {{ t('errors.password.required') }}
-                  </div>
-                </Transition>
+                <div
+                  class="absolute left-full ml-3 top-0 bottom-0 whitespace-nowrap my-auto flex items-center text-[#f83068] opacity-0 invisible transition-[opacity,visibility]"
+                  :class="{
+                    '!opacity-100 !visible': isPasswordMismatch[field.param],
+                  }"
+                >
+                  {{ t('errors.password.mismatch') }}
+                </div>
+                <div
+                  class="absolute left-full ml-3 top-0 bottom-0 whitespace-nowrap my-auto flex items-center text-[#f83068] opacity-0 invisible transition-[opacity,visibility]"
+                  :class="{
+                    '!opacity-100 !visible': isPasswordMissed[field.param],
+                  }"
+                >
+                  {{ t('errors.password.required') }}
+                </div>
               </div>
-              <UiInput
-                v-else
-                :init-type="field.type"
-                :init-value="field.value"
-                class="table-cell"
-                :class="[field.widthClass]"
-                :input-type="field.validationType"
-                :status="field.status"
-                :required="
-                  field.isRequired ||
-                  (field.param === 'root-name' &&
-                    !!changesAndErrors.changes.settings?.login?.['root-pass']) ||
-                  (field.param === 'user-name' &&
-                    !!changesAndErrors.changes.settings?.login?.['user-pass'])
-                "
-                @valueChanged="field.value = $event"
-                @statusChanged="field.status = $event"
-              />
-              <span
-                class="text-[#4b7ca8] text-sm leading-[1.143] ml-3"
-                v-if="topic === 'rtc' && field.param === 'interval'"
-              >
-                {{ t('ms') }}
-              </span>
+              <div v-else>
+                <UiInput
+                  :init-type="field.type"
+                  :init-value="field.value"
+                  class="table-cell"
+                  :class="[field.widthClass]"
+                  :input-type="field.validationType"
+                  :status="field.status"
+                  :required="
+                    field.isRequired ||
+                    (field.param === 'root-name' &&
+                      !!changesAndErrors.changes.settings?.login?.['root-pass']) ||
+                    (field.param === 'user-name' &&
+                      !!changesAndErrors.changes.settings?.login?.['user-pass'])
+                  "
+                  @valueChanged="field.value = $event"
+                  @statusChanged="field.status = $event"
+                />
+                <span
+                  class="text-[#4b7ca8] text-sm leading-[1.143] ml-3"
+                  v-if="topic === 'rtc' && field.param === 'interval'"
+                >
+                  {{ t('ms') }}
+                </span>
+                <span
+                  class="ml-3 text-sm text-[#f83068] opacity-0 invisible transition-[opacity,visibility]"
+                  v-if="
+                    isKeyOf(isUsernameMissed, field.param) || isKeyOf(isUsernameShort, field.param)
+                  "
+                  :class="{
+                    '!opacity-100 !visible':
+                      (isKeyOf(isUsernameMissed, field.param) && isUsernameMissed[field.param]) ||
+                      (isKeyOf(isUsernameShort, field.param) && isUsernameShort[field.param]),
+                  }"
+                >
+                  {{
+                    isKeyOf(isUsernameMissed, field.param) && isUsernameMissed[field.param]
+                      ? t('errors.login.required')
+                      : t('errors.login.minLength')
+                  }}
+                </span>
+              </div>
             </div>
           </div>
         </div>
@@ -271,6 +291,30 @@ const isPasswordMissed = computed<Partial<Record<PasswordFieldName, boolean>>>((
     !changesAndErrors.value.changes.settings?.login?.['user-pass'],
 }));
 
+const isUsernameMissed = computed(() => ({
+  'root-name':
+    !fields.value?.['root-login'][0][0].value &&
+    !!changesAndErrors.value.changes.settings?.login?.['root-pass'],
+  'user-name':
+    !fields.value?.['user-login'][0][0].value &&
+    !!changesAndErrors.value.changes.settings?.login?.['user-pass'],
+}));
+
+const isUsernameShort = computed(() => {
+  const rootName = fields.value?.['root-login'][0][0].value;
+  const userName = fields.value?.['user-login'][0][0].value;
+  return {
+    'root-name':
+      rootName &&
+      !!changesAndErrors.value.changes.settings?.login?.['root-pass'] &&
+      rootName.length < 6,
+    'user-name':
+      userName &&
+      !!changesAndErrors.value.changes.settings?.login?.['user-pass'] &&
+      userName.length < 6,
+  };
+});
+
 const isSaveButtonDisabled = computed(
   () =>
     isEmpty(changesAndErrors.value.changes.settings) ||
@@ -322,8 +366,10 @@ const changesAndErrors = computed(() => {
         // if (isErrors) return;
         row.forEach((param, paramIndex) => {
           // if (isErrors) return;
-          if (/^(root|user)-pass$/.test(param.param) && param.value) {
-            set(changes, ['settings', 'login', param.param], md5(param.value));
+          if (/^(root|user)-pass$/.test(param.param)) {
+            if (param.value) {
+              set(changes, ['settings', 'login', param.param], md5(param.value));
+            }
           } else if (
             !/^(root|user)-pass-repeat$/.test(param.param) &&
             param.value !== init[topic][rowIndex][paramIndex].value
@@ -346,14 +392,19 @@ const changesAndErrors = computed(() => {
         });
       });
     });
-    if (changes.settings?.login?.['root-pass'] && !changes.settings.login['root-name']) {
-      set(
-        changes,
-        ['settings', 'login', 'root-name'],
-        init['root-login']
-          .find((row) => row.find((p) => p.param === 'root-name'))
-          ?.find((p) => p.param === 'root-name')?.value,
-      );
+    if (
+      changes.settings?.login?.['root-pass'] &&
+      !changes.settings.login['root-name'] &&
+      fields.value?.['root-login'][0][0].value
+    ) {
+      set(changes, ['settings', 'login', 'root-name'], fields.value?.['root-login'][0][0].value);
+    }
+    if (
+      changes.settings?.login?.['user-pass'] &&
+      !changes.settings.login['user-name'] &&
+      fields.value?.['user-login'][0][0].value
+    ) {
+      set(changes, ['settings', 'login', 'user-name'], fields.value?.['user-login'][0][0].value);
     }
   }
   return { changes, isErrors };
@@ -589,9 +640,8 @@ async function save() {
       window.location.host = `${newIp || initIp}:${newPort || initPort}`;
       return;
     }
-    const newFieldsInit = cloneDeep(fields.value);
     (['root-login', 'user-login'] as (keyof CommonControllerSettings)[]).forEach((topic) => {
-      newFieldsInit?.[topic].find((row) =>
+      fields.value?.[topic].forEach((row) =>
         row.forEach((p) => {
           if (
             p.param === 'root-pass' ||
@@ -603,7 +653,7 @@ async function save() {
           }
         }),
       );
-      fieldsInit.value = newFieldsInit;
+      fieldsInit.value = cloneDeep(fields.value);
     });
   } catch (error) {
     toast.error(t('toast.error.header'), t('toast.error.text'));
@@ -714,6 +764,10 @@ const { t } = useI18n({
       minutes: 'minutes',
       ms: 'ms',
       errors: {
+        login: {
+          minLength: 'The minimum login length is 6 characters',
+          required: 'Login is required when changing password',
+        },
         password: {
           mismatch: 'Passwords do not match',
           required: 'Password is required when changing login',
@@ -827,6 +881,10 @@ const { t } = useI18n({
       minutes: 'минут',
       ms: 'мс',
       errors: {
+        login: {
+          minLength: 'Минимальная длина логина 6 символов',
+          required: 'Логин обязателен при смене пароля',
+        },
         password: {
           mismatch: 'Пароли не совпадают',
           required: 'Пароль обязателен при смене логина',
