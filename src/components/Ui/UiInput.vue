@@ -19,12 +19,17 @@
   />
 </template>
 
-<script setup lang="ts" generic="T extends InputFieldParams">
-import type { InputFieldParams, InputFieldStatus } from '@/typings/common';
+<script
+  setup
+  lang="ts"
+  generic="T extends 'string' | 'number', V extends T extends 'string' ? string : number"
+>
+import type { InputFieldStatus } from '@/typings/common';
 
 const props = withDefaults(
   defineProps<{
-    init: T;
+    initValue: V | undefined;
+    initType: T;
     status?: InputFieldStatus;
     minMax?: [number | undefined, number | undefined];
     required?: boolean;
@@ -42,14 +47,14 @@ const props = withDefaults(
 );
 
 const emit = defineEmits<{
-  (e: 'valueChanged', value: T): void;
+  (e: 'valueChanged', value: V): void;
   (e: 'statusChanged', status: InputFieldStatus): void;
 }>();
 
 // eslint-disable-next-line vue/no-setup-props-destructure
-let lastInitValue: any = props.init;
+let lastInitValue: any = props.initValue;
 
-const valueInit = ref<string>(props.init.value?.toString() || '');
+const valueInit = ref<string>(props.initValue?.toString() || '');
 
 function setStatus(status: InputFieldStatus) {
   emit('statusChanged', status);
@@ -77,7 +82,7 @@ function isFitValidationType(v: string) {
 function valueChangedHandler() {
   // console.log('valueChangedHandler');
   const v = valueInit.value;
-  if (props.init.valueType === 'string') {
+  if (props.initType === 'string') {
     if (props.notAllowedValues?.includes(v)) {
       setStatus('not-allowed');
       return;
@@ -88,11 +93,11 @@ function valueChangedHandler() {
     }
     if (props.required && !v) {
       setStatus('invalid');
-      emit('valueChanged', { ...props.init, value: '' } as T);
+      emit('valueChanged', '' as V);
       return;
     }
     lastInitValue = v;
-    emit('valueChanged', { ...props.init, value: v } as T);
+    emit('valueChanged', v as V);
   } else if (v) {
     const parsed = parseFloat(v.replace(/,/, '.'));
     if (isNaN(parsed)) {
@@ -116,7 +121,7 @@ function valueChangedHandler() {
       return;
     }
     lastInitValue = parsed;
-    emit('valueChanged', { ...props.init, value: parsed } as T);
+    emit('valueChanged', parsed as V);
   }
   setStatus(v ? 'valid' : 'empty');
 }
@@ -124,6 +129,7 @@ function valueChangedHandler() {
 watchDebounced(
   valueInit,
   () => {
+    // console.log('valueInit', valueInit.value);
     valueChangedHandler();
   },
   { immediate: true, debounce: 10 },
@@ -137,14 +143,13 @@ watchDebounced(
   { debounce: 10 },
 );
 
-watchDebounced(
-  () => props.init,
+watch(
+  () => props.initValue,
   () => {
-    if (props.init.value === lastInitValue) return;
-    lastInitValue = props.init.value;
-    valueInit.value = props.init.value?.toString() || '';
+    if (props.initValue === lastInitValue) return;
+    lastInitValue = props.initValue;
+    valueInit.value = props.initValue?.toString() || '';
   },
-  { debounce: 10 },
 );
 
 function onFocus(e: FocusEvent) {

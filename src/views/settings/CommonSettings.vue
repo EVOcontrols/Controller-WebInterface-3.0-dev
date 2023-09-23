@@ -19,8 +19,8 @@
             :class="[topic === 'rtc' ? 'table-row-group' : 'flex flex-row gap-x-3']"
           >
             <div
-              v-for="(field, param) in params"
-              :key="param"
+              v-for="field in params"
+              :key="field.param"
               class="text-[#6d9cc5] text-sm leading-[1.143]"
               :class="[
                 field.orientation === 'h'
@@ -34,12 +34,7 @@
               </span>
               <ButtonGroup
                 v-if="field.type === 'btn-group'"
-                :buttons="
-                  field.values.map((v) => ({
-                    text: t(`${topic}.fields.${field.param}.values.${v}`),
-                    value: v,
-                  }))
-                "
+                :buttons="field.values"
                 :value="field.value"
                 @change="field.value = $event"
               />
@@ -53,10 +48,10 @@
                     @click="onClick"
                   >
                     <span class="font-roboto text-[#8dc5f6]">
-                      {{ timeZones[field.value + 12]?.tz }}
+                      {{ timeZones[(field.value || 0) + 12]?.tz }}
                     </span>
                     <span class="font-roboto text-[#2b9bff] lowercase">
-                      {{ timeZones[field.value + 12]?.time }}
+                      {{ timeZones[(field.value || 0) + 12]?.time }}
                     </span>
                   </button>
                 </template>
@@ -146,21 +141,20 @@
               </div>
               <UiInput
                 v-else
-                :init="
-                  field.type === 'string'
-                    ? { valueType: 'string', value: field.value as string }
-                    : { valueType: 'number', value: field.value as number }
-                "
+                :init-type="field.type"
+                :init-value="field.value"
                 class="table-cell"
                 :class="[field.widthClass]"
                 :input-type="field.validationType"
                 :status="field.status"
                 :required="
                   field.isRequired ||
-                  (field.param === 'root-name' && !!wasChanged.settings?.login?.['root-pass']) ||
-                  (field.param === 'user-name' && !!wasChanged.settings?.login?.['user-pass'])
+                  (field.param === 'root-name' &&
+                    !!changesAndErrors.changes.settings?.login?.['root-pass']) ||
+                  (field.param === 'user-name' &&
+                    !!changesAndErrors.changes.settings?.login?.['user-pass'])
                 "
-                @valueChanged="field.value = $event.value"
+                @valueChanged="field.value = $event"
                 @statusChanged="field.status = $event"
               />
               <span
@@ -180,8 +174,8 @@
       <SaveButton
         :isSaving="isSaving"
         :is-disabled="
-          isEmpty(wasChanged) ||
-          haveErrors ||
+          isEmpty(changesAndErrors.changes.settings) ||
+          changesAndErrors.isErrors ||
           Object.values(isPasswordMismatch).find((m) => m) ||
           Object.values(isPasswordMissed).find((m) => m)
         "
@@ -219,7 +213,7 @@ type Fields = {
     [P2 in keyof CommonControllerSettings[P]]: {
       orientation: 'v' | 'h';
       param: P2;
-      value: CommonControllerSettings[P][P2];
+      value: CommonControllerSettings[P][P2] | undefined;
     } & (IsStringLiteral<CommonControllerSettings[P][P2]> extends false
       ? {
           type: 'string' | 'number' | 'password';
@@ -230,7 +224,12 @@ type Fields = {
         }
       : {
           type: 'btn-group';
-          values: Readonly<CommonControllerSettings[P][P2][]>;
+          values: Readonly<
+            {
+              text: string;
+              value: CommonControllerSettings[P][P2];
+            }[]
+          >;
         });
   }[keyof CommonControllerSettings[P]][][];
 };
@@ -256,23 +255,16 @@ const isPasswordMismatch = computed<Record<string, boolean>>(() => ({
 
 const isPasswordMissed = computed<Record<string, boolean>>(() => ({
   'root-pass':
-    !!wasChanged.value.settings?.login?.['root-name'] &&
-    !wasChanged.value.settings?.login?.['root-pass'],
+    !!changesAndErrors.value.changes.settings?.login?.['root-name'] &&
+    !changesAndErrors.value.changes.settings?.login?.['root-pass'],
   'user-pass':
-    !!wasChanged.value.settings?.login?.['user-name'] &&
-    !wasChanged.value.settings?.login?.['user-pass'],
+    !!changesAndErrors.value.changes.settings?.login?.['user-name'] &&
+    !changesAndErrors.value.changes.settings?.login?.['user-pass'],
 }));
 
 const fields = ref<Fields | undefined>();
 
 const fieldsInit = ref<Fields | undefined>();
-
-const wasChanged = ref<{
-  settings?: PartialDeep<ControllerSettings>;
-  files?: { showFunctionsCount?: number; tempUnit?: TempUnit; lang?: 'ru' | 'en' };
-}>({});
-
-const haveErrors = ref(false);
 
 const isSaving = ref(false);
 
@@ -296,7 +288,7 @@ const timeZones = computed(() => {
   });
 });
 
-function getChangesAndErrors() {
+const changesAndErrors = computed(() => {
   const changes: {
     settings?: PartialDeep<ControllerSettings>;
     files?: { showFunctionsCount?: number; tempUnit?: TempUnit; lang?: 'ru' | 'en' };
@@ -306,8 +298,11 @@ function getChangesAndErrors() {
   const init = fieldsInit.value;
   if (init && currentFields) {
     (Object.keys(currentFields) as (keyof CommonControllerSettings)[]).forEach((topic) => {
-      currentFields[topic].forEach((row, rowIndex) =>
+      if (isErrors) return;
+      currentFields[topic].forEach((row, rowIndex) => {
+        if (isErrors) return;
         row.forEach((param, paramIndex) => {
+          if (isErrors) return;
           if (/^(root|user)-pass$/.test(param.param) && param.value) {
             set(changes, ['settings', 'login', param.param], md5(param.value));
           } else if (
@@ -329,8 +324,8 @@ function getChangesAndErrors() {
           if (!isErrors && param.type !== 'btn-group') {
             isErrors = param.status === 'invalid' || param.status === 'not-allowed';
           }
-        }),
-      );
+        });
+      });
     });
     if (changes.settings?.login?.['root-pass'] && !changes.settings.login['root-name']) {
       set(
@@ -343,18 +338,7 @@ function getChangesAndErrors() {
     }
   }
   return { changes, isErrors };
-}
-
-watchDebounced(
-  [fields, fieldsInit],
-  () => {
-    const changesAndErrors = getChangesAndErrors();
-    wasChanged.value = changesAndErrors.changes;
-    haveErrors.value = changesAndErrors.isErrors;
-    // console.log(wasChanged.value);
-  },
-  { debounce: 10, deep: true },
-);
+});
 
 function setFields(settings: ControllerSettings) {
   fields.value = {
@@ -363,7 +347,10 @@ function setFields(settings: ControllerSettings) {
         {
           param: 'addr-mode',
           type: 'btn-group',
-          values: lanAddrModes,
+          values: lanAddrModes.map((v) => ({
+            text: t(`lan.fields.addr-mode.values.${v}`),
+            value: v,
+          })),
           orientation: 'h',
           value: settings.lan['addr-mode'],
         },
@@ -415,7 +402,10 @@ function setFields(settings: ControllerSettings) {
         {
           param: 'mode',
           type: 'btn-group',
-          values: cloudModes,
+          values: cloudModes.map((v) => ({
+            text: t(`cloud.fields.mode.values.${v}`),
+            value: v,
+          })),
           orientation: 'h',
           value: settings.cloud.mode,
         },
@@ -455,7 +445,10 @@ function setFields(settings: ControllerSettings) {
         {
           param: 'source',
           type: 'btn-group',
-          values: rtcSources,
+          values: rtcSources.map((v) => ({
+            text: t(`rtc.fields.source.values.${v}`),
+            value: v,
+          })),
           orientation: 'h',
           value: settings.rtc.source,
         },
@@ -564,9 +557,9 @@ function setFields(settings: ControllerSettings) {
 async function save() {
   isSaving.value = true;
   try {
-    await api.post('set_config', wasChanged.value.settings);
-    const newIp = wasChanged.value.settings?.lan?.['ip-addr'];
-    const newPort = wasChanged.value.settings?.lan?.['serv-port'];
+    await api.post('set_config', changesAndErrors.value.changes.settings);
+    const newIp = changesAndErrors.value.changes.settings?.lan?.['ip-addr'];
+    const newPort = changesAndErrors.value.changes.settings?.lan?.['serv-port'];
     if (newIp || newPort) {
       const initIp = fieldsInit.value?.lan
         .find((row) => row.find((p) => p.param === 'ip-addr'))

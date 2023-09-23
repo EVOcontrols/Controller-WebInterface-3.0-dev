@@ -15,11 +15,13 @@
 
 <script lang="ts" setup generic="T, U extends T">
 defineProps<{
-  buttons: {
-    text: string;
-    value: T;
-  }[];
-  value: U;
+  buttons: Readonly<
+    {
+      text: string;
+      value: T;
+    }[]
+  >;
+  value: U | undefined;
 }>();
 
 const emit = defineEmits<{
