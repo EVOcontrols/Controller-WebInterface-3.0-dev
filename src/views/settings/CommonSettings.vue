@@ -1,198 +1,205 @@
 <template>
   <div class="h-full flex flex-col">
-    <div class="flex flex-col flex-1 overflow-auto scrollbar-4">
-      <div
-        v-for="(rows, topic) in fields"
-        :key="topic"
-        class="mt-8 mx-8 flex flex-col gap-y-6 border-b border-[#0b3d68] last:border-none"
-        :class="[topic === 'rtc' ? 'pb-4' : 'pb-10']"
-      >
-        <h2 class="font-semibold text-xl leading-[1.2]">
-          {{ t(`${topic}.param`) }}
-        </h2>
+    <div class="flex flex-col flex-1 overflow-auto scrollbar-4 relative">
+      <div class="relative bg-[#08253d]">
         <div
-          :class="[topic === 'rtc' ? 'table w-max border-spacing-y-6' : 'flex flex-col gap-y-6']"
+          v-for="(rows, topic) in fields"
+          :key="topic"
+          class="mt-8 mx-8 flex flex-col gap-y-6 border-b border-[#0b3d68] last:border-none"
+          :class="[topic === 'rtc' ? 'pb-4' : 'pb-10']"
         >
+          <h2 class="font-semibold text-xl leading-[1.2]">
+            {{ t(`${topic}.param`) }}
+          </h2>
           <div
-            v-for="(params, rowIndex) in rows"
-            :key="rowIndex"
-            :class="[topic === 'rtc' ? 'table-row-group' : 'flex flex-row gap-x-3']"
+            :class="[topic === 'rtc' ? 'table w-max border-spacing-y-6' : 'flex flex-col gap-y-6']"
           >
             <div
-              v-for="field in params"
-              :key="field.param"
-              class="text-[#6d9cc5] text-sm leading-[1.143]"
-              :class="[
-                field.orientation === 'h'
-                  ? 'flex-row items-center gap-x-[0.875rem]'
-                  : 'flex-col items-start gap-y-1.5',
-                topic === 'rtc' ? 'table-row' : 'flex',
-              ]"
+              v-for="(params, rowIndex) in rows"
+              :key="rowIndex"
+              :class="[topic === 'rtc' ? 'table-row-group' : 'flex flex-row gap-x-3']"
             >
-              <span :class="[topic === 'rtc' ? 'table-cell pr-5 align-middle' : '']">
-                {{ t(`${topic}.fields.${field.param}.param`) }}
-              </span>
-              <ButtonGroup
-                v-if="field.type === 'btn-group'"
-                :buttons="field.values"
-                :value="field.value"
-                @change="field.value = $event"
-              />
-              <DropDown
-                v-else-if="field.param === 'time-zone'"
-                class="table-cell text-[0.813rem]"
+              <div
+                v-for="field in params"
+                :key="field.param"
+                class="text-[#6d9cc5] text-sm leading-[1.143]"
+                :class="[
+                  field.orientation === 'h'
+                    ? 'flex-row items-center gap-x-[0.875rem]'
+                    : 'flex-col items-start gap-y-1.5',
+                  topic === 'rtc' ? 'table-row' : 'flex',
+                ]"
               >
-                <template #trigger-element="{ onClick }">
-                  <button
-                    class="rounded-lg h-[2.438rem] w-[11.438rem] bg-[#0f304b] flex flex-row items-center justify-between pl-[0.875rem] pr-[2.125rem]"
-                    @click="onClick"
-                  >
-                    <span class="font-roboto text-[#8dc5f6]">
-                      {{ timeZones[(field.value || 0) + 12]?.tz }}
-                    </span>
-                    <span class="font-roboto text-[#2b9bff] lowercase">
-                      {{ timeZones[(field.value || 0) + 12]?.time }}
-                    </span>
-                  </button>
-                </template>
-                <template #body="{ isOpen, onSelect }">
-                  <div
-                    class="w-full rounded-lg bg-[#0f304b] flex flex-col py-[0.31rem]"
-                    v-if="isOpen"
-                  >
-                    <div class="max-h-[11.563rem] overflow-auto scrollbar-3 px-1.5">
-                      <div
-                        v-for="t in timeZones"
-                        :key="t.tz"
-                        class="flex flex-row justify-between h-[2.188rem] hover:bg-[#134d7d] shrink-0 items-center pl-2 pr-3 rounded hover:pl-3 transition-[background-color,padding] select-none cursor-pointer on:bg-[#134d7d]"
-                        :class="{ on: t.value === field.value }"
-                        @click="
-                          () => {
-                            field.value = t.value;
-                            onSelect();
-                          }
-                        "
-                      >
-                        <span class="font-roboto text-[#8dc5f6]">
-                          {{ t.tz }}
-                        </span>
-                        <span class="font-roboto text-[#2b9bff] lowercase">
-                          {{ t.time }}
-                        </span>
+                <span :class="[topic === 'rtc' ? 'table-cell pr-5 align-middle' : '']">
+                  {{ t(`${topic}.fields.${field.param}.param`) }}
+                </span>
+                <ButtonGroup
+                  v-if="field.type === 'btn-group'"
+                  :buttons="field.values"
+                  :value="field.value"
+                  @change="field.value = $event"
+                />
+                <DropDown
+                  v-else-if="field.param === 'time-zone'"
+                  class="table-cell text-[0.813rem]"
+                >
+                  <template #trigger-element="{ onClick }">
+                    <button
+                      class="rounded-lg h-[2.438rem] w-[11.438rem] bg-[#0f304b] flex flex-row items-center justify-between pl-[0.875rem] pr-[2.125rem]"
+                      @click="onClick"
+                    >
+                      <span class="font-roboto text-[#8dc5f6]">
+                        {{ timeZones[(field.value || 0) + 12]?.tz }}
+                      </span>
+                      <span class="font-roboto text-[#2b9bff] lowercase">
+                        {{ timeZones[(field.value || 0) + 12]?.time }}
+                      </span>
+                    </button>
+                  </template>
+                  <template #body="{ isOpen, onSelect }">
+                    <div
+                      class="w-full rounded-lg bg-[#0f304b] flex flex-col py-[0.31rem]"
+                      v-if="isOpen"
+                    >
+                      <div class="max-h-[11.563rem] overflow-auto scrollbar-3 px-1.5">
+                        <div
+                          v-for="t in timeZones"
+                          :key="t.tz"
+                          class="flex flex-row justify-between h-[2.188rem] hover:bg-[#134d7d] shrink-0 items-center pl-2 pr-3 rounded hover:pl-3 transition-[background-color,padding] select-none cursor-pointer on:bg-[#134d7d]"
+                          :class="{ on: t.value === field.value }"
+                          @click="
+                            () => {
+                              field.value = t.value;
+                              onSelect();
+                            }
+                          "
+                        >
+                          <span class="font-roboto text-[#8dc5f6]">
+                            {{ t.tz }}
+                          </span>
+                          <span class="font-roboto text-[#2b9bff] lowercase">
+                            {{ t.time }}
+                          </span>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                </template>
-              </DropDown>
-              <div
-                v-else-if="field.type === 'password'"
-                class="relative table-cell"
-                :class="[field.widthClass]"
-              >
-                <LoginInput
-                  class="w-72"
-                  inputType="password"
-                  :isPasswordVisible="!!isPasswordVisible[field.param]"
-                  :isDisabled="false"
-                  :isError="!!isPasswordMismatch[field.param] || !!isPasswordMissed[field.param]"
-                  :name="field.param"
-                  :init-value="field.value as string"
-                  placeholder=""
-                  autocomplete="new-password"
-                  :hasFocusOffset="false"
-                  @change="field.value = $event"
-                  @focus="isPasswordFocus[field.param] = true"
-                  @blur="isPasswordFocus[field.param] = false"
-                />
-                <button
-                  type="button"
-                  class="absolute bottom-0 right-3 top-0 my-auto z-[3] w-[1.125rem] h-[1.125rem]"
-                  @click="
-                    () => {
-                      isPasswordVisible[field.param] = !isPasswordVisible[field.param];
-                    }
-                  "
-                >
-                  <Transition
-                    mode="out-in"
-                    name="scale-y-150"
-                  >
-                    <span
-                      v-html="isPasswordVisible[field.param] ? openEye : closedEye"
-                      :key="isPasswordVisible[field.param] ? 'openEye' : 'closedEye'"
-                      class="w-[1.125rem] h-[1.125rem] block group/icon"
-                      :class="{
-                        on:
-                          isPasswordFocus[field.param] &&
-                          !isPasswordMismatch[field.param] &&
-                          !isPasswordMissed[field.param],
-                        error: isPasswordMismatch[field.param] || isPasswordMissed[field.param],
-                      }"
-                    ></span>
-                  </Transition>
-                </button>
+                  </template>
+                </DropDown>
                 <div
-                  class="absolute left-full ml-3 top-0 bottom-0 whitespace-nowrap my-auto flex items-center text-[#f83068] opacity-0 invisible transition-[opacity,visibility]"
-                  :class="{
-                    '!opacity-100 !visible': isPasswordMismatch[field.param],
-                  }"
-                >
-                  {{ t('errors.password.mismatch') }}
-                </div>
-                <div
-                  class="absolute left-full ml-3 top-0 bottom-0 whitespace-nowrap my-auto flex items-center text-[#f83068] opacity-0 invisible transition-[opacity,visibility]"
-                  :class="{
-                    '!opacity-100 !visible': isPasswordMissed[field.param],
-                  }"
-                >
-                  {{ t('errors.password.required') }}
-                </div>
-              </div>
-              <div v-else>
-                <UiInput
-                  :init-type="field.type"
-                  :init-value="field.value"
-                  class="table-cell"
+                  v-else-if="field.type === 'password'"
+                  class="relative table-cell"
                   :class="[field.widthClass]"
-                  :input-type="field.validationType"
-                  :status="field.status"
-                  :required="
-                    field.isRequired ||
-                    (field.param === 'root-name' &&
-                      !!changesAndErrors.changes.settings?.login?.['root-pass']) ||
-                    (field.param === 'user-name' &&
-                      !!changesAndErrors.changes.settings?.login?.['user-pass'])
-                  "
-                  @valueChanged="field.value = $event"
-                  @statusChanged="field.status = $event"
-                />
-                <span
-                  class="text-[#4b7ca8] text-sm leading-[1.143] ml-3"
-                  v-if="topic === 'rtc' && field.param === 'interval'"
                 >
-                  {{ t('ms') }}
-                </span>
-                <span
-                  class="ml-3 text-sm text-[#f83068] opacity-0 invisible transition-[opacity,visibility]"
-                  v-if="
-                    isKeyOf(isUsernameMissed, field.param) || isKeyOf(isUsernameShort, field.param)
-                  "
-                  :class="{
-                    '!opacity-100 !visible':
-                      (isKeyOf(isUsernameMissed, field.param) && isUsernameMissed[field.param]) ||
-                      (isKeyOf(isUsernameShort, field.param) && isUsernameShort[field.param]),
-                  }"
-                >
-                  {{
-                    isKeyOf(isUsernameMissed, field.param) && isUsernameMissed[field.param]
-                      ? t('errors.login.required')
-                      : t('errors.login.minLength')
-                  }}
-                </span>
+                  <LoginInput
+                    class="w-72"
+                    inputType="password"
+                    :isPasswordVisible="!!isPasswordVisible[field.param]"
+                    :isDisabled="false"
+                    :isError="!!isPasswordMismatch[field.param] || !!isPasswordMissed[field.param]"
+                    :name="field.param"
+                    :init-value="field.value as string"
+                    placeholder=""
+                    autocomplete="new-password"
+                    :hasFocusOffset="false"
+                    @change="field.value = $event"
+                    @focus="isPasswordFocus[field.param] = true"
+                    @blur="isPasswordFocus[field.param] = false"
+                  />
+                  <button
+                    type="button"
+                    class="absolute bottom-0 right-3 top-0 my-auto z-[3] w-[1.125rem] h-[1.125rem]"
+                    @click="
+                      () => {
+                        isPasswordVisible[field.param] = !isPasswordVisible[field.param];
+                      }
+                    "
+                  >
+                    <Transition
+                      mode="out-in"
+                      name="scale-y-150"
+                    >
+                      <span
+                        v-html="isPasswordVisible[field.param] ? openEye : closedEye"
+                        :key="isPasswordVisible[field.param] ? 'openEye' : 'closedEye'"
+                        class="w-[1.125rem] h-[1.125rem] block group/icon"
+                        :class="{
+                          on:
+                            isPasswordFocus[field.param] &&
+                            !isPasswordMismatch[field.param] &&
+                            !isPasswordMissed[field.param],
+                          error: isPasswordMismatch[field.param] || isPasswordMissed[field.param],
+                        }"
+                      ></span>
+                    </Transition>
+                  </button>
+                  <div
+                    class="absolute left-full ml-3 top-0 bottom-0 whitespace-nowrap my-auto flex items-center text-[#f83068] opacity-0 invisible transition-[opacity,visibility]"
+                    :class="{
+                      '!opacity-100 !visible': isPasswordMismatch[field.param],
+                    }"
+                  >
+                    {{ t('errors.password.mismatch') }}
+                  </div>
+                  <div
+                    class="absolute left-full ml-3 top-0 bottom-0 whitespace-nowrap my-auto flex items-center text-[#f83068] opacity-0 invisible transition-[opacity,visibility]"
+                    :class="{
+                      '!opacity-100 !visible': isPasswordMissed[field.param],
+                    }"
+                  >
+                    {{ t('errors.password.required') }}
+                  </div>
+                </div>
+                <div v-else>
+                  <UiInput
+                    :init-type="field.type"
+                    :init-value="field.value"
+                    class="table-cell"
+                    :class="[field.widthClass]"
+                    :input-type="field.validationType"
+                    :status="field.status"
+                    :required="
+                      field.isRequired ||
+                      (field.param === 'root-name' &&
+                        !!changesAndErrors.changes.settings?.login?.['root-pass']) ||
+                      (field.param === 'user-name' &&
+                        !!changesAndErrors.changes.settings?.login?.['user-pass'])
+                    "
+                    @valueChanged="field.value = $event"
+                    @statusChanged="field.status = $event"
+                  />
+                  <span
+                    class="text-[#4b7ca8] text-sm leading-[1.143] ml-3"
+                    v-if="topic === 'rtc' && field.param === 'interval'"
+                  >
+                    {{ t('ms') }}
+                  </span>
+                  <span
+                    class="ml-3 text-sm text-[#f83068] opacity-0 invisible transition-[opacity,visibility]"
+                    v-if="
+                      isKeyOf(isUsernameMissed, field.param) ||
+                      isKeyOf(isUsernameShort, field.param)
+                    "
+                    :class="{
+                      '!opacity-100 !visible':
+                        (isKeyOf(isUsernameMissed, field.param) && isUsernameMissed[field.param]) ||
+                        (isKeyOf(isUsernameShort, field.param) && isUsernameShort[field.param]),
+                    }"
+                  >
+                    {{
+                      isKeyOf(isUsernameMissed, field.param) && isUsernameMissed[field.param]
+                        ? t('errors.login.required')
+                        : t('errors.login.minLength')
+                    }}
+                  </span>
+                </div>
               </div>
             </div>
           </div>
         </div>
+        <div
+          class="absolute top-0 left-0 h-full w-full z-[3]"
+          v-if="isSaving"
+        ></div>
       </div>
     </div>
     <div
