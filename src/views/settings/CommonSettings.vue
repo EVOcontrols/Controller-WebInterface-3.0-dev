@@ -96,6 +96,7 @@
                   :isDisabled="false"
                   :isError="!!isPasswordMismatch[field.param] || !!isPasswordMissed[field.param]"
                   :name="field.param"
+                  :init-value="field.value as string"
                   placeholder=""
                   autocomplete="new-password"
                   :hasFocusOffset="false"
@@ -135,7 +136,13 @@
                     class="absolute left-full ml-3 top-0 bottom-0 whitespace-nowrap my-auto flex items-center text-[#f83068]"
                     v-if="isPasswordMismatch[field.param]"
                   >
-                    Password mismatch
+                    {{ t('errors.password.mismatch') }}
+                  </div>
+                  <div
+                    class="absolute left-full ml-3 top-0 bottom-0 whitespace-nowrap my-auto flex items-center text-[#f83068]"
+                    v-else-if="isPasswordMissed[field.param]"
+                  >
+                    {{ t('errors.password.required') }}
                   </div>
                 </Transition>
               </div>
@@ -694,6 +701,12 @@ const { t } = useI18n({
       },
       minutes: 'minutes',
       ms: 'ms',
+      errors: {
+        password: {
+          mismatch: 'Passwords do not match',
+          required: 'Password is required when changing login',
+        },
+      },
       toast: {
         success: 'Saved',
         error: {
@@ -801,6 +814,12 @@ const { t } = useI18n({
       },
       minutes: 'минут',
       ms: 'мс',
+      errors: {
+        password: {
+          mismatch: 'Пароли не совпадают',
+          required: 'Пароль обязателен при смене логина',
+        },
+      },
       toast: {
         success: 'Сохранено',
         error: {

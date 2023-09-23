@@ -47,7 +47,7 @@ const props = withDefaults(
 );
 
 const emit = defineEmits<{
-  (e: 'valueChanged', value: V): void;
+  (e: 'valueChanged', value: V | undefined): void;
   (e: 'statusChanged', status: InputFieldStatus): void;
 }>();
 
@@ -82,6 +82,11 @@ function isFitValidationType(v: string) {
 function valueChangedHandler() {
   // console.log('valueChangedHandler');
   const v = valueInit.value;
+  if (props.required && !v) {
+    setStatus('invalid');
+    emit('valueChanged', '' as V);
+    return;
+  }
   if (props.initType === 'string') {
     if (props.notAllowedValues?.includes(v)) {
       setStatus('not-allowed');
@@ -91,13 +96,9 @@ function valueChangedHandler() {
       setStatus('invalid');
       return;
     }
-    if (props.required && !v) {
-      setStatus('invalid');
-      emit('valueChanged', '' as V);
-      return;
-    }
     lastInitValue = v;
     emit('valueChanged', v as V);
+    // console.log('valid string', v, props.initType);
   } else if (v) {
     const parsed = parseFloat(v.replace(/,/, '.'));
     if (isNaN(parsed)) {
@@ -122,7 +123,11 @@ function valueChangedHandler() {
     }
     lastInitValue = parsed;
     emit('valueChanged', parsed as V);
+    // console.log('valid', v, props.initType, parsed);
+  } else {
+    emit('valueChanged', '' as V);
   }
+  // console.log('final', v, props.initType);
   setStatus(v ? 'valid' : 'empty');
 }
 

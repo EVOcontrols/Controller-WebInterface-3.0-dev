@@ -171,6 +171,7 @@ watch(isInputFocus, () => {
 });
 
 watch(value, () => {
+  // console.log(value.value, props.initValue);
   if (value.value === props.initValue) return;
   emit('change', value.value);
 });
