@@ -39,7 +39,7 @@ const props = withDefaults(
     notAllowedValues?: (number | string)[];
     placeholder?: string;
     disabled?: boolean;
-    inputType?: ('ip' | 'url')[] | ['int'];
+    inputType?: ('ip' | 'url')[] | ['int'] | ['latitude'] | ['longitude'];
   }>(),
   {
     autoSelect: false,
@@ -72,10 +72,29 @@ function isUrl(v: string) {
   );
 }
 
+function isLatitude(v: string) {
+  return /^-?([1-8]?[1-9]|[1-9]0)\.{1}\d{1,6}n?$/i.test(v);
+}
+
+function isLongitude(v: string) {
+  return /^-?([1]?[0-7]?[0-9]|[1]?[0-8]?[0]|[1]?[0-8]?[0]\.{1}\d{1,6})e?$/i.test(v);
+}
+
 function isFitValidationType(v: string) {
   if (!props.inputType) return true;
   return props.inputType.some((t) => {
-    return t === 'ip' ? isIp(v) : isUrl(v);
+    switch (t) {
+      case 'ip':
+        return isIp(v);
+      case 'url':
+        return isUrl(v);
+      case 'latitude':
+        return isLatitude(v);
+      case 'longitude':
+        return isLongitude(v);
+      default:
+        return true;
+    }
   });
 }
 

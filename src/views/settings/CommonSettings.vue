@@ -243,10 +243,15 @@
 </template>
 
 <script lang="ts" setup>
-import { type ControllerSettings } from '@/typings/settings';
+import type {
+  CommonControllerSettings,
+  CommonSettingsFields,
+  ControllerSettings,
+  PasswordFieldName,
+} from '@/typings/settings';
 import ButtonGroup from '@/components/Ui/ButtonGroup.vue';
 import UiInput from '@/components/Ui/UiInput.vue';
-import { type IsStringLiteral, type PartialDeep } from 'type-fest';
+import { type PartialDeep } from 'type-fest';
 import LoginInput from '@/components/Ui/LoginInput.vue';
 import openEye from '@/assets/img/open-eye.svg?raw';
 import closedEye from '@/assets/img/closed-eye.svg?raw';
@@ -254,61 +259,10 @@ import DropDown from '@/components/Ui/DropDown.vue';
 import { DateTime } from 'luxon';
 import SaveButton from '@/components/Ui/SaveButton.vue';
 import { cloneDeep, isEmpty, set } from 'lodash';
-import type { InputFieldStatus, Lang, TempUnit } from '@/typings/common';
+import type { Lang, TempUnit } from '@/typings/common';
 import type { FuncsNumberPerPage } from '@/typings/funcs';
 import celsius from '@/assets/img/settings/celsius.svg?raw';
 import fahrenheit from '@/assets/img/settings/fahrenheit.svg?raw';
-
-type CommonControllerSettings = Pick<ControllerSettings, 'lan' | 'cloud' | 'rtc'> & {
-  'root-login': Pick<ControllerSettings['login'], 'root-name' | 'root-pass'> & {
-    'root-pass-repeat': string;
-  };
-  'user-login': Pick<ControllerSettings['login'], 'user-name' | 'user-pass'> & {
-    'user-pass-repeat': string;
-  };
-  funcsNumberPerPage: {
-    funcsNumberPerPage: `${FuncsNumberPerPage}`;
-  };
-  tempUnit: {
-    tempUnit: TempUnit;
-  };
-  lang: {
-    lang: Lang;
-  };
-};
-
-type PasswordFieldName = `${'root' | 'user'}-pass${'-repeat' | ''}`;
-
-type Fields = {
-  [P in keyof CommonControllerSettings]: {
-    [P2 in keyof CommonControllerSettings[P]]: {
-      orientation: 'v' | 'h';
-      param: P2;
-      value: CommonControllerSettings[P][P2] | undefined;
-    } & (IsStringLiteral<CommonControllerSettings[P][P2]> extends false
-      ? (P2 extends PasswordFieldName
-          ? {
-              type: 'password';
-            }
-          : {
-              type: 'string' | 'number';
-            }) & {
-          widthClass: string;
-          status: InputFieldStatus;
-          validationType?: ('ip' | 'url')[] | ['int'];
-          isRequired?: boolean;
-        }
-      : {
-          type: 'btn-group';
-          values: Readonly<
-            {
-              text: string;
-              value: CommonControllerSettings[P][P2];
-            }[]
-          >;
-        });
-  }[keyof CommonControllerSettings[P]][][];
-};
 
 const { api } = useApi();
 
@@ -379,9 +333,9 @@ const isSaveButtonDisabled = computed(
     isPasswordMissed.value['user-pass'],
 );
 
-const fields = ref<Fields | undefined>();
+const fields = ref<CommonSettingsFields | undefined>();
 
-const fieldsInit = ref<Fields | undefined>();
+const fieldsInit = ref<CommonSettingsFields | undefined>();
 
 const isSaving = ref(false);
 
@@ -615,6 +569,26 @@ function setFields(settings: ControllerSettings) {
           widthClass: 'w-[3.563rem]',
           status: 'valid',
           validationType: ['int'],
+        },
+      ],
+    ],
+    gnss: [
+      [
+        {
+          param: 'latitude',
+          type: 'string',
+          orientation: 'v',
+          value: settings.gnss.latitude,
+          widthClass: 'w-[14.25rem]',
+          status: 'valid',
+        },
+        {
+          param: 'longitude',
+          type: 'string',
+          orientation: 'v',
+          value: settings.gnss.longitude,
+          widthClass: 'w-[14.25rem]',
+          status: 'valid',
         },
       ],
     ],
@@ -858,6 +832,17 @@ const { t } = useI18n({
           },
         },
       },
+      gnss: {
+        param: 'EVO NG location',
+        fields: {
+          latitude: {
+            param: 'Latitude',
+          },
+          longitude: {
+            param: 'Longitude',
+          },
+        },
+      },
       'root-login': {
         param: 'Editing the “Administrator” account',
         fields: {
@@ -986,6 +971,17 @@ const { t } = useI18n({
           },
           interval: {
             param: 'Обновление каждые',
+          },
+        },
+      },
+      gnss: {
+        param: 'Местоположение EVO NG',
+        fields: {
+          latitude: {
+            param: 'Широта',
+          },
+          longitude: {
+            param: 'Долгота',
           },
         },
       },

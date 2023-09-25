@@ -1,3 +1,6 @@
+import { FuncsNumberPerPage } from './funcs';
+import { TempUnit, Lang, InputFieldStatus } from './common';
+import { IsStringLiteral } from 'type-fest';
 export type ControllerSettings = {
   lan: {
     'addr-mode': (typeof lanAddrModes)[number];
@@ -17,6 +20,10 @@ export type ControllerSettings = {
     'ntp1-url': string;
     'time-zone': number;
     interval: number;
+  };
+  gnss: {
+    latitude: string;
+    longitude: string;
   };
   login: {
     'user-name': string;
@@ -64,3 +71,59 @@ export type ControllerSettings = {
     'min-delay': number;
   };
 };
+
+export type CommonControllerSettings = Pick<
+  ControllerSettings,
+  'lan' | 'cloud' | 'rtc' | 'gnss'
+> & {
+  'root-login': Pick<ControllerSettings['login'], 'root-name' | 'root-pass'> & {
+    'root-pass-repeat': string;
+  };
+  'user-login': Pick<ControllerSettings['login'], 'user-name' | 'user-pass'> & {
+    'user-pass-repeat': string;
+  };
+  funcsNumberPerPage: {
+    funcsNumberPerPage: `${FuncsNumberPerPage}`;
+  };
+  tempUnit: {
+    tempUnit: TempUnit;
+  };
+  lang: {
+    lang: Lang;
+  };
+};
+
+export type PasswordFieldName = `${'root' | 'user'}-pass${'-repeat' | ''}`;
+
+export type CommonSettingsFields = {
+  [P in keyof CommonControllerSettings]: {
+    [P2 in keyof CommonControllerSettings[P]]: {
+      orientation: 'v' | 'h';
+      param: P2;
+      value: CommonControllerSettings[P][P2] | undefined;
+    } & (IsStringLiteral<CommonControllerSettings[P][P2]> extends false
+      ? (P2 extends PasswordFieldName
+          ? {
+              type: 'password';
+            }
+          : {
+              type: 'string' | 'number';
+            }) & {
+          widthClass: string;
+          status: InputFieldStatus;
+          validationType?: ('ip' | 'url')[] | ['int'] | ['latitude'] | ['longitude'];
+          isRequired?: boolean;
+        }
+      : {
+          type: 'btn-group';
+          values: Readonly<
+            {
+              text: string;
+              value: CommonControllerSettings[P][P2];
+            }[]
+          >;
+        });
+  }[keyof CommonControllerSettings[P]][][];
+};
+
+export type DevicesSettings = Pick<ControllerSettings, '1-wire' | 'modbus'>;
