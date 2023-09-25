@@ -9,7 +9,7 @@ const app = createApp(App);
 
 const i18n = createI18n({
   legacy: false,
-  availableLocales: ['en', 'ru'],
+  availableLocales: langs,
 });
 
 app.use(createPinia());

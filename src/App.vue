@@ -1,13 +1,15 @@
 <template>
   <div class="w-full h-full overflow-hidden flex flex-col bg-[#10375A]">
-    <router-view v-slot="{ Component }">
-      <transition
-        name="fade-300"
-        mode="out-in"
-      >
-        <component :is="Component" />
-      </transition>
-    </router-view>
+    <Suspense>
+      <router-view v-slot="{ Component }">
+        <transition
+          name="fade-300"
+          mode="out-in"
+        >
+          <component :is="Component" />
+        </transition>
+      </router-view>
+    </Suspense>
     <ToastsContainer />
     <Transition
       mode="out-in"

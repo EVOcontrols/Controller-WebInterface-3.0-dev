@@ -1,5 +1,21 @@
 import { toastTypes } from '@/data/common';
 
+export type TwoDimensionalArray<T> = (T[] | undefined)[];
+
+export type ThreeDimensionalArray<T> = ((T[] | undefined)[] | undefined)[];
+
+export type IsAnyTrue<T extends boolean, U extends boolean> = T extends true
+  ? true
+  : U extends true
+  ? true
+  : false;
+
+export type Lang = (typeof langs)[number];
+
+export type UserRole = (typeof userRoles)[number];
+
+export type TempUnit = (typeof tempUnits)[number];
+
 export type ControllerDateTime = {
   hour: number;
   min: number;
@@ -29,3 +45,5 @@ export type InputFieldParams =
       valueType: 'number';
       value?: number;
     };
+
+export type NumberingSystem = (typeof numberingSystems)[number];

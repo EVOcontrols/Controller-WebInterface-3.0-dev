@@ -8,7 +8,7 @@
           class="mt-8 mx-8 flex flex-col gap-y-6 border-b border-[#0b3d68] last:border-none"
           :class="[topic === 'rtc' ? 'pb-4' : 'pb-10']"
         >
-          <h2 class="font-semibold text-xl leading-[1.2]">
+          <h2 class="font-semibold text-xl leading-[1.2] whitespace-pre">
             {{ t(`${topic}.param`) }}
           </h2>
           <div
@@ -30,11 +30,39 @@
                   topic === 'rtc' ? 'table-row' : 'flex',
                 ]"
               >
-                <span :class="[topic === 'rtc' ? 'table-cell pr-5 align-middle' : '']">
+                <span
+                  v-if="topic !== 'tempUnit' && topic !== 'lang'"
+                  :class="[topic === 'rtc' ? 'table-cell pr-5 align-middle' : '']"
+                >
                   {{ t(`${topic}.fields.${field.param}.param`) }}
                 </span>
+                <div v-if="topic === 'tempUnit'">
+                  <button
+                    v-for="unit in tempUnits"
+                    :key="unit"
+                    v-html="unit === '°C' ? celsius : fahrenheit"
+                    type="button"
+                    class="group mr-2.5"
+                    :class="{
+                      on: field.value === unit,
+                    }"
+                    @click="field.value = unit"
+                  ></button>
+                </div>
+                <div v-else-if="topic === 'lang' && field.type === 'btn-group'">
+                  <button
+                    v-for="l in field.values"
+                    :key="l.value"
+                    type="button"
+                    class="text-[#4a779e] text-sm leading-[1.143] tracking-[0.071em] hover:text-[#58b1ff] on:text-[#2b9bff] on:font-semibold transition-[color,font-weight] mr-3"
+                    :class="{ on: field.value === l.value }"
+                    @click="field.value = l.value"
+                  >
+                    {{ l.text }}
+                  </button>
+                </div>
                 <ButtonGroup
-                  v-if="field.type === 'btn-group'"
+                  v-else-if="field.type === 'btn-group'"
                   :buttons="field.values"
                   :value="field.value"
                   @change="field.value = $event"
@@ -215,7 +243,7 @@
 </template>
 
 <script lang="ts" setup>
-import { type ControllerSettings, type TempUnit } from '@/typings/settings';
+import { type ControllerSettings } from '@/typings/settings';
 import ButtonGroup from '@/components/Ui/ButtonGroup.vue';
 import UiInput from '@/components/Ui/UiInput.vue';
 import { type IsStringLiteral, type PartialDeep } from 'type-fest';
@@ -226,7 +254,10 @@ import DropDown from '@/components/Ui/DropDown.vue';
 import { DateTime } from 'luxon';
 import SaveButton from '@/components/Ui/SaveButton.vue';
 import { cloneDeep, isEmpty, set } from 'lodash';
-import type { InputFieldStatus } from '@/typings/common';
+import type { InputFieldStatus, Lang, TempUnit } from '@/typings/common';
+import type { FuncsNumberPerPage } from '@/typings/funcs';
+import celsius from '@/assets/img/settings/celsius.svg?raw';
+import fahrenheit from '@/assets/img/settings/fahrenheit.svg?raw';
 
 type CommonControllerSettings = Pick<ControllerSettings, 'lan' | 'cloud' | 'rtc'> & {
   'root-login': Pick<ControllerSettings['login'], 'root-name' | 'root-pass'> & {
@@ -234,6 +265,15 @@ type CommonControllerSettings = Pick<ControllerSettings, 'lan' | 'cloud' | 'rtc'
   };
   'user-login': Pick<ControllerSettings['login'], 'user-name' | 'user-pass'> & {
     'user-pass-repeat': string;
+  };
+  funcsNumberPerPage: {
+    funcsNumberPerPage: `${FuncsNumberPerPage}`;
+  };
+  tempUnit: {
+    tempUnit: TempUnit;
+  };
+  lang: {
+    lang: Lang;
   };
 };
 
@@ -274,9 +314,15 @@ const { api } = useApi();
 
 const indexStore = useIndexStore();
 
-const { controllerDateTime, lang } = storeToRefs(indexStore);
+const { controllerDateTime, lang, userRole, tempUnit } = storeToRefs(indexStore);
+
+const funcsStore = useFuncsStore();
+
+const { funcsNumberPerPage } = storeToRefs(funcsStore);
 
 const { toast } = useToast();
+
+const { saveToFile } = useReadWriteFiles();
 
 const isPasswordVisible = ref<Record<string, boolean>>({});
 
@@ -324,7 +370,8 @@ const isUsernameShort = computed(() => {
 
 const isSaveButtonDisabled = computed(
   () =>
-    isEmpty(changesAndErrors.value.changes.settings) ||
+    (isEmpty(changesAndErrors.value.changes.settings) &&
+      isEmpty(changesAndErrors.value.changes.files)) ||
     changesAndErrors.value.isErrors ||
     isPasswordMismatch.value['root-pass-repeat'] ||
     isPasswordMismatch.value['user-pass-repeat'] ||
@@ -361,7 +408,7 @@ const timeZones = computed(() => {
 const changesAndErrors = computed(() => {
   const changes: {
     settings?: PartialDeep<ControllerSettings>;
-    files?: { showFunctionsCount?: number; tempUnit?: TempUnit; lang?: 'ru' | 'en' };
+    files?: { funcsNumberPerPage?: `${FuncsNumberPerPage}`; tempUnit?: TempUnit; lang?: Lang };
   } = {};
   let isErrors = false;
   const currentFields = fields.value;
@@ -390,7 +437,15 @@ const changesAndErrors = computed(() => {
               param.type !== 'number' ||
               param.status !== 'empty'
             ) {
-              set(changes, ['settings', topic, param.param], param.value);
+              if (
+                (
+                  ['funcsNumberPerPage', 'tempUnit', 'lang'] as (keyof CommonControllerSettings)[]
+                ).includes(topic)
+              ) {
+                set(changes, ['files', param.param], param.value);
+              } else {
+                set(changes, ['settings', topic, param.param], param.value);
+              }
             }
           }
           if (!isErrors && param.type !== 'btn-group') {
@@ -627,25 +682,85 @@ function setFields(settings: ControllerSettings) {
         },
       ],
     ],
+    funcsNumberPerPage: [
+      [
+        {
+          param: 'funcsNumberPerPage',
+          type: 'btn-group',
+          orientation: 'h',
+          value: `${funcsNumberPerPage.value}`,
+          values: funcsNumbersPerPage.map((v) => ({
+            text: v.toString(),
+            value: `${v}`,
+          })),
+        },
+      ],
+    ],
+    tempUnit: [
+      [
+        {
+          param: 'tempUnit',
+          type: 'btn-group',
+          orientation: 'h',
+          value: tempUnit.value,
+          values: tempUnits.map((v) => ({
+            text: v,
+            value: v,
+          })),
+        },
+      ],
+    ],
+    lang: [
+      [
+        {
+          param: 'lang',
+          type: 'btn-group',
+          orientation: 'h',
+          value: lang.value,
+          values: langs.map((v) => ({
+            text: v === 'en' ? 'ENG' : 'РУС',
+            value: v,
+          })),
+        },
+      ],
+    ],
   };
   fieldsInit.value = cloneDeep(fields.value);
 }
 
 async function save() {
   isSaving.value = true;
+  const { changes } = changesAndErrors.value;
   try {
-    await api.post('set_config', changesAndErrors.value.changes.settings);
-    const newIp = changesAndErrors.value.changes.settings?.lan?.['ip-addr'];
-    const newPort = changesAndErrors.value.changes.settings?.lan?.['serv-port'];
-    if (newIp || newPort) {
-      const initIp = fieldsInit.value?.lan
-        .find((row) => row.find((p) => p.param === 'ip-addr'))
-        ?.find((p) => p.param === 'ip-addr')?.value as string;
-      const initPort = fieldsInit.value?.lan
-        .find((row) => row.find((p) => p.param === 'serv-port'))
-        ?.find((p) => p.param === 'serv-port')?.value as number;
-      window.location.host = `${newIp || initIp}:${newPort || initPort}`;
-      return;
+    if (changes.files) {
+      const isSavingFileError = await saveToFile(
+        { type: 'settings', subType: 'common', user: userRole.value },
+        {
+          funcsNumberPerPage: changes.files.funcsNumberPerPage
+            ? parseInt(changes.files.funcsNumberPerPage)
+            : funcsNumberPerPage.value,
+          tempUnit: changes.files.tempUnit || tempUnit.value,
+          lang: changes.files.lang || lang.value,
+        },
+      );
+      if (isSavingFileError) {
+        throw '';
+      }
+    }
+    if (changes.settings) {
+      await api.post('set_config', changes.settings);
+      const newIp = changes.settings?.lan?.['ip-addr'];
+      const newPort = changes.settings?.lan?.['serv-port'];
+      if (newIp || newPort) {
+        const initIp = fieldsInit.value?.lan
+          .find((row) => row.find((p) => p.param === 'ip-addr'))
+          ?.find((p) => p.param === 'ip-addr')?.value as string;
+        const initPort = fieldsInit.value?.lan
+          .find((row) => row.find((p) => p.param === 'serv-port'))
+          ?.find((p) => p.param === 'serv-port')?.value as number;
+        window.location.host = `${newIp || initIp}:${newPort || initPort}`;
+        return;
+      }
     }
     (['root-login', 'user-login'] as (keyof CommonControllerSettings)[]).forEach((topic) => {
       fields.value?.[topic].forEach((row) =>
@@ -661,6 +776,9 @@ async function save() {
         }),
       );
       fieldsInit.value = cloneDeep(fields.value);
+      if (changes.files?.lang) {
+        indexStore.setLang(changes.files.lang);
+      }
     });
   } catch (error) {
     toast.error(t('toast.error.header'), t('toast.error.text'));
@@ -767,6 +885,20 @@ const { t } = useI18n({
             param: 'Confirm password',
           },
         },
+      },
+      funcsNumberPerPage: {
+        param: 'The number of items in the list \non the “Functions” page',
+        fields: {
+          funcsNumberPerPage: {
+            param: 'Number of functions',
+          },
+        },
+      },
+      tempUnit: {
+        param: 'Temperature unit',
+      },
+      lang: {
+        param: 'Language',
       },
       minutes: 'minutes',
       ms: 'ms',
@@ -885,6 +1017,20 @@ const { t } = useI18n({
           },
         },
       },
+      funcsNumberPerPage: {
+        param: 'Количество элементов в списке \nна странице “Функции”',
+        fields: {
+          funcsNumberPerPage: {
+            param: 'Количество',
+          },
+        },
+      },
+      tempUnit: {
+        param: 'Единица измерения температуры',
+      },
+      lang: {
+        param: 'Язык',
+      },
       minutes: 'минут',
       ms: 'мс',
       errors: {
@@ -911,7 +1057,7 @@ const { t } = useI18n({
 onMounted(async () => {
   await new Promise((resolve) => setTimeout(resolve, 150));
   try {
-    const r = await api.get('get_config');
+    let r = await api.get<ControllerSettings>('get_config');
     setFields(r.data);
   } catch (error) {
     //

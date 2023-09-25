@@ -1,15 +1,16 @@
-import type { ControllerDateTime, Toast } from '@/typings/common';
+import type { ControllerDateTime, Lang, Toast, UserRole } from '@/typings/common';
+import type { TempUnit } from '@/typings/common';
 
 export const useIndexStore = defineStore('indexStore', () => {
   const authToken = useStorage<string>('authToken', '');
 
-  const userRole = useStorage<'user' | 'admin' | undefined>('userRole', undefined, undefined, {
-    mergeDefaults: (val: any) => (val === 'user' || val === 'admin' ? val : undefined),
+  const userRole = useStorage<'user' | 'admin'>('userRole', 'user', undefined, {
+    mergeDefaults: (val: any) => (val === 'user' || val === 'admin' ? val : 'user'),
   });
 
   const isAuth = ref(!!authToken.value && !!userRole.value);
 
-  const lang = useStorage<'en' | 'ru'>('lang', 'en');
+  const lang = ref<Lang>('en');
 
   const newToast = ref<Toast | undefined>();
 
@@ -19,13 +20,15 @@ export const useIndexStore = defineStore('indexStore', () => {
 
   const controllerDateTime = shallowRef<ControllerDateTime | undefined>();
 
-  function setIsAuth(cred: { token: string; role: 'user' | 'admin' } | undefined) {
+  const tempUnit = ref<TempUnit>('°C');
+
+  function setIsAuth(cred: { token: string; role: UserRole } | undefined) {
     isAuth.value = !!cred;
     authToken.value = cred?.token || '';
     userRole.value = cred?.role || 'user';
   }
 
-  function setLang(value: 'en' | 'ru') {
+  function setLang(value: Lang) {
     lang.value = value;
   }
 
@@ -45,6 +48,10 @@ export const useIndexStore = defineStore('indexStore', () => {
     controllerDateTime.value = dateTime;
   }
 
+  function setTempUnit(unit: TempUnit) {
+    tempUnit.value = unit;
+  }
+
   return {
     isAuth,
     authToken,
@@ -54,11 +61,13 @@ export const useIndexStore = defineStore('indexStore', () => {
     toastIdForDeleting,
     notConnected,
     controllerDateTime,
+    tempUnit,
     setIsAuth,
     setLang,
     addNewToast,
     deleteToast,
     setIsNotConnected,
     setControllerDateTime,
+    setTempUnit,
   };
 });

@@ -2,7 +2,7 @@
 const plugin = require('tailwindcss/plugin');
 
 export default {
-  content: ['./index.html', './src/**/*.{vue,css,postcss}', './src/assets/img/*.svg'],
+  content: ['./index.html', './src/**/*.{vue,css,postcss}', './src/assets/img/**/*.svg'],
   theme: {
     extend: {
       fontFamily: {

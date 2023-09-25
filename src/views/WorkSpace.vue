@@ -73,6 +73,15 @@ import logoutIcon from '@/assets/img/logout.svg?raw';
 import DateTimeInfo from '@/components/DateTimeInfo.vue';
 import SelectedItemLine from '@/components/SelectedItemLine.vue';
 import LangNcSwitcher from '@/components/dev/LangNcSwitcher.vue';
+import type { FuncsNumberPerPage } from '@/typings/funcs';
+
+const indexStore = useIndexStore();
+
+const { isAuth, userRole } = storeToRefs(indexStore);
+
+const funcsStore = useFuncsStore();
+
+const { readFile } = useReadWriteFiles();
 
 const route = useRoute();
 
@@ -102,6 +111,19 @@ async function logout() {
     await api.post('logout');
   } catch (error) {
     isDisabled.value = false;
+  }
+}
+
+if (isAuth.value) {
+  const commonFileSettings = await readFile({
+    type: 'settings',
+    subType: 'common',
+    user: userRole.value,
+  });
+  if (commonFileSettings !== 'error') {
+    indexStore.setLang(commonFileSettings.lang);
+    indexStore.setTempUnit(commonFileSettings.tempUnit);
+    funcsStore.setFuncsNumberPerPage(commonFileSettings.funcsNumberPerPage as FuncsNumberPerPage);
   }
 }
 
