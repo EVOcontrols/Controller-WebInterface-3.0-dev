@@ -126,4 +126,21 @@ export type CommonSettingsFields = {
   }[keyof CommonControllerSettings[P]][][];
 };
 
-export type DevicesSettings = Pick<ControllerSettings, '1-wire' | 'modbus'>;
+export type DevicesControllerSettings = Pick<
+  ControllerSettings,
+  '1-wire' | 'modbus' | 'pwm-out' | 'bin-out' | 'adc-in'
+>;
+
+// export type DevicesSettingsFieldsStatuses = {
+//   [P in keyof DevicesControllerSettings]: DevicesControllerSettings[P] extends Array<infer T>
+//     ? {
+//         [P2 in keyof T as `${P2}.${number}`]?: boolean;
+//       }
+//     : DevicesControllerSettings[P] extends Object
+//     ? {
+//         [P2 in keyof DevicesControllerSettings[P] as `${P2}.${number}`]?: boolean;
+//       }
+//     : {
+//         [P2 in keyof DevicesControllerSettings[P]]?: boolean;
+//       };
+// };

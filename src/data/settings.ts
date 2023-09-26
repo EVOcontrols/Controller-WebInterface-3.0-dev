@@ -4,7 +4,7 @@ export const cloudModes = ['none', 'ethernet', 'gsm'] as const;
 
 export const rtcSources = ['ntp', 'cloud'] as const;
 
-export const oneWiresModes = ['off', 'rom', 'sens', 'gpio'] as const;
+export const oneWiresModes = ['off', 'rom', 'sens'] as const;
 
 export const modbusModes = ['off', 'variables', 'ext-devs'] as const;
 

@@ -4,6 +4,7 @@
       <div
         class="relative group"
         ref="wrapperEl"
+        :class="{ on: isOpen }"
       >
         <div
           ref="triggerEl"
@@ -16,8 +17,7 @@
         </div>
         <span
           v-html="scrollArrow"
-          class="[&>svg]:h-[0.56rem] [&>svg]:w-[0.31rem] [&>svg>path]:!fill-[#8dc5f6] absolute right-4 top-0 bottom-0 my-auto flex items-center cursor-pointer transform rotate-90 group-hover:rotate-180 transition-transform origin-center on:!rotate-[270deg]"
-          :class="{ on: isOpen }"
+          class="[&>svg]:h-[0.56rem] [&>svg]:w-[0.31rem] [&>svg>path]:!fill-[#8dc5f6] absolute right-4 top-0 bottom-0 my-auto flex items-center cursor-pointer"
           @click="onClick"
         ></span>
         <Transition name="fade-150">

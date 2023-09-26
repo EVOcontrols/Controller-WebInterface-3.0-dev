@@ -1,6 +1,6 @@
 <svg viewBox="0 0 5 9" fill="none" xmlns="http://www.w3.org/2000/svg"
-  class="w-[0.313rem] h-[0.563rem]">
-    <path
-      d="M.183 1.191a.625.625 0 11.884-.883l3.75 3.75a.625.625 0 01.019.864l-3.438 3.75a.625.625 0 11-.921-.845L3.51 4.518.183 1.191z"
-      class="fill-[#4888A3] group-hover:fill-[#58B1FF] group-active:fill-[#148EF8]" />
+  class="w-[0.313rem] h-[0.563rem] transform rotate-90 group-hover:rotate-180 transition-transform origin-center group-[.on]:!rotate-[270deg]">
+  <path
+    d="M.183 1.191a.625.625 0 11.884-.883l3.75 3.75a.625.625 0 01.019.864l-3.438 3.75a.625.625 0 11-.921-.845L3.51 4.518.183 1.191z"
+    class="fill-[#4888A3] group-hover:fill-[#58B1FF] group-active:fill-[#148EF8]" />
 </svg>

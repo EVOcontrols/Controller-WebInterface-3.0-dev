@@ -2,5 +2,5 @@
   "tailwindCSS.includeLanguages": {
     "svg": "html"
   },
-  "cSpell.words": ["gnss", "luxon", "modbus", "scrollbooster", "serv"]
+  "cSpell.words": ["clbr", "comert", "gnss", "luxon", "modbus", "scrollbooster", "serv"]
 }
