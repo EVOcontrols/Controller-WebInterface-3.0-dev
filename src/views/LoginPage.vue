@@ -114,11 +114,13 @@ import router from '@/router';
 
 const indexStore = useIndexStore();
 
-const { notConnected } = storeToRefs(indexStore);
+const { notConnected, lang } = storeToRefs(indexStore);
 
 const { toast } = useToast();
 
 const { api } = useApi();
+
+const { readFile, saveToFile } = useReadWriteFiles();
 
 const isFieldError = ref({
   login: false,
@@ -156,6 +158,8 @@ const isDisabled = ref(false);
 
 const isPasswordFocus = ref(false);
 
+const startLang = lang.value;
+
 async function login() {
   isDisabled.value = true;
   try {
@@ -164,6 +168,24 @@ async function login() {
       password: md5(credentials.value.password).toLowerCase(),
     });
     indexStore.setIsAuth({ token: r.data.token, role: r.data.role });
+    if (startLang !== lang.value) {
+      const commonFileSettings = await readFile({
+        type: 'settings',
+        subType: 'common',
+        user: r.data.role,
+      });
+      if (typeof commonFileSettings === 'object') {
+        commonFileSettings.lang = lang.value;
+        await saveToFile(
+          {
+            type: 'settings',
+            subType: 'common',
+            user: r.data.role,
+          },
+          commonFileSettings,
+        );
+      }
+    }
     router.push({ name: 'widgets' });
   } catch (error) {
     if (!notConnected.value) {

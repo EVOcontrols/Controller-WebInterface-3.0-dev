@@ -85,6 +85,8 @@ const { readFile } = useReadWriteFiles();
 
 const route = useRoute();
 
+const router = useRouter();
+
 const { api } = useApi();
 
 const menuItems = ['panel', 'functions', 'settings'] as const;
@@ -109,6 +111,8 @@ async function logout() {
   isDisabled.value = true;
   try {
     await api.post('logout');
+    indexStore.setIsAuth(undefined);
+    router.push({ name: 'login' });
   } catch (error) {
     isDisabled.value = false;
   }
@@ -121,9 +125,16 @@ async function getCommonSettings() {
     user: userRole.value,
   });
   if (commonFileSettings !== 'error') {
-    indexStore.setLang(commonFileSettings.lang);
-    indexStore.setTempUnit(commonFileSettings.tempUnit);
-    funcsStore.setFuncsNumberPerPage(commonFileSettings.funcsNumberPerPage as FuncsNumberPerPage);
+    const { lang, tempUnit, funcsNumberPerPage } = commonFileSettings;
+    if (lang === 'en' || lang === 'ru') {
+      indexStore.setLang(lang);
+    }
+    if (tempUnit === '°C' || tempUnit === '°F') {
+      indexStore.setTempUnit(tempUnit);
+    }
+    if (typeof funcsNumberPerPage === 'number' && funcsNumberPerPage > 0) {
+      funcsStore.setFuncsNumberPerPage(funcsNumberPerPage as FuncsNumberPerPage);
+    }
   } else {
     await new Promise((res) => setTimeout(res, 1000));
     await getCommonSettings();
