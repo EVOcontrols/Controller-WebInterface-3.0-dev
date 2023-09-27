@@ -58,14 +58,14 @@ export type ControllerSettings = {
     };
   }[];
   'adc-in': {
-    'avg-size': number[];
-    'clbr-min': number[];
-    'clbr-max': number[];
-    'lim-min': number[];
-    'lim-max': number[];
+    'avg-size': (number | null)[];
+    'clbr-min': (number | null)[];
+    'clbr-max': (number | null)[];
+    'lim-min': (number | null)[];
+    'lim-max': (number | null)[];
   };
   'pwm-out': {
-    frequency: number[];
+    frequency: (number | null)[];
   };
   'bin-out': {
     'min-delay': number;
@@ -130,17 +130,3 @@ export type DevicesControllerSettings = Pick<
   ControllerSettings,
   '1-wire' | 'modbus' | 'pwm-out' | 'bin-out' | 'adc-in'
 >;
-
-// export type DevicesSettingsFieldsStatuses = {
-//   [P in keyof DevicesControllerSettings]: DevicesControllerSettings[P] extends Array<infer T>
-//     ? {
-//         [P2 in keyof T as `${P2}.${number}`]?: boolean;
-//       }
-//     : DevicesControllerSettings[P] extends Object
-//     ? {
-//         [P2 in keyof DevicesControllerSettings[P] as `${P2}.${number}`]?: boolean;
-//       }
-//     : {
-//         [P2 in keyof DevicesControllerSettings[P]]?: boolean;
-//       };
-// };

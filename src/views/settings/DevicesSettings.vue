@@ -8,7 +8,7 @@
           class="mt-8 mx-8 flex flex-col border-b border-[#0b3d68] last:border-none pb-10"
         >
           <h2 class="font-semibold text-xl leading-[1.2] whitespace-pre">
-            {{ t(`${topic}`) }}
+            {{ t(topic) }}
           </h2>
           <div v-if="topic === '1-wire'">
             <h3 class="text-sm leading-[1.143] mt-[1.125rem] mb-2">
@@ -156,6 +156,7 @@
                       fieldsInvalidStatuses.has(`adc-${prefix}-${m}-${i}`) ? 'invalid' : 'valid'
                     "
                     :input-type="['int']"
+                    :nullable="true"
                     @status-changed="
                       $event === 'invalid' || $event === 'not-allowed'
                         ? fieldsInvalidStatuses.add(`adc-${prefix}-${m}-${i}`)
@@ -277,14 +278,17 @@ import ButtonGroup from '@/components/Ui/ButtonGroup.vue';
 import CollapseTransition from '@/components/CollapseTransition.vue';
 import UiInput from '@/components/Ui/UiInput.vue';
 import AdvancedSettingsButton from '@/components/views/devicesSettings/AdvancedSettingsButton.vue';
+import { cloneDeep, get, pick, set } from 'lodash';
 
 const { api } = useApi();
 
+const { toast } = useToast();
+
 const settings = ref<DevicesControllerSettings>();
 
-const isSaving = ref(false);
+const settingsInit = ref<DevicesControllerSettings>();
 
-const isSaveButtonDisabled = ref(true);
+const isSaving = ref(false);
 
 const topics: (keyof DevicesControllerSettings)[] = [
   // 'modbus',
@@ -304,7 +308,101 @@ const advancedSettingsHaveError = computed(() => ({
   '1-wire': [...fieldsInvalidStatuses.value].some((s) => s.startsWith('1-wire')),
 }));
 
-function save() {}
+const isThereChanges = computed(() => {
+  if (!settings.value || !settingsInit.value) return false;
+  return JSON.stringify(settings.value) !== JSON.stringify(settingsInit.value);
+});
+
+const isSaveButtonDisabled = computed(
+  () => isSaving.value || !isThereChanges.value || fieldsInvalidStatuses.value.size > 0,
+);
+
+async function save() {
+  isSaving.value = true;
+  const current = settings.value;
+  const init = settingsInit.value;
+  if (!current || !init) return;
+  const settingsToSave: any = {};
+  Object.keys(current).forEach((k1) => {
+    if (!isKeyOfBoth(current, init, k1)) return;
+    const v1 = current[k1];
+    const v2 = init[k1];
+    if (Array.isArray(v1) && Array.isArray(v2)) {
+      settingsToSave[k1] = [...new Array(v1.length)].map(() => ({}));
+      v1.forEach((v3, i) => {
+        const v4 = v2[i];
+        Object.keys(v3).forEach((k2) => {
+          if (!isKeyOfBoth(v3, v4, k2)) return;
+          const v5 = v3[k2];
+          const v6 = v4[k2];
+          if (typeof v5 === 'object' && typeof v6 === 'object') {
+            if (Array.isArray(v5) && Array.isArray(v6)) {
+              if (JSON.stringify(v5) !== JSON.stringify(v6)) {
+                set(settingsToSave[k1][i], [k2], v5);
+              }
+            } else {
+              Object.keys(v5).forEach((k3) => {
+                if (!isKeyOfBoth(v5, v6, k3)) return;
+                const v7 = v5[k3];
+                const v8 = v6[k3];
+                if (v7 !== v8) {
+                  set(settingsToSave[k1][i], [k2, k3], v7);
+                }
+              });
+            }
+          } else if (v5 !== v6) {
+            set(settingsToSave[k1][i], [k2], v5);
+          }
+        });
+      });
+      if (!settingsToSave[k1].filter((v9: any) => Object.keys(v9).length).length) {
+        delete settingsToSave[k1];
+      } else {
+        settingsToSave[k1].reverse();
+        const indexToCut = settingsToSave[k1].findIndex((v10: any) => Object.keys(v10).length);
+        if (indexToCut !== -1) {
+          settingsToSave[k1].splice(0, indexToCut);
+        }
+        settingsToSave[k1].reverse();
+        const keys = new Set<string>();
+        settingsToSave[k1].forEach((v10: any) => {
+          Object.keys(v10).forEach((k4) => {
+            keys.add(k4);
+          });
+        });
+        if (k1 === '1-wire') keys.add('mode');
+        keys.forEach((k4) => {
+          settingsToSave[k1].forEach((v10: any, i: number) => {
+            if (!v10[k4]) v10[k4] = get(current, [k1, i, k4]);
+          });
+        });
+      }
+    } else {
+      Object.keys(v1).forEach((k2) => {
+        if (!isKeyOfBoth(v1, v2, k2)) return;
+        const v3 = v1[k2];
+        const v4 = v2[k2];
+        if (typeof v3 === 'object' && typeof v4 === 'object') {
+          if (Array.isArray(v3) && Array.isArray(v4)) {
+            if (JSON.stringify(v3) !== JSON.stringify(v4)) {
+              set(settingsToSave, [k1, k2], v3);
+            }
+          }
+        } else if (v3 !== v4) {
+          if (!settingsToSave[k1]) settingsToSave[k1] = {};
+          set(settingsToSave, [k1, k2], v3);
+        }
+      });
+    }
+  });
+  try {
+    await api.post('set_config', settingsToSave);
+    settingsInit.value = cloneDeep(settings.value);
+  } catch (error) {
+    toast.error(t('toast.error.header'), t('toast.error.text'));
+  }
+  isSaving.value = false;
+}
 
 const { t } = useI18n({
   messages: {
@@ -339,6 +437,13 @@ const { t } = useI18n({
       ms: 'ms',
       output: 'output',
       hz: 'Hz',
+      toast: {
+        success: 'Saved',
+        error: {
+          header: 'Error',
+          text: 'Check entered values',
+        },
+      },
     },
     ru: {
       '1-wire': 'Настройки шин 1-wire',
@@ -371,6 +476,13 @@ const { t } = useI18n({
       ms: 'мс',
       output: 'выход',
       hz: 'Гц',
+      toast: {
+        success: 'Сохранено',
+        error: {
+          header: 'Ошибка',
+          text: 'Проверьте введённые значения',
+        },
+      },
     },
   },
 });
@@ -384,7 +496,8 @@ onMounted(async () => {
   await new Promise((resolve) => setTimeout(resolve, 150));
   try {
     let r = await api.get<DevicesControllerSettings>('get_config');
-    settings.value = r.data;
+    settings.value = pick(r.data, ['1-wire', 'adc-in', 'bin-out', 'pwm-out', 'modbus']);
+    settingsInit.value = cloneDeep(settings.value);
   } catch (error) {
     //
   }

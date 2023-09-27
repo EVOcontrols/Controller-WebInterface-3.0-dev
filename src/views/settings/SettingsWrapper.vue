@@ -13,7 +13,7 @@
         </RouterLink>
         <SelectedItemLine
           :activeItemIndex="menuItems.indexOf(route.name as (typeof menuItems)[number])"
-          class="-bottom-0.5"
+          class="!-bottom-0.5"
         />
       </div>
     </div>

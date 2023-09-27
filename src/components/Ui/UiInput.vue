@@ -22,7 +22,11 @@
 <script
   setup
   lang="ts"
-  generic="T extends 'string' | 'number', V extends T extends 'string' ? string : number"
+  generic="
+    T extends 'string' | 'number',
+    U extends boolean,
+    V extends (T extends 'string' ? string : number) | (U extends true ? null : never)
+  "
 >
 import type { InputFieldStatus } from '@/typings/common';
 
@@ -40,6 +44,7 @@ const props = withDefaults(
     placeholder?: string;
     disabled?: boolean;
     inputType?: ('ip' | 'url')[] | ['int'] | ['latitude'] | ['longitude'];
+    nullable?: U;
   }>(),
   {
     autoSelect: false,
@@ -143,8 +148,8 @@ function valueChangedHandler() {
     lastInitValue = parsed;
     emit('valueChanged', parsed as V);
     // console.log('valid', v, props.initType, parsed);
-  } else {
-    emit('valueChanged', '' as V);
+  } else if (props.nullable === true) {
+    emit('valueChanged', null as V);
   }
   // console.log('final', v, props.initType);
   setStatus(v ? 'valid' : 'empty');

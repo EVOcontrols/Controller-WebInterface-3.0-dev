@@ -46,6 +46,7 @@ declare global {
   const inject: typeof import('vue')['inject']
   const isDefined: typeof import('@vueuse/core')['isDefined']
   const isKeyOf: typeof import('./src/typings/helpers')['isKeyOf']
+  const isKeyOfBoth: typeof import('./src/typings/helpers')['isKeyOfBoth']
   const isProxy: typeof import('vue')['isProxy']
   const isReactive: typeof import('vue')['isReactive']
   const isReadonly: typeof import('vue')['isReadonly']
@@ -368,6 +369,7 @@ declare module 'vue' {
     readonly inject: UnwrapRef<typeof import('vue')['inject']>
     readonly isDefined: UnwrapRef<typeof import('@vueuse/core')['isDefined']>
     readonly isKeyOf: UnwrapRef<typeof import('./src/typings/helpers')['isKeyOf']>
+    readonly isKeyOfBoth: UnwrapRef<typeof import('./src/typings/helpers')['isKeyOfBoth']>
     readonly isProxy: UnwrapRef<typeof import('vue')['isProxy']>
     readonly isReactive: UnwrapRef<typeof import('vue')['isReactive']>
     readonly isReadonly: UnwrapRef<typeof import('vue')['isReadonly']>
@@ -683,6 +685,7 @@ declare module '@vue/runtime-core' {
     readonly inject: UnwrapRef<typeof import('vue')['inject']>
     readonly isDefined: UnwrapRef<typeof import('@vueuse/core')['isDefined']>
     readonly isKeyOf: UnwrapRef<typeof import('./src/typings/helpers')['isKeyOf']>
+    readonly isKeyOfBoth: UnwrapRef<typeof import('./src/typings/helpers')['isKeyOfBoth']>
     readonly isProxy: UnwrapRef<typeof import('vue')['isProxy']>
     readonly isReactive: UnwrapRef<typeof import('vue')['isReactive']>
     readonly isReadonly: UnwrapRef<typeof import('vue')['isReadonly']>

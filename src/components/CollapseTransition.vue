@@ -54,7 +54,6 @@ function beforeEnter(element: Element) {
 }
 
 function enter(element: Element) {
-  console.log(element);
   (element as HTMLElement).style.height = `${(element as HTMLElement).scrollHeight}px`;
 }
 
