@@ -108,7 +108,7 @@
                   :init-value="settings['adc-in']['avg-size'][i]"
                   initType="number"
                   class="table-cell w-16 text-center"
-                  :min-max="[0, 32]"
+                  :min-max="[2, 32]"
                   :status="fieldsInvalidStatuses.has(`adc-avg-${i}`) ? 'invalid' : 'valid'"
                   :input-type="['int']"
                   @status-changed="
@@ -126,7 +126,7 @@
                     error: fieldsInvalidStatuses.has(`adc-avg-${i}`),
                   }"
                 >
-                  {{ t('from0To32') }}
+                  {{ t('from2To32') }}
                 </div>
               </div>
             </div>
@@ -198,7 +198,7 @@
               :init-value="settings['bin-out']['min-delay']"
               initType="number"
               class="table-cell w-16 text-center"
-              :min-max="[0, undefined]"
+              :min-max="[0, 200]"
               :status="fieldsInvalidStatuses.has('bin-out') ? 'invalid' : 'valid'"
               :input-type="['int']"
               @status-changed="
@@ -219,7 +219,7 @@
                 error: fieldsInvalidStatuses.has('bin-out'),
               }"
             >
-              {{ t('positiveInteger') }}
+              {{ t('from0To200') }}
             </div>
           </div>
           <div v-else-if="topic === 'pwm-out'">
@@ -236,7 +236,7 @@
                   :init-value="settings['pwm-out']['frequency'][i]"
                   initType="number"
                   class="table-cell w-16 text-center"
-                  :min-max="[0, undefined]"
+                  :min-max="[50, 5000]"
                   :status="fieldsInvalidStatuses.has(`pwm-out-${i}`) ? 'invalid' : 'valid'"
                   :input-type="['int']"
                   @status-changed="
@@ -257,7 +257,7 @@
                     error: fieldsInvalidStatuses.has(`pwm-out-${i}`),
                   }"
                 >
-                  {{ t('positiveInteger') }}
+                  {{ t('from50To5000') }}
                 </div>
               </div>
             </div>
@@ -271,6 +271,7 @@
       <SaveButton
         :isSaving="isSaving"
         :is-disabled="isSaveButtonDisabled"
+        class="w-[7.563rem]"
         @click="save"
       />
     </div>
@@ -437,7 +438,9 @@ const { t } = useI18n({
       positiveInteger: 'Enter a positive integer',
       'adc-avg': 'Use the average value \nfor several measurements',
       input: 'input',
-      from0To32: 'Enter a value from 0 to 32',
+      from2To32: 'Enter a value from 2 to 32',
+      from0To200: 'Enter a value from 0 to 200',
+      from50To5000: 'Enter a value from 50 to 5000',
       lim: 'Limits',
       clbr: 'Calibration',
       'lim-min': 'Lower input threshold',
@@ -476,7 +479,9 @@ const { t } = useI18n({
       positiveInteger: 'Введите положительное целое число',
       'adc-avg': 'Использовать среднее значение \nза несколько измерений',
       input: 'вход',
-      from0To32: 'Введите значение от 0 до 32',
+      from2To32: 'Введите значение от 2 до 32',
+      from0To200: 'Введите значение от 0 до 200',
+      from50To5000: 'Введите значение от 50 до 5000',
       lim: 'Пределы',
       clbr: 'Калибровка',
       'lim-min': 'Нижний порог входа',

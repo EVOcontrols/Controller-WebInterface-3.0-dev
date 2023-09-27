@@ -44,11 +44,50 @@
         <div class="text-[#6d9cc5] text-sm leading-[1.143] mr-6">
           {{ reloadRequired ? t('reloadRequired') : t('reloadNoRequired') }}
         </div>
-        <PrimaryButton class="!h-8">
+        <PrimaryButton
+          class="!h-8"
+          @click="isReloadModalOpen = true"
+        >
           {{ t('reload') }}
         </PrimaryButton>
       </div>
     </div>
+    <ModalWrapper
+      v-if="isReloadModalOpen"
+      @close="isReloadModalOpen = false"
+      :confirm-text="t('reload')"
+      :is-saving="isReloadBtnDisabled"
+      :trigger-close="isControllerRebooting"
+      @confirm="reload"
+    >
+      <template #title-icon>
+        <span v-html="successRound"></span>
+      </template>
+      <template #title>{{ t('confirmation') }}</template>
+      <template #content>
+        <div class="text-[#6cb5d3] text-sm leading-[1.272] whitespace-pre mt-2">
+          {{ t('modalText') }}
+        </div>
+      </template>
+    </ModalWrapper>
+    <ModalWrapper
+      v-if="isControllerRebooting"
+      :is-saving="true"
+    >
+      <template #custom>
+        <div class="shadow-[0_0_1.375rem_0_#082135] p-6 flex flex-col rounded-xl">
+          <span
+            v-html="gears"
+            class="self-center mb-4 [&>svg]:w-12"
+          ></span>
+          <div class="text-[#9adbf6] text-sm leading-[1.167] tracking-[0.03em] whitespace-pre">
+            <div>
+              {{ t('reloading1') }}
+            </div>
+          </div>
+        </div>
+      </template>
+    </ModalWrapper>
   </div>
 </template>
 
@@ -56,6 +95,9 @@
 import ScrollBooster from '@/components/ScrollBooster.vue';
 import edit from '@/assets/img/edit.svg?raw';
 import PrimaryButton from '@/components/Ui/PrimaryButton.vue';
+import ModalWrapper from '@/components/ModalWrapper.vue';
+import successRound from '@/assets/img/success-round.svg?raw';
+import gears from '@/assets/img/gears-animated.svg?raw';
 
 defineProps<{
   activeDeviceIndex: number;
@@ -67,14 +109,45 @@ const emit = defineEmits<{
   (e: 'selectDevice', index: number): void;
 }>();
 
+const { api } = useApi();
+
+const indexStore = useIndexStore();
+
+const { isControllerRebooting, notConnected } = storeToRefs(indexStore);
+
+const isReloadModalOpen = ref(false);
+
+const isReloadBtnDisabled = ref(false);
+
+async function reload() {
+  isReloadBtnDisabled.value = true;
+  try {
+    await api.post('reboot', { device: 0, reboot: true });
+    indexStore.setIsControllerRebooting(true);
+  } catch (error) {
+    //
+  }
+  isReloadBtnDisabled.value = true;
+}
+
+watch(notConnected, () => {
+  if (!notConnected.value && isControllerRebooting.value) {
+    window.location.reload();
+  }
+});
+
 const { t } = useI18n({
   messages: {
     en: {
       selectDevice: 'Select device',
       manageDevice: 'Manage device',
-      reloadNoRequired: 'Reload not required',
-      reloadRequired: 'Reload required',
-      reload: 'Reload',
+      reloadNoRequired: 'Reboot not required',
+      reloadRequired: 'Reboot required',
+      reload: 'Reboot',
+      confirmation: 'Confirmation',
+      modalText: 'Are you sure you want to reboot the device?',
+      reloading1: 'The device is rebooting, please wait...',
+      reloading2: 'Page will be reloaded automatically \nafter reboot.',
     },
     ru: {
       selectDevice: 'Выбор устройства',
@@ -82,6 +155,10 @@ const { t } = useI18n({
       reloadNoRequired: 'Перезагрузка не требуется',
       reloadRequired: 'Требуется перезагрузка',
       reload: 'Перезагрузка',
+      confirmation: 'Подтверждение',
+      modalText: 'Вы действительно хотите перезагрузить \nустройство?',
+      reloading1: 'Идет перезагрузка устройства, пожалуйста подождите...',
+      reloading2: 'По завершении перезагрузки страница будет перезагружена автоматически.',
     },
   },
 });

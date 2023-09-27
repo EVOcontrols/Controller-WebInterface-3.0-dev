@@ -1,0 +1,8 @@
+<svg viewBox="0 0 21 21" fill="none" xmlns="http://www.w3.org/2000/svg"
+  class="w-[1.313rem] h-[1.313rem] group">
+    <path clip-rule="evenodd" d="M10.5 19.25a8.75 8.75 0 100-17.5 8.75 8.75 0 000 17.5z"
+      class="fill-[#148EF8] opacity-20" />
+    <path
+      d="M14.673 6.84a.875.875 0 011.28 1.195l-6.126 6.562a.875.875 0 01-1.209.067L5.556 12.04a.875.875 0 111.138-1.328L9.12 12.79l5.553-5.95z"
+      class="fill-[#148EF8]" />
+</svg>

@@ -16,7 +16,7 @@
       name="fade-300"
     >
       <div
-        v-if="notConnected && route.name !== 'login'"
+        v-if="notConnected && route.name !== 'login' && !isControllerRebooting"
         class="fixed top-0 bottom-0 left-0 right-0 z-[40] bg-[#001d34b2]"
       ></div>
     </Transition>
@@ -29,7 +29,7 @@ import ToastsContainer from './components/toast/ToastsContainer.vue';
 
 const indexStore = useIndexStore();
 
-const { lang, notConnected } = storeToRefs(indexStore);
+const { lang, notConnected, isControllerRebooting, isInterfaceStarted } = storeToRefs(indexStore);
 
 const route = useRoute();
 
@@ -49,12 +49,17 @@ watch(
 );
 
 watch(notConnected, () => {
+  if (isControllerRebooting.value) return;
   if (notConnected.value) {
-    notConnectedToastId = toast.warning(
-      t('msg.disconnected.header'),
-      t('msg.disconnected.text'),
-      0,
-    );
+    if (isInterfaceStarted.value) {
+      notConnectedToastId = toast.warning(
+        t('msg.disconnected.header'),
+        t('msg.disconnected.text'),
+        0,
+      );
+    } else {
+      notConnectedToastId = toast.warning(t('msg.notStarted.header'), t('msg.notStarted.text'), 0);
+    }
   } else {
     if (notConnectedToastId) {
       indexStore.deleteToast(notConnectedToastId);
@@ -77,6 +82,10 @@ const { t } = useI18n({
           header: 'The device online',
           text: { login: 'Please try to log in again', other: 'Continue working with NG' },
         },
+        notStarted: {
+          header: "The device doesn't answer",
+          text: 'Please wait or try to reload page',
+        },
       },
     },
     ru: {
@@ -86,6 +95,7 @@ const { t } = useI18n({
           header: 'Соединение восстановлено',
           text: { login: 'Повторите авторизацию', other: 'Продолжайте работать с NG' },
         },
+        notStarted: { header: 'Устройство не отвечает', text: 'Подождите или обновите страницу' },
       },
     },
   },

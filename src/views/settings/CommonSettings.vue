@@ -236,6 +236,7 @@
       <SaveButton
         :isSaving="isSaving"
         :is-disabled="isSaveButtonDisabled"
+        class="w-[7.563rem]"
         @click="save"
       />
     </div>

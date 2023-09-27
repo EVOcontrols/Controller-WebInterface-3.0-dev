@@ -10,7 +10,14 @@ export const useIndexStore = defineStore('indexStore', () => {
 
   const isAuth = ref(!!authToken.value && !!userRole.value);
 
-  const lang = ref<Lang>('en');
+  const lang = useStorage<Lang>(
+    'lang',
+    /ru-ru/i.test(navigator.language) ? 'ru' : 'en',
+    undefined,
+    {
+      mergeDefaults: (val: any) => (val === 'ru' || val === 'en' ? val : 'en'),
+    },
+  );
 
   const newToast = ref<Toast | undefined>();
 
@@ -21,6 +28,10 @@ export const useIndexStore = defineStore('indexStore', () => {
   const controllerDateTime = shallowRef<ControllerDateTime | undefined>();
 
   const tempUnit = ref<TempUnit>('°C');
+
+  const isControllerRebooting = ref(false);
+
+  const isInterfaceStarted = ref(false);
 
   function setIsAuth(cred: { token: string; role: UserRole } | undefined) {
     isAuth.value = !!cred;
@@ -52,6 +63,14 @@ export const useIndexStore = defineStore('indexStore', () => {
     tempUnit.value = unit;
   }
 
+  function setIsControllerRebooting(value: boolean) {
+    isControllerRebooting.value = value;
+  }
+
+  function setIsInterfaceStarted(value: boolean) {
+    isInterfaceStarted.value = value;
+  }
+
   return {
     isAuth,
     authToken,
@@ -62,6 +81,8 @@ export const useIndexStore = defineStore('indexStore', () => {
     notConnected,
     controllerDateTime,
     tempUnit,
+    isControllerRebooting,
+    isInterfaceStarted,
     setIsAuth,
     setLang,
     addNewToast,
@@ -69,5 +90,7 @@ export const useIndexStore = defineStore('indexStore', () => {
     setIsNotConnected,
     setControllerDateTime,
     setTempUnit,
+    setIsControllerRebooting,
+    setIsInterfaceStarted,
   };
 });

@@ -27,7 +27,7 @@
           />
         </div>
       </div>
-      <div class="w-40">
+      <div class="w-40 z-[70]">
         <LangNcSwitcher v-if="isDev" />
       </div>
       <button
@@ -114,7 +114,7 @@ async function logout() {
   }
 }
 
-if (isAuth.value) {
+async function getCommonSettings() {
   const commonFileSettings = await readFile({
     type: 'settings',
     subType: 'common',
@@ -124,7 +124,15 @@ if (isAuth.value) {
     indexStore.setLang(commonFileSettings.lang);
     indexStore.setTempUnit(commonFileSettings.tempUnit);
     funcsStore.setFuncsNumberPerPage(commonFileSettings.funcsNumberPerPage as FuncsNumberPerPage);
+  } else {
+    await new Promise((res) => setTimeout(res, 1000));
+    await getCommonSettings();
   }
+}
+
+if (isAuth.value) {
+  await getCommonSettings();
+  indexStore.setIsInterfaceStarted(true);
 }
 
 const { t } = useI18n({

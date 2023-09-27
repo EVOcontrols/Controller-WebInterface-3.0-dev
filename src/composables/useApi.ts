@@ -1,4 +1,4 @@
-import axios, { type InternalAxiosRequestConfig } from 'axios';
+import axios, { AxiosError, type InternalAxiosRequestConfig } from 'axios';
 
 export function useApi() {
   const indexStore = useIndexStore();
@@ -67,8 +67,12 @@ export function useApi() {
       }
       return response;
     },
-    async (error) => {
-      if (error.code === 'ETIMEDOUT' || error.code === 'ERR_NETWORK') {
+    async (error: AxiosError) => {
+      if (
+        error.code === 'ETIMEDOUT' ||
+        error.code === 'ERR_NETWORK' ||
+        error.response?.status === 500
+      ) {
         if (!notConnected.value) {
           indexStore.setIsNotConnected(true);
         } else {

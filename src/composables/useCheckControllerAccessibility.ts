@@ -3,12 +3,12 @@ import { useApi } from './useApi';
 export function useCheckControllerAccessibility() {
   const indexStore = useIndexStore();
 
-  const { notConnected } = storeToRefs(indexStore);
+  const { notConnected, isInterfaceStarted } = storeToRefs(indexStore);
 
   const { api } = useApi();
 
   watch(notConnected, () => {
-    if (notConnected.value) {
+    if (notConnected.value && isInterfaceStarted.value) {
       checkAccessibility();
     }
   });
