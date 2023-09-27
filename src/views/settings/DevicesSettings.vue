@@ -408,7 +408,8 @@ async function save() {
     }
   });
   try {
-    await api.post('set_config', settingsToSave);
+    const r = await api.post('set_config', settingsToSave);
+    reloadRequired.value = r.data['reboot-req'];
     settingsInit.value = cloneDeep(settings.value);
   } catch (error) {
     toast.error(t('toast.error.header'), t('toast.error.text'));
