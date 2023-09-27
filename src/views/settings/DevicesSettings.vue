@@ -1,10 +1,11 @@
 <template>
   <div class="h-full flex flex-col">
-    <div class="flex flex-col flex-1 overflow-auto scrollbar-4 relative">
+    <div class="flex flex-col flex-1 overflow-y-auto overflow-x-hidden scrollbar-4 relative">
       <template v-if="settings">
-        <DeviceSelection
+        <ExtDevicesSettings
           :active-device-index="activeDeviceIndex"
-          :device-count="50"
+          :device-count="5"
+          :reload-required="reloadRequired"
           @select-device="activeDeviceIndex = $event"
         />
         <div
@@ -277,14 +278,14 @@
 </template>
 
 <script lang="ts" setup>
-import { type DevicesControllerSettings } from '@/typings/settings';
+import { type ControllerSettings, type DevicesControllerSettings } from '@/typings/settings';
 import SaveButton from '@/components/Ui/SaveButton.vue';
 import ButtonGroup from '@/components/Ui/ButtonGroup.vue';
 import CollapseTransition from '@/components/CollapseTransition.vue';
 import UiInput from '@/components/Ui/UiInput.vue';
 import AdvancedSettingsButton from '@/components/views/devicesSettings/AdvancedSettingsButton.vue';
 import { cloneDeep, get, pick, set } from 'lodash';
-import DeviceSelection from '@/components/views/devicesSettings/DeviceSelection.vue';
+import ExtDevicesSettings from '@/components/views/devicesSettings/ExtDevicesSettings.vue';
 
 const { api } = useApi();
 
@@ -293,6 +294,8 @@ const { toast } = useToast();
 const settings = ref<DevicesControllerSettings>();
 
 const settingsInit = ref<DevicesControllerSettings>();
+
+const reloadRequired = ref(false);
 
 const isSaving = ref(false);
 
@@ -503,9 +506,10 @@ const oneWireBuses = oneWiresModes.map((m) => ({
 onMounted(async () => {
   await new Promise((resolve) => setTimeout(resolve, 150));
   try {
-    let r = await api.get<DevicesControllerSettings>('get_config');
+    let r = await api.get<ControllerSettings>('get_config');
     settings.value = pick(r.data, ['1-wire', 'adc-in', 'bin-out', 'pwm-out', 'modbus']);
     settingsInit.value = cloneDeep(settings.value);
+    reloadRequired.value = r.data['reboot-req'];
   } catch (error) {
     //
   }

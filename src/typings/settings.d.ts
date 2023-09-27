@@ -70,6 +70,7 @@ export type ControllerSettings = {
   'bin-out': {
     'min-delay': number;
   };
+  'reboot-req': boolean;
 };
 
 export type CommonControllerSettings = Pick<

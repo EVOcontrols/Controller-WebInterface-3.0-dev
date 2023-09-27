@@ -35,12 +35,15 @@
     </div>
     <transition name="fade-150">
       <div
-        class="absolute left-0 top-0 rounded-l-lg h-full flex justify-center items-center group cursor-pointer arrow z-1"
+        class="absolute left-0 top-0 h-full flex justify-center items-center group cursor-pointer arrow z-1"
         :class="arrowCssClasses"
         v-if="isLeftArrowVisible"
         @mousedown="scrollDevices('right')"
       >
-        <span v-html="scrollArrow" />
+        <span
+          v-html="scrollArrow"
+          class="[&>svg]:!rotate-180"
+        />
       </div>
     </transition>
     <transition name="fade-150">
@@ -52,7 +55,7 @@
       >
         <span
           v-html="scrollArrow"
-          class="transform -rotate-90"
+          class="[&>svg]:!-rotate-0"
         />
       </div>
     </transition>
