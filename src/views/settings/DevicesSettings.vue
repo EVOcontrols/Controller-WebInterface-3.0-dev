@@ -2,6 +2,11 @@
   <div class="h-full flex flex-col">
     <div class="flex flex-col flex-1 overflow-auto scrollbar-4 relative">
       <template v-if="settings">
+        <DeviceSelection
+          :active-device-index="activeDeviceIndex"
+          :device-count="50"
+          @select-device="activeDeviceIndex = $event"
+        />
         <div
           v-for="topic in topics"
           :key="topic"
@@ -279,6 +284,7 @@ import CollapseTransition from '@/components/CollapseTransition.vue';
 import UiInput from '@/components/Ui/UiInput.vue';
 import AdvancedSettingsButton from '@/components/views/devicesSettings/AdvancedSettingsButton.vue';
 import { cloneDeep, get, pick, set } from 'lodash';
+import DeviceSelection from '@/components/views/devicesSettings/DeviceSelection.vue';
 
 const { api } = useApi();
 
@@ -303,6 +309,8 @@ const isAdvancedSettingsExpanded = ref<Partial<Record<'modbus' | '1-wire', boole
 const oneWiresParams = ['cycle-pause', 'db-time', 'ct-time'] as const;
 
 const fieldsInvalidStatuses = ref<Set<string>>(new Set());
+
+const activeDeviceIndex = ref(0);
 
 const advancedSettingsHaveError = computed(() => ({
   '1-wire': [...fieldsInvalidStatuses.value].some((s) => s.startsWith('1-wire')),

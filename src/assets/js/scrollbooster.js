@@ -89,7 +89,7 @@ export default class ScrollBooster {
 
     if (!this.props.viewport || !(this.props.viewport instanceof Element)) {
       console.error(
-        `ScrollBooster init error: "viewport" config property must be present and must be Element`
+        `ScrollBooster init error: "viewport" config property must be present and must be Element`,
       );
       return;
     }
@@ -446,7 +446,7 @@ export default class ScrollBooster {
       ) {
         dragDirection = this.getDragDirection(
           this.getDragAngle(this.clientOffset.x, this.clientOffset.y),
-          this.props.dragDirectionTolerance
+          this.props.dragDirectionTolerance,
         );
       }
 
@@ -510,7 +510,7 @@ export default class ScrollBooster {
       }
 
       // focus on form input elements
-      const formNodes = ['input', 'textarea', 'button', 'select', 'label'];
+      const formNodes = ['input', 'textarea', 'select', 'label'];
       if (this.props.inputsFocus && formNodes.indexOf(event.target.nodeName.toLowerCase()) > -1) {
         return;
       }
@@ -586,7 +586,7 @@ export default class ScrollBooster {
         this.props.preventDefaultOnEmulateScroll &&
         this.getDragDirection(
           this.getDragAngle(-event.deltaX, -event.deltaY),
-          this.props.dragDirectionTolerance
+          this.props.dragDirectionTolerance,
         ) === this.props.preventDefaultOnEmulateScroll
       ) {
         event.preventDefault();

@@ -8,8 +8,29 @@
         ref="content"
         class="select-none"
         :class="renderParamsClasses"
+        @mousedown="
+          (e) => {
+            preventSelectItem = false;
+            startMovePosition = e.pageX;
+          }
+        "
+        @mousemove="
+          (e) => {
+            if (preventSelectItem) return;
+            if (Math.abs(startMovePosition - e.pageX) > 5) {
+              preventSelectItem = true;
+            }
+          }
+        "
       >
-        <slot />
+        <slot
+          :onClick="
+            (index: number) => {
+              if (preventSelectItem) return;
+              emit('selectItem', index);
+            }
+          "
+        />
       </div>
     </div>
     <transition name="fade-150">
@@ -41,7 +62,7 @@
 <script setup lang="ts">
 import { useElementSize, useScroll } from '@vueuse/core';
 import ScrollBooster from '@/assets/js/scrollbooster';
-import scrollArrow from '@/assets/images/scroll-arrow.svg?raw';
+import scrollArrow from '@/assets/img/scroll-arrow.svg?raw';
 
 const props = defineProps<{
   activeIndex?: { index: number; random: number };
@@ -65,6 +86,7 @@ const props = defineProps<{
 const emit = defineEmits<{
   (e: 'updateScrollX', x: number): void;
   (e: 'updateScrollableWidth', width: number): void;
+  (e: 'selectItem', index: number): void;
 }>();
 
 const viewport = ref<HTMLElement | undefined>();
@@ -78,6 +100,10 @@ const { width: viewportElWidth } = useElementSize(viewport);
 const { x: scrollX } = useScroll(viewport);
 
 let scrollBooster: ScrollBooster | undefined;
+
+let startMovePosition = 0;
+
+let preventSelectItem = false;
 
 const renderParamsClasses = computed(() => {
   if (props.renderParams.type === 'grid') {
