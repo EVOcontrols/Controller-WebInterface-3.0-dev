@@ -289,7 +289,7 @@ import ButtonGroup from '@/components/Ui/ButtonGroup.vue';
 import CollapseTransition from '@/components/CollapseTransition.vue';
 import UiInput from '@/components/Ui/UiInput.vue';
 import AdvancedSettingsButton from '@/components/views/devicesSettings/AdvancedSettingsButton.vue';
-import { cloneDeep, get, pick, set } from 'lodash';
+import { cloneDeep, get, isEmpty, pick, set } from 'lodash';
 import ExtDevicesSettings from '@/components/views/devicesSettings/ExtDevicesSettings.vue';
 
 const indexStore = useIndexStore();
@@ -297,6 +297,8 @@ const indexStore = useIndexStore();
 const { api } = useApi();
 
 const { toast } = useToast();
+
+const { storeCommonSettingsFile } = useStoreCommonSettingsFile();
 
 const settings = ref<DevicesControllerSettings>();
 
@@ -343,6 +345,7 @@ async function save() {
   const settingsToSave: any = {};
   Object.keys(current).forEach((k1) => {
     if (!isKeyOfBoth(current, init, k1)) return;
+    if (k1 === 'numberingSystem') return;
     const v1 = current[k1];
     const v2 = init[k1];
     if (Array.isArray(v1) && Array.isArray(v2)) {
@@ -414,8 +417,19 @@ async function save() {
     }
   });
   try {
-    const r = await api.post('set_config', settingsToSave);
-    reloadRequired.value = r.data['reboot-req'];
+    if (!isEmpty(settingsToSave)) {
+      const r = await api.post('set_config', settingsToSave);
+      reloadRequired.value = r.data['reboot-req'];
+    }
+    if (current.numberingSystem !== init.numberingSystem) {
+      const r = await storeCommonSettingsFile(
+        undefined,
+        undefined,
+        undefined,
+        current.numberingSystem,
+      );
+      if (r === 'error') throw '';
+    }
     settingsInit.value = cloneDeep(settings.value);
   } catch (error) {
     toast.error(t('toast.error.header'), t('toast.error.text'));

@@ -712,7 +712,9 @@ async function save() {
       const r = await storeCommonSettingsFile(
         changes.files.lang,
         changes.files.tempUnit,
-        changes.files.funcsNumberPerPage ? parseInt(changes.files.funcsNumberPerPage) : undefined,
+        changes.files.funcsNumberPerPage
+          ? (parseInt(changes.files.funcsNumberPerPage) as FuncsNumberPerPage)
+          : undefined,
       );
       if (r === 'error') {
         throw '';

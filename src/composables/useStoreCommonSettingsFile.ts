@@ -1,5 +1,6 @@
 import type { Lang, TempUnit, NumberingSystem } from '@/typings/common';
 import type { CommonSettingsFileType } from '@/typings/files';
+import type { FuncsNumberPerPage } from '@/typings/funcs';
 
 export function useStoreCommonSettingsFile() {
   const indexStore = useIndexStore();
@@ -13,7 +14,7 @@ export function useStoreCommonSettingsFile() {
   async function storeCommonSettingsFile(
     lang?: Lang,
     tempUnit?: TempUnit,
-    funcsNumberPerPage?: number,
+    funcsNumberPerPage?: FuncsNumberPerPage,
     numberingSystem?: NumberingSystem,
   ) {
     const commonFileSettingsInit = await readFile({
@@ -38,6 +39,12 @@ export function useStoreCommonSettingsFile() {
       },
       commonFileSettings,
     );
+    if (!isSavingError) {
+      if (lang) indexStore.setLang(lang);
+      if (tempUnit) indexStore.setTempUnit(tempUnit);
+      if (funcsNumberPerPage) funcsStore.setFuncsNumberPerPage(funcsNumberPerPage);
+      if (numberingSystem) indexStore.setNumberingSystem(numberingSystem);
+    }
     return isSavingError ? 'error' : 'success';
   }
 
