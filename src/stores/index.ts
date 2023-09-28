@@ -1,5 +1,5 @@
 import type { ControllerDateTime, Lang, Toast, UserRole } from '@/typings/common';
-import type { TempUnit } from '@/typings/common';
+import type { TempUnit, NumberingSystem } from '@/typings/common';
 
 export const useIndexStore = defineStore('indexStore', () => {
   const authToken = useStorage<string>('authToken', '');
@@ -28,6 +28,8 @@ export const useIndexStore = defineStore('indexStore', () => {
   const controllerDateTime = shallowRef<ControllerDateTime | undefined>();
 
   const tempUnit = ref<TempUnit>('°C');
+
+  const numberingSystem = ref<NumberingSystem>('dec');
 
   const isControllerRebooting = ref(false);
 
@@ -63,6 +65,10 @@ export const useIndexStore = defineStore('indexStore', () => {
     tempUnit.value = unit;
   }
 
+  function setNumberingSystem(system: NumberingSystem) {
+    numberingSystem.value = system;
+  }
+
   function setIsControllerRebooting(value: boolean) {
     isControllerRebooting.value = value;
   }
@@ -81,6 +87,7 @@ export const useIndexStore = defineStore('indexStore', () => {
     notConnected,
     controllerDateTime,
     tempUnit,
+    numberingSystem,
     isControllerRebooting,
     isInterfaceStarted,
     setIsAuth,
@@ -92,5 +99,6 @@ export const useIndexStore = defineStore('indexStore', () => {
     setTempUnit,
     setIsControllerRebooting,
     setIsInterfaceStarted,
+    setNumberingSystem,
   };
 });

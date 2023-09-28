@@ -43,7 +43,7 @@ export function useReadWriteFiles() {
   async function readFile<T extends FileType>(
     params: T,
     part?: number,
-  ): Promise<FileContent<T> | 'error'> {
+  ): Promise<FileContent<T> | 'error' | 'notFound'> {
     let name = `${params.type}.${params.subType}`;
     const isLabels = params.type === 'labels';
     if (isLabels) {
@@ -60,8 +60,8 @@ export function useReadWriteFiles() {
       const r = await api.get(`/misc/${name}.json`);
       return isLabels ? processLabelsChunk(r.data, params) : r.data;
     } catch (e: any) {
-      if (e.response?.status === 404 && isLabels) {
-        return <FileContent<T>>processLabelsChunk(undefined, params);
+      if (e.response?.status === 404) {
+        return isLabels ? <FileContent<T>>processLabelsChunk(undefined, params) : 'notFound';
       }
       return 'error';
     }

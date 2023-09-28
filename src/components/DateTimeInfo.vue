@@ -148,6 +148,11 @@ async function getInfoData() {
 
 onBeforeMount(getInfoData);
 
+onBeforeUnmount(() => {
+  clearTimeout(getDateTimeTimer);
+  abort();
+});
+
 const { t } = useI18n({
   messages: {
     en: {

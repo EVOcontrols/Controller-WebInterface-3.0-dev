@@ -23,6 +23,7 @@ export default {
       addVariant('error', '&.error');
       addVariant('on', '&.on');
       addVariant('off', '&.off');
+      addVariant('thumb', ['&::-webkit-slider-thumb', '&::-moz-range-thumb']);
       matchUtilities(
         {
           scrollbar: (value) => {

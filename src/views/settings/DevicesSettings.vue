@@ -1,12 +1,16 @@
 <template>
   <div class="h-full flex flex-col">
     <div class="flex flex-col flex-1 overflow-y-auto overflow-x-hidden scrollbar-4 relative">
-      <template v-if="settings">
+      <template v-if="settings && settingsInit">
         <ExtDevicesSettings
           :active-device-index="activeDeviceIndex"
           :device-count="5"
           :reload-required="reloadRequired"
+          :modbus-settings-init="settingsInit.modbus"
+          :numbering-system="settings.numberingSystem"
           @select-device="activeDeviceIndex = $event"
+          @set-modbus-settings="settings['modbus'] = $event"
+          @set-numbering-system="settings.numberingSystem = $event"
         />
         <div
           v-for="topic in topics"
@@ -288,6 +292,8 @@ import AdvancedSettingsButton from '@/components/views/devicesSettings/AdvancedS
 import { cloneDeep, get, pick, set } from 'lodash';
 import ExtDevicesSettings from '@/components/views/devicesSettings/ExtDevicesSettings.vue';
 
+const indexStore = useIndexStore();
+
 const { api } = useApi();
 
 const { toast } = useToast();
@@ -513,7 +519,10 @@ onMounted(async () => {
   await new Promise((resolve) => setTimeout(resolve, 150));
   try {
     let r = await api.get<ControllerSettings>('get_config');
-    settings.value = pick(r.data, ['1-wire', 'adc-in', 'bin-out', 'pwm-out', 'modbus']);
+    settings.value = {
+      ...pick(r.data, ['1-wire', 'adc-in', 'bin-out', 'pwm-out', 'modbus']),
+      numberingSystem: indexStore.numberingSystem,
+    };
     settingsInit.value = cloneDeep(settings.value);
     reloadRequired.value = r.data['reboot-req'];
   } catch (error) {

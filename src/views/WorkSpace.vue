@@ -73,6 +73,7 @@ import logoutIcon from '@/assets/img/logout.svg?raw';
 import DateTimeInfo from '@/components/DateTimeInfo.vue';
 import SelectedItemLine from '@/components/SelectedItemLine.vue';
 import LangNcSwitcher from '@/components/dev/LangNcSwitcher.vue';
+import type { CommonSettingsFileType } from '@/typings/files';
 import type { FuncsNumberPerPage } from '@/typings/funcs';
 
 const indexStore = useIndexStore();
@@ -125,7 +126,8 @@ async function getCommonSettings() {
     user: userRole.value,
   });
   if (commonFileSettings !== 'error') {
-    const { lang, tempUnit, funcsNumberPerPage } = commonFileSettings;
+    const { lang, tempUnit, funcsNumberPerPage, numberingSystem } =
+      commonFileSettings !== 'notFound' ? commonFileSettings : ({} as CommonSettingsFileType);
     if (lang === 'en' || lang === 'ru') {
       indexStore.setLang(lang);
     }
@@ -134,6 +136,9 @@ async function getCommonSettings() {
     }
     if (typeof funcsNumberPerPage === 'number' && funcsNumberPerPage > 0) {
       funcsStore.setFuncsNumberPerPage(funcsNumberPerPage as FuncsNumberPerPage);
+    }
+    if (numberingSystem === 'hex' || numberingSystem === 'dec') {
+      indexStore.setNumberingSystem(numberingSystem);
     }
   } else {
     await new Promise((res) => setTimeout(res, 1000));

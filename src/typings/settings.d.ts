@@ -1,5 +1,5 @@
 import { FuncsNumberPerPage } from './funcs';
-import { TempUnit, Lang, InputFieldStatus } from './common';
+import { TempUnit, Lang, InputFieldStatus, NumberingSystem } from './common';
 import { IsStringLiteral } from 'type-fest';
 export type ControllerSettings = {
   lan: {
@@ -41,7 +41,7 @@ export type ControllerSettings = {
     mode: (typeof modbusModes)[number];
     rate: number;
     parity: (typeof modbusParities)[number];
-    stop: number;
+    stop: 1 | 2;
     var: {
       'rd-tmo': number;
       'wr-tmo': number;
@@ -130,4 +130,6 @@ export type CommonSettingsFields = {
 export type DevicesControllerSettings = Pick<
   ControllerSettings,
   '1-wire' | 'modbus' | 'pwm-out' | 'bin-out' | 'adc-in'
->;
+> & {
+  numberingSystem: NumberingSystem;
+};

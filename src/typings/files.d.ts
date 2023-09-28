@@ -1,4 +1,4 @@
-import type { UserRole, Lang } from './common';
+import type { UserRole, Lang, NumberingSystem } from './common';
 
 export type LabelsFileType = {
   type: 'labels';
@@ -11,6 +11,7 @@ export type CommonSettingsFileType = {
   lang: Lang;
   funcsNumberPerPage: number;
   tempUnit: TempUnit;
+  numberingSystem: NumberingSystem;
 };
 
 export type FileType =

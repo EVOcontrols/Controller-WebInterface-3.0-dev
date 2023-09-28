@@ -264,12 +264,13 @@ import type { Lang, TempUnit } from '@/typings/common';
 import type { FuncsNumberPerPage } from '@/typings/funcs';
 import celsius from '@/assets/img/settings/celsius.svg?raw';
 import fahrenheit from '@/assets/img/settings/fahrenheit.svg?raw';
+import { useStoreCommonSettingsFile } from '@/composables/useStoreCommonSettingsFile';
 
 const { api } = useApi();
 
 const indexStore = useIndexStore();
 
-const { controllerDateTime, lang, userRole, tempUnit } = storeToRefs(indexStore);
+const { controllerDateTime, lang, tempUnit } = storeToRefs(indexStore);
 
 const funcsStore = useFuncsStore();
 
@@ -277,7 +278,7 @@ const { funcsNumberPerPage } = storeToRefs(funcsStore);
 
 const { toast } = useToast();
 
-const { saveToFile } = useReadWriteFiles();
+const { storeCommonSettingsFile } = useStoreCommonSettingsFile();
 
 const isPasswordVisible = ref<Record<string, boolean>>({});
 
@@ -708,17 +709,12 @@ async function save() {
   const { changes } = changesAndErrors.value;
   try {
     if (changes.files) {
-      const isSavingFileError = await saveToFile(
-        { type: 'settings', subType: 'common', user: userRole.value },
-        {
-          funcsNumberPerPage: changes.files.funcsNumberPerPage
-            ? parseInt(changes.files.funcsNumberPerPage)
-            : funcsNumberPerPage.value,
-          tempUnit: changes.files.tempUnit || tempUnit.value,
-          lang: changes.files.lang || lang.value,
-        },
+      const r = await storeCommonSettingsFile(
+        changes.files.lang,
+        changes.files.tempUnit,
+        changes.files.funcsNumberPerPage ? parseInt(changes.files.funcsNumberPerPage) : undefined,
       );
-      if (isSavingFileError) {
+      if (r === 'error') {
         throw '';
       }
     }

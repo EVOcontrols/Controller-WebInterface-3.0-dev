@@ -52,6 +52,67 @@
         </PrimaryButton>
       </div>
     </div>
+    <div
+      v-if="modbusSettings.length"
+      class="mt-8 flex flex-col border-b border-[#0b3d68] pb-10 w-full"
+    >
+      <h2 class="font-semibold text-xl leading-[1.2] whitespace-pre mb-[1.125rem]">
+        {{ t('rsSettings') }}
+      </h2>
+      <div class="flex flex-row items-center">
+        <div class="text-[#6d9cc5] text-sm leading-[1.143] mr-6">
+          {{ t('portMode') }}
+        </div>
+        <ButtonGroup
+          :buttons="modbusModes.map((v) => ({ text: t(`portModes.${v}`), value: v }))"
+          :value="modbusSettings[0].mode"
+          additional-classes="px-4"
+          @change="modbusSettings[0].mode = $event"
+        />
+      </div>
+      <div class="flex flex-row mt-[2.8rem]">
+        <div class="text-[#6d9cc5] text-sm leading-[1.143] mr-10">
+          {{ t('speed') }}
+        </div>
+        <InputRange
+          :value="modbusSettings[0].rate"
+          @change="modbusSettings[0].rate = $event"
+        />
+      </div>
+      <div class="flex flex-row items-center mt-[2.5rem]">
+        <div class="text-[#6d9cc5] text-sm leading-[1.143] mr-6">
+          {{ t('parity') }}
+        </div>
+        <ButtonGroup
+          :buttons="modbusParities.map((v) => ({ text: t(`parities.${v}`), value: v }))"
+          :value="modbusSettings[0].parity"
+          additional-classes="px-4"
+          @change="modbusSettings[0].parity = $event"
+        />
+      </div>
+      <div class="flex flex-row items-center mt-[2.75rem]">
+        <div class="text-[#6d9cc5] text-sm leading-[1.143] mr-5">
+          {{ t('stop') }}
+        </div>
+        <ButtonGroup
+          :buttons="([1, 2] as const).map((v) => ({ text: v.toString(), value: v }))"
+          :value="modbusSettings[0].stop"
+          additional-classes="px-4"
+          @change="modbusSettings[0].stop = $event"
+        />
+      </div>
+      <div class="flex flex-row items-center mt-[2.75rem]">
+        <div class="text-[#6d9cc5] text-sm leading-[1.143] mr-5 whitespace-pre">
+          {{ t('numberingSystem') }}
+        </div>
+        <ButtonGroup
+          :buttons="numberingSystems.map((v) => ({ text: v.toUpperCase(), value: v }))"
+          :value="numberingSystem"
+          additional-classes="px-4"
+          @change="emit('setNumberingSystem', $event)"
+        />
+      </div>
+    </div>
     <ModalWrapper
       v-if="isReloadModalOpen"
       @close="isReloadModalOpen = false"
@@ -98,15 +159,25 @@ import PrimaryButton from '@/components/Ui/PrimaryButton.vue';
 import ModalWrapper from '@/components/ModalWrapper.vue';
 import successRound from '@/assets/img/success-round.svg?raw';
 import gears from '@/assets/img/gears-animated.svg?raw';
+import type { DevicesControllerSettings } from '@/typings/settings';
+import ButtonGroup from '@/components/Ui/ButtonGroup.vue';
+import { modbusModes } from '@/data/settings';
+import { cloneDeep } from 'lodash';
+import InputRange from './InputRange.vue';
+import type { NumberingSystem } from '@/typings/common';
 
-defineProps<{
+const props = defineProps<{
   activeDeviceIndex: number;
   deviceCount: number;
   reloadRequired: boolean;
+  modbusSettingsInit: DevicesControllerSettings['modbus'];
+  numberingSystem: NumberingSystem;
 }>();
 
 const emit = defineEmits<{
   (e: 'selectDevice', index: number): void;
+  (e: 'setModbusSettings', settings: DevicesControllerSettings['modbus']): void;
+  (e: 'setNumberingSystem', numberingSystem: NumberingSystem): void;
 }>();
 
 const { api } = useApi();
@@ -118,6 +189,23 @@ const { isControllerRebooting, notConnected } = storeToRefs(indexStore);
 const isReloadModalOpen = ref(false);
 
 const isReloadBtnDisabled = ref(false);
+
+const modbusSettings = ref(cloneDeep(props.modbusSettingsInit));
+
+watch(
+  () => props.modbusSettingsInit,
+  () => {
+    modbusSettings.value = cloneDeep(props.modbusSettingsInit);
+  },
+);
+
+watch(
+  () => modbusSettings.value,
+  () => {
+    emit('setModbusSettings', modbusSettings.value);
+  },
+  { deep: true },
+);
 
 async function reload() {
   isReloadBtnDisabled.value = true;
@@ -148,6 +236,22 @@ const { t } = useI18n({
       modalText: 'Are you sure you want to reboot the device?',
       reloading1: 'The device is rebooting, please wait...',
       reloading2: 'Page will be reloaded automatically \nafter reboot.',
+      rsSettings: 'RS485 bus settings',
+      portMode: 'Port mode',
+      portModes: {
+        off: 'OFF',
+        variables: 'MODBUS VARIABLES',
+        'ext-devs': 'EXTENSION DEVICES',
+      },
+      speed: 'Speed',
+      parity: 'Parity',
+      parities: {
+        none: 'NONE',
+        even: 'EVEN',
+        odd: 'ODD',
+      },
+      stop: 'Stop bit',
+      numberingSystem: 'Default display \nof registers and values',
     },
     ru: {
       selectDevice: 'Выбор устройства',
@@ -159,6 +263,22 @@ const { t } = useI18n({
       modalText: 'Вы действительно хотите перезагрузить \nустройство?',
       reloading1: 'Идет перезагрузка устройства, пожалуйста подождите...',
       reloading2: 'По завершении перезагрузки страница будет перезагружена автоматически.',
+      rsSettings: 'Настройки шины RS485',
+      portMode: 'Режим работы порта',
+      portModes: {
+        off: 'ОТКЛЮЧЕН',
+        variables: 'ПЕРЕМЕННЫЕ MODBUS',
+        'ext-devs': 'УСТРОЙСТВА РАСШИРЕНИЯ',
+      },
+      speed: 'Скорость',
+      parity: 'Четность',
+      parities: {
+        none: 'НЕТ',
+        even: 'ЧЕТНЫЙ',
+        odd: 'НЕЧЕТНЫЙ',
+      },
+      stop: 'Стоп-бит',
+      numberingSystem: 'Отображение регистров \nи значений по умолчанию',
     },
   },
 });
