@@ -37,26 +37,31 @@ export type ControllerSettings = {
     'db-time': number;
     'ct-time': number;
   }[];
-  modbus: {
-    mode: (typeof modbusModes)[number];
+  modbus: ({
     rate: number;
     parity: (typeof modbusParities)[number];
     stop: 1 | 2;
-    var: {
-      'rd-tmo': number;
-      'wr-tmo': number;
-      'rd-pause': number;
-      'wr-pause': number;
-      'cycle-pause': number;
-    };
-    ext: {
-      'get-tmo': number;
-      'set-tmo': number;
-      'ow-scan-tmo': number;
-      'set-cfg-tmo': number;
-      'cycle-pause': number;
-    };
-  }[];
+  } & (
+    | {
+        mode: 'variables';
+        'rd-tmo': number;
+        'wr-tmo': number;
+        'rd-pause': number;
+        'wr-pause': number;
+        'cycle-pause': number;
+      }
+    | {
+        mode: 'ext-devs';
+        'get-tmo': number;
+        'set-tmo': number;
+        'ow-scan-tmo': number;
+        'set-cfg-tmo': number;
+        'cycle-pause': number;
+      }
+    | {
+        mode: 'off';
+      }
+  ))[];
   'adc-in': {
     'avg-size': (number | null)[];
     'clbr-min': (number | null)[];

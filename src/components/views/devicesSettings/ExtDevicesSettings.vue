@@ -1,6 +1,6 @@
 <template>
   <div class="flex flex-col px-8">
-    <div class="mt-8 flex flex-col border-b border-[#0b3d68] pb-10 w-full">
+    <div class="mt-8 flex flex-col border-b border-[#0b3d68] pb-9 w-full">
       <h2 class="font-semibold text-xl leading-[1.2] whitespace-pre mb-[1.125rem]">
         {{ t('selectDevice') }}
       </h2>
@@ -54,7 +54,7 @@
     </div>
     <div
       v-if="modbusSettings.length"
-      class="mt-8 flex flex-col border-b border-[#0b3d68] pb-10 w-full"
+      class="mt-8 border-b border-[#0b3d68] pb-10 w-full"
     >
       <h2 class="font-semibold text-xl leading-[1.2] whitespace-pre mb-[1.125rem]">
         {{ t('rsSettings') }}
@@ -112,6 +112,58 @@
           @change="emit('setNumberingSystem', $event)"
         />
       </div>
+      <template v-if="modbusSettings[0].mode !== 'off'">
+        <AdvancedSettingsButton
+          :is-expanded="!!isAdvancedSettingsExpanded"
+          :is-error="!!advancedSettingsHaveError"
+          @click="isAdvancedSettingsExpanded = !isAdvancedSettingsExpanded"
+        />
+        <CollapseTransition :duration="300">
+          <div
+            v-show="isAdvancedSettingsExpanded"
+            class=""
+          >
+            <div class="table w-max mt-5">
+              <div
+                v-for="p in modbusAdvancedParams[modbusSettings[0].mode]"
+                :key="p"
+                class="table-row h-[3.43rem] align-top last:h-10"
+              >
+                <div class="text-[#6d9cc5] text-sm leading-[1.143] table-cell pr-4">
+                  {{ `${p}:` }}
+                </div>
+                <UiInput
+                  :init-value="isKeyOf(modbusSettings[0], p) ? modbusSettings[0][p] : 0"
+                  :name="p"
+                  initType="number"
+                  class="table-cell w-16 text-center !px-2"
+                  :min-max="[0, undefined]"
+                  :status="fieldsInvalidStatuses.has(`modbus-0-${p}`) ? 'invalid' : 'valid'"
+                  :input-type="['int']"
+                  @status-changed="
+                    $event === 'invalid' || $event === 'not-allowed'
+                      ? fieldsInvalidStatuses.add(`modbus-0-${p}`)
+                      : fieldsInvalidStatuses.delete(`modbus-0-${p}`)
+                  "
+                  @value-changed="
+                    $event === undefined || !isKeyOf(modbusSettings[0], p)
+                      ? ''
+                      : (modbusSettings[0][p] = $event)
+                  "
+                />
+                <div
+                  class="text-[#ed4272] text-sm leading-[1.143] invisible opacity-0 transition-[opacity,visibility] error:visible error:opacity-100 pl-4 table-cell"
+                  :class="{
+                    error: fieldsInvalidStatuses.has(`modbus-0-${p}`),
+                  }"
+                >
+                  {{ t('positiveInteger') }}
+                </div>
+              </div>
+            </div>
+          </div>
+        </CollapseTransition>
+      </template>
     </div>
     <ModalWrapper
       v-if="isReloadModalOpen"
@@ -165,6 +217,9 @@ import { modbusModes } from '@/data/settings';
 import { cloneDeep } from 'lodash';
 import InputRange from './InputRange.vue';
 import type { NumberingSystem } from '@/typings/common';
+import AdvancedSettingsButton from '@/components/views/devicesSettings/AdvancedSettingsButton.vue';
+import CollapseTransition from '@/components/CollapseTransition.vue';
+import UiInput from '@/components/Ui/UiInput.vue';
 
 const props = defineProps<{
   activeDeviceIndex: number;
@@ -172,12 +227,16 @@ const props = defineProps<{
   reloadRequired: boolean;
   modbusSettingsInit: DevicesControllerSettings['modbus'];
   numberingSystem: NumberingSystem;
+  fieldsInvalidStatuses: Set<string>;
+  advancedSettingsHaveError: boolean;
 }>();
 
 const emit = defineEmits<{
   (e: 'selectDevice', index: number): void;
   (e: 'setModbusSettings', settings: DevicesControllerSettings['modbus']): void;
   (e: 'setNumberingSystem', numberingSystem: NumberingSystem): void;
+  (e: 'setFieldsInvalidStatus', param: string): void;
+  (e: 'removeFieldsInvalidStatus', param: string): void;
 }>();
 
 const { api } = useApi();
@@ -191,6 +250,13 @@ const isReloadModalOpen = ref(false);
 const isReloadBtnDisabled = ref(false);
 
 const modbusSettings = ref(cloneDeep(props.modbusSettingsInit));
+
+const isAdvancedSettingsExpanded = ref(false);
+
+const modbusAdvancedParams = {
+  variables: ['rd-tmo', 'wr-tmo', 'rd-pause', 'wr-pause', 'cycle-pause'],
+  'ext-devs': ['get-tmo', 'set-tmo', 'ow-scan-tmo', 'set-cfg-tmo', 'cycle-pause'],
+} as const;
 
 watch(
   () => props.modbusSettingsInit,

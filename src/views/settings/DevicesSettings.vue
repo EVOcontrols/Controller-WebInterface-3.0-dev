@@ -8,6 +8,8 @@
           :reload-required="reloadRequired"
           :modbus-settings-init="settingsInit.modbus"
           :numbering-system="settings.numberingSystem"
+          :fields-invalid-statuses="fieldsInvalidStatuses"
+          :advanced-settings-have-error="advancedSettingsHaveError.modbus"
           @select-device="activeDeviceIndex = $event"
           @set-modbus-settings="settings['modbus'] = $event"
           @set-numbering-system="settings.numberingSystem = $event"
@@ -21,14 +23,14 @@
             {{ t(topic) }}
           </h2>
           <div v-if="topic === '1-wire'">
-            <h3 class="text-sm leading-[1.143] mt-[1.125rem] mb-2">
+            <h3 class="text-sm leading-[1.143] mt-[1.125rem] mb-5">
               {{ t('work-mode') }}
             </h3>
-            <div class="table w-max border-spacing-y-3.5">
+            <div class="table w-max">
               <div
                 v-for="(w, i) in settings['1-wire']"
                 :key="i"
-                class="table-row"
+                class="table-row h-11 align-top last:h-[1.875rem]"
               >
                 <div class="text-[#6d9cc5] text-sm leading-[1.143] table-cell pr-4">
                   {{ `${t('bus')} ${i + 1}` }}
@@ -42,22 +44,22 @@
               </div>
             </div>
             <AdvancedSettingsButton
-              :is-expanded="!!isAdvancedSettingsExpanded['1-wire']"
+              :is-expanded="isAdvancedSettingsExpanded"
               :is-error="!!advancedSettingsHaveError['1-wire']"
-              @click="isAdvancedSettingsExpanded['1-wire'] = !isAdvancedSettingsExpanded['1-wire']"
+              @click="isAdvancedSettingsExpanded = !isAdvancedSettingsExpanded"
             />
             <CollapseTransition :duration="300">
-              <div v-show="isAdvancedSettingsExpanded['1-wire']">
-                <div class="table w-max border-spacing-y-3.5">
+              <div v-show="isAdvancedSettingsExpanded">
+                <div class="table w-max mt-5 border-collapse">
                   <div
                     v-for="(w, i) in settings['1-wire']"
                     :key="i"
-                    class="table-row"
+                    class="table-row-group [&:last-child>div:last-child]:!h-10"
                   >
                     <div
                       v-for="(p, y) in oneWiresParams"
                       :key="p"
-                      class="table-row"
+                      class="table-row h-[3.43rem] align-top"
                     >
                       <div class="text-[#6d9cc5] text-sm leading-[1.143] table-cell pr-9">
                         {{ y ? '' : `${t('bus')} ${i + 1}` }}
@@ -67,8 +69,9 @@
                       </div>
                       <UiInput
                         :init-value="w[p]"
+                        :name="p"
                         initType="number"
-                        class="table-cell w-16 text-center"
+                        class="table-cell w-16 text-center !px-2"
                         :min-max="[0, undefined]"
                         :status="
                           fieldsInvalidStatuses.has(`1-wire-${i}-${p}`) ? 'invalid' : 'valid'
@@ -103,15 +106,18 @@
                 class="table-row text-[#6d9cc5] text-sm leading-[1.143]"
               >
                 <div class="table-cell pr-9 whitespace-pre">
-                  {{ i ? '' : t('adc-avg') }}
+                  <span class="block max-h-px overflow-visible">
+                    {{ i ? '' : t('adc-avg') }}
+                  </span>
                 </div>
                 <div class="table-cell pr-2.5">
                   {{ `${t('input')} ${i + 1}:` }}
                 </div>
                 <UiInput
                   :init-value="settings['adc-in']['avg-size'][i]"
+                  name="avg-size"
                   initType="number"
-                  class="table-cell w-16 text-center"
+                  class="table-cell w-16 text-center !px-2"
                   :min-max="[2, 32]"
                   :status="fieldsInvalidStatuses.has(`adc-avg-${i}`) ? 'invalid' : 'valid'"
                   :input-type="['int']"
@@ -135,7 +141,7 @@
               </div>
             </div>
             <div
-              class="table w-max border-spacing-y-3.5 mt-[3.3rem]"
+              class="table w-max border-spacing-y-3.5 mt-[1.5rem] last:-mb-3.5"
               v-for="prefix in ['lim', 'clbr'] as const"
               :key="prefix"
             >
@@ -159,8 +165,9 @@
                   </div>
                   <UiInput
                     :init-value="settings['adc-in'][`${prefix}-${m}`][i]"
+                    :name="m"
                     initType="number"
-                    class="table-cell w-16 text-center"
+                    class="table-cell w-16 text-center !px-2"
                     :min-max="[0, undefined]"
                     :status="
                       fieldsInvalidStatuses.has(`adc-${prefix}-${m}-${i}`) ? 'invalid' : 'valid'
@@ -200,8 +207,9 @@
             </div>
             <UiInput
               :init-value="settings['bin-out']['min-delay']"
+              name="min-delay"
               initType="number"
-              class="table-cell w-16 text-center"
+              class="table-cell w-16 text-center !px-2"
               :min-max="[0, 200]"
               :status="fieldsInvalidStatuses.has('bin-out') ? 'invalid' : 'valid'"
               :input-type="['int']"
@@ -227,7 +235,7 @@
             </div>
           </div>
           <div v-else-if="topic === 'pwm-out'">
-            <div class="table w-max border-spacing-y-3.5">
+            <div class="table w-max border-spacing-y-3.5 -mb-3.5 mt-1.5">
               <div
                 v-for="(freq, i) in settings['pwm-out']['frequency']"
                 :key="i"
@@ -238,8 +246,9 @@
                 </div>
                 <UiInput
                   :init-value="settings['pwm-out']['frequency'][i]"
+                  name="frequency"
                   initType="number"
-                  class="table-cell w-16 text-center"
+                  class="table-cell w-16 text-center !px-2"
                   :min-max="[50, 5000]"
                   :status="fieldsInvalidStatuses.has(`pwm-out-${i}`) ? 'invalid' : 'valid'"
                   :input-type="['int']"
@@ -316,7 +325,7 @@ const topics: (keyof DevicesControllerSettings)[] = [
   'pwm-out',
 ];
 
-const isAdvancedSettingsExpanded = ref<Partial<Record<'modbus' | '1-wire', boolean>>>({});
+const isAdvancedSettingsExpanded = ref<boolean>(false);
 
 const oneWiresParams = ['cycle-pause', 'db-time', 'ct-time'] as const;
 
@@ -326,6 +335,7 @@ const activeDeviceIndex = ref(0);
 
 const advancedSettingsHaveError = computed(() => ({
   '1-wire': [...fieldsInvalidStatuses.value].some((s) => s.startsWith('1-wire')),
+  modbus: [...fieldsInvalidStatuses.value].some((s) => s.startsWith('modbus')),
 }));
 
 const isThereChanges = computed(() => {

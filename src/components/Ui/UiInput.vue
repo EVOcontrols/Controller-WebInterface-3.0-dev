@@ -16,6 +16,7 @@
     :disabled="disabled"
     autocomplete="off"
     @focus="onFocus"
+    :name="name"
   />
 </template>
 
@@ -34,6 +35,7 @@ const props = withDefaults(
   defineProps<{
     initValue: V | undefined;
     initType: T;
+    name: string;
     status?: InputFieldStatus;
     minMax?: [number | undefined, number | undefined];
     required?: boolean;

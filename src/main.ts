@@ -10,6 +10,9 @@ const app = createApp(App);
 const i18n = createI18n({
   legacy: false,
   availableLocales: langs,
+  missingWarn: false,
+  fallbackWarn: false,
+  messages: commonMessages,
 });
 
 app.use(createPinia());

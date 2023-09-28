@@ -181,6 +181,7 @@
                   <UiInput
                     :init-type="field.type"
                     :init-value="field.value"
+                    :name="field.param"
                     class="table-cell"
                     :class="[field.widthClass]"
                     :input-type="field.validationType"
@@ -568,7 +569,7 @@ function setFields(settings: ControllerSettings) {
           type: 'number',
           orientation: 'h',
           value: settings.rtc.interval,
-          widthClass: 'w-[3.563rem]',
+          widthClass: 'w-[3.563rem] !text-center !px-2',
           status: 'valid',
           validationType: ['int'],
         },
