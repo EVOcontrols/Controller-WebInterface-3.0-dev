@@ -29,7 +29,7 @@ export type Toast = {
   id: number;
   type: (typeof toastTypes)[number];
   header: string;
-  text: string;
+  text: string | (string | (string | { text: string; action: Function }))[];
   timeout: number;
   widthInRem: number;
 };

@@ -6,7 +6,7 @@ export function useToast() {
 
   const toast = toastTypes.reduce(
     (acc, type) => {
-      acc[type] = (header: string, text: string, timeout = 7000, widthInRem = 24) => {
+      acc[type] = (header: string, text: Toast['text'], timeout = 7000, widthInRem = 24) => {
         const id = Math.random();
         indexStore.addNewToast({ id, type, header, text, timeout, widthInRem });
         return id;
@@ -15,7 +15,7 @@ export function useToast() {
     },
     {} as Record<
       Toast['type'],
-      (header: string, text: string, timeout?: number, widthInRem?: number) => number
+      (header: string, text: Toast['text'], timeout?: number, widthInRem?: number) => number
     >,
   );
 

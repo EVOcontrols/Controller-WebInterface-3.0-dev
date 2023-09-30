@@ -251,6 +251,8 @@ const indexStore = useIndexStore();
 
 const { isControllerRebooting, notConnected } = storeToRefs(indexStore);
 
+const { toast } = useToast();
+
 const isReloadModalOpen = ref(false);
 
 const isReloadBtnDisabled = ref(false);
@@ -353,6 +355,9 @@ const { t } = useI18n({
       },
       stop: 'Stop bit',
       numberingSystem: 'Default display \nof registers and values',
+      press: 'Press',
+      here: 'here',
+      forReload: 'for reboot',
     },
     ru: {
       selectDevice: 'Выбор устройства',
@@ -379,7 +384,26 @@ const { t } = useI18n({
       },
       stop: 'Стоп-бит',
       numberingSystem: 'Отображение регистров \nи значений по умолчанию',
+      press: 'Нажмите',
+      here: 'сюда',
+      forReload: 'для перезагрузки',
     },
   },
+});
+
+onMounted(() => {
+  if (props.reloadRequired) {
+    const toastId = toast.info(t('reloadRequired'), [
+      `${t('press')} `,
+      {
+        text: t('here'),
+        action: () => {
+          indexStore.deleteToast(toastId);
+          isReloadModalOpen.value = true;
+        },
+      },
+      ` ${t('forReload')}`,
+    ]);
+  }
 });
 </script>

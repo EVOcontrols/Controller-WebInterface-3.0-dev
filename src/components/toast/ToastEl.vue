@@ -7,7 +7,7 @@
     <component
       class="w-12"
       :color="colors.icon"
-      :is="type === 'success' ? SuccessIcon : ErrorWarningIcon"
+      :is="iconComponent"
     />
     <div class="flex-1 pl-3.5">
       <p
@@ -20,7 +20,26 @@
         class="font-medium"
         :class="colors.text"
       >
-        {{ text }}
+        <template v-if="Array.isArray(text)">
+          <span
+            v-for="(str, i) in text"
+            :key="i"
+          >
+            <span v-if="typeof str === 'string'">
+              {{ str }}
+            </span>
+            <span
+              v-else
+              class="cursor-pointer text-[#adebff] underline underline-offset-2 font-semibold"
+              @click="str.action"
+            >
+              {{ str.text }}
+            </span>
+          </span>
+        </template>
+        <template v-else>
+          {{ text }}
+        </template>
       </p>
     </div>
     <close-icon
@@ -46,6 +65,7 @@
 <script lang="ts" setup>
 import SuccessIcon from './SuccessIcon.vue';
 import ErrorWarningIcon from './ErrorWarningIcon.vue';
+import InfoIcon from './InfoIcon.vue';
 import CloseIcon from './CloseIcon.vue';
 import type { Toast } from '@/typings/common';
 
@@ -55,7 +75,7 @@ const props = withDefaults(
     type: Toast['type'];
     timeout?: number;
     header: string;
-    text?: string;
+    text?: Toast['text'];
     widthInRem?: number;
   }>(),
   {
@@ -77,6 +97,20 @@ let timer: ReturnType<typeof setTimeout> | number = 0;
 
 const timeWidth = ref<number | string>(0);
 
+const iconComponent = computed(() => {
+  switch (props.type) {
+    case 'success':
+      return SuccessIcon;
+    case 'info':
+      return InfoIcon;
+    case 'error':
+    case 'warning':
+      return ErrorWarningIcon;
+    default:
+      return null;
+  }
+});
+
 const colors = computed(() => {
   switch (props.type) {
     case 'success':
@@ -86,6 +120,14 @@ const colors = computed(() => {
         // bg: 'rgba(28, 138, 99, 0.35)',
         icon: [''],
         time: 'linear-gradient(270deg, #93DEBF 0.56%, rgba(40, 119, 137, 0) 58.47%)',
+      };
+    case 'info':
+      return {
+        header: 'text-[#89c8fa]',
+        text: 'text-[#77c3ff]',
+        // bg: 'rgba(137, 29, 68, 0.48)',
+        icon: [''],
+        time: 'linear-gradient(270deg, #148EF8 0.56%, rgba(30, 72, 106, 0.00) 57.04%)',
       };
     case 'error':
       return {
@@ -150,6 +192,9 @@ onBeforeUnmount(() => {
   }
   &.warning-toast {
     background-color: rgba(35, 85, 132, 0.3);
+  }
+  &.info-toast {
+    background-color: rgba(20, 142, 248, 0.35);
   }
 }
 </style>
