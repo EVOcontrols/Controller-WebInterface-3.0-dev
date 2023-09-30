@@ -44,19 +44,19 @@ export type ControllerSettings = {
   } & (
     | {
         mode: 'variables';
-        'rd-tmo': number;
-        'wr-tmo': number;
-        'rd-pause': number;
-        'wr-pause': number;
-        'cycle-pause': number;
+        'rd-tmo'?: number;
+        'wr-tmo'?: number;
+        'rd-pause'?: number;
+        'wr-pause'?: number;
+        'cycle-pause'?: number;
       }
     | {
         mode: 'ext-devs';
-        'get-tmo': number;
-        'set-tmo': number;
-        'ow-scan-tmo': number;
-        'set-cfg-tmo': number;
-        'cycle-pause': number;
+        'get-tmo'?: number;
+        'set-tmo'?: number;
+        'ow-scan-tmo'?: number;
+        'set-cfg-tmo'?: number;
+        'cycle-pause'?: number;
       }
     | {
         mode: 'off';

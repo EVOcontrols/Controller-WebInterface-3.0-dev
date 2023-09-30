@@ -136,7 +136,7 @@
                     error: fieldsInvalidStatuses.has(`adc-avg-${i}`),
                   }"
                 >
-                  {{ t('from2To32') }}
+                  {{ t('integerFromTo', { from: 2, to: 32 }) }}
                 </div>
               </div>
             </div>
@@ -231,7 +231,7 @@
                 error: fieldsInvalidStatuses.has('bin-out'),
               }"
             >
-              {{ t('from0To200') }}
+              {{ t('integerFromTo', { from: 0, to: 200 }) }}
             </div>
           </div>
           <div v-else-if="topic === 'pwm-out'">
@@ -270,7 +270,7 @@
                     error: fieldsInvalidStatuses.has(`pwm-out-${i}`),
                   }"
                 >
-                  {{ t('from50To5000') }}
+                  {{ t('integerFromTo', { from: 50, to: 5000 }) }}
                 </div>
               </div>
             </div>
@@ -385,6 +385,13 @@ async function save() {
             set(settingsToSave[k1][i], [k2], v5);
           }
         });
+        if (
+          !isEmpty(settingsToSave[k1][i]) &&
+          k1 === 'modbus' &&
+          !('mode' in settingsToSave[k1][i])
+        ) {
+          settingsToSave[k1][i].mode = v3.mode;
+        }
       });
       if (!settingsToSave[k1].filter((v9: any) => Object.keys(v9).length).length) {
         delete settingsToSave[k1];
@@ -426,6 +433,7 @@ async function save() {
       });
     }
   });
+  // console.log(cloneDeep(settingsToSave));
   try {
     if (!isEmpty(settingsToSave)) {
       const r = await api.post('set_config', settingsToSave);
@@ -439,6 +447,10 @@ async function save() {
         current.numberingSystem,
       );
       if (r === 'error') throw '';
+    }
+    if (settingsToSave.modbus?.[0]?.mode && settings.value) {
+      const r = await api.get<ControllerSettings>('get_config');
+      settings.value.modbus[0] = r.data.modbus[0];
     }
     settingsInit.value = cloneDeep(settings.value);
   } catch (error) {
@@ -466,12 +478,8 @@ const { t } = useI18n({
         'db-time': 'debounce-time:',
         'ct-time': 'comert-time:',
       },
-      positiveInteger: 'Enter a positive integer',
       'adc-avg': 'Use the average value \nfor several measurements',
       input: 'input',
-      from2To32: 'Enter a value from 2 to 32',
-      from0To200: 'Enter a value from 0 to 200',
-      from50To5000: 'Enter a value from 50 to 5000',
       lim: 'Limits',
       clbr: 'Calibration',
       'lim-min': 'Lower input threshold',
@@ -482,13 +490,6 @@ const { t } = useI18n({
       ms: 'ms',
       output: 'output',
       hz: 'Hz',
-      toast: {
-        success: 'Saved',
-        error: {
-          header: 'Error',
-          text: 'Check entered values',
-        },
-      },
     },
     ru: {
       '1-wire': 'Настройки шин 1-wire',
@@ -507,12 +508,8 @@ const { t } = useI18n({
         'db-time': 'debounce-time:',
         'ct-time': 'comert-time:',
       },
-      positiveInteger: 'Введите положительное целое число',
       'adc-avg': 'Использовать среднее значение \nза несколько измерений',
       input: 'вход',
-      from2To32: 'Введите значение от 2 до 32',
-      from0To200: 'Введите значение от 0 до 200',
-      from50To5000: 'Введите значение от 50 до 5000',
       lim: 'Пределы',
       clbr: 'Калибровка',
       'lim-min': 'Нижний порог входа',
@@ -523,13 +520,6 @@ const { t } = useI18n({
       ms: 'мс',
       output: 'выход',
       hz: 'Гц',
-      toast: {
-        success: 'Сохранено',
-        error: {
-          header: 'Ошибка',
-          text: 'Проверьте введённые значения',
-        },
-      },
     },
   },
 });

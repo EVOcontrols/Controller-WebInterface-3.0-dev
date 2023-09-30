@@ -125,7 +125,7 @@
           >
             <div class="table w-max mt-5">
               <div
-                v-for="p in modbusAdvancedParams[modbusSettings[0].mode]"
+                v-for="(p, i) in modbusAdvancedParams[modbusSettings[0].mode]"
                 :key="p"
                 class="table-row h-[3.43rem] align-top last:h-10"
               >
@@ -133,11 +133,14 @@
                   {{ `${p}:` }}
                 </div>
                 <UiInput
-                  :init-value="isKeyOf(modbusSettings[0], p) ? modbusSettings[0][p] : 0"
+                  :init-value="isKeyOf(modbusSettings[0], p) ? modbusSettings[0][p] : undefined"
                   :name="p"
                   initType="number"
                   class="table-cell w-16 text-center !px-2"
-                  :min-max="[0, undefined]"
+                  :min-max="[
+                    modbusAdvancedParamsMin[modbusSettings[0].mode][i],
+                    modbusAdvancedParamsMax[modbusSettings[0].mode][i],
+                  ]"
                   :status="fieldsInvalidStatuses.has(`modbus-0-${p}`) ? 'invalid' : 'valid'"
                   :input-type="['int']"
                   @status-changed="
@@ -146,9 +149,7 @@
                       : fieldsInvalidStatuses.delete(`modbus-0-${p}`)
                   "
                   @value-changed="
-                    $event === undefined || !isKeyOf(modbusSettings[0], p)
-                      ? ''
-                      : (modbusSettings[0][p] = $event)
+                    !isKeyOf(modbusSettings[0], p) ? '' : (modbusSettings[0][p] = $event)
                   "
                 />
                 <div
@@ -157,7 +158,12 @@
                     error: fieldsInvalidStatuses.has(`modbus-0-${p}`),
                   }"
                 >
-                  {{ t('positiveInteger') }}
+                  {{
+                    t('integerFromTo', {
+                      from: modbusAdvancedParamsMin[modbusSettings[0].mode][i],
+                      to: modbusAdvancedParamsMax[modbusSettings[0].mode][i],
+                    })
+                  }}
                 </div>
               </div>
             </div>
@@ -258,6 +264,16 @@ const modbusAdvancedParams = {
   'ext-devs': ['get-tmo', 'set-tmo', 'ow-scan-tmo', 'set-cfg-tmo', 'cycle-pause'],
 } as const;
 
+const modbusAdvancedParamsMin = {
+  variables: [5, 5, 0, 0, 0],
+  'ext-devs': [1, 1, 100, 100, 0],
+} as const;
+
+const modbusAdvancedParamsMax = {
+  variables: [50000, 50000, 50000, 50000, 50000],
+  'ext-devs': [50000, 50000, 50000, 50000, 50000],
+} as const;
+
 watch(
   () => props.modbusSettingsInit,
   () => {
@@ -271,6 +287,26 @@ watch(
     emit('setModbusSettings', modbusSettings.value);
   },
   { deep: true },
+);
+
+watch(
+  () => modbusSettings.value[0].mode,
+  () => {
+    const [params] = modbusSettings.value;
+    if (params.mode === 'variables') {
+      modbusAdvancedParams.variables.forEach((p) => {
+        if (!(p in modbusSettings.value[0]) || p === 'cycle-pause') {
+          params[p] = undefined;
+        }
+      });
+    } else if (params.mode === 'ext-devs') {
+      modbusAdvancedParams['ext-devs'].forEach((p) => {
+        if (!(p in modbusSettings.value[0]) || p === 'cycle-pause') {
+          params[p] = undefined;
+        }
+      });
+    }
+  },
 );
 
 async function reload() {
@@ -298,7 +334,6 @@ const { t } = useI18n({
       reloadNoRequired: 'Reboot not required',
       reloadRequired: 'Reboot required',
       reload: 'Reboot',
-      confirmation: 'Confirmation',
       modalText: 'Are you sure you want to reboot the device?',
       reloading1: 'The device is rebooting, please wait...',
       reloading2: 'Page will be reloaded automatically \nafter reboot.',
@@ -325,7 +360,6 @@ const { t } = useI18n({
       reloadNoRequired: 'Перезагрузка не требуется',
       reloadRequired: 'Требуется перезагрузка',
       reload: 'Перезагрузка',
-      confirmation: 'Подтверждение',
       modalText: 'Вы действительно хотите перезагрузить \nустройство?',
       reloading1: 'Идет перезагрузка устройства, пожалуйста подождите...',
       reloading2: 'По завершении перезагрузки страница будет перезагружена автоматически.',
