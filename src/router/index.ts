@@ -1,7 +1,12 @@
 import { useIndexStore } from '@/stores';
+import type { Lang } from '@/typings/common';
 import { createRouter, createWebHistory } from 'vue-router';
 
-const commonPageTitle = 'EVO controls';
+declare module 'vue-router' {
+  interface RouteMeta {
+    title: (lang: Lang) => string;
+  }
+}
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -11,7 +16,7 @@ const router = createRouter({
       name: 'login',
       component: () => import('@/views/LoginPage.vue'),
       meta: {
-        title: `${commonPageTitle} | Login`,
+        title: (lang) => (lang === 'en' ? 'Login' : 'Вход'),
       },
     },
     {
@@ -30,6 +35,9 @@ const router = createRouter({
               path: '',
               name: 'widgets',
               component: () => import('@/views/panel/WidgetsPage.vue'),
+              meta: {
+                title: (lang) => (lang === 'en' ? 'Control panel' : 'Панель управления'),
+              },
             },
           ],
         },
@@ -48,11 +56,17 @@ const router = createRouter({
               path: 'common',
               name: 'common-settings',
               component: () => import('@/views/settings/CommonSettings.vue'),
+              meta: {
+                title: (lang) => (lang === 'en' ? 'Common settings' : 'Общие настройки'),
+              },
             },
             {
               path: 'devices',
               name: 'devices-settings',
               component: () => import('@/views/settings/DevicesSettings.vue'),
+              meta: {
+                title: (lang) => (lang === 'en' ? 'Devices settings' : 'Настройки устройств'),
+              },
             },
           ],
         },
@@ -80,7 +94,8 @@ router.beforeEach((to) => {
 });
 
 router.afterEach((to, from) => {
-  window.document.title = (to.meta?.title as string) || 'EVO controls';
+  const indexStore = useIndexStore();
+  window.document.title = `EVO controls | ${to.meta.title(indexStore.lang)}`;
   Object.assign(to.meta, { previous: from.name });
 });
 
