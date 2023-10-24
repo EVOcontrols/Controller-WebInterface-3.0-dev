@@ -3,7 +3,7 @@ import axios, { AxiosError, type InternalAxiosRequestConfig } from 'axios';
 export function useApi() {
   const indexStore = useIndexStore();
 
-  const { authToken, notConnected } = storeToRefs(indexStore);
+  const { authToken, notConnected, isControllerRebooting } = storeToRefs(indexStore);
 
   const route = useRoute();
 
@@ -73,7 +73,7 @@ export function useApi() {
         error.code === 'ERR_NETWORK' ||
         error.response?.status === 500
       ) {
-        if (!notConnected.value) {
+        if (!notConnected.value && !isControllerRebooting.value) {
           indexStore.setIsNotConnected(true);
         } else {
           await new Promise((res) => {

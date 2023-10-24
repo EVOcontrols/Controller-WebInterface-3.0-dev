@@ -42,13 +42,13 @@
       </h2>
       <div class="flex flex-row items-center">
         <div class="text-[#6d9cc5] text-sm leading-[1.143] mr-6">
-          {{ reloadRequired ? t('reloadRequired') : t('reloadNoRequired') }}
+          {{ rebootRequired ? t('rebootRequired') : t('rebootNoRequired') }}
         </div>
         <PrimaryButton
           class="!h-8"
-          @click="isReloadModalOpen = true"
+          @click="isRebootModalOpen = true"
         >
-          {{ t('reload') }}
+          {{ t('reboot') }}
         </PrimaryButton>
       </div>
     </div>
@@ -172,12 +172,12 @@
       </template>
     </div>
     <ModalWrapper
-      v-if="isReloadModalOpen"
-      @close="isReloadModalOpen = false"
-      :confirm-text="t('reload')"
-      :is-saving="isReloadBtnDisabled"
+      v-if="isRebootModalOpen"
+      @close="isRebootModalOpen = false"
+      :confirm-text="t('reboot')"
+      :is-saving="isRebootingStarted"
       :trigger-close="isControllerRebooting"
-      @confirm="reload"
+      @confirm="reboot"
     >
       <template #title-icon>
         <span v-html="successRound"></span>
@@ -190,8 +190,10 @@
       </template>
     </ModalWrapper>
     <ModalWrapper
-      v-if="isControllerRebooting"
+      v-if="isRebootingModalOpen"
       :is-saving="true"
+      :trigger-close="!isControllerRebooting"
+      @close="isRebootingModalOpen = false"
     >
       <template #custom>
         <div class="shadow-[0_0_1.375rem_0_#082135] p-6 flex flex-col rounded-xl">
@@ -201,7 +203,7 @@
           ></span>
           <div class="text-[#9adbf6] text-sm leading-[1.167] tracking-[0.03em] whitespace-pre">
             <div>
-              {{ t('reloading1') }}
+              {{ t('rebooting1') }}
             </div>
           </div>
         </div>
@@ -230,7 +232,7 @@ import UiInput from '@/components/Ui/UiInput.vue';
 const props = defineProps<{
   activeDeviceIndex: number;
   deviceCount: number;
-  reloadRequired: boolean;
+  rebootRequired: boolean;
   modbusSettingsInit: DevicesControllerSettings['modbus'];
   numberingSystem: NumberingSystem;
   fieldsInvalidStatuses: Set<string>;
@@ -249,13 +251,15 @@ const { api } = useApi();
 
 const indexStore = useIndexStore();
 
-const { isControllerRebooting, notConnected } = storeToRefs(indexStore);
+const { isControllerRebooting } = storeToRefs(indexStore);
 
 const { toast } = useToast();
 
-const isReloadModalOpen = ref(false);
+const isRebootModalOpen = ref(false);
 
-const isReloadBtnDisabled = ref(false);
+const isRebootingModalOpen = ref(false);
+
+const isRebootingStarted = ref(false);
 
 const modbusSettings = ref(cloneDeep(props.modbusSettingsInit));
 
@@ -311,34 +315,31 @@ watch(
   },
 );
 
-async function reload() {
-  isReloadBtnDisabled.value = true;
+async function reboot() {
+  isRebootingStarted.value = true;
   try {
     await api.post('reboot', { device: 0, reboot: true });
     indexStore.setIsControllerRebooting(true);
+    isRebootingModalOpen.value = true;
+    setTimeout(() => {
+      isRebootingStarted.value = false;
+    }, 150);
   } catch (error) {
-    //
+    isRebootingStarted.value = false;
   }
-  isReloadBtnDisabled.value = true;
 }
-
-watch(notConnected, () => {
-  if (!notConnected.value && isControllerRebooting.value) {
-    window.location.reload();
-  }
-});
 
 const { t } = useI18n({
   messages: {
     en: {
       selectDevice: 'Select device',
       manageDevice: 'Manage device',
-      reloadNoRequired: 'Reboot not required',
-      reloadRequired: 'Reboot required',
-      reload: 'Reboot',
+      rebootNoRequired: 'Reboot not required',
+      rebootRequired: 'Reboot required',
+      reboot: 'Reboot',
       modalText: 'Are you sure you want to reboot the device?',
-      reloading1: 'The device is rebooting, please wait...',
-      reloading2: 'Page will be reloaded automatically \nafter reboot.',
+      rebooting1: 'The device is rebooting, please wait...',
+      rebooting2: 'Page will be rebooted automatically \nafter reboot.',
       rsSettings: 'RS485 bus settings',
       portMode: 'Port mode',
       portModes: {
@@ -357,17 +358,17 @@ const { t } = useI18n({
       numberingSystem: 'Default display \nof registers and values',
       press: 'Press',
       here: 'here',
-      forReload: 'for reboot',
+      forReboot: 'for reboot',
     },
     ru: {
       selectDevice: 'Выбор устройства',
       manageDevice: 'Управление устройством',
-      reloadNoRequired: 'Перезагрузка не требуется',
-      reloadRequired: 'Требуется перезагрузка',
-      reload: 'Перезагрузка',
+      rebootNoRequired: 'Перезагрузка не требуется',
+      rebootRequired: 'Требуется перезагрузка',
+      reboot: 'Перезагрузка',
       modalText: 'Вы действительно хотите перезагрузить \nустройство?',
-      reloading1: 'Идет перезагрузка устройства, пожалуйста подождите...',
-      reloading2: 'По завершении перезагрузки страница будет перезагружена автоматически.',
+      rebooting1: 'Идет перезагрузка устройства, пожалуйста подождите...',
+      rebooting2: 'По завершении перезагрузки страница будет перезагружена автоматически.',
       rsSettings: 'Настройки шины RS485',
       portMode: 'Режим работы порта',
       portModes: {
@@ -386,23 +387,23 @@ const { t } = useI18n({
       numberingSystem: 'Отображение регистров \nи значений по умолчанию',
       press: 'Нажмите',
       here: 'сюда',
-      forReload: 'для перезагрузки',
+      forReboot: 'для перезагрузки',
     },
   },
 });
 
 onMounted(() => {
-  if (props.reloadRequired) {
-    const toastId = toast.info(t('reloadRequired'), [
+  if (props.rebootRequired) {
+    const toastId = toast.info(t('rebootRequired'), [
       `${t('press')} `,
       {
         text: t('here'),
         action: () => {
           indexStore.deleteToast(toastId);
-          isReloadModalOpen.value = true;
+          isRebootModalOpen.value = true;
         },
       },
-      ` ${t('forReload')}`,
+      ` ${t('forReboot')}`,
     ]);
   }
 });

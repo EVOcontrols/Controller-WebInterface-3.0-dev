@@ -68,6 +68,7 @@ import ErrorWarningIcon from './ErrorWarningIcon.vue';
 import InfoIcon from './InfoIcon.vue';
 import CloseIcon from './CloseIcon.vue';
 import type { Toast } from '@/typings/common';
+import type { Component } from 'vue';
 
 const props = withDefaults(
   defineProps<{
@@ -97,7 +98,7 @@ let timer: ReturnType<typeof setTimeout> | number = 0;
 
 const timeWidth = ref<number | string>(0);
 
-const iconComponent = computed(() => {
+const iconComponent = computed<Component | null>(() => {
   switch (props.type) {
     case 'success':
       return SuccessIcon;

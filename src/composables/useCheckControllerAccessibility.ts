@@ -3,12 +3,12 @@ import { useApi } from './useApi';
 export function useCheckControllerAccessibility() {
   const indexStore = useIndexStore();
 
-  const { notConnected, isInterfaceStarted } = storeToRefs(indexStore);
+  const { notConnected, isInterfaceStarted, isControllerRebooting } = storeToRefs(indexStore);
 
   const { api } = useApi();
 
-  watch(notConnected, () => {
-    if (notConnected.value && isInterfaceStarted.value) {
+  watch([notConnected, isControllerRebooting], () => {
+    if ((notConnected.value || isControllerRebooting) && isInterfaceStarted.value) {
       checkAccessibility();
     }
   });
@@ -16,7 +16,11 @@ export function useCheckControllerAccessibility() {
   async function checkAccessibility() {
     try {
       await api.get('get_id');
-      indexStore.setIsNotConnected(false);
+      if (notConnected.value) {
+        indexStore.setIsNotConnected(false);
+      } else if (isControllerRebooting.value) {
+        indexStore.setIsControllerRebooting(false);
+      }
     } catch (error) {
       setTimeout(checkAccessibility, 1000);
     }

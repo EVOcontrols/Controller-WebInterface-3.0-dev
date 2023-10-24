@@ -5,7 +5,7 @@
         <ExtDevicesSettings
           :active-device-index="activeDeviceIndex"
           :device-count="5"
-          :reload-required="reloadRequired"
+          :reboot-required="rebootRequired"
           :modbus-settings-init="settingsInit.modbus"
           :numbering-system="settings.numberingSystem"
           :fields-invalid-statuses="fieldsInvalidStatuses"
@@ -313,7 +313,7 @@ const settings = ref<DevicesControllerSettings>();
 
 const settingsInit = ref<DevicesControllerSettings>();
 
-const reloadRequired = ref(false);
+const rebootRequired = ref(false);
 
 const isSaving = ref(false);
 
@@ -437,7 +437,7 @@ async function save() {
   try {
     if (!isEmpty(settingsToSave)) {
       const r = await api.post('set_config', settingsToSave);
-      reloadRequired.value = r.data['reboot-req'];
+      rebootRequired.value = r.data['reboot-req'];
     }
     if (current.numberingSystem !== init.numberingSystem) {
       const r = await storeCommonSettingsFile(
@@ -538,7 +538,7 @@ onMounted(async () => {
       numberingSystem: indexStore.numberingSystem,
     };
     settingsInit.value = cloneDeep(settings.value);
-    reloadRequired.value = r.data['reboot-req'];
+    rebootRequired.value = r.data['reboot-req'];
   } catch (error) {
     //
   }
