@@ -1,5 +1,5 @@
 import { FuncsNumberPerPage } from './funcs';
-import { TempUnit, Lang, InputFieldStatus, NumberingSystem } from './common';
+import { TempUnit, Lang, InputFieldStatus, NumberingSystem, type DeviceAddr } from './common';
 import { IsStringLiteral } from 'type-fest';
 export type ControllerSettings = {
   lan: {
@@ -132,9 +132,33 @@ export type CommonSettingsFields = {
   }[keyof CommonControllerSettings[P]][][];
 };
 
-export type DevicesControllerSettings = Pick<
+export type NGCSettings = Pick<
   ControllerSettings,
   '1-wire' | 'modbus' | 'pwm-out' | 'bin-out' | 'adc-in'
 > & {
   numberingSystem: NumberingSystem;
 };
+
+export type DeviceWorkState = 'on' | 'off' | 'init' | 'no-conn' | 'error';
+
+export type ExtDevsListRaw = (
+  | {
+      type: 'NG3-EDIO';
+      addr: Exclude<DeviceAddr, 0>;
+      state: DeviceWorkState;
+      serial: string;
+      version: string;
+    }
+  | {
+      type: 'none';
+    }
+)[];
+
+export type ExtDevsList = {
+  index: number;
+  type: 'NG3-EDIO';
+  addr: Exclude<DeviceAddr, 0>;
+  state: DeviceWorkState;
+  serial: string;
+  version: string;
+}[];

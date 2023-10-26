@@ -219,13 +219,13 @@ import PrimaryButton from '@/components/Ui/PrimaryButton.vue';
 import ModalWrapper from '@/components/ModalWrapper.vue';
 import successRound from '@/assets/img/success-round.svg?raw';
 import gears from '@/assets/img/gears-animated.svg?raw';
-import type { DevicesControllerSettings } from '@/typings/settings';
+import type { NGCSettings } from '@/typings/settings';
 import ButtonGroup from '@/components/Ui/ButtonGroup.vue';
 import { modbusModes } from '@/data/settings';
 import { cloneDeep } from 'lodash';
 import InputRange from './InputRange.vue';
 import type { NumberingSystem } from '@/typings/common';
-import AdvancedSettingsButton from '@/components/views/devicesSettings/AdvancedSettingsButton.vue';
+import AdvancedSettingsButton from '@/components/views/devicesSettings/elements/AdvancedSettingsButton.vue';
 import CollapseTransition from '@/components/CollapseTransition.vue';
 import UiInput from '@/components/Ui/UiInput.vue';
 
@@ -233,7 +233,7 @@ const props = defineProps<{
   activeDeviceIndex: number;
   deviceCount: number;
   rebootRequired: boolean;
-  modbusSettingsInit: DevicesControllerSettings['modbus'];
+  modbusSettingsInit: NGCSettings['modbus'];
   numberingSystem: NumberingSystem;
   fieldsInvalidStatuses: Set<string>;
   advancedSettingsHaveError: boolean;
@@ -241,7 +241,7 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   (e: 'selectDevice', index: number): void;
-  (e: 'setModbusSettings', settings: DevicesControllerSettings['modbus']): void;
+  (e: 'setModbusSettings', settings: NGCSettings['modbus']): void;
   (e: 'setNumberingSystem', numberingSystem: NumberingSystem): void;
   (e: 'setFieldsInvalidStatus', param: string): void;
   (e: 'removeFieldsInvalidStatus', param: string): void;

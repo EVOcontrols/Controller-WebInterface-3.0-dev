@@ -10,6 +10,12 @@ export type IsAnyTrue<T extends boolean, U extends boolean> = T extends true
   ? true
   : false;
 
+type Enumerate<N extends number, Acc extends number[] = []> = Acc['length'] extends N
+  ? Acc[number]
+  : Enumerate<N, [...Acc, Acc['length']]>;
+
+type IntRange<F extends number, T extends number> = Exclude<Enumerate<T>, Enumerate<F>>;
+
 export type Lang = (typeof langs)[number];
 
 export type UserRole = (typeof userRoles)[number];
@@ -47,3 +53,5 @@ export type InputFieldParams =
     };
 
 export type NumberingSystem = (typeof numberingSystems)[number];
+
+export type DeviceAddr = IntRange<0, 247>;
