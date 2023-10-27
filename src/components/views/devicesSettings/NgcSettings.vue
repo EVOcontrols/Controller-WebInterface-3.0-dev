@@ -1,7 +1,7 @@
 <template>
   <div>
     <ManageDevice
-      :reboot-required="rebootRequired"
+      :is-reboot-required="isRebootRequired"
       :device-addr="0"
       :device-state="undefined"
     />
@@ -275,7 +275,7 @@ import ManageDevice from './elements/ManageDevice.vue';
 
 const props = defineProps<{
   initSettings: NGCSettings;
-  rebootRequired: boolean;
+  isRebootRequired: boolean;
 }>();
 
 const emit = defineEmits<{

@@ -1,7 +1,7 @@
 import type { LabelsFileType, FileType, FileContent } from '@/typings/files';
 
 export function useReadWriteFiles() {
-  const { api } = useApi();
+  const { api } = useApiStore();
 
   function processLabelsChunk(receivedLabels: unknown, params: LabelsFileType) {
     const isMbDevicesLabels = params.subType === 'mbDevices';

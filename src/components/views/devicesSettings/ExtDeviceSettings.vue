@@ -1,7 +1,7 @@
 <template>
   <div>
     <ManageDevice
-      :reboot-required="false"
+      :is-reboot-required="false"
       :device-addr="deviceAddr"
       :device-state="deviceState"
     />
@@ -17,4 +17,8 @@ const props = defineProps<{
   deviceAddr: Exclude<DeviceAddr, 0>;
   deviceState: DeviceWorkState;
 }>();
+
+const emit = defineEmits<{}>();
+
+const indexStore = useIndexStore();
 </script>

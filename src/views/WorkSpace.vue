@@ -64,6 +64,26 @@
         />
       </transition>
     </router-view>
+    <ModalWrapper
+      v-if="extDeviceInInitIndex !== undefined"
+      :is-saving="true"
+      :trigger-close="extDeviceInInitState !== undefined"
+      @close="extDeviceInInitIndex = undefined"
+    >
+      <template #custom>
+        <div class="shadow-[0_0_1.375rem_0_#082135] p-6 flex flex-col rounded-xl">
+          <span
+            v-html="gears"
+            class="self-center mb-4 [&>svg]:w-12"
+          ></span>
+          <div class="text-[#9adbf6] text-sm leading-[1.167] tracking-[0.03em] whitespace-pre">
+            <div>
+              {{ t('initializing', { index: extDeviceInInitIndex }) }}
+            </div>
+          </div>
+        </div>
+      </template>
+    </ModalWrapper>
   </div>
 </template>
 
@@ -75,10 +95,13 @@ import SelectedItemLine from '@/components/SelectedItemLine.vue';
 import LangNcSwitcher from '@/components/dev/LangNcSwitcher.vue';
 import type { CommonSettingsFileType } from '@/typings/files';
 import type { FuncsNumberPerPage } from '@/typings/funcs';
+import ModalWrapper from '@/components/ModalWrapper.vue';
+import gears from '@/assets/img/gears-animated.svg?raw';
 
 const indexStore = useIndexStore();
 
-const { isAuth, userRole } = storeToRefs(indexStore);
+const { isAuth, userRole, extDeviceInInitState, extDevsList, rebootingDeviceAddr } =
+  storeToRefs(indexStore);
 
 const funcsStore = useFuncsStore();
 
@@ -107,6 +130,15 @@ const activeMenuItem = computed<(typeof menuItems)[number]>(() => {
 const isDev = import.meta.env.DEV;
 
 const isDisabled = ref(false);
+
+const extDeviceInInitIndex = ref<number>();
+
+watch(extDeviceInInitState, () => {
+  if (extDeviceInInitState.value !== undefined && rebootingDeviceAddr.value === undefined) {
+    const extDevice = extDevsList.value?.find((d) => d.addr === extDeviceInInitState.value);
+    extDeviceInInitIndex.value = extDevice?.index;
+  }
+});
 
 async function logout() {
   isDisabled.value = true;
@@ -160,6 +192,7 @@ const { t } = useI18n({
         functions: 'Functions',
         settings: 'Settings',
       },
+      initializing: 'Extension device #{index} initializing, please wait...',
     },
     ru: {
       logout: 'Выйти',
@@ -168,6 +201,7 @@ const { t } = useI18n({
         functions: 'Функции',
         settings: 'Настройки',
       },
+      initializing: 'Идет инициализация устройства расширения #{index}, пожалуйста подождите...',
     },
   },
 });

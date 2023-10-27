@@ -1,7 +1,7 @@
 <template>
   <div class="h-full flex flex-col">
     <div class="flex flex-col flex-1 overflow-y-auto overflow-x-hidden scrollbar-4 relative">
-      <template v-if="ngcSettings && ngcSettingsInit">
+      <template v-if="ngcSettings && ngcSettingsInit && extDevsList">
         <div class="flex flex-col px-8">
           <div class="mt-8 flex flex-col border-b border-[#0b3d68] pb-9 w-full">
             <h2 class="font-semibold text-xl leading-[1.2] whitespace-pre mb-[1.125rem]">
@@ -43,20 +43,20 @@
             <EditNGCSettings
               v-if="activeDeviceAddr === 0"
               :init-settings="ngcSettings"
-              :reboot-required="rebootRequired"
+              :is-reboot-required="isNgcRebootRequired"
               @change="ngcSettings = $event"
               @set-is-all-fields-valid="isAllNgcSettingsFieldsValid = $event"
             />
             <EditExtDeviceSettings
-              v-else-if="activeDevice"
+              v-else-if="activeExtDevice"
               :device-addr="activeDeviceAddr"
-              :device-state="activeDevice.state"
+              :device-state="activeExtDevice.state"
             />
           </Transition>
           <!-- <ExtDevicesSettings
             :active-device-index="activeDeviceAddr"
             :device-count="5"
-            :reboot-required="rebootRequired"
+            :reboot-required="isNgcRebootRequired"
             :modbus-settings-init="settingsInit.modbus"
             :numbering-system="settings.numberingSystem"
             :fields-invalid-statuses="fieldsInvalidStatuses"
@@ -82,12 +82,7 @@
 </template>
 
 <script lang="ts" setup>
-import {
-  type ControllerSettings,
-  type NGCSettings,
-  type ExtDevsList,
-  type ExtDevsListRaw,
-} from '@/typings/settings';
+import { type ControllerSettings, type NGCSettings, type ExtDevsListRaw } from '@/typings/settings';
 import SaveButton from '@/components/Ui/SaveButton.vue';
 import { cloneDeep, get, isEmpty, pick, set } from 'lodash';
 // import ExtDevicesSettings from '@/components/views/devicesSettings/ExtDevicesSettings.vue';
@@ -99,23 +94,29 @@ import type { DeviceAddr } from '@/typings/common';
 
 const indexStore = useIndexStore();
 
-const { api } = useApi();
+const { api } = useApiStore();
 
 const { toast } = useToast();
 
 const { storeCommonSettingsFile } = useStoreCommonSettingsFile();
 
+const { extDevsList } = storeToRefs(indexStore);
+
 const ngcSettings = ref<NGCSettings>();
 
 const ngcSettingsInit = ref<NGCSettings>();
 
-const rebootRequired = ref(false);
+const isNgcRebootRequired = ref(false);
 
 const isSaving = ref(false);
 
-const activeDeviceAddr = ref<DeviceAddr>(0);
-
-const extDevsList = ref<ExtDevsList>([]);
+const activeDeviceAddr = useStorage<DeviceAddr>('devicesSettings.activeDeviceAddr', 0, undefined, {
+  mergeDefaults: (val: any) => {
+    const parsed = parseInt(val, 10);
+    if (!Number.isNaN(parsed) && parsed >= 0 && parsed <= 247) return parsed as DeviceAddr;
+    return 0;
+  },
+});
 
 const isAllNgcSettingsFieldsValid = ref(true);
 
@@ -128,12 +129,32 @@ const isSaveButtonDisabled = computed(
   () => isSaving.value || !isThereChanges.value || !isAllNgcSettingsFieldsValid.value,
 );
 
-const activeDevice = computed(() => {
-  if (activeDeviceAddr.value === 0) return undefined;
+const activeExtDevice = computed(() => {
+  if (activeDeviceAddr.value === 0 || !extDevsList.value) return undefined;
   return extDevsList.value.find((d) => d.addr === activeDeviceAddr.value);
 });
 
-async function save() {
+watch(
+  extDevsList,
+  () => {
+    if (!extDevsList.value) return;
+    if (!extDevsList.value.find((d) => d.addr === activeDeviceAddr.value)) {
+      console.log('goToNgc');
+      activeDeviceAddr.value = 0;
+    }
+  },
+  { immediate: true },
+);
+
+function save() {
+  if (activeDeviceAddr.value === 0) {
+    saveNgcSettings();
+  } else {
+    // saveExtDeviceSettings();
+  }
+}
+
+async function saveNgcSettings() {
   isSaving.value = true;
   const current = ngcSettings.value;
   const init = ngcSettingsInit.value;
@@ -223,7 +244,7 @@ async function save() {
   try {
     if (!isEmpty(settingsToSave)) {
       const r = await api.post('set_config', settingsToSave);
-      rebootRequired.value = r.data['reboot-req'];
+      isNgcRebootRequired.value = r.data['reboot-req'];
     }
     if (current.numberingSystem !== init.numberingSystem) {
       const r = await storeCommonSettingsFile(
@@ -257,21 +278,19 @@ const { t } = useI18n({
 });
 
 onMounted(async () => {
-  await new Promise((resolve) => setTimeout(resolve, 150));
+  // await new Promise((resolve) => setTimeout(resolve, 150));
   try {
     const r = await api.get<ControllerSettings>('get_config');
     if (r.data.modbus[0]?.mode === 'ext-devs') {
-      const r2 = await api.post<{ list: ExtDevsListRaw }>('get_ext_devs', { bus: 0 });
-      extDevsList.value = r2.data.list
-        .map((d, i) => ({ ...d, index: i + 1 }))
-        .filter((d): d is ExtDevsList[number] => d.type !== 'none');
+      const r2 = await api.post<{ list: ExtDevsListRaw }>('get_ext_devs');
+      indexStore.setExtDevsList(r2.data.list);
     }
     ngcSettings.value = {
       ...pick(r.data, ['1-wire', 'adc-in', 'bin-out', 'pwm-out', 'modbus']),
       numberingSystem: indexStore.numberingSystem,
     };
     ngcSettingsInit.value = cloneDeep(ngcSettings.value);
-    rebootRequired.value = r.data['reboot-req'];
+    isNgcRebootRequired.value = r.data['reboot-req'];
   } catch (error) {
     console.error(error);
   }

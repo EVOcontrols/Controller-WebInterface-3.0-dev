@@ -267,7 +267,7 @@ import celsius from '@/assets/img/settings/celsius.svg?raw';
 import fahrenheit from '@/assets/img/settings/fahrenheit.svg?raw';
 import { useStoreCommonSettingsFile } from '@/composables/useStoreCommonSettingsFile';
 
-const { api } = useApi();
+const { api } = useApiStore();
 
 const indexStore = useIndexStore();
 

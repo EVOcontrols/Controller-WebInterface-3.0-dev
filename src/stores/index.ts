@@ -1,5 +1,6 @@
-import type { ControllerDateTime, Lang, Toast, UserRole } from '@/typings/common';
+import type { ControllerDateTime, DeviceAddr, Lang, Toast, UserRole } from '@/typings/common';
 import type { TempUnit, NumberingSystem } from '@/typings/common';
+import type { ExtDevsList, ExtDevsListRaw } from '@/typings/settings';
 
 export const useIndexStore = defineStore('indexStore', () => {
   const authToken = useStorage<string>('authToken', '');
@@ -31,9 +32,15 @@ export const useIndexStore = defineStore('indexStore', () => {
 
   const numberingSystem = ref<NumberingSystem>('dec');
 
-  const isControllerRebooting = ref(false);
+  const rebootingDeviceAddr = ref<DeviceAddr>();
 
   const isInterfaceStarted = ref(false);
+
+  const extDevsList = ref<ExtDevsList>();
+
+  const extDeviceInInitState = computed(
+    () => extDevsList.value?.find((d) => d.state === 'init')?.addr,
+  );
 
   function setIsAuth(cred: { token: string; role: UserRole } | undefined) {
     isAuth.value = !!cred;
@@ -69,12 +76,18 @@ export const useIndexStore = defineStore('indexStore', () => {
     numberingSystem.value = system;
   }
 
-  function setIsControllerRebooting(value: boolean) {
-    isControllerRebooting.value = value;
+  function setRebootingDeviceAddr(value: DeviceAddr | undefined) {
+    rebootingDeviceAddr.value = value;
   }
 
   function setIsInterfaceStarted(value: boolean) {
     isInterfaceStarted.value = value;
+  }
+
+  function setExtDevsList(list: ExtDevsListRaw) {
+    extDevsList.value = list
+      .map((d, i) => ({ ...d, index: i + 1 }))
+      .filter((d): d is ExtDevsList[number] => d.type !== 'none');
   }
 
   return {
@@ -88,8 +101,10 @@ export const useIndexStore = defineStore('indexStore', () => {
     controllerDateTime,
     tempUnit,
     numberingSystem,
-    isControllerRebooting,
+    rebootingDeviceAddr,
     isInterfaceStarted,
+    extDevsList,
+    extDeviceInInitState,
     setIsAuth,
     setLang,
     addNewToast,
@@ -97,8 +112,9 @@ export const useIndexStore = defineStore('indexStore', () => {
     setIsNotConnected,
     setControllerDateTime,
     setTempUnit,
-    setIsControllerRebooting,
+    setRebootingDeviceAddr,
     setIsInterfaceStarted,
     setNumberingSystem,
+    setExtDevsList,
   };
 });

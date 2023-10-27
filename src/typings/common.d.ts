@@ -54,4 +54,4 @@ export type InputFieldParams =
 
 export type NumberingSystem = (typeof numberingSystems)[number];
 
-export type DeviceAddr = IntRange<0, 247>;
+export type DeviceAddr = IntRange<0, 248>;

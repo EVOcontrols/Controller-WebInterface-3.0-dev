@@ -27,7 +27,7 @@
     </div>
     <div class="flex flex-row items-center">
       <div class="text-[#6d9cc5] text-sm leading-[1.143] mr-6">
-        {{ rebootRequired ? t('rebootRequired') : t('rebootNoRequired') }}
+        {{ isRebootRequired ? t('rebootRequired') : t('rebootNoRequired') }}
       </div>
       <PrimaryButton
         class="!h-8"
@@ -41,7 +41,7 @@
       @close="isRebootModalOpen = false"
       :confirm-text="t('reboot')"
       :is-saving="isRebootingStarted"
-      :trigger-close="deviceAddr === 0 ? isControllerRebooting : isExtDeviceRebooting"
+      :trigger-close="rebootingDeviceAddr !== undefined"
       @confirm="reboot"
     >
       <template #title-icon>
@@ -57,7 +57,7 @@
     <ModalWrapper
       v-if="isRebootingModalOpen"
       :is-saving="true"
-      :trigger-close="deviceAddr === 0 ? !isControllerRebooting : !isExtDeviceRebooting"
+      :trigger-close="rebootingDeviceAddr === undefined"
       @close="isRebootingModalOpen = false"
     >
       <template #custom>
@@ -87,7 +87,7 @@ import type { DeviceAddr } from '@/typings/common';
 import ButtonGroup from '@/components/Ui/ButtonGroup.vue';
 
 const props = defineProps<{
-  rebootRequired: boolean;
+  isRebootRequired: boolean;
   deviceAddr: T;
   deviceState: T extends 0 ? undefined : DeviceWorkState;
 }>();
@@ -96,11 +96,11 @@ const emit = defineEmits<{
   (e: 'changeDeviceState', value: Extract<DeviceWorkState, 'on' | 'off'>): void;
 }>();
 
-const { api } = useApi();
+const { api } = useApiStore();
 
 const indexStore = useIndexStore();
 
-const { isControllerRebooting } = storeToRefs(indexStore);
+const { rebootingDeviceAddr } = storeToRefs(indexStore);
 
 const isRebootModalOpen = ref(false);
 
@@ -108,19 +108,18 @@ const isRebootingModalOpen = ref(false);
 
 const isRebootingStarted = ref(false);
 
-const isExtDeviceRebooting = ref(false);
-
-watch(isExtDeviceRebooting, checkIfExtDeviceRebooted);
+watch(rebootingDeviceAddr, checkIfExtDeviceRebooted);
 
 async function reboot() {
   isRebootingStarted.value = true;
   try {
     await api.post('reboot', { device: props.deviceAddr, reboot: true });
-    if (props.deviceAddr === 0) {
-      indexStore.setIsControllerRebooting(true);
-    } else {
-      isExtDeviceRebooting.value = true;
-    }
+    indexStore.setRebootingDeviceAddr(props.deviceAddr);
+    // if (props.deviceAddr === 0) {
+    //   indexStore.setIsControllerRebooting(true);
+    // } else {
+    //   isExtDeviceRebooting.value = true;
+    // }
     isRebootingModalOpen.value = true;
     setTimeout(() => {
       isRebootingStarted.value = false;
@@ -131,10 +130,14 @@ async function reboot() {
 }
 
 async function checkIfExtDeviceRebooted() {
-  if (!isExtDeviceRebooting.value) return;
+  if (rebootingDeviceAddr.value === undefined || rebootingDeviceAddr.value === 0) {
+    return;
+  }
   try {
     await api.post('get_ext_cfg', { device: props.deviceAddr });
-    isExtDeviceRebooting.value = false;
+    const r = await api.get('get_ext_devs');
+    indexStore.setExtDevsList(r.data.list);
+    indexStore.setRebootingDeviceAddr(undefined);
   } catch (error) {
     setTimeout(checkIfExtDeviceRebooted, 1000);
   }
