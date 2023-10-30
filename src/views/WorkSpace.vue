@@ -71,7 +71,7 @@
       @close="extDeviceInInitIndex = undefined"
     >
       <template #custom>
-        <div class="shadow-[0_0_1.375rem_0_#082135] p-6 flex flex-col rounded-xl">
+        <div class="flex flex-col">
           <span
             v-html="gears"
             class="self-center mb-4 [&>svg]:w-12"
@@ -79,6 +79,26 @@
           <div class="text-[#9adbf6] text-sm leading-[1.167] tracking-[0.03em] whitespace-pre">
             <div>
               {{ t('initializing', { index: extDeviceInInitIndex }) }}
+            </div>
+          </div>
+        </div>
+      </template>
+    </ModalWrapper>
+    <ModalWrapper
+      v-if="isScreenBlocked"
+      :is-saving="true"
+      :trigger-close="!isLongQueryRunning"
+      @close="isScreenBlocked = false"
+    >
+      <template #custom>
+        <div class="flex flex-col">
+          <span
+            v-html="spinner"
+            class="self-center mb-4 [&>svg]:w-8 [&>svg>path]:fill-[#148ef8]"
+          ></span>
+          <div class="text-[#9adbf6] text-sm leading-[1.167] tracking-[0.03em] whitespace-pre">
+            <div>
+              {{ t('longQuery') }}
             </div>
           </div>
         </div>
@@ -98,11 +118,18 @@ import type { FuncsNumberPerPage } from '@/typings/funcs';
 import ModalWrapper from '@/components/ModalWrapper.vue';
 import gears from '@/assets/img/gears-animated.svg?raw';
 import type { ControllerSettings } from '@/typings/settings';
+import spinner from '@/assets/img/spinner-inside-button.svg?raw';
 
 const indexStore = useIndexStore();
 
-const { isAuth, userRole, extDeviceInInitState, extDevsList, rebootingDeviceAddr } =
-  storeToRefs(indexStore);
+const {
+  isAuth,
+  userRole,
+  extDeviceInInitState,
+  extDevsList,
+  rebootingDeviceAddr,
+  isLongQueryRunning,
+} = storeToRefs(indexStore);
 
 const funcsStore = useFuncsStore();
 
@@ -115,6 +142,10 @@ const router = useRouter();
 const { api } = useApi();
 
 const menuItems = ['panel', 'functions', 'settings'] as const;
+
+const isScreenBlocked = ref(false);
+
+let blockScreenTimer = 0;
 
 const activeMenuItem = computed<(typeof menuItems)[number]>(() => {
   let activeItem: (typeof menuItems)[number] = 'panel';
@@ -138,6 +169,15 @@ watch(extDeviceInInitState, () => {
   if (extDeviceInInitState.value !== undefined && rebootingDeviceAddr.value === undefined) {
     const extDevice = extDevsList.value?.find((d) => d.addr === extDeviceInInitState.value);
     extDeviceInInitIndex.value = extDevice?.index;
+  }
+});
+
+watch(isLongQueryRunning, (isRunning) => {
+  clearTimeout(blockScreenTimer);
+  if (isRunning) {
+    blockScreenTimer = setTimeout(() => {
+      isScreenBlocked.value = true;
+    }, 1000);
   }
 });
 
@@ -194,6 +234,7 @@ const { t } = useI18n({
         settings: 'Settings',
       },
       initializing: 'Extension device #{index} initializing, please wait...',
+      longQuery: 'Query took longer than expected. Please wait...',
     },
     ru: {
       logout: 'Выйти',
@@ -203,6 +244,7 @@ const { t } = useI18n({
         settings: 'Настройки',
       },
       initializing: 'Идет инициализация устройства расширения #{index}, пожалуйста подождите...',
+      longQuery: 'Запрос занял больше времени, чем ожидалось. Пожалуйста, подождите...',
     },
   },
 });
