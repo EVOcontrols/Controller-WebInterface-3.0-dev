@@ -1,7 +1,9 @@
 <template>
   <div class="h-full flex flex-col">
     <div class="flex flex-col flex-1 overflow-y-auto overflow-x-hidden scrollbar-4 relative">
-      <template v-if="ngcSettings && ngcSettingsInit && extDevsList">
+      <template
+        v-if="ngcSettings && ngcSettingsInit && (ngcModbusMode !== 'ext-devs' || extDevsList)"
+      >
         <div class="flex flex-col px-8">
           <div class="mt-8 flex flex-col border-b border-[#0b3d68] pb-9 w-full">
             <h2 class="font-semibold text-xl leading-[1.2] whitespace-pre mb-[1.125rem]">
@@ -14,15 +16,23 @@
                   :render-params="{ type: 'row', marginRightClass: 'mr-1' }"
                   v-slot="{ onClick }"
                   class="h-8"
-                  @selectItem="activeDeviceAddr = $event as DeviceAddr"
+                  @selectItem="
+                    (e) => {
+                      if (!extDevsList) return;
+                      activeDeviceAddr = e === 0 ? 0 : extDevsList[e - 1]?.addr;
+                    }
+                  "
                 >
                   <button
-                    v-for="(extDev, i) in [{ addr: 0, state: 'on', serial: '' }, ...extDevsList]"
+                    v-for="(extDev, i) in [
+                      { addr: 0, state: 'on', serial: '' },
+                      ...(ngcModbusMode === 'ext-devs' ? extDevsList || [] : []),
+                    ]"
                     :key="i"
                     type="button"
                     class="h-[1.563rem] w-[3.188rem] bg-[#1b4569] hover:bg-[#214e76] on:bg-[#148ef8] font-roboto rounded flex items-center justify-center"
                     :class="{
-                      on: i === activeDeviceAddr,
+                      on: extDev.addr === activeDeviceAddr,
                     }"
                     @click="onClick(i)"
                   >
@@ -44,8 +54,10 @@
               v-if="activeDeviceAddr === 0"
               :init-settings="ngcSettings"
               :is-reboot-required="isNgcRebootRequired"
+              :reboot-ngc-trigger="rebootNgcTrigger"
               @change="ngcSettings = $event"
               @set-is-all-fields-valid="isAllNgcSettingsFieldsValid = $event"
+              @ngc-rebooted-manually="isNgcRebootRequired = false"
             />
             <EditExtDeviceSettings
               v-else-if="activeExtDevice"
@@ -84,13 +96,14 @@
 <script lang="ts" setup>
 import { type ControllerSettings, type NGCSettings, type ExtDevsListRaw } from '@/typings/settings';
 import SaveButton from '@/components/Ui/SaveButton.vue';
-import { cloneDeep, get, isEmpty, pick, set } from 'lodash';
+import { cloneDeep, isEqual, isEqualWith, omit, pick } from 'lodash';
 // import ExtDevicesSettings from '@/components/views/devicesSettings/ExtDevicesSettings.vue';
 import ScrollBooster from '@/components/ScrollBooster.vue';
 import edit from '@/assets/img/edit.svg?raw';
 import EditNGCSettings from '@/components/views/devicesSettings/NgcSettings.vue';
 import EditExtDeviceSettings from '@/components/views/devicesSettings/ExtDeviceSettings.vue';
 import type { DeviceAddr } from '@/typings/common';
+import type { PartialDeep } from 'type-fest';
 
 const indexStore = useIndexStore();
 
@@ -100,7 +113,7 @@ const { toast } = useToast();
 
 const { storeCommonSettingsFile } = useStoreCommonSettingsFile();
 
-const { extDevsList } = storeToRefs(indexStore);
+const { extDevsList, ngcModbusMode, rebootingDeviceAddr } = storeToRefs(indexStore);
 
 const ngcSettings = ref<NGCSettings>();
 
@@ -109,6 +122,8 @@ const ngcSettingsInit = ref<NGCSettings>();
 const isNgcRebootRequired = ref(false);
 
 const isSaving = ref(false);
+
+const rebootNgcTrigger = ref(0);
 
 const activeDeviceAddr = useStorage<DeviceAddr>('devicesSettings.activeDeviceAddr', 0, undefined, {
   mergeDefaults: (val: any) => {
@@ -120,9 +135,32 @@ const activeDeviceAddr = useStorage<DeviceAddr>('devicesSettings.activeDeviceAdd
 
 const isAllNgcSettingsFieldsValid = ref(true);
 
+const ignoreUndefined = (value: any) => {
+  if (value === undefined) return true;
+};
+
 const isThereChanges = computed(() => {
   if (!ngcSettings.value || !ngcSettingsInit.value) return false;
-  return JSON.stringify(ngcSettings.value) !== JSON.stringify(ngcSettingsInit.value);
+  switch (ngcSettings.value.modbus.mode) {
+    case 'off':
+      return !isEqualWith(
+        omit(ngcSettings.value, `modbus.advanced`),
+        omit(ngcSettingsInit.value, `modbus.advanced`),
+        ignoreUndefined,
+      );
+    case 'variables':
+      return !isEqualWith(
+        omit(ngcSettings.value, `modbus.advanced.ext-devs`),
+        omit(ngcSettingsInit.value, `modbus.advanced.ext-devs`),
+        ignoreUndefined,
+      );
+    case 'ext-devs':
+      return !isEqualWith(
+        omit(ngcSettings.value, `modbus.advanced.variables`),
+        omit(ngcSettingsInit.value, `modbus.advanced.variables`),
+        ignoreUndefined,
+      );
+  }
 });
 
 const isSaveButtonDisabled = computed(
@@ -137,7 +175,7 @@ const activeExtDevice = computed(() => {
 watch(
   extDevsList,
   () => {
-    if (!extDevsList.value) return;
+    if (!extDevsList.value || activeDeviceAddr.value === 0) return;
     if (!extDevsList.value.find((d) => d.addr === activeDeviceAddr.value)) {
       console.log('goToNgc');
       activeDeviceAddr.value = 0;
@@ -159,93 +197,29 @@ async function saveNgcSettings() {
   const current = ngcSettings.value;
   const init = ngcSettingsInit.value;
   if (!current || !init) return;
-  const settingsToSave: any = {};
-  Object.keys(current).forEach((k1) => {
-    if (!isKeyOfBoth(current, init, k1)) return;
-    if (k1 === 'numberingSystem') return;
-    const v1 = current[k1];
-    const v2 = init[k1];
-    if (Array.isArray(v1) && Array.isArray(v2)) {
-      settingsToSave[k1] = [...new Array(v1.length)].map(() => ({}));
-      v1.forEach((v3, i) => {
-        const v4 = v2[i];
-        Object.keys(v3).forEach((k2) => {
-          if (!isKeyOfBoth(v3, v4, k2)) return;
-          const v5 = v3[k2];
-          const v6 = v4[k2];
-          if (typeof v5 === 'object' && typeof v6 === 'object') {
-            if (Array.isArray(v5) && Array.isArray(v6)) {
-              if (JSON.stringify(v5) !== JSON.stringify(v6)) {
-                set(settingsToSave[k1][i], [k2], v5);
-              }
-            } else {
-              Object.keys(v5).forEach((k3) => {
-                if (!isKeyOfBoth(v5, v6, k3)) return;
-                const v7 = v5[k3];
-                const v8 = v6[k3];
-                if (v7 !== v8) {
-                  set(settingsToSave[k1][i], [k2, k3], v7);
-                }
-              });
-            }
-          } else if (v5 !== v6) {
-            set(settingsToSave[k1][i], [k2], v5);
-          }
-        });
-        if (
-          !isEmpty(settingsToSave[k1][i]) &&
-          k1 === 'modbus' &&
-          !('mode' in settingsToSave[k1][i])
-        ) {
-          settingsToSave[k1][i].mode = v3.mode;
-        }
-      });
-      if (!settingsToSave[k1].filter((v9: any) => Object.keys(v9).length).length) {
-        delete settingsToSave[k1];
+  const settingsToSave: PartialDeep<ControllerSettings, { recurseIntoArrays: true }> = {};
+  (['1-wire', 'pwm-out', 'bin-out', 'adc-in'] as const).forEach((k) => {
+    if (isKeyOfBoth(current, init, k) && !isEqual(current[k], init[k])) {
+      if (k === '1-wire') {
+        settingsToSave['1-wire'] = current['1-wire'].map(
+          (v, i): Partial<ControllerSettings['1-wire'][number]> =>
+            isEqual(v, init['1-wire'][i]) ? { mode: v.mode } : v,
+        );
       } else {
-        settingsToSave[k1].reverse();
-        const indexToCut = settingsToSave[k1].findIndex((v10: any) => Object.keys(v10).length);
-        if (indexToCut !== -1) {
-          settingsToSave[k1].splice(0, indexToCut);
-        }
-        settingsToSave[k1].reverse();
-        const keys = new Set<string>();
-        settingsToSave[k1].forEach((v10: any) => {
-          Object.keys(v10).forEach((k4) => {
-            keys.add(k4);
-          });
-        });
-        if (k1 === '1-wire') keys.add('mode');
-        keys.forEach((k4) => {
-          settingsToSave[k1].forEach((v10: any, i: number) => {
-            if (!v10[k4]) v10[k4] = get(current, [k1, i, k4]);
-          });
-        });
+        settingsToSave[k] = current[k] as any;
       }
-    } else {
-      Object.keys(v1).forEach((k2) => {
-        if (!isKeyOfBoth(v1, v2, k2)) return;
-        const v3 = v1[k2];
-        const v4 = v2[k2];
-        if (typeof v3 === 'object' && typeof v4 === 'object') {
-          if (Array.isArray(v3) && Array.isArray(v4)) {
-            if (JSON.stringify(v3) !== JSON.stringify(v4)) {
-              set(settingsToSave, [k1, k2], v3);
-            }
-          }
-        } else if (v3 !== v4) {
-          if (!settingsToSave[k1]) settingsToSave[k1] = {};
-          set(settingsToSave, [k1, k2], v3);
-        }
-      });
     }
   });
-  // console.log(cloneDeep(settingsToSave));
+  if (!isEqual(current.modbus, init.modbus)) {
+    settingsToSave.modbus = [];
+    settingsToSave.modbus[0] = {
+      ...pick(current.modbus, ['rate', 'parity', 'stop', 'mode']),
+      ...(current.modbus.mode === 'off' ? {} : current.modbus.advanced[current.modbus.mode]),
+    };
+  }
   try {
-    if (!isEmpty(settingsToSave)) {
-      const r = await api.post('set_config', settingsToSave);
-      isNgcRebootRequired.value = r.data['reboot-req'];
-    }
+    const r = await api.post('set_config', settingsToSave, { timeout: 60000 });
+    isNgcRebootRequired.value = r.data['reboot-req'];
     if (current.numberingSystem !== init.numberingSystem) {
       const r = await storeCommonSettingsFile(
         undefined,
@@ -255,9 +229,17 @@ async function saveNgcSettings() {
       );
       if (r === 'error') throw '';
     }
-    if (settingsToSave.modbus?.[0]?.mode && ngcSettings.value) {
+    if (settingsToSave.modbus?.[0]?.mode) {
+      if (current.modbus.mode === 'ext-devs' && init.modbus.mode !== 'ext-devs') {
+        rebootNgcTrigger.value += 1;
+        await until(rebootingDeviceAddr).toBe(0);
+        await until(rebootingDeviceAddr).toBe(undefined);
+        const r = await api.get<{ list: ExtDevsListRaw }>('get_ext_devs');
+        indexStore.setExtDevsList(r.data.list);
+      }
+      indexStore.setNGCModbusMode(settingsToSave.modbus[0].mode || 'off');
       const r = await api.get<ControllerSettings>('get_config');
-      ngcSettings.value.modbus[0] = r.data.modbus[0];
+      setNgcSettings(r.data);
     }
     ngcSettingsInit.value = cloneDeep(ngcSettings.value);
   } catch (error) {
@@ -277,19 +259,47 @@ const { t } = useI18n({
   },
 });
 
+function setNgcSettings(data: ControllerSettings) {
+  ngcSettings.value = {
+    ...pick(data, ['1-wire', 'adc-in', 'bin-out', 'pwm-out']),
+    modbus: {
+      ...pick(data.modbus[0], ['rate', 'parity', 'stop', 'mode']),
+      advanced: {
+        variables: {
+          'cycle-pause':
+            data.modbus[0].mode === 'variables' ? data.modbus[0]['cycle-pause'] : undefined,
+          'rd-pause': data.modbus[0].mode === 'variables' ? data.modbus[0]['rd-pause'] : undefined,
+          'rd-tmo': data.modbus[0].mode === 'variables' ? data.modbus[0]['rd-tmo'] : undefined,
+          'wr-pause': data.modbus[0].mode === 'variables' ? data.modbus[0]['wr-pause'] : undefined,
+          'wr-tmo': data.modbus[0].mode === 'variables' ? data.modbus[0]['wr-tmo'] : undefined,
+        },
+        'ext-devs': {
+          'cycle-pause':
+            data.modbus[0].mode === 'ext-devs' ? data.modbus[0]['cycle-pause'] : undefined,
+          'get-tmo': data.modbus[0].mode === 'ext-devs' ? data.modbus[0]['get-tmo'] : undefined,
+          'ow-scan-tmo':
+            data.modbus[0].mode === 'ext-devs' ? data.modbus[0]['ow-scan-tmo'] : undefined,
+          'set-cfg-tmo':
+            data.modbus[0].mode === 'ext-devs' ? data.modbus[0]['set-cfg-tmo'] : undefined,
+          'set-tmo': data.modbus[0].mode === 'ext-devs' ? data.modbus[0]['set-tmo'] : undefined,
+        },
+      },
+    },
+    numberingSystem: indexStore.numberingSystem,
+  };
+  ngcSettingsInit.value = cloneDeep(ngcSettings.value);
+}
+
 onMounted(async () => {
   // await new Promise((resolve) => setTimeout(resolve, 150));
   try {
     const r = await api.get<ControllerSettings>('get_config');
+    indexStore.setNGCModbusMode(r.data.modbus[0]?.mode || 'off');
     if (r.data.modbus[0]?.mode === 'ext-devs') {
-      const r2 = await api.post<{ list: ExtDevsListRaw }>('get_ext_devs');
+      const r2 = await api.get<{ list: ExtDevsListRaw }>('get_ext_devs');
       indexStore.setExtDevsList(r2.data.list);
     }
-    ngcSettings.value = {
-      ...pick(r.data, ['1-wire', 'adc-in', 'bin-out', 'pwm-out', 'modbus']),
-      numberingSystem: indexStore.numberingSystem,
-    };
-    ngcSettingsInit.value = cloneDeep(ngcSettings.value);
+    setNgcSettings(r.data);
     isNgcRebootRequired.value = r.data['reboot-req'];
   } catch (error) {
     console.error(error);

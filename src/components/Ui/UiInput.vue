@@ -108,9 +108,12 @@ function isFitValidationType(v: string) {
 function valueChangedHandler() {
   // console.log('valueChangedHandler');
   const v = valueInit.value;
-  if (props.required && !v) {
-    setStatus('invalid');
-    emit('valueChanged', '' as V);
+  if (!v) {
+    if (props.required) {
+      setStatus('invalid');
+    }
+    lastInitValue = undefined;
+    emit('valueChanged', undefined);
     return;
   }
   if (props.initType === 'string') {
@@ -182,6 +185,8 @@ watch(
     valueInit.value = props.initValue?.toString() || '';
   },
 );
+
+watch(() => props.minMax, valueChangedHandler);
 
 function onFocus(e: FocusEvent) {
   if (props.autoSelect === false) return;

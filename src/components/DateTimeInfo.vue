@@ -42,7 +42,7 @@
               class="text-[#a0d5ff] text-sm"
               :class="{ 'cursor-pointer': p === 'id' && isSupported }"
               :title="p === 'id' && isSupported ? 'Copy' : ''"
-              @click="p === 'id' && isSupported ? copy(infoData[p]) : ''"
+              @click="p === 'id' && infoData.id && isSupported ? copy(infoData.id) : ''"
             >
               {{ infoData[p] }}
             </span>
@@ -61,16 +61,15 @@ import { DateTime } from 'luxon';
 
 const indexStore = useIndexStore();
 
-const { lang, notConnected } = storeToRefs(indexStore);
+const { lang, notConnected, rebootingDeviceAddr, isLongQueryRunning, controllerDateTime } =
+  storeToRefs(indexStore);
 
 const { api, isAborted, abort } = useApi();
 
 const { copy, isSupported } = useClipboard();
 
-const infoData = ref({
-  id: '',
+const infoData = ref<{ id?: string; 'wi-ver': string; 'fw-ver'?: string }>({
   'wi-ver': import.meta.env.VITE_INTERFACE_VERSION,
-  'fw-ver': '',
 });
 
 const formattedTime = ref({ time: '', meridiem: '' });
@@ -79,16 +78,21 @@ const formattedDay = ref({ weekDay: '', date: '' });
 
 let getDateTimeTimer = 0;
 
-watch(notConnected, () => {
-  if (!notConnected.value && isAborted.value) {
-    getDateTime();
-  }
-});
+let getInfoDataTimer = 0;
+
+// watch(notConnected, () => {
+//   if (!notConnected.value && isAborted.value) {
+//     getDateTime();
+//   }
+// });
 
 watch(lang, () => {
-  abort();
-  clearTimeout(getDateTimeTimer);
-  getInfoData();
+  // abort();
+  // clearTimeout(getInfoDataTimer);
+  // getInfoData();
+  if (!controllerDateTime.value) return;
+  parseDate(controllerDateTime.value);
+  parseTime(controllerDateTime.value);
 });
 
 function parseTime(t: { hour: number; min: number; sec: number }) {
@@ -104,6 +108,10 @@ function parseDate(d: { year: number; mon: number; day: number }) {
 }
 
 async function getDateTime() {
+  if (rebootingDeviceAddr.value === 0 || isLongQueryRunning.value || notConnected.value) {
+    getDateTimeTimer = setTimeout(getDateTime, 1000);
+    return;
+  }
   let timeout = 1000;
   try {
     const r = await api.get('get_time');
@@ -134,22 +142,22 @@ async function getInfoData() {
     const r = await api.get('get_cmn_info');
     infoData.value['fw-ver'] = r.data['fw-ver'];
     infoData.value.id = r.data.id;
-    parseTime(r.data.time);
-    parseDate(r.data.time);
-    indexStore.setControllerDateTime(r.data.time);
-    getDateTimeTimer = setTimeout(getDateTime, 5000);
   } catch (error) {
     if (isAborted.value) {
       return;
     }
-    getDateTimeTimer = setTimeout(getInfoData, 1000);
+    getInfoDataTimer = setTimeout(getInfoData, 1000);
   }
 }
 
-onBeforeMount(getInfoData);
+onBeforeMount(() => {
+  getInfoData();
+  getDateTime();
+});
 
 onBeforeUnmount(() => {
   clearTimeout(getDateTimeTimer);
+  clearTimeout(getInfoDataTimer);
   abort();
 });
 

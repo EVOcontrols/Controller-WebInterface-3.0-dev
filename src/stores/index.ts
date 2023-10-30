@@ -1,6 +1,6 @@
 import type { ControllerDateTime, DeviceAddr, Lang, Toast, UserRole } from '@/typings/common';
 import type { TempUnit, NumberingSystem } from '@/typings/common';
-import type { ExtDevsList, ExtDevsListRaw } from '@/typings/settings';
+import type { ControllerSettings, ExtDevsList, ExtDevsListRaw } from '@/typings/settings';
 
 export const useIndexStore = defineStore('indexStore', () => {
   const authToken = useStorage<string>('authToken', '');
@@ -36,7 +36,11 @@ export const useIndexStore = defineStore('indexStore', () => {
 
   const isInterfaceStarted = ref(false);
 
+  const ngcModbusMode = ref<ControllerSettings['modbus'][number]['mode']>('off');
+
   const extDevsList = ref<ExtDevsList>();
+
+  const isLongQueryRunning = ref(false);
 
   const extDeviceInInitState = computed(
     () => extDevsList.value?.find((d) => d.state === 'init')?.addr,
@@ -84,10 +88,18 @@ export const useIndexStore = defineStore('indexStore', () => {
     isInterfaceStarted.value = value;
   }
 
+  function setNGCModbusMode(mode: ControllerSettings['modbus'][number]['mode']) {
+    ngcModbusMode.value = mode;
+  }
+
   function setExtDevsList(list: ExtDevsListRaw) {
     extDevsList.value = list
       .map((d, i) => ({ ...d, index: i + 1 }))
       .filter((d): d is ExtDevsList[number] => d.type !== 'none');
+  }
+
+  function setLongQueryRunning(value: boolean) {
+    isLongQueryRunning.value = value;
   }
 
   return {
@@ -103,8 +115,10 @@ export const useIndexStore = defineStore('indexStore', () => {
     numberingSystem,
     rebootingDeviceAddr,
     isInterfaceStarted,
+    ngcModbusMode,
     extDevsList,
     extDeviceInInitState,
+    isLongQueryRunning,
     setIsAuth,
     setLang,
     addNewToast,
@@ -115,6 +129,8 @@ export const useIndexStore = defineStore('indexStore', () => {
     setRebootingDeviceAddr,
     setIsInterfaceStarted,
     setNumberingSystem,
+    setNGCModbusMode,
     setExtDevsList,
+    setLongQueryRunning,
   };
 });

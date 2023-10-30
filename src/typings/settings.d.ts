@@ -132,10 +132,19 @@ export type CommonSettingsFields = {
   }[keyof CommonControllerSettings[P]][][];
 };
 
-export type NGCSettings = Pick<
-  ControllerSettings,
-  '1-wire' | 'modbus' | 'pwm-out' | 'bin-out' | 'adc-in'
-> & {
+export type NGCSettings = Pick<ControllerSettings, '1-wire' | 'pwm-out' | 'bin-out' | 'adc-in'> & {
+  modbus: Pick<ControllerSettings['modbus'][number], 'rate' | 'parity' | 'stop' | 'mode'> & {
+    advanced: {
+      variables: Omit<
+        Extract<ControllerSettings['modbus'][number], { mode: 'variables' }>,
+        'rate' | 'parity' | 'stop' | 'mode'
+      >;
+      'ext-devs': Omit<
+        Extract<ControllerSettings['modbus'][number], { mode: 'ext-devs' }>,
+        'rate' | 'parity' | 'stop' | 'mode'
+      >;
+    };
+  };
   numberingSystem: NumberingSystem;
 };
 

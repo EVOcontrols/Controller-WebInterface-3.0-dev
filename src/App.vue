@@ -16,7 +16,7 @@
       name="fade-300"
     >
       <div
-        v-if="notConnected && route.name !== 'login' && !isControllerRebooting"
+        v-if="notConnected && route.name !== 'login' && rebootingDeviceAddr !== 0"
         class="fixed top-0 bottom-0 left-0 right-0 z-[40] bg-[#001d34b2]"
       ></div>
     </Transition>
@@ -29,7 +29,7 @@ import ToastsContainer from './components/toast/ToastsContainer.vue';
 
 const indexStore = useIndexStore();
 
-const { lang, notConnected, isControllerRebooting, isInterfaceStarted } = storeToRefs(indexStore);
+const { lang, notConnected, rebootingDeviceAddr, isInterfaceStarted } = storeToRefs(indexStore);
 
 const route = useRoute();
 
@@ -49,7 +49,7 @@ watch(
 );
 
 watch(notConnected, () => {
-  if (isControllerRebooting.value) return;
+  if (rebootingDeviceAddr.value === 0) return;
   if (notConnected.value) {
     if (isInterfaceStarted.value) {
       notConnectedToastId = toast.warning(

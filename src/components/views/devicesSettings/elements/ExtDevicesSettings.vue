@@ -1,6 +1,6 @@
 <template>
   <div class="flex flex-col px-8">
-    <div class="mt-8 flex flex-col border-b border-[#0b3d68] pb-9 w-full">
+    <!-- <div class="mt-8 flex flex-col border-b border-[#0b3d68] pb-9 w-full">
       <h2 class="font-semibold text-xl leading-[1.2] whitespace-pre mb-[1.125rem]">
         {{ t('selectDevice') }}
       </h2>
@@ -32,8 +32,8 @@
           class="group ml-3"
         ></button>
       </div>
-    </div>
-    <div
+    </div> -->
+    <!-- <div
       v-if="activeDeviceIndex === 0"
       class="mt-8 flex flex-col border-b border-[#0b3d68] pb-10 w-full"
     >
@@ -51,7 +51,7 @@
           {{ t('reboot') }}
         </PrimaryButton>
       </div>
-    </div>
+    </div> -->
     <div
       v-if="modbusSettings.length"
       class="mt-8 border-b border-[#0b3d68] pb-10 w-full"

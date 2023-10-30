@@ -97,6 +97,7 @@ import type { CommonSettingsFileType } from '@/typings/files';
 import type { FuncsNumberPerPage } from '@/typings/funcs';
 import ModalWrapper from '@/components/ModalWrapper.vue';
 import gears from '@/assets/img/gears-animated.svg?raw';
+import type { ControllerSettings } from '@/typings/settings';
 
 const indexStore = useIndexStore();
 
@@ -204,5 +205,15 @@ const { t } = useI18n({
       initializing: 'Идет инициализация устройства расширения #{index}, пожалуйста подождите...',
     },
   },
+});
+
+onMounted(async () => {
+  if (route.name === 'devices-settings') return;
+  try {
+    const r = await api.get<ControllerSettings>('get_config');
+    indexStore.setNGCModbusMode(r.data.modbus[0]?.mode || 'off');
+  } catch (error) {
+    //
+  }
 });
 </script>

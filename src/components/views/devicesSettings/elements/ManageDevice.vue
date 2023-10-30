@@ -42,7 +42,7 @@
       :confirm-text="t('reboot')"
       :is-saving="isRebootingStarted"
       :trigger-close="rebootingDeviceAddr !== undefined"
-      @confirm="reboot"
+      @confirm="reboot('manual')"
     >
       <template #title-icon>
         <span v-html="successRound"></span>
@@ -90,10 +90,12 @@ const props = defineProps<{
   isRebootRequired: boolean;
   deviceAddr: T;
   deviceState: T extends 0 ? undefined : DeviceWorkState;
+  rebootTrigger?: number;
 }>();
 
 const emit = defineEmits<{
   (e: 'changeDeviceState', value: Extract<DeviceWorkState, 'on' | 'off'>): void;
+  (e: 'ngcRebootedManually'): void;
 }>();
 
 const { api } = useApiStore();
@@ -102,18 +104,33 @@ const indexStore = useIndexStore();
 
 const { rebootingDeviceAddr } = storeToRefs(indexStore);
 
+const { toast } = useToast();
+
 const isRebootModalOpen = ref(false);
 
 const isRebootingModalOpen = ref(false);
 
 const isRebootingStarted = ref(false);
 
-watch(rebootingDeviceAddr, checkIfExtDeviceRebooted);
+let lastRebootCause: 'manual' | 'auto' | undefined;
 
-async function reboot() {
+watch(rebootingDeviceAddr, (nv, ov) => {
+  checkIfExtDeviceRebooted();
+  if (nv === undefined && ov === 0 && lastRebootCause === 'manual') {
+    emit('ngcRebootedManually');
+  }
+});
+
+watch(
+  () => props.rebootTrigger,
+  () => reboot('auto'),
+);
+
+async function reboot(cause: 'manual' | 'auto') {
   isRebootingStarted.value = true;
   try {
     await api.post('reboot', { device: props.deviceAddr, reboot: true });
+    lastRebootCause = cause;
     indexStore.setRebootingDeviceAddr(props.deviceAddr);
     // if (props.deviceAddr === 0) {
     //   indexStore.setIsControllerRebooting(true);
@@ -178,5 +195,21 @@ const { t } = useI18n({
       forReboot: 'для перезагрузки',
     },
   },
+});
+
+onMounted(() => {
+  if (props.deviceAddr === 0 && props.isRebootRequired) {
+    const toastId = toast.info(t('rebootRequired'), [
+      `${t('press')} `,
+      {
+        text: t('here'),
+        action: () => {
+          indexStore.deleteToast(toastId);
+          isRebootModalOpen.value = true;
+        },
+      },
+      ` ${t('forReboot')}`,
+    ]);
+  }
 });
 </script>
