@@ -102,7 +102,7 @@
                       : fieldsInvalidStatuses.delete(`modbus-${p.param}`)
                   "
                   @value-changed="
-                    (e) => {
+                    (e?: number) => {
                       if (settings.modbus.mode === 'off') return;
                       if (!isKeyOf(settings.modbus.advanced[settings.modbus.mode], p.param)) return;
                       settings.modbus.advanced[settings.modbus.mode][p.param] = e;
