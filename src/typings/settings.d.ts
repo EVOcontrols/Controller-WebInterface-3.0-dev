@@ -171,3 +171,32 @@ export type ExtDevsList = {
   serial: string;
   version: string;
 }[];
+
+export type ExtDeviceSettings = {
+  'mb-slave': {
+    addr: number;
+    rate: number;
+    parity: (typeof modbusParities)[number];
+    stop: 1 | 2;
+  };
+  'mb-master': (
+    | {
+        mode: 'variables';
+        parity: (typeof modbusParities)[number];
+        rate: number;
+        stop: 1 | 2;
+        'rd-tmo': number;
+        'wr-tmo': number;
+        'rd-dly': number;
+        'wr-dly': number;
+        'cm-dly': number;
+      }
+    | { mode: 'off' }
+  )[];
+  '1-wire': {
+    mode: (typeof oneWiresModes)[number];
+    'cycle-delay': number;
+    'debounce-time': number;
+    'convert-time': number;
+  }[];
+};

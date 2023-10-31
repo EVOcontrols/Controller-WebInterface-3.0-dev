@@ -1,133 +1,39 @@
 <template>
-  <div>
+  <div v-if="settings">
     <ManageDevice
       :is-reboot-required="isRebootRequired"
       :device-addr="0"
       :device-state="undefined"
-      :reboot-trigger="rebootNgcTrigger"
-      @ngc-rebooted-manually="emit('ngcRebootedManually')"
+      :reboot-trigger="rebootTrigger"
+      @ngc-rebooted-manually="isRebootRequired = false"
     />
-    <div class="mt-8 border-b border-[#0b3d68] pb-10 w-full">
-      <h2 class="font-semibold text-xl leading-[1.2] whitespace-pre mb-[1.125rem]">
-        {{ t('rsSettings') }}
-      </h2>
-      <div class="flex flex-row items-center">
-        <div class="text-[#6d9cc5] text-sm leading-[1.143] mr-6">
-          {{ t('portMode') }}
-        </div>
-        <ButtonGroup
-          :buttons="modbusModes.map((v) => ({ text: t(`portModes.${v}`), value: v }))"
-          :value="settings.modbus.mode"
-          additional-classes="px-4"
-          @change="settings.modbus.mode = $event"
-        />
-      </div>
-      <div class="flex flex-row mt-[2.8rem]">
-        <div class="text-[#6d9cc5] text-sm leading-[1.143] mr-10">
-          {{ t('speed') }}
-        </div>
-        <InputRange
-          :value="settings.modbus.rate"
-          @change="settings.modbus.rate = $event"
-        />
-      </div>
-      <div class="flex flex-row items-center mt-[2.5rem]">
-        <div class="text-[#6d9cc5] text-sm leading-[1.143] mr-6">
-          {{ t('parity') }}
-        </div>
-        <ButtonGroup
-          :buttons="modbusParities.map((v) => ({ text: t(`parities.${v}`), value: v }))"
-          :value="settings.modbus.parity"
-          additional-classes="px-4"
-          @change="settings.modbus.parity = $event"
-        />
-      </div>
-      <div class="flex flex-row items-center mt-[2.75rem]">
-        <div class="text-[#6d9cc5] text-sm leading-[1.143] mr-5">
-          {{ t('stop') }}
-        </div>
-        <ButtonGroup
-          :buttons="([1, 2] as const).map((v) => ({ text: v.toString(), value: v }))"
-          :value="settings.modbus.stop"
-          additional-classes="px-4"
-          @change="settings.modbus.stop = $event"
-        />
-      </div>
-      <div class="flex flex-row items-center mt-[2.75rem]">
-        <div class="text-[#6d9cc5] text-sm leading-[1.143] mr-5 whitespace-pre">
-          {{ t('numberingSystem') }}
-        </div>
-        <ButtonGroup
-          :buttons="numberingSystems.map((v) => ({ text: v.toUpperCase(), value: v }))"
-          :value="settings.numberingSystem"
-          additional-classes="px-4"
-          @change="settings.numberingSystem = $event"
-        />
-      </div>
-      <template v-if="settings.modbus.mode !== 'off'">
-        <AdvancedSettingsButton
-          :is-expanded="!!isAdvancedSettingsExpanded.rs485"
-          :is-error="!!advancedSettingsHaveError.rs485"
-          @click="isAdvancedSettingsExpanded.rs485 = !isAdvancedSettingsExpanded.rs485"
-        />
-        <CollapseTransition :duration="300">
-          <div
-            v-show="isAdvancedSettingsExpanded.rs485"
-            class=""
-          >
-            <div class="table w-max mt-5">
-              <div
-                v-for="p in rsAdvancedParams[settings.modbus.mode]"
-                :key="`${settings.modbus.mode}${p.param}`"
-                class="table-row h-[3.43rem] align-top last:h-10"
-              >
-                <div class="text-[#6d9cc5] text-sm leading-[1.143] table-cell pr-4">
-                  {{ `${p.label}:` }}
-                </div>
-                <UiInput
-                  :init-value="
-                    isKeyOf(settings.modbus.advanced[settings.modbus.mode], p.param)
-                      ? settings.modbus.advanced[settings.modbus.mode][p.param]
-                      : undefined
-                  "
-                  :name="p.param"
-                  initType="number"
-                  class="table-cell w-16 text-center !px-2"
-                  :min-max="[p.min, p.max]"
-                  :status="fieldsInvalidStatuses.has(`modbus-${p.param}`) ? 'invalid' : 'valid'"
-                  :input-type="['int']"
-                  @status-changed="
-                    $event === 'invalid' || $event === 'not-allowed'
-                      ? fieldsInvalidStatuses.add(`modbus-${p.param}`)
-                      : fieldsInvalidStatuses.delete(`modbus-${p.param}`)
-                  "
-                  @value-changed="
-                    (e?: number) => {
-                      if (settings.modbus.mode === 'off') return;
-                      if (!isKeyOf(settings.modbus.advanced[settings.modbus.mode], p.param)) return;
-                      settings.modbus.advanced[settings.modbus.mode][p.param] = e;
-                    }
-                  "
-                />
-                <div
-                  class="text-[#ed4272] text-sm leading-[1.143] invisible opacity-0 transition-[opacity,visibility] error:visible error:opacity-100 pl-4 table-cell"
-                  :class="{
-                    error: fieldsInvalidStatuses.has(`modbus-${p.param}`),
-                  }"
-                >
-                  {{
-                    t('integerFromTo', {
-                      from: p.min,
-                      to: p.max,
-                    })
-                  }}
-                </div>
-              </div>
-            </div>
-          </div>
-        </CollapseTransition>
-      </template>
-    </div>
+    <Rs485Settings
+      :settings="settings.modbus"
+      :numbering-system="settings.numberingSystem"
+      :fields-invalid-statuses="
+        new Set([...fieldsInvalidStatuses].filter((s) => s.startsWith('modbus')))
+      "
+      @toggle-invalid-field-status="
+        (field: string, action: 'add' | 'delete') => {
+          if (action === 'add') {
+            fieldsInvalidStatuses.add(field);
+          } else {
+            fieldsInvalidStatuses.delete(field);
+          }
+        }
+      "
+      @change-mode="settings.modbus.mode = $event"
+      @change-rate="settings.modbus.rate = $event"
+      @change-parity="settings.modbus.parity = $event"
+      @change-stop="settings.modbus.stop = $event"
+      @change-numbering-system="settings.numberingSystem = $event"
+      @change-advanced-param="
+        (param, value) => {
+          if (!settings || settings.modbus.mode === 'off') return;
+          settings.modbus.advanced[settings.modbus.mode][param] = value;
+        }
+      "
+    />
     <div
       v-for="topic in topics"
       :key="topic"
@@ -394,56 +300,46 @@ import ButtonGroup from '@/components/Ui/ButtonGroup.vue';
 import CollapseTransition from '@/components/CollapseTransition.vue';
 import UiInput from '@/components/Ui/UiInput.vue';
 import AdvancedSettingsButton from '@/components/views/devicesSettings/elements/AdvancedSettingsButton.vue';
-import type { NGCSettings } from '@/typings/settings';
-import { cloneDeep, isEqual } from 'lodash-es';
+import type { ControllerSettings, ExtDevsListRaw, NGCSettings } from '@/typings/settings';
+import { cloneDeep, isEmpty, isEqual, isEqualWith, omit, pick } from 'lodash-es';
 import ManageDevice from './elements/ManageDevice.vue';
-import InputRange from './elements/InputRange.vue';
+import Rs485Settings from './elements/Rs485Settings.vue';
+import type { PartialDeep } from 'type-fest/source/partial-deep';
 
 const props = defineProps<{
-  initSettings: NGCSettings;
-  isRebootRequired: boolean;
-  rebootNgcTrigger: number;
+  controllerSettings: ControllerSettings;
+  saveTrigger: number;
 }>();
 
 const emit = defineEmits<{
   (e: 'change', value: NGCSettings): void;
-  (e: 'setIsAllFieldsValid', isValid: boolean): void;
-  (e: 'ngcRebootedManually'): void;
+  (e: 'setNeedToSave', needToSave: boolean): void;
+  (e: 'setIsSaving', isSaving: boolean): void;
 }>();
 
-const settings = ref<NGCSettings>(cloneDeep(props.initSettings));
+const indexStore = useIndexStore();
 
-watch(
-  settings,
-  () => {
-    emit('change', cloneDeep(settings.value));
-  },
-  { deep: true },
-);
+const { rebootingDeviceAddr, numberingSystem } = storeToRefs(indexStore);
+
+const { api } = useApiStore();
+
+const { storeCommonSettingsFile } = useStoreCommonSettingsFile();
+
+const { toast } = useToast();
+
+const settings = ref<NGCSettings>();
+
+const settingsInit = ref<NGCSettings>();
+
+const isRebootRequired = ref(false);
+
+const rebootTrigger = ref(0);
 
 const topics: (keyof NGCSettings)[] = ['1-wire', 'adc-in', 'bin-out', 'pwm-out'];
 
-const isAdvancedSettingsExpanded = ref<{ rs485: boolean; oneWire: boolean }>({
-  rs485: false,
+const isAdvancedSettingsExpanded = ref<{ oneWire: boolean }>({
   oneWire: false,
 });
-
-const rsAdvancedParams = {
-  variables: [
-    { param: 'rd-tmo', label: 'rd-tmo', min: 5, max: 50000 },
-    { param: 'wr-tmo', label: 'wr-tmo', min: 5, max: 50000 },
-    { param: 'rd-pause', label: 'rd-ddy', min: 0, max: 50000 },
-    { param: 'wr-pause', label: 'wr-ddy', min: 0, max: 50000 },
-    { param: 'cycle-pause', label: 'cm-ddy', min: 0, max: 50000 },
-  ],
-  'ext-devs': [
-    { param: 'get-tmo', label: 'get-tmo', min: 1, max: 50000 },
-    { param: 'set-tmo', label: 'set-tmo', min: 1, max: 50000 },
-    { param: 'ow-scan-tmo', label: 'ow-scan-tmo', min: 100, max: 50000 },
-    { param: 'set-cfg-tmo', label: 'set-cfg-tmo', min: 100, max: 50000 },
-    { param: 'cycle-pause', label: 'cycle-pause', min: 0, max: 50000 },
-  ],
-} as const;
 
 const oneWiresParams = computed<
   {
@@ -453,46 +349,66 @@ const oneWiresParams = computed<
     max: number;
   }[][]
 >(() =>
-  settings.value['1-wire'].map((w) => [
-    {
-      param: 'cycle-pause',
-      label: 'cycle-delay',
-      min: 5,
-      max: w.mode === 'rom' ? 100 : w.mode === 'sens' ? 1000 : 100,
-    },
-    { param: 'db-time', label: 'debounce-time', min: 0, max: w.mode === 'rom' ? 100 : 100 },
-    {
-      param: 'ct-time',
-      label: 'comert-time',
-      min: 50,
-      max: w.mode === 'rom' ? 100 : w.mode === 'sens' ? 500 : 100,
-    },
-  ]),
+  settings.value === undefined
+    ? []
+    : settings.value['1-wire'].map((w) => [
+        {
+          param: 'cycle-pause',
+          label: 'cycle-delay',
+          min: 5,
+          max: w.mode === 'rom' ? 100 : w.mode === 'sens' ? 1000 : 100,
+        },
+        { param: 'db-time', label: 'debounce-time', min: 0, max: w.mode === 'rom' ? 100 : 100 },
+        {
+          param: 'ct-time',
+          label: 'comert-time',
+          min: 50,
+          max: w.mode === 'rom' ? 100 : w.mode === 'sens' ? 500 : 100,
+        },
+      ]),
 );
 
 const fieldsInvalidStatuses = ref<Set<string>>(new Set());
 
-watch(
-  () => props.initSettings,
-  () => {
-    if (!isEqual(props.initSettings, settings.value)) {
-      settings.value = cloneDeep(props.initSettings);
-    }
-  },
-);
-
-watch(
-  fieldsInvalidStatuses,
-  () => {
-    emit('setIsAllFieldsValid', fieldsInvalidStatuses.value.size === 0);
-  },
-  { deep: true },
-);
-
 const advancedSettingsHaveError = computed(() => ({
   oneWire: [...fieldsInvalidStatuses.value].some((s) => s.startsWith('1-wire')),
-  rs485: [...fieldsInvalidStatuses.value].some((s) => s.startsWith('modbus')),
 }));
+
+const ignoreUndefined = (value: any) => {
+  if (value === undefined) return true;
+};
+
+const areThereChanges = computed(() => {
+  if (!settings.value || !settingsInit.value) return false;
+  switch (settings.value.modbus.mode) {
+    case 'off':
+      return !isEqualWith(
+        omit(settings.value, `modbus.advanced`),
+        omit(settingsInit.value, `modbus.advanced`),
+        ignoreUndefined,
+      );
+    case 'variables':
+      return !isEqualWith(
+        omit(settings.value, `modbus.advanced.ext-devs`),
+        omit(settingsInit.value, `modbus.advanced.ext-devs`),
+        ignoreUndefined,
+      );
+    case 'ext-devs':
+      return !isEqualWith(
+        omit(settings.value, `modbus.advanced.variables`),
+        omit(settingsInit.value, `modbus.advanced.variables`),
+        ignoreUndefined,
+      );
+  }
+});
+
+const needToSave = computed(() => areThereChanges.value && !fieldsInvalidStatuses.value.size);
+
+watch(needToSave, () => {
+  emit('setNeedToSave', needToSave.value);
+});
+
+watch(() => props.saveTrigger, save);
 
 const { t } = useI18n({
   messages: {
@@ -525,22 +441,6 @@ const { t } = useI18n({
       ms: 'ms',
       output: 'output',
       hz: 'Hz',
-      rsSettings: 'RS485 bus settings',
-      portMode: 'Port mode',
-      portModes: {
-        off: 'OFF',
-        variables: 'MODBUS VARIABLES',
-        'ext-devs': 'EXTENSION DEVICES',
-      },
-      speed: 'Speed',
-      parity: 'Parity',
-      parities: {
-        none: 'NONE',
-        even: 'EVEN',
-        odd: 'ODD',
-      },
-      stop: 'Stop bit',
-      numberingSystem: 'Default display \nof registers and values',
       press: 'Press',
       here: 'here',
       forReboot: 'for reboot',
@@ -574,22 +474,6 @@ const { t } = useI18n({
       ms: 'мс',
       output: 'выход',
       hz: 'Гц',
-      rsSettings: 'Настройки шины RS485',
-      portMode: 'Режим работы порта',
-      portModes: {
-        off: 'ОТКЛЮЧЕН',
-        variables: 'ПЕРЕМЕННЫЕ MODBUS',
-        'ext-devs': 'УСТРОЙСТВА РАСШИРЕНИЯ',
-      },
-      speed: 'Скорость',
-      parity: 'Четность',
-      parities: {
-        none: 'НЕТ',
-        even: 'ЧЕТНЫЙ',
-        odd: 'НЕЧЕТНЫЙ',
-      },
-      stop: 'Стоп-бит',
-      numberingSystem: 'Отображение регистров \nи значений по умолчанию',
       press: 'Нажмите',
       here: 'сюда',
       forReboot: 'для перезагрузки',
@@ -601,4 +485,98 @@ const oneWireBuses = oneWiresModes.map((m) => ({
   text: t(`buses.${m}`),
   value: m,
 }));
+
+function setNgcSettings(data: ControllerSettings) {
+  settings.value = {
+    ...pick(data, ['1-wire', 'adc-in', 'bin-out', 'pwm-out']),
+    modbus: {
+      ...pick(data.modbus[0], ['rate', 'parity', 'stop', 'mode']),
+      advanced: {
+        variables: {
+          'cycle-pause':
+            data.modbus[0].mode === 'variables' ? data.modbus[0]['cycle-pause'] : undefined,
+          'rd-pause': data.modbus[0].mode === 'variables' ? data.modbus[0]['rd-pause'] : undefined,
+          'rd-tmo': data.modbus[0].mode === 'variables' ? data.modbus[0]['rd-tmo'] : undefined,
+          'wr-pause': data.modbus[0].mode === 'variables' ? data.modbus[0]['wr-pause'] : undefined,
+          'wr-tmo': data.modbus[0].mode === 'variables' ? data.modbus[0]['wr-tmo'] : undefined,
+        },
+        'ext-devs': {
+          'cycle-pause':
+            data.modbus[0].mode === 'ext-devs' ? data.modbus[0]['cycle-pause'] : undefined,
+          'get-tmo': data.modbus[0].mode === 'ext-devs' ? data.modbus[0]['get-tmo'] : undefined,
+          'ow-scan-tmo':
+            data.modbus[0].mode === 'ext-devs' ? data.modbus[0]['ow-scan-tmo'] : undefined,
+          'set-cfg-tmo':
+            data.modbus[0].mode === 'ext-devs' ? data.modbus[0]['set-cfg-tmo'] : undefined,
+          'set-tmo': data.modbus[0].mode === 'ext-devs' ? data.modbus[0]['set-tmo'] : undefined,
+        },
+      },
+    },
+    numberingSystem: numberingSystem.value,
+  };
+  isRebootRequired.value = data['reboot-req'];
+  settingsInit.value = cloneDeep(settings.value);
+}
+
+async function save() {
+  emit('setIsSaving', true);
+  const current = settings.value;
+  const init = settingsInit.value;
+  if (!current || !init) return;
+  const settingsToSave: PartialDeep<ControllerSettings, { recurseIntoArrays: true }> = {};
+  (['1-wire', 'pwm-out', 'bin-out', 'adc-in'] as const).forEach((k) => {
+    if (isKeyOfBoth(current, init, k) && !isEqual(current[k], init[k])) {
+      if (k === '1-wire') {
+        settingsToSave['1-wire'] = current['1-wire'].map(
+          (v, i): Partial<ControllerSettings['1-wire'][number]> =>
+            isEqual(v, init['1-wire'][i]) ? { mode: v.mode } : v,
+        );
+      } else {
+        settingsToSave[k] = current[k] as any;
+      }
+    }
+  });
+  if (!isEqual(current.modbus, init.modbus)) {
+    settingsToSave.modbus = [];
+    settingsToSave.modbus[0] = {
+      ...pick(current.modbus, ['rate', 'parity', 'stop', 'mode']),
+      ...(current.modbus.mode === 'off' ? {} : current.modbus.advanced[current.modbus.mode]),
+    };
+  }
+  try {
+    if (!isEmpty(settingsToSave)) {
+      const r = await api.post('set_config', settingsToSave, { timeout: 60000 });
+      isRebootRequired.value = r.data['reboot-req'];
+    }
+    if (current.numberingSystem !== init.numberingSystem) {
+      const r = await storeCommonSettingsFile(
+        undefined,
+        undefined,
+        undefined,
+        current.numberingSystem,
+      );
+      if (r === 'error') throw '';
+      indexStore.setNumberingSystem(current.numberingSystem);
+    }
+    if (current.modbus.mode !== init.modbus.mode) {
+      if (current.modbus.mode === 'ext-devs' && init.modbus.mode !== 'ext-devs') {
+        rebootTrigger.value += 1;
+        await until(rebootingDeviceAddr).toBe(0);
+        await until(rebootingDeviceAddr).toBe(undefined);
+        const r = await api.get<{ list: ExtDevsListRaw }>('get_ext_devs');
+        indexStore.setExtDevsList(r.data.list);
+      }
+      indexStore.setNGCModbusMode(current.modbus.mode);
+      const r = await api.get<ControllerSettings>('get_config');
+      setNgcSettings(r.data);
+    } else {
+      settingsInit.value = cloneDeep(settings.value);
+    }
+  } catch (error) {
+    toast.error(t('toast.error.header'), t('toast.error.text'));
+  }
+  emit('setIsSaving', false);
+}
+
+setNgcSettings(props.controllerSettings);
 </script>

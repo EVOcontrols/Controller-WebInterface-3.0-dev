@@ -8,7 +8,7 @@
       },
     ]"
     spellcheck="false"
-    v-model.trim="valueInit"
+    v-model.trim="value"
     :required="required"
     :maxlength="maxLength"
     :autofocus="autofocus"
@@ -58,10 +58,9 @@ const emit = defineEmits<{
   (e: 'statusChanged', status: InputFieldStatus): void;
 }>();
 
-// eslint-disable-next-line vue/no-setup-props-destructure
-let lastInitValue: any = props.initValue;
+let lastInitValue = props.initValue;
 
-const valueInit = ref<string>(props.initValue?.toString() || '');
+const value = ref<string>(props.initValue?.toString() || '');
 
 function setStatus(status: InputFieldStatus) {
   emit('statusChanged', status);
@@ -106,11 +105,12 @@ function isFitValidationType(v: string) {
 }
 
 function valueChangedHandler() {
-  // console.log('valueChangedHandler');
-  const v = valueInit.value;
+  const v = value.value;
   if (!v) {
     if (props.required) {
       setStatus('invalid');
+    } else {
+      setStatus('empty');
     }
     lastInitValue = undefined;
     emit('valueChanged', undefined);
@@ -125,9 +125,8 @@ function valueChangedHandler() {
       setStatus('invalid');
       return;
     }
-    lastInitValue = v;
+    lastInitValue = v as V;
     emit('valueChanged', v as V);
-    // console.log('valid string', v, props.initType);
   } else if (v) {
     const parsed = parseFloat(v.replace(/,/, '.'));
     if (isNaN(parsed)) {
@@ -150,20 +149,19 @@ function valueChangedHandler() {
       setStatus('invalid');
       return;
     }
-    lastInitValue = parsed;
+    // console.log(v, parsed);
+    lastInitValue = parsed as V;
     emit('valueChanged', parsed as V);
-    // console.log('valid', v, props.initType, parsed);
   } else if (props.nullable === true) {
+    lastInitValue = null as V;
     emit('valueChanged', null as V);
   }
-  // console.log('final', v, props.initType);
   setStatus(v ? 'valid' : 'empty');
 }
 
 watchDebounced(
-  valueInit,
+  value,
   () => {
-    // console.log('valueInit', valueInit.value);
     valueChangedHandler();
   },
   { immediate: true, debounce: 10 },
@@ -179,17 +177,21 @@ watchDebounced(
 
 watch(
   () => props.initValue,
-  () => {
-    if (props.initValue === lastInitValue) return;
-    lastInitValue = props.initValue;
-    valueInit.value = props.initValue?.toString() || '';
+  (v) => {
+    if (v === lastInitValue) return;
+    // console.log('valueChangedHandler', v, lastInitValue, typeof v, typeof lastInitValue);
+    value.value = v?.toString() || '';
   },
 );
 
-watch(() => props.minMax, valueChangedHandler);
+watch([() => props.minMax?.[0], () => props.minMax?.[1]], valueChangedHandler);
 
 function onFocus(e: FocusEvent) {
   if (props.autoSelect === false) return;
   (e.target as HTMLInputElement)?.select();
 }
+
+onBeforeUnmount(() => {
+  emit('statusChanged', 'empty');
+});
 </script>
