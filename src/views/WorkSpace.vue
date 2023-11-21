@@ -30,17 +30,38 @@
             <div class="w-40 z-[70]">
                 <LangNcSwitcher v-if="isDev" />
             </div>
-            <button
-                class="group text-[#638bae] hover:text-[#adebff] flex flex-row items-center mr-10 font-semibold text-[0.938rem] leading-[1.2] tracking-[0.03em]"
+            <div
+                class="relative group text-[#638bae] hover:text-[#adebff] active:text-[#adebff] flex flex-row items-center mr-10 pr-2 pt-1 pb-1 font-semibold text-[0.938rem] leading-[1.2] tracking-[0.03em] cursor-pointer transition-all duration-300"
                 :disabled="isDisabled"
-                @click="logout"
+                ref="userBlock"
+                @click="showUserSubmenu"
             >
                 <span
-                    v-html="logoutIcon"
+                    v-html="currentUserRole === 'admin' ? admin : user"
                     class="mr-2"
                 ></span>
-                {{ t('logout') }}
-            </button>
+                {{ currentUserRole === 'admin' ? t('admin') : t('user') }}
+                <transition name="fade-150">
+                    <div
+                        class="absolute top-full -left-[1.125rem] p-2 cursor-default bg-[#133A5A] rounded-[7px] transition-all duration-300"
+                        :style="{
+                            filter: 'drop-shadow(0px 0px 11px #0F2A4B)',
+                            width: 'calc(100% + 18px)',
+                        }"
+                        @mouseenter.stop
+                        v-show="isUserSubmenuVisible"
+                    >
+                        <a
+                            href=""
+                            @click.prevent="logout"
+                            class="flex items-center gap-2 transition-all duration-300 text-sm text-[#ADEBFF] p-2 pb-[10px] rounded-[4px] hover:bg-[#134d7e] hover:pl-3"
+                        >
+                            <SignoutIcon />
+                            {{ t('logout') }}
+                        </a>
+                    </div>
+                </transition>
+            </div>
         </div>
         <Transition
             name="fade-150"
@@ -113,7 +134,9 @@
 
 <script setup lang="ts">
 import logo from '@/assets/img/logo.svg?raw';
-import logoutIcon from '@/assets/img/logout.svg?raw';
+import SignoutIcon from '@/assets/SignoutIcon.vue';
+import admin from '@/assets/img/admin.svg?raw';
+import user from '@/assets/img/user.svg?raw';
 import DateTimeInfo from '@/components/DateTimeInfo.vue';
 import SelectedItemLine from '@/components/SelectedItemLine.vue';
 import LangNcSwitcher from '@/components/dev/LangNcSwitcher.vue';
@@ -169,6 +192,16 @@ const isDisabled = ref(false);
 
 const extDeviceInInitIndex = ref<number>();
 
+const isUserSubmenuVisible = ref(false);
+
+const userBlock = ref<HTMLElement | null>(null);
+
+const zIndex = ref<number | 'unset'>(0);
+
+let zIndexTimer: ReturnType<typeof setTimeout> | undefined;
+
+const currentUserRole = userRole.value;
+
 watch(extDeviceInInitState, () => {
     if (extDeviceInInitState.value !== undefined && rebootingDeviceAddr.value === undefined) {
         const extDevice = extDevsList.value?.find((d) => d.addr === extDeviceInInitState.value);
@@ -223,6 +256,31 @@ async function getCommonSettings() {
     }
 }
 
+function userSubmenuListener() {
+    isUserSubmenuVisible.value = false;
+    zIndexTimer = setTimeout(() => {
+        zIndex.value = 'unset';
+    }, 300);
+}
+
+function showUserSubmenu() {
+    isUserSubmenuVisible.value = !isUserSubmenuVisible.value;
+    userBlock.value?.removeEventListener('mouseleave', userSubmenuListener);
+    if (zIndexTimer) {
+        clearTimeout(zIndexTimer);
+        zIndexTimer = undefined;
+    }
+    if (isUserSubmenuVisible.value) {
+        userBlock.value?.addEventListener('mouseleave', userSubmenuListener, { once: true });
+        zIndex.value = 1;
+    } else {
+        zIndexTimer = setTimeout(() => {
+            zIndex.value = 'unset';
+            zIndexTimer = undefined;
+        }, 300);
+    }
+}
+
 if (isAuth.value) {
     await getCommonSettings();
     indexStore.setIsInterfaceStarted(true);
@@ -239,6 +297,8 @@ const { t } = useI18n({
             },
             initializing: 'Extension device #{index} initializing, please wait...',
             longQuery: 'Query took longer than expected. Please wait...',
+            admin: 'Administrator',
+            user: 'User',
         },
         ru: {
             logout: 'Выйти',
@@ -250,6 +310,8 @@ const { t } = useI18n({
             initializing:
                 'Идет инициализация устройства расширения #{index}, пожалуйста подождите...',
             longQuery: 'Запрос занял больше времени, чем ожидалось. Пожалуйста, подождите...',
+            admin: 'Администратор',
+            user: 'Пользователь',
         },
     },
 });
