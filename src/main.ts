@@ -8,11 +8,11 @@ import { createI18n } from 'vue-i18n';
 const app = createApp(App);
 
 const i18n = createI18n({
-  legacy: false,
-  availableLocales: langs,
-  missingWarn: false,
-  fallbackWarn: false,
-  messages: commonMessages,
+    legacy: false,
+    availableLocales: langs,
+    missingWarn: false,
+    fallbackWarn: false,
+    messages: commonMessages,
 });
 
 app.use(createPinia());
