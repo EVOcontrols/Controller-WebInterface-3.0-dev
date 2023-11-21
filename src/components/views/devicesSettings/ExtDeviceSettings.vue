@@ -1,11 +1,11 @@
 <template>
-  <div>
-    <ManageDevice
-      :is-reboot-required="false"
-      :device-addr="deviceAddr"
-      :device-state="deviceState"
-    />
-  </div>
+    <div>
+        <ManageDevice
+            :is-reboot-required="false"
+            :device-addr="deviceAddr"
+            :device-state="deviceState"
+        />
+    </div>
 </template>
 
 <script lang="ts" setup>
@@ -14,8 +14,8 @@ import ManageDevice from './elements/ManageDevice.vue';
 import type { DeviceAddr } from '@/typings/common';
 
 const props = defineProps<{
-  deviceAddr: Exclude<DeviceAddr, 0>;
-  deviceState: DeviceWorkState;
+    deviceAddr: Exclude<DeviceAddr, 0>;
+    deviceState: DeviceWorkState;
 }>();
 
 const emit = defineEmits<{}>();

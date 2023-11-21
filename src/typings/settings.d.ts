@@ -2,201 +2,201 @@ import { FuncsNumberPerPage } from './funcs';
 import { TempUnit, Lang, InputFieldStatus, NumberingSystem, type DeviceAddr } from './common';
 import { IsStringLiteral } from 'type-fest';
 export type ControllerSettings = {
-  lan: {
-    'addr-mode': (typeof lanAddrModes)[number];
-    'ip-addr': string;
-    'ip-mask': string;
-    'ip-gate': string;
-    'serv-port': number;
-  };
-  cloud: {
-    mode: (typeof cloudModes)[number];
-    interval: number;
-    'main-url': string;
-    'main-port': number;
-  };
-  rtc: {
-    source: (typeof rtcSources)[number];
-    'ntp1-url': string;
-    'time-zone': number;
-    interval: number;
-  };
-  gnss: {
-    latitude: string;
-    longitude: string;
-  };
-  login: {
-    'user-name': string;
-    'user-pass': string;
-    'root-name': string;
-    'root-pass': string;
-  };
-  '1-wire': {
-    mode: (typeof oneWiresModes)[number];
-    'cycle-pause': number;
-    'db-time': number;
-    'ct-time': number;
-  }[];
-  modbus: ({
-    rate: number;
-    parity: (typeof modbusParities)[number];
-    stop: 1 | 2;
-  } & (
-    | {
-        mode: 'variables';
-        'rd-tmo'?: number;
-        'wr-tmo'?: number;
-        'rd-pause'?: number;
-        'wr-pause'?: number;
-        'cycle-pause'?: number;
-      }
-    | {
-        mode: 'ext-devs';
-        'get-tmo'?: number;
-        'set-tmo'?: number;
-        'ow-scan-tmo'?: number;
-        'set-cfg-tmo'?: number;
-        'cycle-pause'?: number;
-      }
-    | {
-        mode: 'off';
-      }
-  ))[];
-  'adc-in': {
-    'avg-size': (number | null)[];
-    'clbr-min': (number | null)[];
-    'clbr-max': (number | null)[];
-    'lim-min': (number | null)[];
-    'lim-max': (number | null)[];
-  };
-  'pwm-out': {
-    frequency: (number | null)[];
-  };
-  'bin-out': {
-    'min-delay': number;
-  };
-  'reboot-req': boolean;
+    lan: {
+        'addr-mode': (typeof lanAddrModes)[number];
+        'ip-addr': string;
+        'ip-mask': string;
+        'ip-gate': string;
+        'serv-port': number;
+    };
+    cloud: {
+        mode: (typeof cloudModes)[number];
+        interval: number;
+        'main-url': string;
+        'main-port': number;
+    };
+    rtc: {
+        source: (typeof rtcSources)[number];
+        'ntp1-url': string;
+        'time-zone': number;
+        interval: number;
+    };
+    gnss: {
+        latitude: string;
+        longitude: string;
+    };
+    login: {
+        'user-name': string;
+        'user-pass': string;
+        'root-name': string;
+        'root-pass': string;
+    };
+    '1-wire': {
+        mode: (typeof oneWiresModes)[number];
+        'cycle-pause': number;
+        'db-time': number;
+        'ct-time': number;
+    }[];
+    modbus: ({
+        rate: number;
+        parity: (typeof modbusParities)[number];
+        stop: 1 | 2;
+    } & (
+        | {
+              mode: 'variables';
+              'rd-tmo'?: number;
+              'wr-tmo'?: number;
+              'rd-pause'?: number;
+              'wr-pause'?: number;
+              'cycle-pause'?: number;
+          }
+        | {
+              mode: 'ext-devs';
+              'get-tmo'?: number;
+              'set-tmo'?: number;
+              'ow-scan-tmo'?: number;
+              'set-cfg-tmo'?: number;
+              'cycle-pause'?: number;
+          }
+        | {
+              mode: 'off';
+          }
+    ))[];
+    'adc-in': {
+        'avg-size': (number | null)[];
+        'clbr-min': (number | null)[];
+        'clbr-max': (number | null)[];
+        'lim-min': (number | null)[];
+        'lim-max': (number | null)[];
+    };
+    'pwm-out': {
+        frequency: (number | null)[];
+    };
+    'bin-out': {
+        'min-delay': number;
+    };
+    'reboot-req': boolean;
 };
 
 export type CommonControllerSettings = Pick<
-  ControllerSettings,
-  'lan' | 'cloud' | 'rtc' | 'gnss'
+    ControllerSettings,
+    'lan' | 'cloud' | 'rtc' | 'gnss'
 > & {
-  'root-login': Pick<ControllerSettings['login'], 'root-name' | 'root-pass'> & {
-    'root-pass-repeat': string;
-  };
-  'user-login': Pick<ControllerSettings['login'], 'user-name' | 'user-pass'> & {
-    'user-pass-repeat': string;
-  };
-  funcsNumberPerPage: {
-    funcsNumberPerPage: `${FuncsNumberPerPage}`;
-  };
-  tempUnit: {
-    tempUnit: TempUnit;
-  };
-  lang: {
-    lang: Lang;
-  };
+    'root-login': Pick<ControllerSettings['login'], 'root-name' | 'root-pass'> & {
+        'root-pass-repeat': string;
+    };
+    'user-login': Pick<ControllerSettings['login'], 'user-name' | 'user-pass'> & {
+        'user-pass-repeat': string;
+    };
+    funcsNumberPerPage: {
+        funcsNumberPerPage: `${FuncsNumberPerPage}`;
+    };
+    tempUnit: {
+        tempUnit: TempUnit;
+    };
+    lang: {
+        lang: Lang;
+    };
 };
 
 export type PasswordFieldName = `${'root' | 'user'}-pass${'-repeat' | ''}`;
 
 export type CommonSettingsFields = {
-  [P in keyof CommonControllerSettings]: {
-    [P2 in keyof CommonControllerSettings[P]]: {
-      orientation: 'v' | 'h';
-      param: P2;
-      value: CommonControllerSettings[P][P2] | undefined;
-    } & (IsStringLiteral<CommonControllerSettings[P][P2]> extends false
-      ? (P2 extends PasswordFieldName
-          ? {
-              type: 'password';
-            }
-          : {
-              type: 'string' | 'number';
-            }) & {
-          widthClass: string;
-          status: InputFieldStatus;
-          validationType?: ('ip' | 'url')[] | ['int'] | ['latitude'] | ['longitude'];
-          isRequired?: boolean;
-        }
-      : {
-          type: 'btn-group';
-          values: Readonly<
-            {
-              text: string;
-              value: CommonControllerSettings[P][P2];
-            }[]
-          >;
-        });
-  }[keyof CommonControllerSettings[P]][][];
+    [P in keyof CommonControllerSettings]: {
+        [P2 in keyof CommonControllerSettings[P]]: {
+            orientation: 'v' | 'h';
+            param: P2;
+            value: CommonControllerSettings[P][P2] | undefined;
+        } & (IsStringLiteral<CommonControllerSettings[P][P2]> extends false
+            ? (P2 extends PasswordFieldName
+                  ? {
+                        type: 'password';
+                    }
+                  : {
+                        type: 'string' | 'number';
+                    }) & {
+                  widthClass: string;
+                  status: InputFieldStatus;
+                  validationType?: ('ip' | 'url')[] | ['int'] | ['latitude'] | ['longitude'];
+                  isRequired?: boolean;
+              }
+            : {
+                  type: 'btn-group';
+                  values: Readonly<
+                      {
+                          text: string;
+                          value: CommonControllerSettings[P][P2];
+                      }[]
+                  >;
+              });
+    }[keyof CommonControllerSettings[P]][][];
 };
 
 export type NGCSettings = Pick<ControllerSettings, '1-wire' | 'pwm-out' | 'bin-out' | 'adc-in'> & {
-  modbus: Pick<ControllerSettings['modbus'][number], 'rate' | 'parity' | 'stop' | 'mode'> & {
-    advanced: {
-      variables: Omit<
-        Extract<ControllerSettings['modbus'][number], { mode: 'variables' }>,
-        'rate' | 'parity' | 'stop' | 'mode'
-      >;
-      'ext-devs': Omit<
-        Extract<ControllerSettings['modbus'][number], { mode: 'ext-devs' }>,
-        'rate' | 'parity' | 'stop' | 'mode'
-      >;
+    modbus: Pick<ControllerSettings['modbus'][number], 'rate' | 'parity' | 'stop' | 'mode'> & {
+        advanced: {
+            variables: Omit<
+                Extract<ControllerSettings['modbus'][number], { mode: 'variables' }>,
+                'rate' | 'parity' | 'stop' | 'mode'
+            >;
+            'ext-devs': Omit<
+                Extract<ControllerSettings['modbus'][number], { mode: 'ext-devs' }>,
+                'rate' | 'parity' | 'stop' | 'mode'
+            >;
+        };
     };
-  };
-  numberingSystem: NumberingSystem;
+    numberingSystem: NumberingSystem;
 };
 
 export type DeviceWorkState = 'on' | 'off' | 'init' | 'no-conn' | 'error';
 
 export type ExtDevsListRaw = (
-  | {
-      type: 'NG3-EDIO';
-      addr: Exclude<DeviceAddr, 0>;
-      state: DeviceWorkState;
-      serial: string;
-      version: string;
-    }
-  | {
-      type: 'none';
-    }
+    | {
+          type: 'NG3-EDIO';
+          addr: Exclude<DeviceAddr, 0>;
+          state: DeviceWorkState;
+          serial: string;
+          version: string;
+      }
+    | {
+          type: 'none';
+      }
 )[];
 
 export type ExtDevsList = {
-  index: number;
-  type: 'NG3-EDIO';
-  addr: Exclude<DeviceAddr, 0>;
-  state: DeviceWorkState;
-  serial: string;
-  version: string;
+    index: number;
+    type: 'NG3-EDIO';
+    addr: Exclude<DeviceAddr, 0>;
+    state: DeviceWorkState;
+    serial: string;
+    version: string;
 }[];
 
 export type ExtDeviceSettings = {
-  'mb-slave': {
-    addr: number;
-    rate: number;
-    parity: (typeof modbusParities)[number];
-    stop: 1 | 2;
-  };
-  'mb-master': (
-    | {
-        mode: 'variables';
-        parity: (typeof modbusParities)[number];
+    'mb-slave': {
+        addr: number;
         rate: number;
+        parity: (typeof modbusParities)[number];
         stop: 1 | 2;
-        'rd-tmo': number;
-        'wr-tmo': number;
-        'rd-dly': number;
-        'wr-dly': number;
-        'cm-dly': number;
-      }
-    | { mode: 'off' }
-  )[];
-  '1-wire': {
-    mode: (typeof oneWiresModes)[number];
-    'cycle-delay': number;
-    'debounce-time': number;
-    'convert-time': number;
-  }[];
+    };
+    'mb-master': (
+        | {
+              mode: 'variables';
+              parity: (typeof modbusParities)[number];
+              rate: number;
+              stop: 1 | 2;
+              'rd-tmo': number;
+              'wr-tmo': number;
+              'rd-dly': number;
+              'wr-dly': number;
+              'cm-dly': number;
+          }
+        | { mode: 'off' }
+    )[];
+    '1-wire': {
+        mode: (typeof oneWiresModes)[number];
+        'cycle-delay': number;
+        'debounce-time': number;
+        'convert-time': number;
+    }[];
 };

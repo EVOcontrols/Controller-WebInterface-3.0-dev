@@ -3,100 +3,103 @@ import type { Lang } from '@/typings/common';
 import { createRouter, createWebHistory } from 'vue-router';
 
 declare module 'vue-router' {
-  interface RouteMeta {
-    title: (lang: Lang) => string;
-  }
+    interface RouteMeta {
+        title: (lang: Lang) => string;
+    }
 }
 
 const router = createRouter({
-  history: createWebHistory(import.meta.env.BASE_URL),
-  routes: [
-    {
-      path: '/login',
-      name: 'login',
-      component: () => import('@/views/LoginPage.vue'),
-      meta: {
-        title: (lang) => (lang === 'en' ? 'Login' : 'Вход'),
-      },
-    },
-    {
-      path: '/c',
-      name: 'c',
-      component: () => import('@/views/WorkSpace.vue'),
-      redirect: { name: 'widgets' },
-      children: [
+    history: createWebHistory(import.meta.env.BASE_URL),
+    routes: [
         {
-          path: 'panel',
-          name: 'panel',
-          component: () => import('@/views/panel/PanelWrapper.vue'),
-          redirect: { name: 'widgets' },
-          children: [
-            {
-              path: '',
-              name: 'widgets',
-              component: () => import('@/views/panel/WidgetsPage.vue'),
-              meta: {
-                title: (lang) => (lang === 'en' ? 'Control panel' : 'Панель управления'),
-              },
+            path: '/login',
+            name: 'login',
+            component: () => import('@/views/LoginPage.vue'),
+            meta: {
+                title: (lang) => (lang === 'en' ? 'Login' : 'Вход'),
             },
-          ],
         },
         {
-          path: 'functions',
-          name: 'functions',
-          component: () => import('@/views/functions/FunctionsWrapper.vue'),
+            path: '/c',
+            name: 'c',
+            component: () => import('@/views/WorkSpace.vue'),
+            redirect: { name: 'widgets' },
+            children: [
+                {
+                    path: 'panel',
+                    name: 'panel',
+                    component: () => import('@/views/panel/PanelWrapper.vue'),
+                    redirect: { name: 'widgets' },
+                    children: [
+                        {
+                            path: '',
+                            name: 'widgets',
+                            component: () => import('@/views/panel/WidgetsPage.vue'),
+                            meta: {
+                                title: (lang) =>
+                                    lang === 'en' ? 'Control panel' : 'Панель управления',
+                            },
+                        },
+                    ],
+                },
+                {
+                    path: 'functions',
+                    name: 'functions',
+                    component: () => import('@/views/functions/FunctionsWrapper.vue'),
+                },
+                {
+                    path: 'settings',
+                    name: 'settings',
+                    component: () => import('@/views/settings/SettingsWrapper.vue'),
+                    redirect: { name: 'common-settings' },
+                    children: [
+                        {
+                            path: 'common',
+                            name: 'common-settings',
+                            component: () => import('@/views/settings/CommonSettings.vue'),
+                            meta: {
+                                title: (lang) =>
+                                    lang === 'en' ? 'Common settings' : 'Общие настройки',
+                            },
+                        },
+                        {
+                            path: 'devices',
+                            name: 'devices-settings',
+                            component: () => import('@/views/settings/DevicesSettings.vue'),
+                            meta: {
+                                title: (lang) =>
+                                    lang === 'en' ? 'Devices settings' : 'Настройки устройств',
+                            },
+                        },
+                    ],
+                },
+            ],
         },
         {
-          path: 'settings',
-          name: 'settings',
-          component: () => import('@/views/settings/SettingsWrapper.vue'),
-          redirect: { name: 'common-settings' },
-          children: [
-            {
-              path: 'common',
-              name: 'common-settings',
-              component: () => import('@/views/settings/CommonSettings.vue'),
-              meta: {
-                title: (lang) => (lang === 'en' ? 'Common settings' : 'Общие настройки'),
-              },
-            },
-            {
-              path: 'devices',
-              name: 'devices-settings',
-              component: () => import('@/views/settings/DevicesSettings.vue'),
-              meta: {
-                title: (lang) => (lang === 'en' ? 'Devices settings' : 'Настройки устройств'),
-              },
-            },
-          ],
+            path: '/:(.*)*',
+            redirect: { name: 'widgets' },
         },
-      ],
-    },
-    {
-      path: '/:(.*)*',
-      redirect: { name: 'widgets' },
-    },
-  ],
+    ],
 });
 
 router.beforeEach((to) => {
-  if (!router.hasRoute(to.name as string)) {
-    return { name: 'widgets' };
-  }
-  const indexStore = useIndexStore();
-  const isAuth = indexStore.isAuth;
-  if (to.name !== 'login' && !isAuth) {
-    return { name: 'login' };
-  }
-  if (to.name === 'login' && isAuth) {
-    return { name: 'widgets' };
-  }
+    if (!router.hasRoute(to.name as string)) {
+        return { name: 'widgets' };
+    }
+    const indexStore = useIndexStore();
+    const isAuth = indexStore.isAuth;
+    if (to.name !== 'login' && !isAuth) {
+        return { name: 'login' };
+    }
+    if (to.name === 'login' && isAuth) {
+        return { name: 'widgets' };
+    }
 });
 
 router.afterEach((to, from) => {
-  const indexStore = useIndexStore();
-  window.document.title = `EVO controls | ${to.meta.title(indexStore.lang)}`;
-  Object.assign(to.meta, { previous: from.name });
+    const indexStore = useIndexStore();
+    window.document.title = `EVO controls | ${to.meta.title(indexStore.lang)}`;
+    Object.assign(to.meta, { previous: from.name });
 });
 
 export default router;

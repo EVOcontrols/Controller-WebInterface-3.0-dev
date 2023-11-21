@@ -1,110 +1,114 @@
 <template>
-  <div class="w-full h-full flex flex-col overflow-hidden">
-    <div class="h-[5.063rem] bg-[#092740] flex flex-row w-full items-center">
-      <RouterLink
-        :to="{ name: 'widgets' }"
-        class="ml-10"
-        ><span
-          v-html="logo"
-          class="[&>svg]:h-[1.688rem] [&>svg]:w-[1.688rem]"
-        ></span
-      ></RouterLink>
-      <DateTimeInfo />
-      <div class="flex-1 flex flex-row justify-center h-full">
-        <div class="flex flex-row h-full gap-x-8 relative">
-          <RouterLink
-            v-for="item in menuItems"
-            :key="item"
-            :to="{ name: item }"
-            class="font-semibold text-[#638bae] text-[0.938rem] leading-[1.2] hover:text-[#67c4e2e0] on:!text-[#adebff] h-full flex items-center"
-            :class="{ on: activeMenuItem === item }"
-          >
-            {{ t(`menuItems.${item}`) }}
-          </RouterLink>
-          <SelectedItemLine
-            :activeItemIndex="menuItems.indexOf(activeMenuItem)"
-            :withBg="true"
-          />
+    <div class="w-full h-full flex flex-col overflow-hidden">
+        <div class="h-[5.063rem] bg-[#092740] flex flex-row w-full items-center">
+            <RouterLink
+                :to="{ name: 'widgets' }"
+                class="ml-10"
+                ><span
+                    v-html="logo"
+                    class="[&>svg]:h-[1.688rem] [&>svg]:w-[1.688rem]"
+                ></span
+            ></RouterLink>
+            <DateTimeInfo />
+            <div class="flex-1 flex flex-row justify-center h-full">
+                <div class="flex flex-row h-full gap-x-8 relative">
+                    <RouterLink
+                        v-for="item in menuItems"
+                        :key="item"
+                        :to="{ name: item }"
+                        class="font-semibold text-[#638bae] text-[0.938rem] leading-[1.2] hover:text-[#67c4e2e0] on:!text-[#adebff] h-full flex items-center"
+                        :class="{ on: activeMenuItem === item }"
+                    >
+                        {{ t(`menuItems.${item}`) }}
+                    </RouterLink>
+                    <SelectedItemLine
+                        :activeItemIndex="menuItems.indexOf(activeMenuItem)"
+                        :withBg="true"
+                    />
+                </div>
+            </div>
+            <div class="w-40 z-[70]">
+                <LangNcSwitcher v-if="isDev" />
+            </div>
+            <button
+                class="group text-[#638bae] hover:text-[#adebff] flex flex-row items-center mr-10 font-semibold text-[0.938rem] leading-[1.2] tracking-[0.03em]"
+                :disabled="isDisabled"
+                @click="logout"
+            >
+                <span
+                    v-html="logoutIcon"
+                    class="mr-2"
+                ></span>
+                {{ t('logout') }}
+            </button>
         </div>
-      </div>
-      <div class="w-40 z-[70]">
-        <LangNcSwitcher v-if="isDev" />
-      </div>
-      <button
-        class="group text-[#638bae] hover:text-[#adebff] flex flex-row items-center mr-10 font-semibold text-[0.938rem] leading-[1.2] tracking-[0.03em]"
-        :disabled="isDisabled"
-        @click="logout"
-      >
-        <span
-          v-html="logoutIcon"
-          class="mr-2"
-        ></span>
-        {{ t('logout') }}
-      </button>
+        <Transition
+            name="fade-150"
+            mode="out-in"
+        >
+            <h1
+                class="font-semibold text-[#8dc5f6] text-[1.625rem] leading-[1.192] tracking-[0.02em] mt-6 mx-10"
+                :key="activeMenuItem"
+            >
+                {{ t('menuItems.' + activeMenuItem) }}
+            </h1>
+        </Transition>
+        <router-view v-slot="{ Component }">
+            <transition
+                name="fade-150"
+                mode="out-in"
+            >
+                <component
+                    :is="Component"
+                    class="flex-1"
+                />
+            </transition>
+        </router-view>
+        <ModalWrapper
+            v-if="extDeviceInInitIndex !== undefined"
+            :is-saving="true"
+            :trigger-close="extDeviceInInitState !== undefined"
+            @close="extDeviceInInitIndex = undefined"
+        >
+            <template #custom>
+                <div class="flex flex-col">
+                    <span
+                        v-html="gears"
+                        class="self-center mb-4 [&>svg]:w-12"
+                    ></span>
+                    <div
+                        class="text-[#9adbf6] text-sm leading-[1.167] tracking-[0.03em] whitespace-pre"
+                    >
+                        <div>
+                            {{ t('initializing', { index: extDeviceInInitIndex }) }}
+                        </div>
+                    </div>
+                </div>
+            </template>
+        </ModalWrapper>
+        <ModalWrapper
+            v-if="isScreenBlocked"
+            :is-saving="true"
+            :trigger-close="!isLongQueryRunning"
+            @close="isScreenBlocked = false"
+        >
+            <template #custom>
+                <div class="flex flex-col">
+                    <span
+                        v-html="spinner"
+                        class="self-center mb-4 [&>svg]:w-8 [&>svg>path]:fill-[#148ef8]"
+                    ></span>
+                    <div
+                        class="text-[#9adbf6] text-sm leading-[1.167] tracking-[0.03em] whitespace-pre"
+                    >
+                        <div>
+                            {{ t('longQuery') }}
+                        </div>
+                    </div>
+                </div>
+            </template>
+        </ModalWrapper>
     </div>
-    <Transition
-      name="fade-150"
-      mode="out-in"
-    >
-      <h1
-        class="font-semibold text-[#8dc5f6] text-[1.625rem] leading-[1.192] tracking-[0.02em] mt-6 mx-10"
-        :key="activeMenuItem"
-      >
-        {{ t('menuItems.' + activeMenuItem) }}
-      </h1>
-    </Transition>
-    <router-view v-slot="{ Component }">
-      <transition
-        name="fade-150"
-        mode="out-in"
-      >
-        <component
-          :is="Component"
-          class="flex-1"
-        />
-      </transition>
-    </router-view>
-    <ModalWrapper
-      v-if="extDeviceInInitIndex !== undefined"
-      :is-saving="true"
-      :trigger-close="extDeviceInInitState !== undefined"
-      @close="extDeviceInInitIndex = undefined"
-    >
-      <template #custom>
-        <div class="flex flex-col">
-          <span
-            v-html="gears"
-            class="self-center mb-4 [&>svg]:w-12"
-          ></span>
-          <div class="text-[#9adbf6] text-sm leading-[1.167] tracking-[0.03em] whitespace-pre">
-            <div>
-              {{ t('initializing', { index: extDeviceInInitIndex }) }}
-            </div>
-          </div>
-        </div>
-      </template>
-    </ModalWrapper>
-    <ModalWrapper
-      v-if="isScreenBlocked"
-      :is-saving="true"
-      :trigger-close="!isLongQueryRunning"
-      @close="isScreenBlocked = false"
-    >
-      <template #custom>
-        <div class="flex flex-col">
-          <span
-            v-html="spinner"
-            class="self-center mb-4 [&>svg]:w-8 [&>svg>path]:fill-[#148ef8]"
-          ></span>
-          <div class="text-[#9adbf6] text-sm leading-[1.167] tracking-[0.03em] whitespace-pre">
-            <div>
-              {{ t('longQuery') }}
-            </div>
-          </div>
-        </div>
-      </template>
-    </ModalWrapper>
-  </div>
 </template>
 
 <script setup lang="ts">
@@ -123,12 +127,12 @@ import spinner from '@/assets/img/spinner-inside-button.svg?raw';
 const indexStore = useIndexStore();
 
 const {
-  isAuth,
-  userRole,
-  extDeviceInInitState,
-  extDevsList,
-  rebootingDeviceAddr,
-  isLongQueryRunning,
+    isAuth,
+    userRole,
+    extDeviceInInitState,
+    extDevsList,
+    rebootingDeviceAddr,
+    isLongQueryRunning,
 } = storeToRefs(indexStore);
 
 const funcsStore = useFuncsStore();
@@ -148,15 +152,15 @@ const isScreenBlocked = ref(false);
 let blockScreenTimer = 0;
 
 const activeMenuItem = computed<(typeof menuItems)[number]>(() => {
-  let activeItem: (typeof menuItems)[number] = 'panel';
-  route.matched.some((r) => {
-    if (menuItems.includes(r.name as any)) {
-      activeItem = r.name as any;
-      return true;
-    }
-    return false;
-  });
-  return activeItem;
+    let activeItem: (typeof menuItems)[number] = 'panel';
+    route.matched.some((r) => {
+        if (menuItems.includes(r.name as any)) {
+            activeItem = r.name as any;
+            return true;
+        }
+        return false;
+    });
+    return activeItem;
 });
 
 const isDev = import.meta.env.DEV;
@@ -166,96 +170,97 @@ const isDisabled = ref(false);
 const extDeviceInInitIndex = ref<number>();
 
 watch(extDeviceInInitState, () => {
-  if (extDeviceInInitState.value !== undefined && rebootingDeviceAddr.value === undefined) {
-    const extDevice = extDevsList.value?.find((d) => d.addr === extDeviceInInitState.value);
-    extDeviceInInitIndex.value = extDevice?.index;
-  }
+    if (extDeviceInInitState.value !== undefined && rebootingDeviceAddr.value === undefined) {
+        const extDevice = extDevsList.value?.find((d) => d.addr === extDeviceInInitState.value);
+        extDeviceInInitIndex.value = extDevice?.index;
+    }
 });
 
 watch(isLongQueryRunning, (isRunning) => {
-  clearTimeout(blockScreenTimer);
-  if (isRunning) {
-    blockScreenTimer = setTimeout(() => {
-      isScreenBlocked.value = true;
-    }, 1000);
-  }
+    clearTimeout(blockScreenTimer);
+    if (isRunning) {
+        blockScreenTimer = setTimeout(() => {
+            isScreenBlocked.value = true;
+        }, 1000);
+    }
 });
 
 async function logout() {
-  isDisabled.value = true;
-  try {
-    await api.post('logout');
-    indexStore.setIsAuth(undefined);
-    router.push({ name: 'login' });
-  } catch (error) {
-    isDisabled.value = false;
-  }
+    isDisabled.value = true;
+    try {
+        await api.post('logout');
+        indexStore.setIsAuth(undefined);
+        router.push({ name: 'login' });
+    } catch (error) {
+        isDisabled.value = false;
+    }
 }
 
 async function getCommonSettings() {
-  const commonFileSettings = await readFile({
-    type: 'settings',
-    subType: 'common',
-    user: userRole.value,
-  });
-  if (commonFileSettings !== 'error') {
-    const { lang, tempUnit, funcsNumberPerPage, numberingSystem } =
-      commonFileSettings !== 'notFound' ? commonFileSettings : ({} as CommonSettingsFileType);
-    if (lang === 'en' || lang === 'ru') {
-      indexStore.setLang(lang);
+    const commonFileSettings = await readFile({
+        type: 'settings',
+        subType: 'common',
+        user: userRole.value,
+    });
+    if (commonFileSettings !== 'error') {
+        const { lang, tempUnit, funcsNumberPerPage, numberingSystem } =
+            commonFileSettings !== 'notFound' ? commonFileSettings : ({} as CommonSettingsFileType);
+        if (lang === 'en' || lang === 'ru') {
+            indexStore.setLang(lang);
+        }
+        if (tempUnit === '°C' || tempUnit === '°F') {
+            indexStore.setTempUnit(tempUnit);
+        }
+        if (typeof funcsNumberPerPage === 'number' && funcsNumberPerPage > 0) {
+            funcsStore.setFuncsNumberPerPage(funcsNumberPerPage as FuncsNumberPerPage);
+        }
+        if (numberingSystem === 'hex' || numberingSystem === 'dec') {
+            indexStore.setNumberingSystem(numberingSystem);
+        }
+    } else {
+        await new Promise((res) => setTimeout(res, 1000));
+        await getCommonSettings();
     }
-    if (tempUnit === '°C' || tempUnit === '°F') {
-      indexStore.setTempUnit(tempUnit);
-    }
-    if (typeof funcsNumberPerPage === 'number' && funcsNumberPerPage > 0) {
-      funcsStore.setFuncsNumberPerPage(funcsNumberPerPage as FuncsNumberPerPage);
-    }
-    if (numberingSystem === 'hex' || numberingSystem === 'dec') {
-      indexStore.setNumberingSystem(numberingSystem);
-    }
-  } else {
-    await new Promise((res) => setTimeout(res, 1000));
-    await getCommonSettings();
-  }
 }
 
 if (isAuth.value) {
-  await getCommonSettings();
-  indexStore.setIsInterfaceStarted(true);
+    await getCommonSettings();
+    indexStore.setIsInterfaceStarted(true);
 }
 
 const { t } = useI18n({
-  messages: {
-    en: {
-      logout: 'Log out',
-      menuItems: {
-        panel: 'Control panel',
-        functions: 'Functions',
-        settings: 'Settings',
-      },
-      initializing: 'Extension device #{index} initializing, please wait...',
-      longQuery: 'Query took longer than expected. Please wait...',
+    messages: {
+        en: {
+            logout: 'Log out',
+            menuItems: {
+                panel: 'Control panel',
+                functions: 'Functions',
+                settings: 'Settings',
+            },
+            initializing: 'Extension device #{index} initializing, please wait...',
+            longQuery: 'Query took longer than expected. Please wait...',
+        },
+        ru: {
+            logout: 'Выйти',
+            menuItems: {
+                panel: 'Панель управления',
+                functions: 'Функции',
+                settings: 'Настройки',
+            },
+            initializing:
+                'Идет инициализация устройства расширения #{index}, пожалуйста подождите...',
+            longQuery: 'Запрос занял больше времени, чем ожидалось. Пожалуйста, подождите...',
+        },
     },
-    ru: {
-      logout: 'Выйти',
-      menuItems: {
-        panel: 'Панель управления',
-        functions: 'Функции',
-        settings: 'Настройки',
-      },
-      initializing: 'Идет инициализация устройства расширения #{index}, пожалуйста подождите...',
-      longQuery: 'Запрос занял больше времени, чем ожидалось. Пожалуйста, подождите...',
-    },
-  },
 });
 
 onMounted(async () => {
-  if (route.name === 'devices-settings') return;
-  try {
-    const r = await api.get<ControllerSettings>('get_config');
-    indexStore.setNGCModbusMode(r.data.modbus[0]?.mode || 'off');
-  } catch (error) {
-    //
-  }
+    if (route.name === 'devices-settings') return;
+    try {
+        const r = await api.get<ControllerSettings>('get_config');
+        indexStore.setNGCModbusMode(r.data.modbus[0]?.mode || 'off');
+    } catch (error) {
+        //
+    }
 });
 </script>

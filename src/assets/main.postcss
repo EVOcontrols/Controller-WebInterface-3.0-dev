@@ -3,37 +3,37 @@
 @tailwind utilities;
 
 @font-face {
-  font-family: 'Gilroy';
-  src: url('@/assets/fonts/Gilroy-Regular.otf');
-  font-display: block;
-  font-weight: normal;
+    font-family: 'Gilroy';
+    src: url('@/assets/fonts/Gilroy-Regular.otf');
+    font-display: block;
+    font-weight: normal;
 }
 @font-face {
-  font-family: 'Gilroy';
-  src: url('@/assets/fonts/Gilroy-Medium.otf');
-  font-display: block;
-  font-weight: 500;
+    font-family: 'Gilroy';
+    src: url('@/assets/fonts/Gilroy-Medium.otf');
+    font-display: block;
+    font-weight: 500;
 }
 @font-face {
-  font-family: 'Gilroy';
-  src: url('@/assets/fonts/Gilroy-SemiBold.otf');
-  font-display: block;
-  font-weight: 600;
+    font-family: 'Gilroy';
+    src: url('@/assets/fonts/Gilroy-SemiBold.otf');
+    font-display: block;
+    font-weight: 600;
 }
 @font-face {
-  font-family: 'Roboto';
-  src: url('@/assets/fonts/Roboto-Medium.ttf');
-  font-display: block;
-  font-weight: 500;
+    font-family: 'Roboto';
+    src: url('@/assets/fonts/Roboto-Medium.ttf');
+    font-display: block;
+    font-weight: 500;
 }
 
 html,
 body,
 #app {
-  height: 100%;
-  width: 100%;
-  overflow: hidden;
-  position: relative;
+    height: 100%;
+    width: 100%;
+    overflow: hidden;
+    position: relative;
 }
 
 #app,
@@ -42,13 +42,13 @@ input,
 textarea,
 a,
 select {
-  @apply font-gilroy text-[0.813rem] font-medium leading-[1.154] text-[#adebff] transition-[color,opacity,background-color,box-shadow,fill,border-color] duration-300;
+    @apply font-gilroy text-[0.813rem] font-medium leading-[1.154] text-[#adebff] transition-[color,opacity,background-color,box-shadow,fill,border-color] duration-300;
 }
 
 a,
 button,
 select {
-  @apply select-none;
+    @apply select-none;
 }
 /* *,
 input::placeholder,
@@ -61,97 +61,97 @@ input,
 button,
 button:focus,
 textarea {
-  outline: none !important;
+    outline: none !important;
 }
 .vuesax-ph {
-  &::placeholder {
-    transition: color 0.15s ease;
-  }
-  &:focus::placeholder {
-    color: transparent !important;
-  }
+    &::placeholder {
+        transition: color 0.15s ease;
+    }
+    &:focus::placeholder {
+        color: transparent !important;
+    }
 }
 @keyframes blink {
-  from,
-  to {
-    background-color: #84b5e3;
-  }
-  50% {
-    background-color: transparent;
-  }
+    from,
+    to {
+        background-color: #84b5e3;
+    }
+    50% {
+        background-color: transparent;
+    }
 }
 .blinking-cursor {
-  position: relative;
-  &::after {
-    content: '';
-    color: white;
-    animation: 1s blink step-end infinite;
-    display: inline-block;
-    position: absolute;
-    top: 0;
-    left: 0;
-    height: 1rem;
-    width: 1px;
-    background-color: #84b5e3;
-  }
+    position: relative;
+    &::after {
+        content: '';
+        color: white;
+        animation: 1s blink step-end infinite;
+        display: inline-block;
+        position: absolute;
+        top: 0;
+        left: 0;
+        height: 1rem;
+        width: 1px;
+        background-color: #84b5e3;
+    }
 }
 .no-scrollbar {
-  scrollbar-width: none;
-  &::-webkit-scrollbar {
-    display: none;
-  }
+    scrollbar-width: none;
+    &::-webkit-scrollbar {
+        display: none;
+    }
 }
 
 .scale-y-150-enter-active,
 .scale-y-150-leave-active {
-  transition: transform 0.15s ease;
-  transform-origin: center;
+    transition: transform 0.15s ease;
+    transform-origin: center;
 }
 .scale-y-150-enter-from,
 .scale-y-150-leave-to {
-  transform: scaleY(0);
+    transform: scaleY(0);
 }
 
 .list-enter-active {
-  transition: all 0.3s ease !important;
+    transition: all 0.3s ease !important;
 }
 .list-leave-active {
-  transition: all 0.3s ease !important;
+    transition: all 0.3s ease !important;
 }
 .list-enter-from {
-  opacity: 0;
+    opacity: 0;
 }
 .list-leave-to {
-  margin-top: -5.25rem;
-  opacity: 0;
+    margin-top: -5.25rem;
+    opacity: 0;
 }
 
 .fade-150-enter-active,
 .fade-150-leave-active {
-  transition: opacity 0.15s ease;
+    transition: opacity 0.15s ease;
 }
 .fade-150-enter-from,
 .fade-150-leave-to {
-  opacity: 0;
+    opacity: 0;
 }
 
 .fade-300-enter-active,
 .fade-300-leave-active {
-  transition: opacity 0.3s ease;
+    transition: opacity 0.3s ease;
 }
 .fade-300-enter-from,
 .fade-300-leave-to {
-  opacity: 0;
+    opacity: 0;
 }
 
 .appear-top-150-enter-active,
 .appear-top-150-leave-active {
-  transition: transform 0.15s ease;
+    transition: transform 0.15s ease;
 }
 
 .appear-top-150-enter-from {
-  transform: translateY(100%);
+    transform: translateY(100%);
 }
 .appear-top-150-leave-to {
-  transform: translateY(-100%);
+    transform: translateY(-100%);
 }
