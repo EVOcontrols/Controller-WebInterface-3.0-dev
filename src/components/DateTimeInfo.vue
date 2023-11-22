@@ -123,9 +123,7 @@ async function getDateTime() {
         const r = await api.get('get_time');
         indexStore.setControllerDateTime(r.data);
         parseTime(r.data);
-        if (r.data.hour === 0 && r.data.min === 0 && r.data.sec < 20) {
-            parseDate(r.data);
-        }
+        parseDate(r.data);
         if (r.data.sec < 30) {
             timeout = 20000;
         } else if (r.data.sec < 40) {
