@@ -30,7 +30,7 @@
     </svg>
 </template>
 
-<script></script>
+<script setup></script>
 
 <style lang="postcss" scoped>
 a:hover svg path {

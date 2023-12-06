@@ -2,7 +2,63 @@ import type { ControllerDateTime, DeviceAddr, Lang, Toast, UserRole } from '@/ty
 import type { TempUnit, NumberingSystem } from '@/typings/common';
 import type { ControllerSettings, ExtDevsList, ExtDevsListRaw } from '@/typings/settings';
 
+export interface Device {
+    addr: number;
+    serial?: string;
+    type: string;
+    version?: string;
+    interf: string[];
+}
+
+export interface Interf {
+    value: string;
+    label: {
+        ru: string;
+        en: string;
+    };
+}
+
+export interface Widget {
+    d: number;
+    i: string;
+    deviceName: string;
+    component: any;
+}
+
+export interface InterfVal {
+    type: string;
+    device: number;
+    index: number;
+    value: number[];
+}
+
 export const useIndexStore = defineStore('indexStore', () => {
+    const timeout = ref(1000);
+
+    const devices = ref<Device[]>([]);
+
+    const interfaces = ref<Interf[]>([
+        // { value: 'ibtn', label: { ru: '1-wire ID', en: '1-wire ID' } },
+        // { value: '1w-sens', label: { ru: 'Термометры', en: 'Thermometers' } },
+        { value: 'bin-in', label: { ru: 'Дискретные входы', en: 'Discrete inputs' } },
+        { value: 'adc-in', label: { ru: 'Аналоговые входы', en: 'Analog inputs' } },
+        { value: 'bin-out', label: { ru: 'Дискретные выходы', en: 'Discrete outputs' } },
+        { value: 'pwm-out', label: { ru: 'ШИМ-выходы', en: 'PWM outputs' } },
+        // { value: 'mb-var', label: { ru: 'Переменные MODBUS', en: 'MODBUS variables' } },
+        { value: 'bin-var', label: { ru: 'Бинарные переменные', en: 'Binary variables' } },
+        { value: 'int-var', label: { ru: 'Целочисленные переменные', en: 'Integer variables' } },
+        { value: 'tim-var', label: { ru: 'Переменные времени', en: 'Time variables' } },
+    ]);
+
+    const visibleWidgets = ref<any[]>([]);
+
+    const devicesState = ref<
+        {
+            device: number;
+            interfVal: InterfVal[];
+        }[]
+    >([]);
+
     const authToken = useStorage<string>('authToken', '');
 
     const userRole = useStorage<'user' | 'admin'>('userRole', 'user', undefined, {
@@ -41,6 +97,14 @@ export const useIndexStore = defineStore('indexStore', () => {
     const extDevsList = ref<ExtDevsList>();
 
     const isLongQueryRunning = ref(false);
+
+    const chosenDevices = ref<number[]>(
+        (JSON.parse(localStorage.getItem('chosenDevices')) as number[]) || [],
+    );
+
+    const chosenInterfaces = ref<string[]>(
+        (JSON.parse(localStorage.getItem('chosenInterfaces')) as string[]) || [],
+    );
 
     const extDeviceInInitState = computed(
         () => extDevsList.value?.find((d) => d.state === 'init')?.addr,
@@ -102,7 +166,119 @@ export const useIndexStore = defineStore('indexStore', () => {
         isLongQueryRunning.value = value;
     }
 
+    function setDevices(devicesArr: Device[]) {
+        if (devices.value.length === 0) {
+            devices.value.push(...devicesArr);
+        } else {
+            devicesArr.forEach((d) => {
+                const index = devicesState.value.findIndex((obj) => obj.device === d.addr);
+                index === -1 ? devices.value.push(d) : (devices.value[index] = d);
+            });
+        }
+    }
+
+    function toggleDevice(device: number) {
+        const index = chosenDevices.value.findIndex((d) => d === device);
+        let newArr;
+        if (index >= 0) {
+            chosenDevices.value.splice(index, 1);
+            newArr = [...chosenDevices.value];
+        } else {
+            chosenDevices.value.push(device);
+            newArr = [...chosenDevices.value];
+        }
+        chosenDevices.value = [...newArr];
+        localStorage.setItem('chosenDevices', JSON.stringify(chosenDevices.value));
+    }
+
+    function toggleChooseAllDevices(isAllDevicesChoosen?: Ref<boolean>) {
+        if (!isAllDevicesChoosen || !isAllDevicesChoosen.value) {
+            chosenDevices.value = [];
+        } else {
+            const arr: number[] = [];
+            devices.value.forEach((d) => {
+                arr.push(d.addr);
+            });
+            chosenDevices.value = arr;
+        }
+        localStorage.setItem('chosenDevices', JSON.stringify(chosenDevices.value));
+    }
+
+    function toggleInterface(interf: string) {
+        const index = chosenInterfaces.value.findIndex((i) => i === interf);
+        let newArr;
+        if (index >= 0) {
+            chosenInterfaces.value.splice(index, 1);
+            newArr = [...chosenInterfaces.value];
+        } else {
+            chosenInterfaces.value.push(interf);
+            newArr = [...chosenInterfaces.value];
+        }
+        chosenInterfaces.value = [...newArr];
+        localStorage.setItem('chosenInterfaces', JSON.stringify(chosenInterfaces.value));
+    }
+
+    function toggleChooseAllInterfaces(isAllInterfacesChoosen?: Ref<boolean>) {
+        if (!isAllInterfacesChoosen || !isAllInterfacesChoosen.value) {
+            chosenInterfaces.value = [];
+        } else {
+            const values: string[] = [];
+            interfaces.value.forEach((val) => {
+                values.push(val.value);
+            });
+            chosenInterfaces.value = [...values];
+        }
+        localStorage.setItem('chosenInterfaces', JSON.stringify(chosenInterfaces.value));
+    }
+
+    function setDevicesState(device: number, interfVal: InterfVal[]) {
+        if (
+            devicesState.value.length === 0 ||
+            devicesState.value.findIndex((obj) => obj.device === device) === -1
+        ) {
+            devicesState.value.push({ device: device, interfVal: interfVal });
+        } else {
+            const state = devicesState.value.find((obj) => obj.device === device);
+            const devIndex = devicesState.value.findIndex((obj) => obj.device === device);
+            interfVal.forEach((i) => {
+                const index = state?.interfVal.findIndex((interf) => interf.type === i.type);
+                if (index === -1) {
+                    devicesState.value.find((obj) => obj.device === device)?.interfVal.push(i);
+                } else {
+                    const interfIndex = devicesState.value[devIndex].interfVal.findIndex(
+                        (interf) => interf.type === i.type,
+                    );
+                    devicesState.value[devIndex].interfVal[interfIndex].value = i.value;
+                }
+            });
+        }
+    }
+
+    function getSortedDevices() {
+        return devices.value.sort((d1, d2) => {
+            return d1.addr - d2.addr;
+        });
+    }
+
+    function getSortedChosenDevices() {
+        const sortedDevices = getSortedDevices();
+        return [...chosenDevices.value].sort((d1, d2) => {
+            const index1 = sortedDevices.findIndex((dev) => dev.addr === d1);
+            const index2 = sortedDevices.findIndex((dev) => dev.addr === d2);
+            return index1 - index2;
+        });
+    }
+
+    function setVisibleWidgets(entities: any[]) {
+        visibleWidgets.value = entities;
+    }
+
     return {
+        timeout,
+        devices,
+        interfaces,
+        visibleWidgets,
+        devicesState,
         isAuth,
         authToken,
         userRole,
@@ -119,6 +295,9 @@ export const useIndexStore = defineStore('indexStore', () => {
         extDevsList,
         extDeviceInInitState,
         isLongQueryRunning,
+        chosenDevices,
+        chosenInterfaces,
+        setDevices,
         setIsAuth,
         setLang,
         addNewToast,
@@ -132,5 +311,13 @@ export const useIndexStore = defineStore('indexStore', () => {
         setNGCModbusMode,
         setExtDevsList,
         setLongQueryRunning,
+        toggleDevice,
+        toggleChooseAllDevices,
+        toggleInterface,
+        toggleChooseAllInterfaces,
+        setDevicesState,
+        getSortedDevices,
+        getSortedChosenDevices,
+        setVisibleWidgets,
     };
 });

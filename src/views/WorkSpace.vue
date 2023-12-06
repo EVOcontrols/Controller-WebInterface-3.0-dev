@@ -10,7 +10,7 @@
                 ></span
             ></RouterLink>
             <DateTimeInfo />
-            <div class="flex-1 flex flex-row justify-center h-full">
+            <div class="flex-1 flex flex-row justify-center h-full ml-4">
                 <div class="flex flex-row h-full gap-x-8 relative">
                     <RouterLink
                         v-for="item in menuItems"
@@ -146,6 +146,7 @@ import ModalWrapper from '@/components/ModalWrapper.vue';
 import gears from '@/assets/img/gears-animated.svg?raw';
 import type { ControllerSettings } from '@/typings/settings';
 import spinner from '@/assets/img/spinner-inside-button.svg?raw';
+import type { Device } from '@/stores';
 
 const indexStore = useIndexStore();
 
@@ -156,6 +157,9 @@ const {
     extDevsList,
     rebootingDeviceAddr,
     isLongQueryRunning,
+    interfaces,
+    timeout,
+    visibleWidgets,
 } = storeToRefs(indexStore);
 
 const funcsStore = useFuncsStore();
@@ -166,7 +170,7 @@ const route = useRoute();
 
 const router = useRouter();
 
-const { api } = useApi();
+const { api, isAborted } = useApi();
 
 const menuItems = ['panel', 'functions', 'settings'] as const;
 
@@ -202,6 +206,8 @@ let zIndexTimer: ReturnType<typeof setTimeout> | undefined;
 
 const currentUserRole = userRole.value;
 
+let getDevicesTimer: ReturnType<typeof setTimeout> | undefined;
+
 watch(extDeviceInInitState, () => {
     if (extDeviceInInitState.value !== undefined && rebootingDeviceAddr.value === undefined) {
         const extDevice = extDevsList.value?.find((d) => d.addr === extDeviceInInitState.value);
@@ -214,7 +220,7 @@ watch(isLongQueryRunning, (isRunning) => {
     if (isRunning) {
         blockScreenTimer = setTimeout(() => {
             isScreenBlocked.value = true;
-        }, 1000);
+        }, timeout.value);
     }
 });
 
@@ -251,8 +257,13 @@ async function getCommonSettings() {
             indexStore.setNumberingSystem(numberingSystem);
         }
     } else {
-        await new Promise((res) => setTimeout(res, 1000));
-        await getCommonSettings();
+        indexStore.setLang('ru');
+        indexStore.setTempUnit('°C');
+        funcsStore.setFuncsNumberPerPage(5 as FuncsNumberPerPage);
+        indexStore.setNumberingSystem('dec');
+
+        // await new Promise((res) => setTimeout(res, 1000));
+        // await getCommonSettings();
     }
 }
 
@@ -316,13 +327,96 @@ const { t } = useI18n({
     },
 });
 
+async function getDevices() {
+    try {
+        const devices: Device[] = [];
+        const r = (await (await api.post('get_ext_devs')).data).list as Device[];
+        const r0 = await api.post('get_dev_capab', {
+            device: 0,
+        });
+        const devicesArr = [r0.data, ...r.filter((item) => item.type !== 'none')];
+        for (let index = 0; index < devicesArr.length; index += 1) {
+            const reqArr: { type: string; device: number; index: number; quant: number }[] = [];
+            const interfArr: string[] = [];
+            const r1 = await api.post('get_dev_capab', {
+                device: devicesArr[index].addr,
+            });
+            for (let j = 0; j < interfaces.value.length; j++) {
+                if (r1.data[interfaces.value[j].value]) {
+                    interfArr.push(interfaces.value[j].value);
+                }
+            }
+            interfArr.forEach((i) => {
+                reqArr.push({
+                    type: i,
+                    device: devicesArr[index].addr,
+                    index: 0,
+                    quant: r1.data[i],
+                });
+            });
+            const filteredReqArr = reqArr.filter((el) => {
+                return visibleWidgets.value.find((w) => w.d === el.device && w.i === el.type);
+            });
+            const r2 = await api.post('get_ent_state', {
+                list: filteredReqArr,
+            });
+            indexStore.setDevicesState(r1.data.addr, r2.data.state);
+            devices.push(
+                Object.assign(
+                    { addr: r1.data.addr as number },
+                    { type: r1.data.type as string },
+                    { interf: interfArr },
+                ),
+            );
+        }
+        indexStore.setDevices(devices);
+    } catch (error) {
+        if (isAborted.value) {
+            return;
+        }
+    }
+    getDevicesTimer = setTimeout(getDevices, timeout.value);
+}
+
 onMounted(async () => {
     if (route.name === 'devices-settings') return;
     try {
         const r = await api.get<ControllerSettings>('get_config');
         indexStore.setNGCModbusMode(r.data.modbus[0]?.mode || 'off');
+        // const reqArr: { type: string; device: number; index: number; quant: number }[] = [];
+        // const r1 = await api.post('get_dev_capab', {
+        //     device: 0,
+        // });
+        // const interfArr: string[] = [];
+        // for (let j = 0; j < interfaces.value.length; j++) {
+        //     if (r1.data[interfaces.value[j].value]) {
+        //         interfArr.push(interfaces.value[j].value);
+        //     }
+        // }
+        // interfArr.forEach((i) => {
+        //     reqArr.push({ type: i, device: 0, index: 0, quant: r1.data[i] });
+        // });
+        // const r2 = await api.post('get_ent_state', {
+        //     list: reqArr,
+        // });
+        // indexStore.setDevicesState(0, r2.data.state);
+        // indexStore.setDevices([
+        //     Object.assign(
+        //         { addr: r1.data.addr as number },
+        //         { type: r1.data.type as string },
+        //         { interf: interfArr },
+        //     ),
+        // ]);
+        getDevices();
     } catch (error) {
+        if (isAborted.value) {
+            return;
+        }
         //
     }
+});
+
+onBeforeMount(() => {
+    getDevicesTimer = undefined;
 });
 </script>

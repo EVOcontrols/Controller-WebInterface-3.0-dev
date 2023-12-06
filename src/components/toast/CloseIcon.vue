@@ -29,6 +29,10 @@
 svg rect {
     @apply fill-current transition-colors duration-300;
 }
+
+span svg rect {
+    fill: #8dc5f6;
+}
 .success-toast svg {
     & rect {
         @apply text-[#74FFDE];
@@ -61,5 +65,10 @@ svg rect {
     &:active rect {
         @apply text-[#2D72FA];
     }
+}
+
+span:hover svg rect,
+span.active svg rect {
+    fill: #adebff;
 }
 </style>

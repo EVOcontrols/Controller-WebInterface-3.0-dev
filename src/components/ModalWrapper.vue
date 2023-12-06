@@ -59,7 +59,6 @@
 </template>
 
 <script setup lang="ts">
-import closeIcon from '@/assets/img/close.svg?raw';
 import OutlinedButton from './Ui/OutlinedButton.vue';
 import SaveButton from './Ui/SaveButton.vue';
 
