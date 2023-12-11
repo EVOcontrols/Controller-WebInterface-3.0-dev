@@ -4,14 +4,35 @@ import type { ControllerSettings, ExtDevsList, ExtDevsListRaw } from '@/typings/
 
 export interface Device {
     addr: number;
-    serial?: string;
     type: string;
-    version?: string;
-    interf: string[];
+    interf: [
+        | '1w-gpio'
+        | '1w-rom'
+        | '1w-sens'
+        | 'adc-in'
+        | 'bin-in'
+        | 'bin-out'
+        | 'bin-var'
+        | 'int-var'
+        | 'mb-var'
+        | 'pwm-out'
+        | 'tim-var',
+    ];
 }
 
 export interface Interf {
-    value: string;
+    value:
+        | '1w-gpio'
+        | '1w-rom'
+        | '1w-sens'
+        | 'adc-in'
+        | 'bin-in'
+        | 'bin-out'
+        | 'bin-var'
+        | 'int-var'
+        | 'mb-var'
+        | 'pwm-out'
+        | 'tim-var';
     label: {
         ru: string;
         en: string;
@@ -33,7 +54,7 @@ export interface InterfVal {
 }
 
 export const useIndexStore = defineStore('indexStore', () => {
-    const timeout = ref(1000);
+    const timeout = ref(500);
 
     const devices = ref<Device[]>([]);
 
@@ -166,15 +187,8 @@ export const useIndexStore = defineStore('indexStore', () => {
         isLongQueryRunning.value = value;
     }
 
-    function setDevices(devicesArr: Device[]) {
-        if (devices.value.length === 0) {
-            devices.value.push(...devicesArr);
-        } else {
-            devicesArr.forEach((d) => {
-                const index = devicesState.value.findIndex((obj) => obj.device === d.addr);
-                index === -1 ? devices.value.push(d) : (devices.value[index] = d);
-            });
-        }
+    function setDevices(device: Device) {
+        devices.value.push(device);
     }
 
     function toggleDevice(device: number) {
@@ -236,7 +250,7 @@ export const useIndexStore = defineStore('indexStore', () => {
             devicesState.value.length === 0 ||
             devicesState.value.findIndex((obj) => obj.device === device) === -1
         ) {
-            devicesState.value.push({ device: device, interfVal: interfVal });
+            devicesState.value = [...devicesState.value, { device: device, interfVal: interfVal }];
         } else {
             const state = devicesState.value.find((obj) => obj.device === device);
             const devIndex = devicesState.value.findIndex((obj) => obj.device === device);
@@ -248,7 +262,9 @@ export const useIndexStore = defineStore('indexStore', () => {
                     const interfIndex = devicesState.value[devIndex].interfVal.findIndex(
                         (interf) => interf.type === i.type,
                     );
-                    devicesState.value[devIndex].interfVal[interfIndex].value = i.value;
+                    const prevDeviceState = [...devicesState.value];
+                    prevDeviceState[devIndex].interfVal[interfIndex].value = i.value;
+                    devicesState.value = [...prevDeviceState];
                 }
             });
         }

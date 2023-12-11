@@ -10,7 +10,9 @@
             >
             <!-- {{ label }} -->
         </div>
-        <span class="rounded p-[6px] bg-[#07435c] text-[#00b3cb]">{{ props.activeIO.val }}%</span>
+        <span class="rounded p-[6px] bg-[#07435c] text-[#00b3cb]"
+            >{{ props.activeIO.val > 100 ? 100 : props.activeIO.val }}%</span
+        >
     </div>
     <div
         v-else
@@ -30,27 +32,58 @@
                 </div>
             </div>
         </div>
-        <PrimaryButton @click="$emit('enter')">{{ t('btn') }}</PrimaryButton>
+        <OutlinedButton
+            v-if="isBig"
+            class="mr-2"
+            >{{ btnText }}</OutlinedButton
+        >
+        <PrimaryButton @click="$emit('enter')">{{
+            isBig ? t('btn.close') : t('btn.open')
+        }}</PrimaryButton>
     </div>
 </template>
 
 <script lang="ts" setup>
 import { useI18n } from 'vue-i18n';
 import PrimaryButton from '@/components/Ui/PrimaryButton.vue';
+import OutlinedButton from '@/components/Ui/OutlinedButton.vue';
 import info from '@/assets/img/info.svg?raw';
+import type { Widget } from '@/stores';
 
 const props = defineProps<{
     isInfoVisible: boolean;
-    activeIO: { index: number; val: number } | null;
+    activeIO?: { index: number; val: number } | null;
+    isBig?: boolean;
+    w?: Widget;
 }>();
+
+const btnText = computed<string>(() => {
+    if (props.w?.i === 'pwm-out') {
+        return t('bigWBtn.init');
+    } else {
+        return '';
+    }
+});
 
 const { t } = useI18n({
     messages: {
         ru: {
-            btn: 'Открыть',
+            btn: {
+                open: 'Открыть',
+                close: 'Закрыть',
+            },
+            bigWBtn: {
+                init: 'Инициализация',
+            },
         },
         en: {
-            btn: 'Open',
+            btn: {
+                open: 'Open',
+                close: 'Close',
+            },
+            bigWBtn: {
+                init: 'Initialization',
+            },
         },
     },
 });

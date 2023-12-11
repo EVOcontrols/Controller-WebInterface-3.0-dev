@@ -13,6 +13,8 @@
                 v-if="widgets.big"
                 class="ml-10 w-full h-full rounded-xl bg-[#092740]"
                 :class="gridClasses.big"
+                :w="widgets.big"
+                @enter="setBigWidget"
             ></BigWidget>
             <div
                 class="gap-4 relative max-h-full widgets overflow-y-scroll scrollbar-4 px-10"
@@ -23,9 +25,9 @@
             >
                 <transition-group name="appear">
                     <component
-                        :is="w.component"
+                        :is="w.w.component"
                         v-for="w in widgets.small"
-                        :key="`${w.d}.${w.i}`"
+                        :key="`${w.w.d}.${w.w.i}`"
                         :w="w"
                         class="rounded-xl bg-[#092740] w-full flex overflow-hidden flex-col h-[12.625rem]"
                         @enter="setBigWidget"
@@ -56,15 +58,18 @@ import ShimWidget from '@/components/views/widgets/ShimWidget.vue';
 
 const indexStore = useIndexStore();
 
-const { devices, interfaces, chosenInterfaces } = storeToRefs(indexStore);
+const { devices, interfaces, chosenInterfaces, devicesState } = storeToRefs(indexStore);
 
 const bigWidget = ref<{ d: number; i: string } | null>(null);
 
 const scrollEl = ref<HTMLElement | undefined>();
 
-const widgets = computed<{ big: Widget | null; small: Widget[] }>(() => {
-    const small: Widget[] = [];
-    let big: Widget | null = null;
+const widgets = computed<{
+    big: { w: Widget; state: number[] } | null;
+    small: { w: Widget; state: number[] }[];
+}>(() => {
+    const small: { w: Widget; state: number[] }[] = [];
+    let big: { w: Widget; state: number[] } | null = null;
     const sortedChosenDevices = indexStore.getSortedChosenDevices();
     const sortedChosenInterfaces = [...chosenInterfaces.value].sort((i1, i2) => {
         const index1 = interfaces.value.findIndex((i) => i.value === i1);
@@ -73,6 +78,8 @@ const widgets = computed<{ big: Widget | null; small: Widget[] }>(() => {
     });
     sortedChosenDevices.forEach((d) => {
         sortedChosenInterfaces.forEach((i) => {
+            const obj = devicesState.value[d]?.interfVal.find((interf) => interf.type === i);
+            const state: number[] = (obj?.value as number[]) || [];
             //without 1-wire & modbus
             const widget: Widget = {
                 d: d,
@@ -92,9 +99,9 @@ const widgets = computed<{ big: Widget | null; small: Widget[] }>(() => {
                 widget.component = ShimWidget;
             }
             if (bigWidget.value && bigWidget.value.d === d && bigWidget.value.i === i) {
-                big = widget;
+                big = { w: widget, state: state };
             } else {
-                small.push(widget);
+                small.push({ w: widget, state: state });
             }
         });
     });
@@ -119,7 +126,12 @@ const gridClasses = computed<{ all: string; big: string; small: string }>(() => 
 const visibleWidgets = ref<Widget[]>([]);
 
 function setBigWidget(d: number, i: string) {
-    bigWidget.value = { d: d, i: i };
+    if (!d && !i) {
+        bigWidget.value = null;
+    } else {
+        if (d === undefined || i === undefined) return;
+        bigWidget.value = { d: d, i: i };
+    }
 }
 
 function handleScroll() {

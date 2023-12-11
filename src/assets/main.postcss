@@ -63,6 +63,11 @@ button:focus,
 textarea {
     outline: none !important;
 }
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
 .vuesax-ph {
     &::placeholder {
         transition: color 0.15s ease;
@@ -169,4 +174,14 @@ span.active {
 .translate-leave-active,
 .translate-leave-to {
     margin-top: -120px;
+}
+
+.label-enter-active,
+.label-leave-active {
+    transition: all 0.5s ease;
+}
+.label-enter-from,
+.label-leave-to {
+    transform: scale(0.82);
+    opacity: 0;
 }

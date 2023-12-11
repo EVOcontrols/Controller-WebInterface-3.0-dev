@@ -7,7 +7,7 @@
                 :class="{ disabled: notConnected }"
                 @click="handleArrowClick('toStart')"
             />
-            <div class="flex overflow-x-hidden relative ml-2 bg-113 pl-2 pr-1 rounded-l-lg w-full">
+            <div class="flex overflow-x-hidden relative ml-2 pl-2 pr-1 rounded-l-lg w-full">
                 <div
                     v-dragscroll.x
                     v-on:dragscrollmove="handleScrollMove"
