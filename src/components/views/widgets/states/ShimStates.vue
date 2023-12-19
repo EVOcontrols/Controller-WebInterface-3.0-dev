@@ -1,10 +1,10 @@
 <template>
     <div
         class="flex-1 relative"
-        :class="props.isBig ? 'pl-[18px] pr-[8px] w-[54%]' : 'px-3  w-full'"
+        :class="props.isBig ? 'pl-[18px] pr-[8px] w-[422px]' : 'px-3  w-full'"
     >
         <div
-            class="absolute top-[50%] translate-y-[-50%] rotate-180 left-[6px] cursor-pointer bg-[#092740] h-full w-[34px] z-[2] flex justify-center items-center"
+            class="arrow absolute top-[50%] translate-y-[-50%] rotate-180 left-0 cursor-pointer bg-[#092740] h-full w-[34px] z-[2] flex justify-center items-center"
             v-if="!isStartScrollEl && !props.isBig"
             @click="handleArrowClick('toStart')"
         >
@@ -24,28 +24,48 @@
                 <div
                     v-for="(s, index) in state"
                     :key="index"
-                    class="rounded group inline-flex flex-col h-full transition-spacing duration-300 relative"
+                    class="rounded group inline-flex flex-col h-full transition-spacing duration-300 relative items-center"
                     :class="props.isBig ? 'px-[0.06rem]' : 'py-1 hover:bg-[#113655]'"
                     @mouseenter="handleMouseEnter(index, s)"
                     @mouseleave="handleMouseLeave"
                 >
                     <div
-                        class="flex items-end flex-1 w-1.5 mx-2 overflow-hidden relative rounded-2xl cursor-pointer parent z-[1] peer"
-                        :class="
-                            props.isBig
+                        v-if="props.isCalibration"
+                        class="flex gap-1 flex-col items-center mb-2 calibrGroup"
+                    >
+                        <div
+                            class="w-1 h-1 rounded-[50%]"
+                            :class="false ? 'bg-[#00B3CB]' : 'bg-[#07435D]'"
+                        ></div>
+                        <span
+                            v-if="false"
+                            v-html="check"
+                            class="block bg-[#074a56] rounded-[3px] p-[1px]"
+                        ></span>
+                        <CalibrArrow
+                            v-else
+                            class="block p-[1px] bg-[#0D2F4B] rounded-[3px] rotate-180 transition-color duration-300 hover:bg-[#06516a] cursor-pointer"
+                        />
+                    </div>
+                    <div
+                        class="flex items-end flex-1 w-1.5 mx-2 overflow-hidden relative rounded-2xl parent z-[1] peer mb-2"
+                        :class="[
+                            props.isBig && props.w.w.i === 'pwm-out'
                                 ? 'bg-[#063a52] group-hover:overflow-visible'
-                                : 'bg-[#07435d]'
-                        "
+                                : 'bg-[#07435d]',
+                            { ' cursor-pointer': props.w.w.i === 'pwm-out' },
+                        ]"
                         @mousedown.left="quickChange(index, $event, s)"
                     >
                         <div
+                            v-if="!notConnected"
                             class="relative w-full bg-[#00b3cb] transition-all duration-500 rounded-[18px]"
                             :style="{
-                                height: `${activeIndex === index ? activeValue / 10 : s / 10}%`,
+                                height: `${activeIndex === index ? activeValue / 100 : s / 100}%`,
                             }"
                         >
                             <div
-                                v-if="props.isBig"
+                                v-if="props.isBig && props.w.w.i === 'pwm-out'"
                                 class="bg-[#00B3CB] absolute top-[-0.22rem] -left-[6px] w-[18px] h-[0.44rem] inline-block rounded opacity-0 transition-none"
                                 :class="{
                                     'opacity-100': activeIndex === index,
@@ -55,14 +75,35 @@
                             ></div>
                         </div>
                     </div>
-                    <div class="mt-2 text-[#6CB5D3] text-0.81 font-medium text-center leading-none">
+                    <div
+                        v-if="props.isCalibration"
+                        class="flex gap-1 flex-col items-center mb-[6px]"
+                    >
+                        <span
+                            v-if="false"
+                            v-html="check"
+                            class="block bg-[#074a56] rounded-[3px] p-[1px]"
+                        ></span>
+                        <CalibrArrow
+                            v-else
+                            class="block p-[1px] bg-[#0D2F4B] rounded-[3px] transition-color duration-300 hover:bg-[#06516a] cursor-pointer"
+                        />
+                        <div
+                            class="w-1 h-1 rounded-[50%]"
+                            :class="false ? 'bg-[#00B3CB]' : 'bg-[#07435D]'"
+                        ></div>
+                    </div>
+                    <div
+                        class="text-0.81 font-medium text-center leading-none"
+                        :class="notConnected ? 'text-[#3E688E]' : 'text-[#6CB5D3]'"
+                    >
                         {{ index + 1 }}
                     </div>
                 </div>
             </div>
         </div>
         <div
-            class="absolute top-[50%] translate-y-[-50%] right-[6px] cursor-pointer bg-[#092740] h-full w-[34px] z-[2] flex justify-center items-center"
+            class="arrow absolute top-[50%] translate-y-[-50%] right-0 cursor-pointer bg-[#092740] h-full w-[34px] z-[2] flex justify-center items-center"
             v-if="!isEndScrollEl && !props.isBig"
             @click="handleArrowClick('toEnd')"
         >
@@ -74,11 +115,13 @@
 <script lang="ts" setup>
 import type { Widget } from '@/stores';
 import ArrowIcon from '@/assets/ArrowIcon.vue';
+import CalibrArrow from '@/assets/CalibrArrow.vue';
+import check from '@/assets/img/check.svg?raw';
 const { api } = useApi();
 
 const indexStore = useIndexStore();
 
-const { notConnected } = storeToRefs(indexStore);
+const { notConnected, devicesState } = storeToRefs(indexStore);
 
 const isStartScrollEl = ref(true);
 
@@ -96,6 +139,8 @@ const range = ref<{ yBottom: number; yTop: number; height: number } | null>(null
 
 const activeValue = ref(0);
 
+const isRequesting = ref(false);
+
 const props = defineProps<{
     w: { w: Widget; state: number[] };
     isBig?: boolean;
@@ -103,6 +148,7 @@ const props = defineProps<{
     lastActiveIO?: { index: number; val: number } | null;
     mouseenterTimer?: number;
     mouseleaveTimer?: number;
+    isCalibration?: boolean;
 }>();
 
 const state = ref<number[]>([...props.w.state]);
@@ -113,7 +159,7 @@ const emit = defineEmits<{
 }>();
 
 function handleMouseEnter(index: number, s: number | null) {
-    if (!s) return;
+    if (s === null) return;
     if (props.isBig) {
         activeIndex.value = index;
         activeValue.value = s;
@@ -161,7 +207,7 @@ function handleScrollMove() {
 async function quickChange(index: number, e: MouseEvent, currentState: number | null) {
     const { d, i } = props.w.w;
     try {
-        if (props.isBig) {
+        if (props.isBig && props.w.w.i === 'pwm-out') {
             activeIndex.value = index;
             mouseOffset.value = 0;
             const target = e.target as Element;
@@ -176,12 +222,12 @@ async function quickChange(index: number, e: MouseEvent, currentState: number | 
             changeValue(e);
             document.addEventListener('mousemove', changeValue);
             document.addEventListener('mouseup', stopChange, { once: true });
-        } else {
+        } else if (props.w.w.i === 'pwm-out') {
             await api.post('set_ent_value', {
                 type: i,
                 device: d,
                 index: index,
-                value: currentState === 0 ? 1000 : 0,
+                value: currentState === 0 ? 10000 : 0,
             });
         }
     } catch (error) {
@@ -209,28 +255,38 @@ function startChange(index: number, e: MouseEvent, s: number) {
     document.addEventListener('mouseup', stopChange, { once: true });
 }
 
-function changeValue(e: MouseEvent) {
-    if (!activeIndex.value) return;
+async function changeValue(e: MouseEvent) {
+    if (isRequesting.value) return;
+    if (activeIndex.value === null || activeIndex.value === undefined) return;
     let y = e.clientY - mouseOffset.value;
     if (!range.value) return;
     if (y > range.value.yBottom) y = range.value.yBottom;
     if (y < range.value.yTop) y = range.value.yTop;
     const height = range.value.yBottom - y;
     const value = height / range.value.height;
-    activeValue.value = value * 1000;
-    state.value[activeIndex.value] = activeValue.value;
+    activeValue.value = value * 10000;
+    isRequesting.value = true;
+    await api.post('set_ent_value', {
+        type: props.w.w.i,
+        device: props.w.w.d,
+        index: activeIndex.value,
+        value: Math.round(activeValue.value),
+    });
+    setTimeout(() => {
+        isRequesting.value = false;
+    }, 20);
 }
 
 async function stopChange() {
     try {
-        const { d, i } = props.w.w;
-        await api.post('set_ent_value', {
-            type: i,
-            device: d,
-            index: activeIndex.value,
-            value: Math.round(activeValue.value),
-        });
         document.removeEventListener('mousemove', changeValue);
+        // const { d, i } = props.w.w;
+        // await api.post('set_ent_value', {
+        //     type: i,
+        //     device: d,
+        //     index: activeIndex.value,
+        //     value: Math.round(activeValue.value),
+        // });
         activeIndex.value = null;
         activeValue.value = 0;
     } catch (error) {
@@ -249,9 +305,12 @@ watch(
 );
 
 watch(
-    () => props.w.state,
+    () => devicesState.value,
     () => {
-        state.value = [...props.w.state];
+        const newState = devicesState.value
+            .find((obj) => obj.device === props.w.w.d)
+            ?.interfVal.find((obj) => obj.type === props.w.w.i)?.value;
+        state.value = newState ? newState : [...props.w.state];
     },
 );
 </script>

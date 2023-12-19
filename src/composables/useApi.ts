@@ -15,8 +15,6 @@ export function useApi() {
 
     const isAborted = ref(false);
 
-    const time = 0;
-
     function createNewAbortController() {
         isAborted.value = false;
         abortController = new AbortController();
@@ -39,9 +37,6 @@ export function useApi() {
             if (!signal || signal.aborted) {
                 createNewAbortController();
             }
-            // const currentTime = Date.now();
-            // console.log(currentTime - time, config.url);
-            // time = currentTime;
             return {
                 ...config,
                 // url: isMisc ? config.url : `/api/${config.url}`,

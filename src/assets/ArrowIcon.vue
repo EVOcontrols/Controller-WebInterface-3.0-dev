@@ -21,7 +21,8 @@ path {
     transition: all 0.3s;
 }
 
-svg:hover path {
+svg:hover path,
+.arrow:hover svg path {
     fill: #58b1ff;
 }
 

@@ -192,6 +192,7 @@ const devicesArr = ref<
         'bin-var': number;
         code: number;
         'ext-dev': number;
+        index: number;
         'int-var': number;
         'mb-iface': number;
         'mb-var': number;
@@ -239,6 +240,8 @@ let zIndexTimer: ReturnType<typeof setTimeout> | undefined;
 const currentUserRole = userRole.value;
 
 let getDevicesTimer: ReturnType<typeof setTimeout> | undefined;
+
+let getDevicesStatesTimer: ReturnType<typeof setTimeout> | undefined;
 
 watch(extDeviceInInitState, () => {
     if (extDeviceInInitState.value !== undefined && rebootingDeviceAddr.value === undefined) {
@@ -372,9 +375,11 @@ async function setDevicesStates() {
                 });
             });
             let filteredReqArr;
-            if (visibleWidgets.value.length === 0) {
+            if (visibleWidgets.value.length !== 0) {
                 filteredReqArr = reqArr.filter((el) => {
-                    return visibleWidgets.value.find((w) => w.d === el.device && w.i === el.type);
+                    return visibleWidgets.value.find((w) => {
+                        return w.w.d === el.device && w.w.i === el.type;
+                    });
                 });
             } else {
                 filteredReqArr = reqArr;
@@ -390,7 +395,20 @@ async function setDevicesStates() {
             return;
         }
     }
-    getDevicesTimer = setTimeout(setDevicesStates, timeout.value);
+    getDevicesStatesTimer = setTimeout(setDevicesStates, timeout.value);
+}
+
+async function getDevices(device: number = 0, index: number = 0) {
+    try {
+        const r0 = await api.post('get_dev_capab', {
+            device: device,
+        });
+        devicesArr.value = [...devicesArr.value, Object.assign(r0.data, { index: index })];
+    } catch (error) {
+        getDevicesTimer = setTimeout(() => {
+            getDevices();
+        }, timeout.value);
+    }
 }
 
 onMounted(async () => {
@@ -398,18 +416,16 @@ onMounted(async () => {
     try {
         const r = await api.get<ControllerSettings>('get_config');
         indexStore.setNGCModbusMode(r.data.modbus[0]?.mode || 'off');
-        const r0 = await api.post('get_dev_capab', {
-            device: 0,
-        });
-        devicesArr.value = [...devicesArr.value, r0.data];
+        await getDevices();
         if (ngcModbusMode.value === 'ext-devs') {
             const r = (await (await api.post('get_ext_devs')).data).list as Device[];
-            const devices = r.filter((item) => item.type !== 'none');
+            const newR = [];
+            for (let i = 0; i < r.length; i += 1) {
+                newR.push(Object.assign(r[i], { index: i + 1 }));
+            }
+            const devices = newR.filter((item) => item.type !== 'none');
             devices.forEach(async (d) => {
-                const r1 = await api.post('get_dev_capab', {
-                    device: d.addr,
-                });
-                devicesArr.value = [...devicesArr.value, r1.data];
+                await getDevices(d.addr, d.index);
             });
         }
         setDevicesStates();
@@ -435,8 +451,26 @@ watch(
                 indexStore.setDevices(
                     Object.assign(
                         { addr: devicesArr.value[i].addr as number },
-                        { type: devicesArr.value[i].type as string },
-                        { interf: interfArr },
+                        {
+                            type: (devicesArr.value[i].type +
+                                ' ' +
+                                devicesArr.value[i].index) as string,
+                        },
+                        {
+                            interf: interfArr as [
+                                | '1w-gpio'
+                                | '1w-rom'
+                                | '1w-sens'
+                                | 'adc-in'
+                                | 'bin-in'
+                                | 'bin-out'
+                                | 'bin-var'
+                                | 'int-var'
+                                | 'mb-var'
+                                | 'pwm-out'
+                                | 'tim-var',
+                            ],
+                        },
                     ),
                 );
             }
@@ -446,5 +480,6 @@ watch(
 
 onBeforeMount(() => {
     getDevicesTimer = undefined;
+    getDevicesStatesTimer = undefined;
 });
 </script>

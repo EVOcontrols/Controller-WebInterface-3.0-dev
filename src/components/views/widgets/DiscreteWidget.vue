@@ -1,7 +1,18 @@
 <template>
     <div>
         <WidgetHeader :w="props.w.w" />
-        <ShimStates
+        <DiscreteOutStates
+            v-if="props.w.w.i === 'bin-out'"
+            :w="props.w"
+            :activeIO="activeIO"
+            :lastActiveIO="lastActiveIO"
+            :mouseenterTimer="mouseenterTimer"
+            :mouseleaveTimer="mouseleaveTimer"
+            @hover="setActiveIO"
+            @leave="resetActiveIO"
+        />
+        <DiscreteStates
+            v-else
             :w="props.w"
             :activeIO="activeIO"
             :lastActiveIO="lastActiveIO"
@@ -11,7 +22,7 @@
             @leave="resetActiveIO"
         />
         <WidgetFooter
-            :isInfoVisible="false"
+            :isInfoVisible="['bin-in'].includes(props.w.w.i)"
             :w="props.w.w"
             :activeIO="activeIO"
             @enter="$emit('enter', props.w.w.d, props.w.w.i)"
@@ -23,7 +34,8 @@
 import type { Widget } from '@/stores';
 import WidgetHeader from '@/components/views/widgets/WidgetHeader.vue';
 import WidgetFooter from '@/components/views/widgets/WidgetFooter.vue';
-import ShimStates from '@/components/views/widgets/states/ShimStates.vue';
+import DiscreteStates from '@/components/views/widgets/states/DiscreteStates.vue';
+import DiscreteOutStates from '@/components/views/widgets/states/DiscreteOutStates.vue';
 
 const activeIO = ref<{ index: number; val: number } | null>(null);
 

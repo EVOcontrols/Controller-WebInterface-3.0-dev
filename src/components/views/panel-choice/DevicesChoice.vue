@@ -28,12 +28,15 @@
                             @mousedown="mousedown"
                             @mouseup="mouseup(device.addr, $event)"
                         >
-                            {{ device.type + ' ' + device.addr }}
+                            {{
+                                device.addr === 0
+                                    ? device.type.slice(0, device.type.indexOf('-'))
+                                    : device.type.slice(device.type.indexOf('-') + 3)
+                            }}
                         </div>
                     </div>
                 </div>
             </div>
-
             <div class="relative flex items-center pr-5 pl-[1.875rem] ml-[1px]">
                 <ArrowIcon
                     v-if="!isEndScrollEl"
@@ -55,6 +58,10 @@
                         {{ t('select') }}
                     </span>
                 </label>
+                <SettingsIcon
+                    class="ml-[26px]"
+                    :class="{ nc: notConnected }"
+                />
             </div>
         </div>
     </div>
@@ -64,6 +71,7 @@
 import { useI18n } from 'vue-i18n';
 import CheckBox from './CheckBox.vue';
 import ArrowIcon from '@/assets/ArrowIcon.vue';
+import SettingsIcon from '@/assets/SettingsIcon.vue';
 
 const isAllDevicesChosen = ref(false);
 
@@ -135,7 +143,7 @@ onMounted(() => {
 });
 
 watch(
-    () => chosenDevices.value,
+    () => [chosenDevices.value, devices.value],
     () => {
         isAllDevicesChosen.value = chosenDevices.value.length === devices.value.length;
     },

@@ -1,7 +1,7 @@
 <template>
     <div>
         <WidgetHeader :w="props.w.w" />
-        <ShimStates
+        <VarStates
             :w="props.w"
             :activeIO="activeIO"
             :lastActiveIO="lastActiveIO"
@@ -23,11 +23,11 @@
 import type { Widget } from '@/stores';
 import WidgetHeader from '@/components/views/widgets/WidgetHeader.vue';
 import WidgetFooter from '@/components/views/widgets/WidgetFooter.vue';
-import ShimStates from '@/components/views/widgets/states/ShimStates.vue';
+import VarStates from '@/components/views/widgets/states/VarStates.vue';
 
-const activeIO = ref<{ index: number; val: number } | null>(null);
+const activeIO = ref<{ index: number; val: number | null } | null>(null);
 
-const lastActiveIO = ref<{ index: number; val: number } | null>(null);
+const lastActiveIO = ref<{ index: number; val: number | null } | null>(null);
 
 const mouseenterTimer = ref(0);
 
@@ -40,7 +40,7 @@ const props = defineProps<{
 function setActiveIO(index: number, s: number | null) {
     clearTimeout(mouseenterTimer.value);
     clearTimeout(mouseleaveTimer.value);
-    lastActiveIO.value = { index: index, val: s || 0 };
+    lastActiveIO.value = { index: index, val: s };
     mouseenterTimer.value = setTimeout(() => {
         if (lastActiveIO.value !== null) activeIO.value = lastActiveIO.value;
     }, 50);

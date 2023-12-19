@@ -54,13 +54,17 @@ export interface InterfVal {
 }
 
 export const useIndexStore = defineStore('indexStore', () => {
-    const timeout = ref(500);
+    const timeout = ref(1000);
 
     const devices = ref<Device[]>([]);
 
+    const sortedDevices = ref<Device[]>([]);
+
+    const sortedChosenDevices = ref<number[]>([]);
+
     const interfaces = ref<Interf[]>([
         // { value: 'ibtn', label: { ru: '1-wire ID', en: '1-wire ID' } },
-        // { value: '1w-sens', label: { ru: 'Термометры', en: 'Thermometers' } },
+        // { value: '1w-sens', label: { ru: '1-wire термометры', en: '1-wire Thermometers' } },
         { value: 'bin-in', label: { ru: 'Дискретные входы', en: 'Discrete inputs' } },
         { value: 'adc-in', label: { ru: 'Аналоговые входы', en: 'Analog inputs' } },
         { value: 'bin-out', label: { ru: 'Дискретные выходы', en: 'Discrete outputs' } },
@@ -70,6 +74,13 @@ export const useIndexStore = defineStore('indexStore', () => {
         { value: 'int-var', label: { ru: 'Целочисленные переменные', en: 'Integer variables' } },
         { value: 'tim-var', label: { ru: 'Переменные времени', en: 'Time variables' } },
     ]);
+
+    const valuesRange = ref<{ interf: string; values: { min: number; max: number } }[]>([
+        { interf: 'pwm-out', values: { min: 0, max: 100 } },
+        { interf: 'int-var', values: { min: -32768, max: 32767 } },
+    ]);
+
+    const sortedChosenInterfaces = ref<string[]>([]);
 
     const visibleWidgets = ref<any[]>([]);
 
@@ -188,7 +199,9 @@ export const useIndexStore = defineStore('indexStore', () => {
     }
 
     function setDevices(device: Device) {
-        devices.value.push(device);
+        devices.value = [...devices.value, device];
+        setSortedDevices();
+        setSortedChosenInterfaces();
     }
 
     function toggleDevice(device: number) {
@@ -203,6 +216,7 @@ export const useIndexStore = defineStore('indexStore', () => {
         }
         chosenDevices.value = [...newArr];
         localStorage.setItem('chosenDevices', JSON.stringify(chosenDevices.value));
+        setSortedDevices();
     }
 
     function toggleChooseAllDevices(isAllDevicesChoosen?: Ref<boolean>) {
@@ -216,6 +230,7 @@ export const useIndexStore = defineStore('indexStore', () => {
             chosenDevices.value = arr;
         }
         localStorage.setItem('chosenDevices', JSON.stringify(chosenDevices.value));
+        setSortedDevices();
     }
 
     function toggleInterface(interf: string) {
@@ -230,6 +245,7 @@ export const useIndexStore = defineStore('indexStore', () => {
         }
         chosenInterfaces.value = [...newArr];
         localStorage.setItem('chosenInterfaces', JSON.stringify(chosenInterfaces.value));
+        setSortedChosenInterfaces();
     }
 
     function toggleChooseAllInterfaces(isAllInterfacesChoosen?: Ref<boolean>) {
@@ -243,6 +259,7 @@ export const useIndexStore = defineStore('indexStore', () => {
             chosenInterfaces.value = [...values];
         }
         localStorage.setItem('chosenInterfaces', JSON.stringify(chosenInterfaces.value));
+        setSortedChosenInterfaces();
     }
 
     function setDevicesState(device: number, interfVal: InterfVal[]) {
@@ -270,17 +287,25 @@ export const useIndexStore = defineStore('indexStore', () => {
         }
     }
 
-    function getSortedDevices() {
-        return devices.value.sort((d1, d2) => {
-            return d1.addr - d2.addr;
+    function setSortedChosenInterfaces() {
+        sortedChosenInterfaces.value = [...chosenInterfaces.value].sort((i1, i2) => {
+            const index1 = interfaces.value.findIndex((i) => i.value === i1);
+            const index2 = interfaces.value.findIndex((i) => i.value === i2);
+            return index1 - index2;
         });
     }
 
-    function getSortedChosenDevices() {
-        const sortedDevices = getSortedDevices();
-        return [...chosenDevices.value].sort((d1, d2) => {
-            const index1 = sortedDevices.findIndex((dev) => dev.addr === d1);
-            const index2 = sortedDevices.findIndex((dev) => dev.addr === d2);
+    function setSortedDevices() {
+        sortedDevices.value = devices.value.sort((d1, d2) => {
+            return d1.addr - d2.addr;
+        });
+        setSortedChosenDevices();
+    }
+
+    function setSortedChosenDevices() {
+        sortedChosenDevices.value = [...chosenDevices.value].sort((d1, d2) => {
+            const index1 = sortedDevices.value.findIndex((dev) => dev.addr === d1);
+            const index2 = sortedDevices.value.findIndex((dev) => dev.addr === d2);
             return index1 - index2;
         });
     }
@@ -292,7 +317,11 @@ export const useIndexStore = defineStore('indexStore', () => {
     return {
         timeout,
         devices,
+        sortedDevices,
+        sortedChosenDevices,
         interfaces,
+        valuesRange,
+        sortedChosenInterfaces,
         visibleWidgets,
         devicesState,
         isAuth,
@@ -332,8 +361,9 @@ export const useIndexStore = defineStore('indexStore', () => {
         toggleInterface,
         toggleChooseAllInterfaces,
         setDevicesState,
-        getSortedDevices,
-        getSortedChosenDevices,
+        setSortedDevices,
+        setSortedChosenDevices,
         setVisibleWidgets,
+        setSortedChosenInterfaces,
     };
 });
