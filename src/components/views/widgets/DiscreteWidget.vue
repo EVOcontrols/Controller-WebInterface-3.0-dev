@@ -1,5 +1,5 @@
 <template>
-    <div>
+    <div class="relative">
         <WidgetHeader :w="props.w.w" />
         <DiscreteOutStates
             v-if="props.w.w.i === 'bin-out'"
@@ -27,6 +27,11 @@
             :activeIO="activeIO"
             @enter="$emit('enter', props.w.w.d, props.w.w.i)"
         />
+        <div
+            v-if="devStatus === 'init'"
+            class="absolute w-full h-full"
+            :style="{ background: 'rgba(9, 39, 64, 0.85)' }"
+        ></div>
     </div>
 </template>
 
@@ -45,9 +50,17 @@ const mouseenterTimer = ref(0);
 
 const mouseleaveTimer = ref(0);
 
+const indexStore = useIndexStore();
+
+const { devices } = storeToRefs(indexStore);
+
 const props = defineProps<{
     w: { w: Widget; state: number[] };
 }>();
+
+const devStatus = computed<'on' | 'off' | 'no-conn' | 'init' | 'error' | undefined>(() => {
+    return devices.value.find((el) => el.addr === props.w.w.d)?.state;
+});
 
 function setActiveIO(index: number, s: number | null) {
     clearTimeout(mouseenterTimer.value);

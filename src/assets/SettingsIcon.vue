@@ -1,7 +1,7 @@
 <template>
     <!-- eslint-disable max-len -->
     <svg
-        class="cursor-pointer"
+        :class="props.disabled ? 'disabled' : 'active cursor-pointer'"
         xmlns="http://www.w3.org/2000/svg"
         width="20"
         height="20"
@@ -18,14 +18,22 @@
     </svg>
 </template>
 
-<script setup></script>
+<script lang="ts" setup>
+const props = defineProps<{
+    disabled?: boolean;
+}>();
+</script>
 
 <style lang="postcss" scoped>
-svg:hover path {
+svg.disabled path {
+    fill: #194f76;
+}
+
+svg.active:hover path {
     fill: #3e7df9;
 }
 
-svg:active path {
+svg.active:active path {
     fill: #306add;
 }
 

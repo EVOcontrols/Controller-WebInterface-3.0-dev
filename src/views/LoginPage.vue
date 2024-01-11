@@ -141,7 +141,6 @@ import openEye from '@/assets/img/open-eye.svg?raw';
 import closedEye from '@/assets/img/closed-eye.svg?raw';
 import LoginInput from '@/components/Ui/LoginInput.vue';
 import { useToast } from '@/composables/useToast';
-import { useApi } from '@/composables/useApi';
 import { md5 } from '@/plugins/md5';
 import router from '@/router';
 
@@ -151,7 +150,7 @@ const { notConnected, lang } = storeToRefs(indexStore);
 
 const { toast } = useToast();
 
-const { api } = useApi();
+const api = indexStore.getApi().api;
 
 const { storeCommonSettingsFile } = useStoreCommonSettingsFile();
 

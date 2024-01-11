@@ -6,6 +6,9 @@ export interface Device {
     addr: number;
     type: string;
     interf: [
+        | { interf: '1w-gpio'; bus: number }
+        | { interf: '1w-rom'; bus: number }
+        | { interf: '1w-sens'; bus: number }
         | '1w-gpio'
         | '1w-rom'
         | '1w-sens'
@@ -15,9 +18,13 @@ export interface Device {
         | 'bin-var'
         | 'int-var'
         | 'mb-var'
+        | { interf: 'mb-var'; bus: number }
         | 'pwm-out'
         | 'tim-var',
     ];
+    state: 'on' | 'off' | 'init' | 'no-conn' | 'error';
+    serial: string;
+    version: string;
 }
 
 export interface Interf {
@@ -44,17 +51,21 @@ export interface Widget {
     i: string;
     deviceName: string;
     component: any;
+    bus?: number;
 }
 
 export interface InterfVal {
     type: string;
     device: number;
     index: number;
-    value: number[];
+    value: number[] | [number | null][];
+    bus?: number;
 }
 
 export const useIndexStore = defineStore('indexStore', () => {
-    const timeout = ref(1000);
+    const timeout = ref(500);
+
+    const OWIds = ref<string[][][]>([]);
 
     const devices = ref<Device[]>([]);
 
@@ -63,13 +74,13 @@ export const useIndexStore = defineStore('indexStore', () => {
     const sortedChosenDevices = ref<number[]>([]);
 
     const interfaces = ref<Interf[]>([
-        // { value: 'ibtn', label: { ru: '1-wire ID', en: '1-wire ID' } },
-        // { value: '1w-sens', label: { ru: '1-wire термометры', en: '1-wire Thermometers' } },
+        { value: '1w-rom', label: { ru: '1-wire ID', en: '1-wire ID' } },
+        { value: '1w-sens', label: { ru: '1-wire термометры', en: '1-wire Thermometers' } },
         { value: 'bin-in', label: { ru: 'Дискретные входы', en: 'Discrete inputs' } },
         { value: 'adc-in', label: { ru: 'Аналоговые входы', en: 'Analog inputs' } },
         { value: 'bin-out', label: { ru: 'Дискретные выходы', en: 'Discrete outputs' } },
         { value: 'pwm-out', label: { ru: 'ШИМ-выходы', en: 'PWM outputs' } },
-        // { value: 'mb-var', label: { ru: 'Переменные MODBUS', en: 'MODBUS variables' } },
+        { value: 'mb-var', label: { ru: 'Переменные MODBUS', en: 'MODBUS variables' } },
         { value: 'bin-var', label: { ru: 'Бинарные переменные', en: 'Binary variables' } },
         { value: 'int-var', label: { ru: 'Целочисленные переменные', en: 'Integer variables' } },
         { value: 'tim-var', label: { ru: 'Переменные времени', en: 'Time variables' } },
@@ -82,14 +93,9 @@ export const useIndexStore = defineStore('indexStore', () => {
 
     const sortedChosenInterfaces = ref<string[]>([]);
 
-    const visibleWidgets = ref<any[]>([]);
+    const visibleWidgets = ref<any[][]>([]);
 
-    const devicesState = ref<
-        {
-            device: number;
-            interfVal: InterfVal[];
-        }[]
-    >([]);
+    const devicesState = ref<InterfVal[][]>([]);
 
     const authToken = useStorage<string>('authToken', '');
 
@@ -120,6 +126,8 @@ export const useIndexStore = defineStore('indexStore', () => {
 
     const numberingSystem = ref<NumberingSystem>('dec');
 
+    const curNumberingSystem = ref<NumberingSystem>(numberingSystem.value);
+
     const rebootingDeviceAddr = ref<DeviceAddr>();
 
     const isInterfaceStarted = ref(false);
@@ -130,17 +138,28 @@ export const useIndexStore = defineStore('indexStore', () => {
 
     const isLongQueryRunning = ref(false);
 
-    const chosenDevices = ref<number[]>(
-        (JSON.parse(localStorage.getItem('chosenDevices')) as number[]) || [],
-    );
+    const chosenDevices = ref<number[]>([]);
 
-    const chosenInterfaces = ref<string[]>(
-        (JSON.parse(localStorage.getItem('chosenInterfaces')) as string[]) || [],
-    );
+    const chosenInterfaces = ref<string[]>([]);
 
     const extDeviceInInitState = computed(
         () => extDevsList.value?.find((d) => d.state === 'init')?.addr,
     );
+
+    const api = ref();
+
+    const isPriorWOpen = ref(false);
+
+    const calibrVals = ref<[null | number][]>([]);
+
+    const choosenMbDevices = ref<number[][]>([]);
+
+    function getApi() {
+        if (!api.value) {
+            api.value = useApi();
+        }
+        return api.value;
+    }
 
     function setIsAuth(cred: { token: string; role: UserRole } | undefined) {
         isAuth.value = !!cred;
@@ -174,6 +193,10 @@ export const useIndexStore = defineStore('indexStore', () => {
 
     function setNumberingSystem(system: NumberingSystem) {
         numberingSystem.value = system;
+    }
+
+    function setCurNumberingSystem(system: NumberingSystem) {
+        curNumberingSystem.value = system;
     }
 
     function setRebootingDeviceAddr(value: DeviceAddr | undefined) {
@@ -215,12 +238,11 @@ export const useIndexStore = defineStore('indexStore', () => {
             newArr = [...chosenDevices.value];
         }
         chosenDevices.value = [...newArr];
-        localStorage.setItem('chosenDevices', JSON.stringify(chosenDevices.value));
         setSortedDevices();
     }
 
-    function toggleChooseAllDevices(isAllDevicesChoosen?: Ref<boolean>) {
-        if (!isAllDevicesChoosen || !isAllDevicesChoosen.value) {
+    function toggleChooseAllDevices(isAllDevicesChoosen?: Ref<boolean>, isFirstOpen?: boolean) {
+        if ((!isAllDevicesChoosen || !isAllDevicesChoosen.value) && !isFirstOpen) {
             chosenDevices.value = [];
         } else {
             const arr: number[] = [];
@@ -229,7 +251,6 @@ export const useIndexStore = defineStore('indexStore', () => {
             });
             chosenDevices.value = arr;
         }
-        localStorage.setItem('chosenDevices', JSON.stringify(chosenDevices.value));
         setSortedDevices();
     }
 
@@ -244,12 +265,14 @@ export const useIndexStore = defineStore('indexStore', () => {
             newArr = [...chosenInterfaces.value];
         }
         chosenInterfaces.value = [...newArr];
-        localStorage.setItem('chosenInterfaces', JSON.stringify(chosenInterfaces.value));
         setSortedChosenInterfaces();
     }
 
-    function toggleChooseAllInterfaces(isAllInterfacesChoosen?: Ref<boolean>) {
-        if (!isAllInterfacesChoosen || !isAllInterfacesChoosen.value) {
+    function toggleChooseAllInterfaces(
+        isAllInterfacesChoosen?: Ref<boolean>,
+        isFirstOpen?: boolean,
+    ) {
+        if ((!isAllInterfacesChoosen || !isAllInterfacesChoosen.value) && !isFirstOpen) {
             chosenInterfaces.value = [];
         } else {
             const values: string[] = [];
@@ -258,29 +281,29 @@ export const useIndexStore = defineStore('indexStore', () => {
             });
             chosenInterfaces.value = [...values];
         }
-        localStorage.setItem('chosenInterfaces', JSON.stringify(chosenInterfaces.value));
         setSortedChosenInterfaces();
     }
 
     function setDevicesState(device: number, interfVal: InterfVal[]) {
-        if (
-            devicesState.value.length === 0 ||
-            devicesState.value.findIndex((obj) => obj.device === device) === -1
-        ) {
-            devicesState.value = [...devicesState.value, { device: device, interfVal: interfVal }];
+        if (devicesState.value.length === 0 || devicesState.value.length - 1 < device) {
+            if (device !== 0) {
+                const arr = [...devicesState.value];
+                for (let i = devicesState.value.length; i < device; i += 1) {
+                    arr.push([]);
+                }
+                arr.push([...interfVal]);
+                devicesState.value = [...arr];
+            } else {
+                devicesState.value = [[...interfVal]];
+            }
         } else {
-            const state = devicesState.value.find((obj) => obj.device === device);
-            const devIndex = devicesState.value.findIndex((obj) => obj.device === device);
             interfVal.forEach((i) => {
-                const index = state?.interfVal.findIndex((interf) => interf.type === i.type);
+                const index = devicesState.value[device].findIndex((obj) => obj.type === i.type);
                 if (index === -1) {
-                    devicesState.value.find((obj) => obj.device === device)?.interfVal.push(i);
+                    devicesState.value[device].push(i);
                 } else {
-                    const interfIndex = devicesState.value[devIndex].interfVal.findIndex(
-                        (interf) => interf.type === i.type,
-                    );
                     const prevDeviceState = [...devicesState.value];
-                    prevDeviceState[devIndex].interfVal[interfIndex].value = i.value;
+                    prevDeviceState[device][index] = i;
                     devicesState.value = [...prevDeviceState];
                 }
             });
@@ -310,11 +333,89 @@ export const useIndexStore = defineStore('indexStore', () => {
         });
     }
 
-    function setVisibleWidgets(entities: any[]) {
-        visibleWidgets.value = entities;
+    function setVisibleWidgets(entities: { w: { d: number; i: string } }[]) {
+        const newArr: any[][] = [];
+        for (let i = 0; i < visibleWidgets.value.length; i += 1) {
+            newArr.push([]);
+        }
+        entities.forEach((ent) => {
+            if (!newArr[ent.w.d]) {
+                newArr[ent.w.d] = [ent];
+            } else {
+                newArr[ent.w.d].push(ent);
+            }
+        });
+        visibleWidgets.value = newArr;
+    }
+
+    function setOWIds(d: number, bus: number, ids: string[]) {
+        if (!OWIds.value[d]) {
+            const arr = [...OWIds.value];
+            for (let i = OWIds.value.length; i < d; i += 1) {
+                arr.push([]);
+            }
+            const busArr = [];
+            for (let i = 0; i < bus; i += 1) {
+                busArr.push([]);
+            }
+            busArr.push(ids);
+            arr.push(busArr);
+            OWIds.value = [...arr];
+        } else {
+            if (OWIds.value[d].length - 1 < bus) {
+                const busArr = [];
+                for (let i = OWIds.value[d].length; i < bus; i += 1) {
+                    busArr.push([]);
+                }
+                busArr.push(ids);
+                const arr = [...OWIds.value];
+                arr[d] = busArr;
+                OWIds.value = [...arr];
+            } else {
+                const arr = [...OWIds.value];
+                arr[d][bus] = ids;
+                OWIds.value = [...arr];
+            }
+        }
+    }
+
+    function changeIsPriorWOpen(isStart?: boolean) {
+        isPriorWOpen.value = !!isStart;
+    }
+
+    function setCalibrVals(arrMin: [number | null], arrMax: [number | null]) {
+        calibrVals.value = [arrMin, arrMax];
+    }
+
+    function changeDeviceState(addr: number, state: 'on' | 'off' | 'error' | 'init' | 'no-conn') {
+        const prevDevices = [...devices.value];
+        const index = prevDevices.findIndex((el) => el.addr === addr);
+        if (index !== -1) {
+            const prevEl: Device = Object.assign(prevDevices[index]);
+            prevEl.state = state;
+            prevDevices[index] = prevEl;
+            devices.value = [...prevDevices];
+        }
+    }
+
+    function setChoosenMbDevices(d: number, vals: number[]) {
+        if (!choosenMbDevices.value[d]) {
+            const arr = [...choosenMbDevices.value];
+            for (let i = choosenMbDevices.value.length; i < d; i += 1) {
+                arr.push([]);
+            }
+            arr.push(vals);
+            choosenMbDevices.value = [...arr];
+        } else {
+            const arr = [...choosenMbDevices.value];
+            arr[d] = vals;
+            choosenMbDevices.value = [...arr];
+        }
     }
 
     return {
+        api,
+        OWIds,
         timeout,
         devices,
         sortedDevices,
@@ -334,6 +435,7 @@ export const useIndexStore = defineStore('indexStore', () => {
         controllerDateTime,
         tempUnit,
         numberingSystem,
+        curNumberingSystem,
         rebootingDeviceAddr,
         isInterfaceStarted,
         ngcModbusMode,
@@ -342,6 +444,10 @@ export const useIndexStore = defineStore('indexStore', () => {
         isLongQueryRunning,
         chosenDevices,
         chosenInterfaces,
+        isPriorWOpen,
+        calibrVals,
+        choosenMbDevices,
+        getApi,
         setDevices,
         setIsAuth,
         setLang,
@@ -353,6 +459,7 @@ export const useIndexStore = defineStore('indexStore', () => {
         setRebootingDeviceAddr,
         setIsInterfaceStarted,
         setNumberingSystem,
+        setCurNumberingSystem,
         setNGCModbusMode,
         setExtDevsList,
         setLongQueryRunning,
@@ -365,5 +472,10 @@ export const useIndexStore = defineStore('indexStore', () => {
         setSortedChosenDevices,
         setVisibleWidgets,
         setSortedChosenInterfaces,
+        setOWIds,
+        changeIsPriorWOpen,
+        setCalibrVals,
+        changeDeviceState,
+        setChoosenMbDevices,
     };
 });

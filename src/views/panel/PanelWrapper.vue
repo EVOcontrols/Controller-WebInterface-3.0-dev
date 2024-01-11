@@ -47,8 +47,7 @@ const showChoice = ref<string>('devices');
 const { notConnected, chosenDevices, chosenInterfaces } = storeToRefs(indexStore);
 
 const chosenDevicesCount = ref<number>(chosenDevices.value.length);
-
-const chosenInterfacesCount = ref<number>(chosenInterfaces.value.length);
+const chosenInterfacesCount = ref<number>(chosenInterfaces.value.length || 0);
 
 const diCount = ref<{ devices: number; interfaces: number }>({
     devices: chosenDevicesCount.value,

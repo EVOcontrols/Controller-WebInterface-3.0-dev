@@ -1,25 +1,51 @@
 <template>
-    <div class="flex-1 relative w-full overflow-hidden px-[14px]">
+    <div class="flex-1 relative w-full overflow-hidden px-[12px]">
         <div
-            class="flex h-full items-center overflow-x-auto no-scrollbar"
+            class="flex h-full overflow-x-auto no-scrollbar py-[18px]"
             ref="scrollWrapper"
         >
-            <div class="flex flex-wrap">
+            <div
+                v-if="!notScan"
+                class="flex flex-wrap gap-y-[10px]"
+            >
                 <div
                     v-for="(s, index) in state"
                     :key="index"
-                    class="w-[24px] h-[38px] rounded flex flex-col items-center justify-center gap-[6px] transition-all duration-300 bg-transparent hover:bg-[#113655]"
                     @mouseenter="handleMouseEnter(index, s)"
                     @mouseleave="handleMouseLeave"
                 >
                     <div
-                        class="w-[11px] h-[11px] rounded-[50%]"
-                        :class="s >= 0 ? 'bg-[#EB8246]' : 'bg-[#35A1FF]'"
-                    ></div>
-                    <div class="text-0.81 font-medium text-center leading-none select-none">
-                        {{ index + 1 }}
+                        v-if="s !== null"
+                        class="mr-[6px] w-[17px] rounded flex flex-col items-center justify-center gap-[6px] transition-all duration-300 bg-transparent hover:bg-[#113655]"
+                        :style="{ height: 'fit-content' }"
+                    >
+                        <div
+                            class="w-[11px] h-[11px] rounded-[50%]"
+                            :class="s >= 0 ? 'bg-[#EB8246]' : 'bg-[#35A1FF]'"
+                        ></div>
+                        <div class="text-0.81 font-medium text-center leading-none select-none">
+                            {{ index + 1 }}
+                        </div>
                     </div>
                 </div>
+            </div>
+            <div
+                v-else-if="!props.isBig"
+                class="w-full h-full flex flex-col gap-[14px] items-center justify-center"
+            >
+                <div>{{ t('scanNotDone') }}</div>
+                <button
+                    class="rounded-[32px] min-w-[104px] px-[10px] py-2 h-[1.688rem] border-[#148ef8] border flex items-center justify-center font-semibold text-[#148ef8] text-sm leading-[1.429] hover:border-[#3e7df9] hover:text-[#3e7df9] active:border-[#3e7df9] active:bg-[#3e7df9] active:text-[#adebff] transition-colors"
+                    @click="$emit('scan')"
+                >
+                    {{ t('scan') }}
+                </button>
+            </div>
+            <div
+                v-else
+                class="w-full h-full flex flex-col items-center justify-center text-[#6CB5D3]"
+            >
+                <div>{{ t('scanText') }}</div>
             </div>
         </div>
     </div>
@@ -27,28 +53,21 @@
 
 <script lang="ts" setup>
 import type { Widget } from '@/stores';
-import ArrowIcon from '@/assets/ArrowIcon.vue';
-
-const { api } = useApi();
 
 const indexStore = useIndexStore();
 
-const { notConnected, devicesState } = storeToRefs(indexStore);
-
-const isStartScrollEl = ref(true);
-
-const isEndScrollEl = ref(false);
+const { devicesState } = storeToRefs(indexStore);
 
 const scrollWrapper = ref<HTMLElement | undefined>();
-
-const scrollEl = ref<HTMLElement | undefined>();
 
 const activeIndex = ref<number | null>();
 
 const activeValue = ref(0);
 
+const notScan = ref(false);
+
 const props = defineProps<{
-    w: { w: Widget; state: number[] };
+    w: { w: Widget; state: [number | null][] };
     isBig?: boolean;
     activeIO?: { index: number; val: number | null } | null;
     lastActiveIO?: { index: number; val: number | null } | null;
@@ -56,14 +75,27 @@ const props = defineProps<{
     mouseleaveTimer?: number;
 }>();
 
-const state = ref<number[]>([...props.w.state]);
-
 const emit = defineEmits<{
     (e: 'hover', index: number, s: number): void;
+    (e: 'scan'): void;
     (e: 'leave'): void;
 }>();
 
-function handleMouseEnter(index: number, s: number) {
+const curState = ref<[number | null][]>([...props.w.state]);
+
+const state = computed<[number | null]>(() => {
+    let res: any[] = [];
+    curState.value.forEach((el) => {
+        res.push(el[0] === null ? null : el[0]);
+    });
+    if (res.filter((el) => el !== null).length === 0) {
+        notScan.value = true;
+    }
+    return res as [number | null];
+});
+
+function handleMouseEnter(index: number, s: number | null) {
+    if (s === null) return;
     if (props.isBig) {
         activeIndex.value = index;
         activeValue.value = s;
@@ -81,54 +113,26 @@ function handleMouseLeave() {
     }
 }
 
-function handleArrowClick(direction: 'toStart' | 'toEnd') {
-    const el = scrollEl.value;
-    const wrapper = scrollWrapper.value;
-    if (!el || !wrapper) return;
-    if (direction === 'toStart') {
-        wrapper?.scrollTo({
-            left: wrapper.scrollLeft - wrapper.offsetWidth,
-            behavior: 'smooth',
-        });
-        isStartScrollEl.value = wrapper.scrollLeft - wrapper.offsetWidth <= 0;
-        isEndScrollEl.value = false;
-    } else {
-        wrapper.scrollTo({
-            left: wrapper.scrollLeft + wrapper.offsetWidth,
-            behavior: 'smooth',
-        });
-        isStartScrollEl.value = false;
-        isEndScrollEl.value = wrapper.scrollWidth - wrapper.scrollLeft <= wrapper.offsetWidth * 2;
-    }
-}
-
-function handleScrollMove() {
-    const el = scrollEl.value;
-    const wrapper = scrollWrapper.value;
-    if (!el || !wrapper) return;
-    isStartScrollEl.value = wrapper.scrollLeft < 10;
-    isEndScrollEl.value = wrapper.scrollWidth - wrapper.scrollLeft - 10 <= wrapper.offsetWidth;
-}
-
 watch(
     () => devicesState.value,
     () => {
-        const newState = devicesState.value
-            .find((obj) => obj.device === props.w.w.d)
-            ?.interfVal.find((obj) => obj.type === props.w.w.i)?.value;
-        // state.value = newState ? newState : [...props.w.state];
+        const newState = devicesState.value[props.w.w.d].find((obj) => obj.type === props.w.w.i)
+            ?.value as [number | null][];
+        curState.value = newState ? newState : [...props.w.state];
     },
 );
 
 const { t } = useI18n({
     messages: {
         ru: {
-            true: 'ИСТИНА',
-            false: 'ЛОЖЬ',
+            scanNotDone: 'Сканирование не выполнено',
+            scan: 'Сканировать',
+            scanText: 'Здесь появятся новые устройства ',
         },
         en: {
-            true: 'TRUE',
-            false: 'FALSE',
+            scanNotDone: 'Scan not done',
+            scan: 'Scan',
+            scanText: 'New devices will appear here',
         },
     },
 });

@@ -15,14 +15,17 @@
                 :class="gridClasses.big"
                 :w="widgets.big"
                 :isInitialization="isInitialization"
+                :isMb="isMb"
                 :isCalibration="isCalibration"
+                :isPriorWOpen="isPriorWOpen"
                 @enter="setBigWidget"
                 @init="setInitStatus"
                 @calibr="handleCalibrClick(true)"
-                @back="handleCalibrClick(false)"
+                @back="handleBackClick"
+                @scan="handleScanClick(true)"
             ></BigWidget>
             <div
-                v-if="!isInitialization"
+                v-if="!isInitialization && !isMb"
                 class="gap-4 relative max-h-full widgets overflow-y-scroll scrollbar-4 px-10 grid-rows-[min-content]"
                 :class="gridClasses.small"
                 :style="{ 'padding-right': 'calc(2.5rem - 6px)' }"
@@ -37,6 +40,8 @@
                         :w="w"
                         class="rounded-xl bg-[#092740] w-full flex overflow-hidden flex-col h-[12.625rem]"
                         @enter="setBigWidget"
+                        @mb="setMbStatus"
+                        @scan="handleScanClick"
                     />
                 </transition-group>
             </div>
@@ -58,6 +63,7 @@ import ShimWidget from '@/components/views/widgets/ShimWidget.vue';
 import DiscreteWidget from '@/components/views/widgets/DiscreteWidget.vue';
 import VarWidget from '@/components/views/widgets/VarWidget.vue';
 import TempWidget from '@/components/views/widgets/TempWidget.vue';
+import OwWidget from '@/components/views/widgets/OwWidget.vue';
 import MbWidget from '@/components/views/widgets/MbWidget.vue';
 
 const indexStore = useIndexStore();
@@ -77,11 +83,17 @@ const scrollEl = ref<HTMLElement | undefined>();
 
 const visibleWidgets = ref<Widget[]>([]);
 
-const prevChosenInterfaces = [...chosenInterfaces.value];
+let prevChosenInterfaces = [...chosenInterfaces.value];
+
+let prevChosenDevices = [...chosenDevices.value];
 
 const isInitialization = ref(false);
 
+const isMb = ref(false);
+
 const isCalibration = ref(false);
+
+const isPriorWOpen = ref(false);
 
 const widgets = computed<{
     big: { w: Widget; state: number[] } | null;
@@ -91,11 +103,14 @@ const widgets = computed<{
     let big: { w: Widget; state: number[] } | null = null;
     sortedChosenDevices.value.forEach((d) => {
         sortedChosenInterfaces.value.forEach((i) => {
-            const index = devicesState.value[d]?.interfVal.findIndex((interf) => interf.type === i);
-            if (index !== -1) {
-                const obj = devicesState.value[d]?.interfVal[index];
-                const state: number[] = (obj?.value as number[]) || [];
-                //without 1-wire & modbus
+            const index = devicesState.value[d]?.findIndex((interf) => interf.type === i);
+            if (
+                devicesState.value[d] &&
+                index !== -1 &&
+                devices.value[d].state !== 'no-conn' &&
+                devices.value[d].state !== 'error'
+            ) {
+                let state = (devicesState.value[d][index]?.value as number[]) || [];
                 const widget: Widget = {
                     d: d,
                     i: i,
@@ -106,19 +121,23 @@ const widgets = computed<{
                     widget.component = ShimWidget;
                 } else if (['bin-in', 'bin-out'].includes(i)) {
                     widget.component = DiscreteWidget;
-                    // } else if (['int-var'].includes(i)) {
-                    //     widget.component = TempWidget;
-                    // }
-                    // } else if (['int-var'].includes(i)) {
-                    //     widget.component = MbWidget;
-                    // }
+                } else if (['1w-sens'].includes(i)) {
+                    widget.component = TempWidget;
+                    widget.bus = devicesState.value[d][index].bus;
                 } else if (['int-var', 'bin-var', 'tim-var'].includes(i)) {
                     widget.component = VarWidget;
+                } else if (i === '1w-rom') {
+                    widget.component = OwWidget;
+                    widget.bus = devicesState.value[d][index].bus;
+                } else if (i === 'mb-var') {
+                    widget.component = MbWidget;
                 }
-                if (bigWidget.value && bigWidget.value.d === d && bigWidget.value.i === i) {
-                    big = { w: widget, state: state };
-                } else {
-                    small.push({ w: widget, state: state });
+                if (widget.component !== '') {
+                    if (bigWidget.value && bigWidget.value.d === d && bigWidget.value.i === i) {
+                        big = { w: widget, state: state };
+                    } else {
+                        small.push({ w: widget, state: state });
+                    }
                 }
             }
         });
@@ -129,26 +148,41 @@ const widgets = computed<{
 const gridClasses = computed<{ all: string; big: string; small: string }>(() => {
     if (window.innerWidth > 1680) {
         return {
-            all: bigWidget.value ? (isInitialization.value ? 'mx-[40px]' : 'grid grid-cols-2') : '',
+            all: bigWidget.value
+                ? isInitialization.value || isMb.value
+                    ? 'mx-[40px]'
+                    : 'grid grid-cols-2'
+                : '',
             small: bigWidget.value ? 'grid grid-cols-2 pr-10' : 'grid grid-cols-4 px-10',
-            big: isInitialization.value ? '' : 'ml-10',
+            big: isInitialization.value || isMb.value ? '' : 'ml-10',
         };
     }
     return {
-        all: bigWidget.value ? (isInitialization.value ? 'mx-[40px]' : 'grid grid-cols-3') : '',
+        all: bigWidget.value
+            ? isInitialization.value || isMb.value
+                ? 'mx-[40px]'
+                : 'grid grid-cols-3'
+            : '',
         small: bigWidget.value ? 'grid grid-cols-1 pr-10' : 'grid grid-cols-3 px-10',
-        big: bigWidget.value ? (isInitialization.value ? '' : 'col-span-2 ml-10') : '',
+        big: bigWidget.value
+            ? isInitialization.value || isMb.value
+                ? ''
+                : 'col-span-2 ml-10'
+            : '',
     };
 });
 
 function setBigWidget(d: number, i: string) {
     if (!d && !i) {
         bigWidget.value = null;
+        isMb.value = false;
     } else {
         if (d === undefined || i === undefined) return;
         bigWidget.value = { d: d, i: i };
         isCalibration.value = false;
+        isPriorWOpen.value = false;
     }
+    indexStore.changeIsPriorWOpen(!!bigWidget.value);
 }
 
 function setInitStatus(w?: Widget) {
@@ -157,6 +191,14 @@ function setInitStatus(w?: Widget) {
     } else {
         bigWidget.value = { d: w.d, i: w.i };
         isInitialization.value = true;
+    }
+}
+
+function setMbStatus(w?: Widget) {
+    if (w) {
+        bigWidget.value = { d: w.d, i: w.i };
+        isMb.value = true;
+        indexStore.changeIsPriorWOpen(true);
     }
 }
 
@@ -181,6 +223,21 @@ function changeVisibleWidgets() {
 
 function handleCalibrClick(res: boolean) {
     isCalibration.value = res;
+    indexStore.changeIsPriorWOpen(res);
+}
+
+function handleScanClick(res: boolean, d?: number, i?: string) {
+    isPriorWOpen.value = res;
+    indexStore.changeIsPriorWOpen(isPriorWOpen.value);
+    if (d !== undefined && i !== undefined) {
+        bigWidget.value = { d: d, i: i };
+    }
+}
+
+function handleBackClick() {
+    handleCalibrClick(false);
+    handleScanClick(false);
+    indexStore.changeIsPriorWOpen();
 }
 
 onMounted(() => {
@@ -207,25 +264,29 @@ watch(
                 return chosenDevices.value.includes(widget.w.d);
             }),
         );
-        if (newItems.length === visibleWidgets.length) {
-            let prevDevise: number | undefined;
-            chosenDevices.value.forEach((d) => {
-                const index = newItems.findIndex((widget) => {
-                    return widget.w.d === d;
-                });
-                if (index === -1) prevDevise = d;
-            });
-            if (prevDevise !== undefined) {
-                chosenInterfaces.value.forEach((i) => {
+        if (chosenDevices.value.length > prevChosenDevices.length) {
+            let prevDev = chosenDevices.value.filter((x) => !prevChosenDevices.includes(x))[0];
+            chosenInterfaces.value.forEach((interf) => {
+                const index = newItems.findIndex(
+                    (item) => item.w.i === interf && item.w.d === prevDev,
+                );
+                if (index === -1) {
                     newItems.push({
-                        w: { d: prevDevise, i: i },
+                        w: { d: prevDev, i: interf },
                     });
-                });
+                }
+            });
+        } else {
+            if (bigWidget.value && !chosenDevices.value.includes(bigWidget.value.d)) {
+                bigWidget.value = null;
+                isInitialization.value = false;
+                isMb.value = false;
             }
         }
         indexStore.setVisibleWidgets(
             widgets.value.big ? [...newItems, widgets.value.big] : newItems,
         );
+        prevChosenDevices = [...chosenDevices.value];
     },
 );
 
@@ -253,10 +314,17 @@ watch(
                     });
                 }
             });
+        } else {
+            if (bigWidget.value && !chosenInterfaces.value.includes(bigWidget.value.i)) {
+                bigWidget.value = null;
+                isInitialization.value = false;
+                isMb.value = false;
+            }
         }
         indexStore.setVisibleWidgets(
             widgets.value.big ? [...newItems, widgets.value.big] : newItems,
         );
+        prevChosenInterfaces = [...chosenInterfaces.value];
     },
 );
 

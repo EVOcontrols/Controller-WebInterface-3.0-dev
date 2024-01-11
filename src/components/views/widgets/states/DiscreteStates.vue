@@ -9,7 +9,7 @@
                 :style="{ 'grid-template-columns': 'repeat(auto-fill, 24px)' }"
             >
                 <div
-                    v-for="(s, i) in props.w.state"
+                    v-for="(s, i) in state"
                     :key="i"
                     class="rounded group inline-flex flex-col transition-spacing duration-300 relative"
                     :class="{ 'hover:bg-[#113655]': !props.isBig }"
@@ -36,12 +36,14 @@ import IButtonIcon from '@/assets/IButtonIcon.vue';
 
 const indexStore = useIndexStore();
 
-const { notConnected } = storeToRefs(indexStore);
+const { notConnected, devicesState } = storeToRefs(indexStore);
 
 const props = defineProps<{
     w: { w: Widget; state: number[] };
     isBig?: boolean;
 }>();
+
+const state = ref<number[]>([...props.w.state]);
 
 const emit = defineEmits<{
     (e: 'hover', index: number, s: number): void;
@@ -60,4 +62,13 @@ function handleMouseLeave() {
         emit('leave');
     }
 }
+
+watch(
+    () => devicesState.value,
+    () => {
+        const newState = devicesState.value[props.w.w.d].find((obj) => obj.type === props.w.w.i)
+            ?.value as number[];
+        state.value = newState ? newState : [...props.w.state];
+    },
+);
 </script>

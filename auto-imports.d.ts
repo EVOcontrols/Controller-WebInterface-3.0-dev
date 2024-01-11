@@ -10,7 +10,9 @@ declare global {
   const EffectScope: typeof import('vue')['EffectScope']
   const InterfacesChoice: typeof import('./src/components/views/panel-choice/InterfacesChoice.vue')['default']
   const PanelWrapper: typeof import('./src/views/panel/PanelWrapper.vue')['default']
+  const RawDisplayer: typeof import('./src/components/views/widgets/bigWidgets/RawDisplayer.vue')['default']
   const ScanButton: typeof import('./src/components/views/panel-choice/ScanButton.vue')['default']
+  const ScanWidget: typeof import('./src/components/views/widgets/bigWidgets/ScanWidget.vue')['default']
   const ShimWidget: typeof import('./src/components/views/widgets/ShimWidget.vue')['default']
   const SignoutIcon: typeof import('./src/assets/SignoutIcon.vue')['default']
   const WidgetHeader: typeof import('./src/components/views/widgets/WidgetHeader.vue')['default']
@@ -318,6 +320,7 @@ declare global {
   const useWindowScroll: typeof import('@vueuse/core')['useWindowScroll']
   const useWindowSize: typeof import('@vueuse/core')['useWindowSize']
   const userRoles: typeof import('./src/data/common')['userRoles']
+  const vuedraggable: typeof import('./src/typings/vuedraggable.d')['default']
   const watch: typeof import('vue')['watch']
   const watchArray: typeof import('@vueuse/core')['watchArray']
   const watchAtMost: typeof import('@vueuse/core')['watchAtMost']
@@ -345,6 +348,7 @@ import { UnwrapRef } from 'vue'
 declare module 'vue' {
   interface ComponentCustomProperties {
     readonly EffectScope: UnwrapRef<typeof import('vue')['EffectScope']>
+    readonly ScanWidget: UnwrapRef<typeof import('./src/components/views/widgets/bigWidgets/ScanWidget.vue')['default']>
     readonly acceptHMRUpdate: UnwrapRef<typeof import('pinia')['acceptHMRUpdate']>
     readonly asyncComputed: UnwrapRef<typeof import('@vueuse/core')['asyncComputed']>
     readonly autoResetRef: UnwrapRef<typeof import('@vueuse/core')['autoResetRef']>
@@ -664,6 +668,7 @@ declare module 'vue' {
 declare module '@vue/runtime-core' {
   interface ComponentCustomProperties {
     readonly EffectScope: UnwrapRef<typeof import('vue')['EffectScope']>
+    readonly ScanWidget: UnwrapRef<typeof import('./src/components/views/widgets/bigWidgets/ScanWidget.vue')['default']>
     readonly acceptHMRUpdate: UnwrapRef<typeof import('pinia')['acceptHMRUpdate']>
     readonly asyncComputed: UnwrapRef<typeof import('@vueuse/core')['asyncComputed']>
     readonly autoResetRef: UnwrapRef<typeof import('@vueuse/core')['autoResetRef']>

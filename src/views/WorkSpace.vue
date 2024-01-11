@@ -147,8 +147,12 @@ import gears from '@/assets/img/gears-animated.svg?raw';
 import type { ControllerSettings } from '@/typings/settings';
 import spinner from '@/assets/img/spinner-inside-button.svg?raw';
 import type { Device } from '@/stores';
+import axios from 'axios';
+import { useStoreCommonSettingsFile } from '@/composables/useStoreCommonSettingsFile';
 
 const indexStore = useIndexStore();
+
+const { storeCommonSettingsFile } = useStoreCommonSettingsFile();
 
 const {
     isAuth,
@@ -162,6 +166,9 @@ const {
     timeout,
     visibleWidgets,
     ngcModbusMode,
+    chosenDevices,
+    chosenInterfaces,
+    isPriorWOpen,
 } = storeToRefs(indexStore);
 
 const funcsStore = useFuncsStore();
@@ -172,7 +179,9 @@ const route = useRoute();
 
 const router = useRouter();
 
-const { api, isAborted } = useApi();
+const api = indexStore.getApi().api as axios.AxiosInstance;
+
+const isAborted = indexStore.getApi().isAborted;
 
 const menuItems = ['panel', 'functions', 'settings'] as const;
 
@@ -182,20 +191,21 @@ let blockScreenTimer = 0;
 
 const devicesArr = ref<
     {
-        '1w-gpio': number;
-        '1w-rom': number;
-        '1w-sens': number;
+        '1w-gpio': { val: number; bus: number } | number;
+        '1w-rom': { val: number; bus: number } | number;
+        '1w-sens': { val: number; bus: number } | number;
         'adc-in': number;
         addr: number;
         'bin-in': number;
         'bin-out': number;
         'bin-var': number;
         code: number;
+        devStatus: 'on' | 'off' | 'init' | 'no-conn' | 'error';
         'ext-dev': number;
         index: number;
         'int-var': number;
         'mb-iface': number;
-        'mb-var': number;
+        'mb-var': { val: number; bus: number } | number;
         message: string;
         'ow-iface': number;
         'pwm-out': number;
@@ -208,6 +218,8 @@ const devicesArr = ref<
         'udf-timer': number;
         'udf-trans': number;
         'udf-trig': number;
+        serial: string;
+        version: string;
     }[]
 >([]);
 
@@ -243,6 +255,8 @@ let getDevicesTimer: ReturnType<typeof setTimeout> | undefined;
 
 let getDevicesStatesTimer: ReturnType<typeof setTimeout> | undefined;
 
+let getExtStatusesTimer: ReturnType<typeof setTimeout> | undefined;
+
 watch(extDeviceInInitState, () => {
     if (extDeviceInInitState.value !== undefined && rebootingDeviceAddr.value === undefined) {
         const extDevice = extDevsList.value?.find((d) => d.addr === extDeviceInInitState.value);
@@ -266,7 +280,13 @@ async function logout() {
         indexStore.setIsAuth(undefined);
         router.push({ name: 'login' });
     } catch (error) {
+        if (isAborted.value) {
+            return;
+        }
         isDisabled.value = false;
+        setTimeout(() => {
+            logout();
+        }, 20);
     }
 }
 
@@ -276,7 +296,7 @@ async function getCommonSettings() {
         subType: 'common',
         user: userRole.value,
     });
-    if (commonFileSettings !== 'error') {
+    if (commonFileSettings && commonFileSettings !== 'error') {
         const { lang, tempUnit, funcsNumberPerPage, numberingSystem } =
             commonFileSettings !== 'notFound' ? commonFileSettings : ({} as CommonSettingsFileType);
         if (lang === 'en' || lang === 'ru') {
@@ -292,13 +312,22 @@ async function getCommonSettings() {
             indexStore.setNumberingSystem(numberingSystem);
         }
     } else {
-        indexStore.setLang('ru');
-        indexStore.setTempUnit('°C');
-        funcsStore.setFuncsNumberPerPage(5 as FuncsNumberPerPage);
-        indexStore.setNumberingSystem('dec');
+        setCommonSettings();
+        await new Promise((res) => setTimeout(res, 1000));
+        await getCommonSettings();
+    }
+}
 
-        // await new Promise((res) => setTimeout(res, 1000));
-        // await getCommonSettings();
+async function setCommonSettings() {
+    try {
+        await storeCommonSettingsFile('ru', '°C', 10, 'dec');
+    } catch (error) {
+        if (isAborted.value) {
+            return;
+        }
+        setTimeout(() => {
+            setCommonSettings();
+        }, 20);
     }
 }
 
@@ -362,79 +391,319 @@ const { t } = useI18n({
     },
 });
 
+async function getEntState(
+    device: number,
+    filteredReqArr: {
+        type: string;
+        device: number;
+        index: number;
+        quant: number;
+    }[],
+) {
+    try {
+        const r = await api.post('get_ent_state', {
+            list: filteredReqArr,
+        });
+        const state = await r.data.state;
+        const newState = state.filter((el: any) => Array.isArray(el.value));
+        indexStore.setDevicesState(device, newState);
+    } catch (error) {
+        if (isAborted.value) {
+            return;
+        }
+        setTimeout(
+            () => {
+                getEntState(device, filteredReqArr);
+            },
+            isPriorWOpen.value ? 200 : 20,
+        );
+    }
+}
+
 async function setDevicesStates() {
     try {
+        if (activeMenuItem.value !== 'panel') return;
         for (let index = 0; index < devices.value.length; index += 1) {
-            const reqArr: { type: string; device: number; index: number; quant: number }[] = [];
-            devices.value[index].interf.forEach((i) => {
-                reqArr.push({
-                    type: i,
-                    device: devices.value[index].addr,
-                    index: 0,
-                    quant: devicesArr.value[index][i],
-                });
-            });
-            let filteredReqArr;
-            if (visibleWidgets.value.length !== 0) {
-                filteredReqArr = reqArr.filter((el) => {
-                    return visibleWidgets.value.find((w) => {
-                        return w.w.d === el.device && w.w.i === el.type;
+            const el = devices.value.find((el) => el.state === 'init');
+            if (
+                (!el &&
+                    chosenDevices.value.includes(devices.value[index].addr) &&
+                    devices.value[index].state !== 'init' &&
+                    devices.value[index].state !== 'no-conn' &&
+                    devices.value[index].state !== 'error') ||
+                (chosenDevices.value.includes(devices.value[index].addr) && index === 0)
+            ) {
+                const reqArr: {
+                    type: string;
+                    device: number;
+                    index: number;
+                    quant: number;
+                    bus?: number;
+                }[] = [];
+                for (const i of devices.value[index].interf) {
+                    if (typeof i === 'string') {
+                        reqArr.push({
+                            type: i,
+                            device: devices.value[index].addr,
+                            index: 0,
+                            quant: devicesArr.value[index][i] as number,
+                        });
+                    } else {
+                        const interf = devicesArr.value[index][i.interf] as {
+                            val: number;
+                            bus: number;
+                        };
+                        reqArr.push({
+                            type: i.interf,
+                            device: devices.value[index].addr,
+                            index: 0,
+                            quant: interf.val,
+                            bus: i.bus,
+                        });
+                    }
+                }
+                let filteredReqArr;
+                if (visibleWidgets.value[index] && visibleWidgets.value[index].length !== 0) {
+                    filteredReqArr = reqArr.filter((el) => {
+                        return visibleWidgets.value[index].find((w) => {
+                            return w.w.d === el.device && w.w.i === el.type;
+                        });
                     });
-                });
-            } else {
-                filteredReqArr = reqArr;
+                } else {
+                    let numbOfVisibleW = 0;
+                    visibleWidgets.value.forEach((el) => (numbOfVisibleW += el.length));
+                    filteredReqArr = numbOfVisibleW ? [] : reqArr;
+                }
+                if (filteredReqArr.length)
+                    getEntState(devicesArr.value[index].addr, filteredReqArr);
             }
-            const r = await api.post('get_ent_state', {
-                list: filteredReqArr,
-            });
-            indexStore.setDevicesState(devicesArr.value[index].addr, r.data.state);
         }
     } catch (error) {
-        console.error(error);
         if (isAborted.value) {
             return;
         }
     }
-    getDevicesStatesTimer = setTimeout(setDevicesStates, timeout.value);
+    getDevicesStatesTimer = setTimeout(setDevicesStates, 3000);
+    // getDevicesStatesTimer = setTimeout(
+    //     setDevicesStates,
+    //     isPriorWOpen.value ? timeout.value * 3 : timeout.value,
+    // );
 }
 
-async function getDevices(device: number = 0, index: number = 0) {
+async function getOWIds(d: number, bus: number) {
+    try {
+        const r = await api.post('get_ow_ids', {
+            device: d,
+            bus: bus,
+        });
+        const ids = await r.data.ids;
+        indexStore.setOWIds(d, bus, ids);
+    } catch (error) {
+        if (isAborted.value) {
+            return;
+        }
+        setTimeout(() => {
+            getOWIds(d, bus);
+        }, 20);
+    }
+}
+
+async function checkMb(d: number, mb: { mode: 'off' | 'variables' }[]) {
+    try {
+        let mbArr: { interf: string; bus: number }[] | null = null;
+        if (d) {
+            for (let i = 0; i < mb.length; i += 1) {
+                if (mb[i].mode === 'variables') {
+                    mbArr !== null
+                        ? mbArr.push({ interf: 'mb-var', bus: i })
+                        : (mbArr = [{ interf: 'mb-var', bus: i }]);
+                }
+            }
+        } else {
+            mbArr = mb.length ? [{ interf: 'mb-var', bus: 0 }] : null;
+        }
+        const arr = [...devicesArr.value];
+        const device = devicesArr.value.find((dev) => dev.addr === d);
+        if (device) {
+            const val = arr[d]['mb-var'] as number;
+            arr[d]['mb-var'] = mbArr ? { val: val, bus: 0 } : 0;
+            devicesArr.value = [...arr];
+        }
+    } catch (error) {
+        if (isAborted.value) {
+            return;
+        }
+        setTimeout(() => {
+            checkMb(d, mb);
+        }, 20);
+    }
+}
+
+async function checkOWs(d: number, ow: { mode: 'off' | 'sens' | 'rom' | 'gpio' }[]) {
+    try {
+        let owArr: { interf: string; bus: number }[] | null = null;
+        for (let i = 0; i < ow.length; i += 1) {
+            if (ow[i].mode !== 'off') {
+                const interf =
+                    ow[i].mode === 'sens' ? '1w-sens' : ow[i].mode === 'rom' ? '1w-rom' : '1w-gpio';
+                owArr !== null
+                    ? owArr.push({ interf: interf, bus: i })
+                    : (owArr = [{ interf: interf, bus: i }]);
+            }
+        }
+        const arr = [...devicesArr.value];
+        const device = devicesArr.value.find((dev) => dev.addr === d);
+        if (device) {
+            Object.keys(device).forEach((i) => {
+                if (i.includes('1w-') && owArr !== null) {
+                    const obj = owArr.find((interf) => interf.interf === i);
+                    if (obj) {
+                        const interf = i as '1w-sens' | '1w-rom' | '1w-gpio';
+                        const val = arr[d][interf] as number;
+                        arr[d][interf] = { val: val, bus: obj.bus };
+                        getOWIds(d, obj.bus);
+                    } else {
+                        const interf = i as '1w-sens' | '1w-rom' | '1w-gpio';
+                        arr[d][interf] = 0;
+                    }
+                }
+            });
+            devicesArr.value = [...arr];
+        }
+    } catch (error) {
+        if (isAborted.value) {
+            return;
+        }
+        setTimeout(() => {
+            checkOWs(d, ow);
+        }, 20);
+    }
+}
+
+async function getDevices(
+    device: number = 0,
+    index: number = 0,
+    state?: 'on' | 'off' | 'init' | 'no-conn' | 'error',
+    serial?: string,
+    version?: string,
+) {
     try {
         const r0 = await api.post('get_dev_capab', {
             device: device,
         });
-        devicesArr.value = [...devicesArr.value, Object.assign(r0.data, { index: index })];
+        devicesArr.value = [
+            ...devicesArr.value,
+            Object.assign(
+                r0.data,
+                { index: index },
+                { devStatus: state },
+                { serial: serial },
+                { version: version },
+            ),
+        ];
+        if (device === 0) await setMbMode();
     } catch (error) {
-        getDevicesTimer = setTimeout(() => {
+        if (isAborted.value) {
+            return;
+        }
+        setTimeout(() => {
             getDevices();
-        }, timeout.value);
+        }, 20);
+    }
+}
+
+async function setMbMode() {
+    try {
+        const r = await api.get<ControllerSettings>('get_config');
+        const min = (await r.data['adc-in']['clbr-min']) as [number | null];
+        const max = (await r.data['adc-in']['clbr-max']) as [number | null];
+        if (min && max) indexStore.setCalibrVals(min, max);
+        indexStore.setNGCModbusMode(r.data.modbus[0]?.mode || 'off');
+        if (ngcModbusMode.value === 'ext-devs') {
+            await getExtDevs();
+        }
+        checkOWs(0, r.data['1-wire'] as { mode: 'off' | 'sens' | 'rom' | 'gpio' }[]);
+        checkMb(0, ngcModbusMode.value === 'variables' ? [{ mode: 'variables' }] : []);
+    } catch (error) {
+        if (isAborted.value) {
+            return;
+        }
+        setTimeout(() => {
+            setMbMode();
+        }, 20);
+    }
+}
+
+async function getExtDevs() {
+    try {
+        const r = (await (await api.get('get_ext_devs')).data).list as Device[];
+        const newR = [];
+        for (let i = 0; i < r.length; i += 1) {
+            newR.push(Object.assign(r[i], { index: i + 1 }));
+        }
+        const devices = newR.filter((item) => item.type !== 'none');
+        devices.forEach(async (d) => {
+            await getDevices(d.addr, d.index, d.state, d.serial, d.version);
+            await getExtDevsCfg(d.addr);
+        });
+        getExtStatuses();
+    } catch (error) {
+        if (isAborted.value) {
+            return;
+        }
+        setTimeout(() => {
+            getExtDevs();
+        }, 20);
+    }
+}
+
+async function getExtStatuses() {
+    try {
+        const r = (await (await api.get('get_ext_devs')).data).list as Device[];
+        const newR = [];
+        for (let i = 0; i < r.length; i += 1) {
+            newR.push(Object.assign(r[i], { index: i + 1 }));
+        }
+        const devs = newR.filter((item) => item.type !== 'none');
+        devs.forEach(async (d) => {
+            if (d.state !== devices.value.find((el) => el.addr === d.addr)?.state) {
+                indexStore.changeDeviceState(d.addr, d.state);
+            }
+        });
+    } catch (error) {
+        if (isAborted.value) {
+            return;
+        }
+        return new Promise((resolve) =>
+            setTimeout(() => {
+                getExtStatuses();
+            }, 20),
+        );
+    }
+    getExtStatusesTimer = setTimeout(getExtStatuses, 1000);
+}
+
+async function getExtDevsCfg(d: number) {
+    try {
+        const r = await api.post('get_ext_cfg', {
+            device: d,
+        });
+        checkOWs(d, r.data['1-wire'] as { mode: 'off' | 'sens' | 'rom' | 'gpio' }[]);
+        checkMb(d, r.data['mb-master'] as { mode: 'off' | 'variables' }[]);
+    } catch (error) {
+        if (isAborted.value) {
+            return;
+        }
+        setTimeout(() => {
+            getExtDevsCfg(d);
+        }, 20);
     }
 }
 
 onMounted(async () => {
     if (route.name === 'devices-settings') return;
-    try {
-        const r = await api.get<ControllerSettings>('get_config');
-        indexStore.setNGCModbusMode(r.data.modbus[0]?.mode || 'off');
-        await getDevices();
-        if (ngcModbusMode.value === 'ext-devs') {
-            const r = (await (await api.post('get_ext_devs')).data).list as Device[];
-            const newR = [];
-            for (let i = 0; i < r.length; i += 1) {
-                newR.push(Object.assign(r[i], { index: i + 1 }));
-            }
-            const devices = newR.filter((item) => item.type !== 'none');
-            devices.forEach(async (d) => {
-                await getDevices(d.addr, d.index);
-            });
-        }
-        setDevicesStates();
-    } catch (error) {
-        if (isAborted.value) {
-            return;
-        }
-        //
-    }
+    await getDevices();
+    setDevicesStates();
 });
 
 watch(
@@ -442,12 +711,42 @@ watch(
     () => {
         for (let i = 0; i < devicesArr.value.length; i += 1) {
             if (devices.value.findIndex((obj) => obj.addr === devicesArr.value[i].addr) === -1) {
-                const interfArr: string[] = [];
+                let interfArr: [string | { interf: string; bus: number }] | null = null;
                 for (let j = 0; j < interfaces.value.length; j++) {
                     if (devicesArr.value[i][interfaces.value[j].value]) {
-                        interfArr.push(interfaces.value[j].value);
+                        if (
+                            interfaces.value[j].value.includes('1w-') &&
+                            typeof devicesArr.value[i][interfaces.value[j].value] === 'number'
+                        ) {
+                            break;
+                        } else if (interfaces.value[j].value.includes('1w-')) {
+                            const interfVal = devicesArr.value[i][interfaces.value[j].value] as {
+                                val: number;
+                                bus: number;
+                            };
+                            interfArr !== null
+                                ? interfArr.push({
+                                      interf: interfaces.value[j].value,
+                                      bus: interfVal.bus,
+                                  })
+                                : (interfArr = [
+                                      { interf: interfaces.value[j].value, bus: interfVal.bus },
+                                  ]);
+                        } else if (interfaces.value[j].value === 'mb-var') {
+                            interfArr !== null
+                                ? interfArr.push({
+                                      interf: interfaces.value[j].value,
+                                      bus: 0,
+                                  })
+                                : (interfArr = [{ interf: interfaces.value[j].value, bus: 0 }]);
+                        } else {
+                            interfArr !== null
+                                ? interfArr.push(interfaces.value[j].value)
+                                : (interfArr = [interfaces.value[j].value]);
+                        }
                     }
                 }
+                if (interfArr === null) break;
                 indexStore.setDevices(
                     Object.assign(
                         { addr: devicesArr.value[i].addr as number },
@@ -458,6 +757,9 @@ watch(
                         },
                         {
                             interf: interfArr as [
+                                | { interf: '1w-gpio'; bus: number }
+                                | { interf: '1w-rom'; bus: number }
+                                | { interf: '1w-sens'; bus: number }
                                 | '1w-gpio'
                                 | '1w-rom'
                                 | '1w-sens'
@@ -471,15 +773,34 @@ watch(
                                 | 'tim-var',
                             ],
                         },
+                        { state: devicesArr.value[i].devStatus },
+                        { serial: devicesArr.value[i].serial },
+                        { version: devicesArr.value[i].version },
                     ),
                 );
             }
         }
+        indexStore.toggleChooseAllDevices(undefined, true);
+        indexStore.toggleChooseAllInterfaces(undefined, true);
     },
 );
 
-onBeforeMount(() => {
-    getDevicesTimer = undefined;
+watch(
+    () => activeMenuItem.value,
+    () => {
+        if (activeMenuItem.value !== 'panel') {
+            clearTimeout(getDevicesStatesTimer);
+            getDevicesStatesTimer = undefined;
+        } else {
+            setDevicesStates();
+        }
+    },
+);
+
+onBeforeUnmount(() => {
+    clearTimeout(getDevicesStatesTimer);
     getDevicesStatesTimer = undefined;
+    clearTimeout(getExtStatusesTimer);
+    getExtStatusesTimer = undefined;
 });
 </script>

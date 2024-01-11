@@ -109,9 +109,8 @@ function handleMouseLeave() {
 watch(
     () => devicesState.value,
     () => {
-        const newState = devicesState.value
-            .find((obj) => obj.device === props.w.w.d)
-            ?.interfVal.find((obj) => obj.type === props.w.w.i)?.value;
+        const newState = devicesState.value[props.w.w.d].find((obj) => obj.type === props.w.w.i)
+            ?.value as number[];
         state.value = newState ? newState : [...props.w.state];
     },
 );

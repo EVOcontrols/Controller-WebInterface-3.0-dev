@@ -67,6 +67,11 @@ span svg rect {
     }
 }
 
+.label-close:hover rect,
+.plus:hover rect {
+    fill: #58b1ff;
+}
+
 span:hover svg rect,
 span.active svg rect {
     fill: #adebff;

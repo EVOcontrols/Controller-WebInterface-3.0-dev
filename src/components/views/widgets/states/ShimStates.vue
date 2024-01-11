@@ -35,16 +35,35 @@
                     >
                         <div
                             class="w-1 h-1 rounded-[50%]"
-                            :class="false ? 'bg-[#00B3CB]' : 'bg-[#07435D]'"
+                            :class="
+                                props.checkedArr?.find(
+                                    (el) => el.dir === 'max' && el.index === index,
+                                )
+                                    ? 'bg-[#00B3CB]'
+                                    : 'bg-[#07435D]'
+                            "
                         ></div>
                         <span
-                            v-if="false"
+                            v-if="
+                                props.checkedArr?.find(
+                                    (el) => el.dir === 'max' && el.index === index,
+                                )
+                            "
                             v-html="check"
                             class="block bg-[#074a56] rounded-[3px] p-[1px]"
+                        ></span>
+                        <span
+                            v-else-if="
+                                props.calibratedArr?.find(
+                                    (el) => el.dir === 'max' && el.index === index,
+                                )
+                            "
+                            class="loader"
                         ></span>
                         <CalibrArrow
                             v-else
                             class="block p-[1px] bg-[#0D2F4B] rounded-[3px] rotate-180 transition-color duration-300 hover:bg-[#06516a] cursor-pointer"
+                            @click="emit('calibrate', index, 'max')"
                         />
                     </div>
                     <div
@@ -80,17 +99,36 @@
                         class="flex gap-1 flex-col items-center mb-[6px]"
                     >
                         <span
-                            v-if="false"
+                            v-if="
+                                props.checkedArr?.find(
+                                    (el) => el.dir === 'min' && el.index === index,
+                                )
+                            "
                             v-html="check"
                             class="block bg-[#074a56] rounded-[3px] p-[1px]"
+                        ></span>
+                        <span
+                            v-else-if="
+                                props.calibratedArr?.find(
+                                    (el) => el.dir === 'min' && el.index === index,
+                                )
+                            "
+                            class="loader"
                         ></span>
                         <CalibrArrow
                             v-else
                             class="block p-[1px] bg-[#0D2F4B] rounded-[3px] transition-color duration-300 hover:bg-[#06516a] cursor-pointer"
+                            @click="emit('calibrate', index, 'min')"
                         />
                         <div
                             class="w-1 h-1 rounded-[50%]"
-                            :class="false ? 'bg-[#00B3CB]' : 'bg-[#07435D]'"
+                            :class="
+                                props.checkedArr?.find(
+                                    (el) => el.dir === 'min' && el.index === index,
+                                )
+                                    ? 'bg-[#00B3CB]'
+                                    : 'bg-[#07435D]'
+                            "
                         ></div>
                     </div>
                     <div
@@ -117,9 +155,12 @@ import type { Widget } from '@/stores';
 import ArrowIcon from '@/assets/ArrowIcon.vue';
 import CalibrArrow from '@/assets/CalibrArrow.vue';
 import check from '@/assets/img/check.svg?raw';
-const { api } = useApi();
 
 const indexStore = useIndexStore();
+
+const api = indexStore.getApi().api;
+
+const isAborted = indexStore.getApi().isAborted;
 
 const { notConnected, devicesState } = storeToRefs(indexStore);
 
@@ -131,7 +172,7 @@ const scrollWrapper = ref<HTMLElement | undefined>();
 
 const scrollEl = ref<HTMLElement | undefined>();
 
-const activeIndex = ref<number | null>();
+const activeIndex = ref<number | null>(null);
 
 const mouseOffset = ref(0);
 
@@ -149,6 +190,9 @@ const props = defineProps<{
     mouseenterTimer?: number;
     mouseleaveTimer?: number;
     isCalibration?: boolean;
+    calibrIn?: { index: number; dir: 'min' | 'max' };
+    calibratedArr?: { index: number; dir: 'min' | 'max' }[];
+    checkedArr?: { index: number; dir: 'min' | 'max' }[];
 }>();
 
 const state = ref<number[]>([...props.w.state]);
@@ -156,6 +200,7 @@ const state = ref<number[]>([...props.w.state]);
 const emit = defineEmits<{
     (e: 'hover', index: number, s: number): void;
     (e: 'leave'): void;
+    (e: 'calibrate', index: number, dir: 'min' | 'max'): void;
 }>();
 
 function handleMouseEnter(index: number, s: number | null) {
@@ -204,34 +249,56 @@ function handleScrollMove() {
     isStartScrollEl.value = wrapper.scrollLeft < 10 ? true : false;
 }
 
-async function quickChange(index: number, e: MouseEvent, currentState: number | null) {
+async function setValue(val: number, index: number) {
     const { d, i } = props.w.w;
     try {
-        if (props.isBig && props.w.w.i === 'pwm-out') {
-            activeIndex.value = index;
-            mouseOffset.value = 0;
-            const target = e.target as Element;
-            const parent = target.closest('.parent');
-            if (!parent) return;
-            const boundingRect = parent.getBoundingClientRect();
-            range.value = {
-                yBottom: boundingRect.y + boundingRect.height,
-                yTop: boundingRect.y,
-                height: boundingRect.height,
-            };
-            changeValue(e);
-            document.addEventListener('mousemove', changeValue);
-            document.addEventListener('mouseup', stopChange, { once: true });
-        } else if (props.w.w.i === 'pwm-out') {
-            await api.post('set_ent_value', {
-                type: i,
-                device: d,
-                index: index,
-                value: currentState === 0 ? 10000 : 0,
-            });
+        const r = await api.post('set_ent_value', {
+            type: i,
+            device: d,
+            index: index,
+            value: val,
+        });
+        if (r.data.status === 'ok') {
+            const devStates = [...devicesState.value][props.w.w.d];
+            const prevStateIndex = devStates.findIndex((el) => el.type === props.w.w.i);
+            if (prevStateIndex !== -1 && devStates[prevStateIndex].value[index] !== undefined)
+                devStates[prevStateIndex].value[index] = val;
+            indexStore.setDevicesState(props.w.w.d, [...devStates]);
         }
     } catch (error) {
-        //
+        if (isAborted.value) {
+            return;
+        }
+        setTimeout(() => {
+            setValue(val, index);
+        }, 5);
+    }
+}
+
+async function quickChange(index: number, e: MouseEvent, currentState: number | null) {
+    if (props.isBig && props.w.w.i === 'pwm-out') {
+        activeIndex.value = index;
+        mouseOffset.value = 0;
+        const target = e.target as Element;
+        const parent = target.closest('.parent');
+        if (!parent) return;
+        const boundingRect = parent.getBoundingClientRect();
+        range.value = {
+            yBottom: boundingRect.y + boundingRect.height,
+            yTop: boundingRect.y,
+            height: boundingRect.height,
+        };
+        changeValue(e);
+        document.addEventListener('mousemove', changeValue);
+        document.addEventListener(
+            'mouseup',
+            () => {
+                stopChange();
+            },
+            { once: true },
+        );
+    } else if (props.w.w.i === 'pwm-out') {
+        setValue(currentState === 0 ? 10000 : 0, index);
     }
 }
 
@@ -252,46 +319,62 @@ function startChange(index: number, e: MouseEvent, s: number) {
         height: boundingRect.height,
     };
     document.addEventListener('mousemove', changeValue);
-    document.addEventListener('mouseup', stopChange, { once: true });
+    document.addEventListener(
+        'mouseup',
+        () => {
+            stopChange();
+        },
+        { once: true },
+    );
 }
 
 async function changeValue(e: MouseEvent) {
-    if (isRequesting.value) return;
-    if (activeIndex.value === null || activeIndex.value === undefined) return;
-    let y = e.clientY - mouseOffset.value;
-    if (!range.value) return;
-    if (y > range.value.yBottom) y = range.value.yBottom;
-    if (y < range.value.yTop) y = range.value.yTop;
-    const height = range.value.yBottom - y;
-    const value = height / range.value.height;
-    activeValue.value = value * 10000;
-    isRequesting.value = true;
-    await api.post('set_ent_value', {
-        type: props.w.w.i,
-        device: props.w.w.d,
-        index: activeIndex.value,
-        value: Math.round(activeValue.value),
-    });
-    setTimeout(() => {
-        isRequesting.value = false;
-    }, 20);
+    try {
+        if (isRequesting.value) return;
+        if (activeIndex.value === null || activeIndex.value === undefined) return;
+        let y = e.clientY - mouseOffset.value;
+        if (!range.value) return;
+        if (y > range.value.yBottom) y = range.value.yBottom;
+        if (y < range.value.yTop) y = range.value.yTop;
+        const height = range.value.yBottom - y;
+        const value = height / range.value.height;
+        activeValue.value = value * 10000;
+        isRequesting.value = true;
+        const r = await api.post('set_ent_value', {
+            type: props.w.w.i,
+            device: props.w.w.d,
+            index: activeIndex.value,
+            value: Math.round(activeValue.value),
+        });
+        if (r.data.status === 'ok') {
+            const devStates = [...devicesState.value][props.w.w.d];
+            const prevStateIndex = devStates.findIndex((el) => el.type === props.w.w.i);
+            if (
+                prevStateIndex !== -1 &&
+                devStates[prevStateIndex].value[activeIndex.value] !== undefined
+            )
+                devStates[prevStateIndex].value[activeIndex.value] = Math.round(activeValue.value);
+            indexStore.setDevicesState(props.w.w.d, [...devStates]);
+        }
+        state.value[activeIndex.value] = Math.round(activeValue.value);
+        setTimeout(() => {
+            isRequesting.value = false;
+        }, 5);
+    } catch (error) {
+        if (isAborted.value) {
+            return;
+        }
+    }
 }
 
 async function stopChange() {
-    try {
-        document.removeEventListener('mousemove', changeValue);
-        // const { d, i } = props.w.w;
-        // await api.post('set_ent_value', {
-        //     type: i,
-        //     device: d,
-        //     index: activeIndex.value,
-        //     value: Math.round(activeValue.value),
-        // });
-        activeIndex.value = null;
-        activeValue.value = 0;
-    } catch (error) {
-        stopChange();
-    }
+    if (activeIndex.value === null) return;
+    document.removeEventListener('mousemove', changeValue);
+    setValue(Math.round(activeValue.value), activeIndex.value);
+    if (activeIndex.value !== null && activeIndex.value !== null)
+        state.value[activeIndex.value] = Math.round(activeValue.value);
+    activeIndex.value = null;
+    activeValue.value = 0;
 }
 
 watch(
@@ -307,10 +390,33 @@ watch(
 watch(
     () => devicesState.value,
     () => {
-        const newState = devicesState.value
-            .find((obj) => obj.device === props.w.w.d)
-            ?.interfVal.find((obj) => obj.type === props.w.w.i)?.value;
+        const newState = devicesState.value[props.w.w.d].find((obj) => obj.type === props.w.w.i)
+            ?.value as number[];
+        if (activeIndex.value !== null && activeIndex.value !== undefined && newState) {
+            newState[activeIndex.value] = Math.round(activeValue.value);
+        }
         state.value = newState ? newState : [...props.w.state];
     },
 );
 </script>
+<style scoped>
+.loader {
+    width: 14px;
+    height: 14px;
+    border: 2px solid #00b3cb;
+    border-bottom-color: transparent;
+    border-radius: 50%;
+    display: inline-block;
+    box-sizing: border-box;
+    animation: rotation 1s linear infinite;
+}
+
+@keyframes rotation {
+    0% {
+        transform: rotate(0deg);
+    }
+    100% {
+        transform: rotate(360deg);
+    }
+}
+</style>

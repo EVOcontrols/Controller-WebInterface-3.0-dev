@@ -7,7 +7,7 @@
                 :class="{ disabled: notConnected }"
                 @click="handleArrowClick('toStart')"
             />
-            <div class="flex overflow-x-hidden relative ml-2 bg-113 pl-2 pr-1 rounded-l-lg w-full">
+            <div class="flex overflow-x-hidden ml-2 bg-113 pl-2 pr-1 rounded-l-lg w-full">
                 <div
                     v-dragscroll.x
                     v-on:dragscrollmove="handleScrollMove"
@@ -21,13 +21,33 @@
                         <div
                             v-for="device in devices"
                             :key="device.addr"
-                            class="device h-6 min-w-[4rem] px-3 flex items-center mr-[6px] rounded text-0.81 font-roboto text-[#ADEBFF] cursor-pointer transition-all duration-300 justify-center select-none"
-                            :class="{
-                                active: chosenDevices.includes(device.addr),
-                            }"
+                            class="device h-6 min-w-[4rem] pr-2 flex items-center mr-[6px] rounded text-0.81 font-roboto text-[#ADEBFF] cursor-pointer transition-all duration-300 justify-center select-none"
+                            :class="[
+                                {
+                                    active: chosenDevices.includes(device.addr),
+                                },
+                                ['init', 'no-conn', 'error'].includes(device.state)
+                                    ? 'pl-[6px]'
+                                    : 'pl-2',
+                            ]"
                             @mousedown="mousedown"
                             @mouseup="mouseup(device.addr, $event)"
+                            @mouseenter="(e) => $emit('enter', device, e as MouseEvent)"
+                            @mouseleave="$emit('leave', device)"
                         >
+                            <div
+                                v-if="
+                                    device.addr !== 0 &&
+                                    device.state !== 'on' &&
+                                    device.state !== 'off'
+                                "
+                                class="w-[5px] h-[5px] rounded-[50%] mr-[6px]"
+                                :class="[
+                                    { 'bg-[#84AFBD]': device.state === 'init' },
+                                    { 'bg-[#3E688E]': device.state === 'no-conn' },
+                                    { 'bg-[#FF5A88]': device.state === 'error' },
+                                ]"
+                            ></div>
                             {{
                                 device.addr === 0
                                     ? device.type.slice(0, device.type.indexOf('-'))
@@ -37,16 +57,16 @@
                     </div>
                 </div>
             </div>
-            <div class="relative flex items-center pr-5 pl-[1.875rem] ml-[1px]">
+            <div class="flex items-center pr-5 pl-[1.875rem] ml-[1px]">
                 <ArrowIcon
                     v-if="!isEndScrollEl"
-                    class="absolute top-[50%] translate-y-[-50%] left-1 cursor-pointer"
+                    class="h-full cursor-pointer mr-[6px]"
                     :class="{ disabled: notConnected }"
                     @click="handleArrowClick('toEnd')"
                 />
                 <div class="h-[39px] w-[1px] bg-[#0C3051] mr-3"></div>
                 <!-- eslint-disable-next-line vuejs-accessibility/label-has-for -->
-                <label class="flex items-center cursor-pointer nc:cursor-default group">
+                <label class="flex items-center cursor-pointer nc:cursor-default group mr-[26px]">
                     <check-box
                         :isDisabled="notConnected"
                         @change="toggleChooseAllDevices()"
@@ -58,10 +78,38 @@
                         {{ t('select') }}
                     </span>
                 </label>
-                <SettingsIcon
-                    class="ml-[26px]"
-                    :class="{ nc: notConnected }"
-                />
+                <div class="group">
+                    <SettingsIcon
+                        :class="{ nc: notConnected }"
+                        :disabled="ngcModbusMode !== 'ext-devs'"
+                    />
+                    <div
+                        v-if="ngcModbusMode !== 'ext-devs'"
+                        class="absolute flex flex-col gap-3 py-4 px-5 w-[270px] h-[130px] bg-[#1B4569] right-5 -top-[116px] rounded-[10px] invisible opacity-0 group-hover:visible group-hover:opacity-100 transition-[visibility,opacity] z-[1]"
+                    >
+                        <span
+                            class="w-full text-[#A0D5FF] font-semibold"
+                            :style="{ 'text-wrap': 'wrap' }"
+                            >{{ t('infoBlock.title') }}</span
+                        >
+                        <div
+                            class="w-full text-balance text-[#77C3FF]"
+                            :style="{ 'text-wrap': 'wrap' }"
+                        >
+                            {{ t('infoBlock.text.p1')
+                            }}{{
+                                ngcModbusMode === 'off'
+                                    ? t('infoBlock.text.off')
+                                    : t('infoBlock.text.mb')
+                            }}{{ t('infoBlock.text.p2') }}
+                            <RouterLink :to="{ path: 'settings/devices' }"
+                                ><span class="underline text-[#ADEBFF] font-semibold">
+                                    {{ t('infoBlock.text.link') }}</span
+                                ></RouterLink
+                            >{{ t('infoBlock.text.p3') }}
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -87,7 +135,7 @@ const isStartScrollEl = ref(true);
 
 const isEndScrollEl = ref(false);
 
-const { chosenDevices, devices, notConnected } = storeToRefs(indexStore);
+const { chosenDevices, devices, notConnected, ngcModbusMode } = storeToRefs(indexStore);
 
 function toggleChooseAllDevices() {
     isAllDevicesChosen.value = !isAllDevicesChosen.value;
@@ -99,13 +147,15 @@ function handleArrowClick(direction: 'toStart' | 'toEnd') {
     const wrapper = scrollWrapper.value;
     if (!el || !wrapper) return;
     if (direction === 'toStart') {
-        wrapper.scrollTo({ left: 0, behavior: 'smooth' });
-        isStartScrollEl.value = true;
+        wrapper.scrollTo({ left: wrapper.scrollLeft - wrapper.offsetWidth, behavior: 'smooth' });
+        isStartScrollEl.value = wrapper.scrollLeft - wrapper.offsetWidth < 20;
         isEndScrollEl.value = false;
     } else {
-        wrapper.scrollTo({ left: wrapper.offsetWidth, behavior: 'smooth' });
+        wrapper.scrollTo({ left: wrapper.scrollLeft + wrapper.offsetWidth, behavior: 'smooth' });
         isStartScrollEl.value = false;
-        isEndScrollEl.value = true;
+        isEndScrollEl.value =
+            wrapper.scrollWidth - wrapper.offsetWidth - 20 <=
+            wrapper.scrollLeft + wrapper.offsetWidth;
     }
 }
 
@@ -154,10 +204,32 @@ const { t } = useI18n({
         ru: {
             select: 'Выбрать все',
             allDevices: 'Все устройства',
+            infoBlock: {
+                title: 'Редактирование списка устройств расширения невозможно.',
+                text: {
+                    p1: 'Шина RS485 NGC ',
+                    off: 'отключена. ',
+                    mb: 'находится в режиме “переменные Modbus". ',
+                    p2: 'Нажмите ',
+                    link: 'сюда ',
+                    p3: 'для перехода к настройкам режима работы шины.',
+                },
+            },
         },
         en: {
             select: 'Select all',
             allDevices: 'All devices',
+            infoBlock: {
+                title: 'Editing the list of expansion devices is not possible.',
+                text: {
+                    p1: 'RS485 NGC bus ',
+                    off: 'disabled. ',
+                    mb: 'is in “Modbus variables” mode. ',
+                    p2: 'Click ',
+                    link: 'here ',
+                    p3: 'to go to the bus operating mode settings.',
+                },
+            },
         },
     },
 });

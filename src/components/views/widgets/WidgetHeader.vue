@@ -3,7 +3,7 @@
         class="flex w-full h-[3.125rem] border-b border-[#1D4162] items-center px-4 justify-between select-none"
         :class="notConnected ? 'text-[#3E688E]' : 'text-[#9ADBF6]'"
     >
-        {{ title }}
+        {{ props.w.bus === undefined ? title : title + ' (' + t('bus') + (props.w.bus + 1) + ')' }}
         <div class="flex items-center gap-2">
             <SettingsIcon :class="{ nc: notConnected }" />
             <div
@@ -41,5 +41,16 @@ const { locale } = useI18n();
 const title = computed<string>(() => {
     const interf = interfaces.value.find((i) => i.value === props.w.i);
     return locale.value === 'en' ? (interf?.label.en as string) : (interf?.label.ru as string);
+});
+
+const { t } = useI18n({
+    messages: {
+        ru: {
+            bus: 'шина ',
+        },
+        en: {
+            bus: 'bus ',
+        },
+    },
 });
 </script>

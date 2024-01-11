@@ -1,7 +1,7 @@
 <template>
     <div class="relative">
         <WidgetHeader :w="props.w.w" />
-        <TempStates
+        <OwStates
             :w="props.w"
             :activeIO="activeIO"
             :lastActiveIO="lastActiveIO"
@@ -29,7 +29,7 @@
 import type { Widget } from '@/stores';
 import WidgetHeader from '@/components/views/widgets/WidgetHeader.vue';
 import WidgetFooter from '@/components/views/widgets/WidgetFooter.vue';
-import TempStates from '@/components/views/widgets/states/TempStates.vue';
+import OwStates from '@/components/views/widgets/states/OwStates.vue';
 
 const activeIO = ref<{ index: number; val: number | null } | null>(null);
 
@@ -44,7 +44,7 @@ const indexStore = useIndexStore();
 const { devices } = storeToRefs(indexStore);
 
 const props = defineProps<{
-    w: { w: Widget; state: [number | null][] };
+    w: { w: Widget; state: [number | null] };
 }>();
 
 const devStatus = computed<'on' | 'off' | 'no-conn' | 'init' | 'error' | undefined>(() => {

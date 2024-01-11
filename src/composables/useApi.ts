@@ -15,6 +15,8 @@ export function useApi() {
 
     const isAborted = ref(false);
 
+    let isFree = true;
+
     function createNewAbortController() {
         isAborted.value = false;
         abortController = new AbortController();
@@ -25,7 +27,6 @@ export function useApi() {
     }
 
     const api = axios.create({
-        timeout: 5000,
         transitional: {
             clarifyTimeoutError: true,
         },
@@ -33,20 +34,28 @@ export function useApi() {
 
     api.interceptors.request.use(
         (config) => {
+            if (!isFree) {
+                throw new Error('isBusy');
+            }
             const isMisc = config.url?.startsWith('/misc/');
             if (!signal || signal.aborted) {
                 createNewAbortController();
             }
+            isFree = false;
             return {
                 ...config,
                 // url: isMisc ? config.url : `/api/${config.url}`,
                 // url: isMisc ? config.url : `http://192.168.1.30/api/${config.url}`,
-                url: isMisc ? config.url : `http://65.21.176.66:49163/api/${config.url}`,
+                // url: isMisc ? config.url : `http://65.21.176.66:49163/api/${config.url}`,
+                url: isMisc
+                    ? `http://65.21.176.66:49163${config.url}`
+                    : `http://65.21.176.66:49163/api/${config.url}`,
                 data: isMisc ? config.data : JSON.stringify(config.data),
+                timeout: config.url === 'calibr_adc_in' ? 10000 : 5000,
                 headers: isMisc
                     ? {
                           'Content-Type': 'text/plain; charset=utf-8',
-                          'Auth-Token': authToken.value,
+                          //   'Auth-Token': authToken.value,
                       }
                     : {},
                 signal,
@@ -62,11 +71,13 @@ export function useApi() {
                     indexStore.setIsAuth(undefined);
                     router.push({ name: 'login' });
                 } else {
+                    isFree = true;
                     throw new Error();
                 }
             } else if (notConnected.value) {
                 indexStore.setIsNotConnected(false);
             }
+            isFree = true;
             return response;
         },
         async (error: AxiosError) => {
@@ -81,6 +92,11 @@ export function useApi() {
                     await new Promise((res) => {
                         setTimeout(res, 1000);
                     });
+                }
+                isFree = true;
+            } else {
+                if (error.message !== 'isBusy') {
+                    isFree = true;
                 }
             }
             return Promise.reject(error);

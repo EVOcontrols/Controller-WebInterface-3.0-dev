@@ -62,7 +62,6 @@
 <script lang="ts" setup>
 import gsm from '@/assets/img/gsm.svg?raw';
 import info from '@/assets/img/info.svg?raw';
-import { useApi } from '@/composables/useApi';
 import { DateTime } from 'luxon';
 
 const indexStore = useIndexStore();
@@ -70,7 +69,11 @@ const indexStore = useIndexStore();
 const { lang, notConnected, rebootingDeviceAddr, isLongQueryRunning, controllerDateTime } =
     storeToRefs(indexStore);
 
-const { api, isAborted, abort } = useApi();
+const api = indexStore.getApi().api;
+
+const isAborted = indexStore.getApi().isAborted;
+
+const abort = indexStore.getApi().abort;
 
 const { copy, isSupported } = useClipboard();
 
