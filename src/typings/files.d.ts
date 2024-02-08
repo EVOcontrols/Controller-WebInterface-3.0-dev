@@ -2,9 +2,24 @@ import type { UserRole, Lang, NumberingSystem } from './common';
 
 export type LabelsFileType = {
     type: 'labels';
-    subType: 'mbVars' | 'mbDevices';
+    subType?: 'mbVars' | 'mbDevices';
     device: number;
-    bus: number;
+    bus?: number;
+    interf:
+        | '1w-rom'
+        | '1w-sens'
+        | 'bin-in'
+        | 'adc-in'
+        | 'bin-out'
+        | 'pwm-out'
+        | 'mb-var'
+        | 'bin-var'
+        | 'int-var'
+        | 'tim-var';
+};
+
+export type LabelsType = {
+    labels: string[];
 };
 
 export type CommonSettingsFileType = {
@@ -22,7 +37,7 @@ export type FileType =
 export type FileContent<T extends FileType> = T extends { type: 'labels'; subType: 'mbDevices' }
     ? (string | null)[]
     : T extends { type: 'labels' }
-    ? string[]
+    ? LabelsType
     : T extends { type: 'settings'; subType: 'common' }
     ? CommonSettingsFileType
     : TwoDimensionalArray<NumberingSystem>;

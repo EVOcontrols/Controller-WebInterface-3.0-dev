@@ -58,12 +58,23 @@ export interface InterfVal {
     type: string;
     device: number;
     index: number;
-    value: number[] | [number | null][];
+    value: number[] | null[] | [number | null][];
     bus?: number;
 }
 
 export const useIndexStore = defineStore('indexStore', () => {
     const timeout = ref(500);
+
+    const labels = ref<
+        | [
+              | {
+                    interf: string;
+                    val: [string[] | []];
+                }[]
+              | null,
+          ]
+        | []
+    >([]);
 
     const OWIds = ref<string[][][]>([]);
 
@@ -413,8 +424,143 @@ export const useIndexStore = defineStore('indexStore', () => {
         }
     }
 
+    function setLabels(
+        d: number,
+        interf:
+            | '1w-rom'
+            | '1w-sens'
+            | 'bin-in'
+            | 'adc-in'
+            | 'bin-out'
+            | 'pwm-out'
+            | 'mb-var'
+            | 'bin-var'
+            | 'int-var'
+            | 'tim-var',
+        labelsArr: string[] | null,
+        part: number,
+        bus?: number,
+    ) {
+        const newArr = [...labels.value];
+        const arr = [];
+        for (let i = 0; i < labelsFileLength; i++) {
+            arr.push('');
+        }
+        if (!newArr.length || !newArr[d]) {
+            if (d) {
+                for (let i = newArr.length; i < d; i++) {
+                    newArr.push(null);
+                }
+            }
+            const val = [];
+            if (bus) {
+                for (let i = 0; i < bus; i++) {
+                    val.push([]);
+                }
+            }
+            const labelsVal = [];
+            if (part) {
+                for (let i = 0; i < part; i++) {
+                    labelsVal.push(...arr);
+                }
+            }
+            labelsVal.push(...(labelsArr ? labelsArr : arr));
+            val.push(labelsVal);
+            const obj = { interf: interf as string, val: val as [[] | string[]] };
+            if (!newArr.length) {
+                newArr.push([obj]);
+            } else {
+                newArr[d] = [obj];
+            }
+        } else {
+            const interfObj = newArr[d]?.find((el) => el.interf === interf);
+            if (interfObj) {
+                const val = [...interfObj.val];
+                if (bus && val.length < bus) {
+                    for (let i = val.length; i < bus; i++) {
+                        val.push([]);
+                    }
+                }
+                const labelsVal = bus ? val[bus] : val[0];
+                if (labelsVal.length / labelsFileLength < part) {
+                    for (let i = labelsVal.length / labelsFileLength; i < part; i++) {
+                        labelsVal.push(...arr);
+                    }
+                    labelsVal.push(...(labelsArr ? labelsArr : arr));
+                } else {
+                    for (let i = 0; i < labelsFileLength; i++) {
+                        labelsVal[part * labelsFileLength + i] = labelsArr ? labelsArr[i] : arr[i];
+                    }
+                }
+                val[bus || 0] = labelsVal;
+                interfObj.val = val as [string[] | []];
+            } else {
+                const val = [];
+                if (bus) {
+                    for (let i = 0; i < bus; i++) {
+                        val.push([]);
+                    }
+                }
+                const labelsVal = [];
+                if (part) {
+                    for (let i = 0; i < part; i++) {
+                        labelsVal.push(...arr);
+                    }
+                }
+                labelsVal.push(...(labelsArr ? labelsArr : arr));
+                val.push(labelsVal);
+                const obj = { interf: interf as string, val: val as [[] | string[]] };
+                newArr[d] ? newArr[d]?.push(obj) : (newArr[d] = [obj]);
+            }
+        }
+        labels.value = [...newArr] as [
+            | {
+                  interf: string;
+                  val: [string[] | []];
+              }[]
+            | null,
+        ];
+    }
+
+    function changeLabel(
+        d: number,
+        interf:
+            | '1w-rom'
+            | '1w-sens'
+            | 'bin-in'
+            | 'adc-in'
+            | 'bin-out'
+            | 'pwm-out'
+            | 'mb-var'
+            | 'bin-var'
+            | 'int-var'
+            | 'tim-var',
+        labelsArr: string[],
+        part: number,
+        bus?: number,
+    ) {
+        const newArr = [...labels.value];
+        const interfObj = newArr[d]?.find((el) => el.interf === interf);
+        if (!interfObj) return;
+        const val = [...interfObj.val];
+        const labelsVal = bus ? val[bus] : val[0];
+        for (let i = 0; i < labelsFileLength; i++) {
+            labelsVal[part * labelsFileLength + i] = labelsArr[i];
+        }
+        val[bus || 0] = labelsVal;
+        interfObj.val = val as [string[] | []];
+        labels.value = [...newArr] as [
+            | {
+                  interf: string;
+                  val: [string[] | []];
+              }[]
+            | null,
+        ];
+    }
+
     return {
         api,
+        labels,
         OWIds,
         timeout,
         devices,
@@ -477,5 +623,7 @@ export const useIndexStore = defineStore('indexStore', () => {
         setCalibrVals,
         changeDeviceState,
         setChoosenMbDevices,
+        setLabels,
+        changeLabel,
     };
 });

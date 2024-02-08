@@ -62,6 +62,7 @@
                         <UpdateIcon
                             class="cursor-pointer w-[50px] h-6 rounded-[3px] border border-[#148EF8] py-1 active:bg-[#148EF8]"
                             :class="{ disabled: notConnected }"
+                            @click="updateItem"
                         />
                     </div>
                 </div>
@@ -77,7 +78,7 @@
                     >
                         <div class="flex flex-col items-center flex-none w-full">
                             <div
-                                class="w-full h-[50px] border-y border-[#1D4162] text-sm pl-5 pt-5 sticky top-0 bg-[#092740]"
+                                class="w-full h-[50px] border-y border-[#1D4162] pl-5 pt-5 sticky top-0 bg-[#092740] text-base font-semibold"
                             >
                                 Discrete inputs
                             </div>
@@ -119,7 +120,7 @@
                         </div>
                         <div class="flex flex-col items-center flex-none w-full">
                             <div
-                                class="w-full h-[50px] border-y border-[#1D4162] text-sm pl-5 pt-5 sticky top-0 bg-[#092740]"
+                                class="w-full h-[50px] border-y border-[#1D4162] pl-5 pt-5 sticky top-0 bg-[#092740] text-base font-semibold"
                             >
                                 Coils
                             </div>
@@ -140,10 +141,11 @@
                                 </div>
                                 <div class="w-full flex mt-3 mb-[18px] gap-1 px-[18px]">
                                     <div
-                                        class="w-[90px] h-10 flex items-center justify-between text-[#35FED0] text-xs rounded px-[6px]"
+                                        class="w-[90px] h-10 flex items-center justify-between text-[#35FED0] text-xs rounded px-[6px] cursor-pointer"
                                         :class="el.val ? 'bg-[#176F6F]' : 'bg-[#0D424D]'"
                                         v-for="(el, i) in s.vals"
                                         :key="i"
+                                        @click="handleCoilClick(el)"
                                     >
                                         <div class="flex flex-col justify-end gap-[6px]">
                                             <div class="h-[12px]"></div>
@@ -171,7 +173,7 @@
                         </div>
                         <div class="flex flex-col items-center flex-none w-full">
                             <div
-                                class="w-full h-[50px] border-y border-[#1D4162] text-sm pl-5 pt-5 sticky top-0 bg-[#092740]"
+                                class="w-full h-[50px] border-y border-[#1D4162] pl-5 pt-5 sticky top-0 bg-[#092740] text-base font-semibold"
                             >
                                 Input registers
                             </div>
@@ -226,7 +228,7 @@
                         </div>
                         <div class="flex flex-col items-center flex-none w-full">
                             <div
-                                class="w-full h-[50px] border-y border-[#1D4162] text-sm pl-5 pt-5 sticky top-0 bg-[#092740]"
+                                class="w-full h-[50px] border-y border-[#1D4162] pl-5 pt-5 sticky top-0 bg-[#092740] text-base font-semibold"
                             >
                                 Holding registers
                             </div>
@@ -282,14 +284,395 @@
                     </div>
                 </div>
             </div>
-            <div class="w-[42%] h-full border-l border-[#1D4162]"></div>
+            <div class="w-[42%] h-full border-l border-[#1D4162]">
+                <div class="flex overflow-y-hidden rounded-l-lg w-full">
+                    <div
+                        v-dragscroll.y
+                        class="flex overflow-y-auto w-full scrollbar-4 flex-1 flex-col"
+                        :style="{ height: 'calc(100vh - 460px)' }"
+                    >
+                        <div class="flex flex-col items-center flex-none w-full">
+                            <div
+                                class="w-full h-[70px] border-y border-[#1D4162] text-sm pl-[18px] pt-[12px] sticky top-0 bg-[#092740] flex flex-col"
+                            >
+                                <div class="text-base mb-1 font-semibold">Discrete inputs</div>
+                                <div class="flex gap-5 pr-10 text-[13px]">
+                                    <div class="flex-1">{{ t('columnsNames.name') }}</div>
+                                    <div class="w-[50px]">{{ t('columnsNames.device') }}</div>
+                                    <div class="w-[50px]">{{ t('columnsNames.reg') }}</div>
+                                    <div class="w-[50px]">{{ t('columnsNames.status') }}</div>
+                                </div>
+                            </div>
+                            <div
+                                class="w-full flex flex-col text-[#6CB5D3] items-center px-2"
+                                v-for="(s, index) in diArr"
+                                :key="index"
+                            >
+                                <div
+                                    class="label group w-full text-[#6CB5D3] select-none"
+                                    v-for="(el, i) in s.vals"
+                                    :key="i"
+                                    @dblclick="handleDblClick(el, i)"
+                                >
+                                    <div
+                                        v-if="
+                                            activeLabel?.i === i &&
+                                            JSON.stringify(activeLabel.state) === JSON.stringify(el)
+                                        "
+                                        class="activeLabel h-[68px] bg-[#092E4B] -ml-2 pl-4 pr-[18px] flex items-center justify-center"
+                                        :style="{ width: 'calc(100% + 16px)' }"
+                                    >
+                                        <input
+                                            class="w-full h-9 bg-[#183A58] rounded-[6px] px-[14px]"
+                                            type="text"
+                                            :value="String(activeLabelInputVal)"
+                                            @input="(event) => handleInput(event as InputEvent)"
+                                        />
+                                    </div>
+                                    <div
+                                        v-else
+                                        class="h-[30px] flex items-center pl-[10px] pr-2 hover:bg-[#0C2F4D] transition-colors duration-500 rounded"
+                                    >
+                                        <div class="flex-1">Название регистра</div>
+                                        <div class="w-[50px] ml-5 flex justify-end text-[#ADEBFF]">
+                                            {{ el.dev_addr }}
+                                        </div>
+                                        <div class="w-[50px] ml-5 flex justify-end text-[#ADEBFF]">
+                                            {{
+                                                curNumberingSystem === 'dec'
+                                                    ? el.reg_addr
+                                                    : el.reg_addr.toString(16)
+                                            }}
+                                        </div>
+                                        <div class="w-[50px] ml-5 mr-3 flex justify-end">
+                                            <div
+                                                class="w-[9px] h-[9px] rounded-[2px]"
+                                                :class="
+                                                    notConnected
+                                                        ? 'bg-[#193E60]'
+                                                        : el.val
+                                                        ? 'bg-[#35FED0]'
+                                                        : 'bg-[#176F6F]'
+                                                "
+                                            ></div>
+                                        </div>
+                                        <CloseIcon
+                                            class="label-close cursor-pointer"
+                                            @click="deleteItem(el)"
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex flex-col items-center flex-none w-full">
+                            <div
+                                class="w-full h-[70px] border-y border-[#1D4162] text-sm pl-[18px] pt-[12px] sticky top-0 bg-[#092740] flex flex-col"
+                            >
+                                <div class="text-base mb-1 font-semibold">Coils</div>
+                                <div class="flex gap-5 pr-10 text-[13px]">
+                                    <div class="flex-1">{{ t('columnsNames.name') }}</div>
+                                    <div class="w-[50px]">{{ t('columnsNames.device') }}</div>
+                                    <div class="w-[50px]">{{ t('columnsNames.reg') }}</div>
+                                    <div class="w-[50px]">{{ t('columnsNames.status') }}</div>
+                                </div>
+                            </div>
+                            <div
+                                class="w-full flex flex-col text-[#6CB5D3] items-center px-2"
+                                v-for="(s, index) in coilArr"
+                                :key="index"
+                            >
+                                <div
+                                    class="label group w-full text-[#6CB5D3] select-none"
+                                    v-for="(el, i) in s.vals"
+                                    :key="i"
+                                    @dblclick="handleDblClick(el, i)"
+                                >
+                                    <div
+                                        v-if="
+                                            activeLabel?.i === i &&
+                                            JSON.stringify(activeLabel.state) === JSON.stringify(el)
+                                        "
+                                        class="activeLabel h-[68px] bg-[#092E4B] -ml-2 pl-4 pr-[18px] flex items-center justify-center flex gap-2"
+                                        :style="{ width: 'calc(100% + 16px)' }"
+                                    >
+                                        <input
+                                            class="flex-1 h-9 bg-[#183A58] rounded-[6px] px-[14px]"
+                                            type="text"
+                                            :value="String(activeLabelInputVal)"
+                                            @input="(event) => handleInput(event as InputEvent)"
+                                        />
+                                        <div
+                                            class="h-9 pl-[10px] w-[88px] rounded-[6px] flex items-center justify-start gap-[6px] bg-[#0D424D] text-xs"
+                                        >
+                                            <IButtonOutIcon
+                                                class="cursor-pointer"
+                                                :isHovered="
+                                                    hoveredBinOutItem?.i === i &&
+                                                    JSON.stringify(hoveredBinOutItem.state) ===
+                                                        JSON.stringify(el)
+                                                "
+                                                :isActive="!!el.val"
+                                                @mouseenter="handleBinOutMouseEnter(i, el)"
+                                                @mouseleave="handleBinOutMouseLeave"
+                                                @click="handleCoilClick(el)"
+                                            />
+                                            {{ el.val ? t('on') : t('off') }}
+                                        </div>
+                                    </div>
+                                    <div
+                                        v-else
+                                        class="h-[30px] flex items-center pl-[10px] pr-2 hover:bg-[#0C2F4D] transition-colors duration-500 rounded"
+                                    >
+                                        <div class="flex-1">Название регистра</div>
+                                        <div class="w-[50px] ml-5 flex justify-end text-[#ADEBFF]">
+                                            {{ el.dev_addr }}
+                                        </div>
+                                        <div class="w-[50px] ml-5 flex justify-end text-[#ADEBFF]">
+                                            {{
+                                                curNumberingSystem === 'dec'
+                                                    ? el.reg_addr
+                                                    : el.reg_addr.toString(16)
+                                            }}
+                                        </div>
+                                        <div class="w-[50px] ml-5 mr-3 flex justify-end">
+                                            <div
+                                                :class="
+                                                    notConnected
+                                                        ? 'text-[#3E688E]'
+                                                        : el.val
+                                                        ? 'text-[#35FED0]'
+                                                        : 'text-[#176F6F]'
+                                                "
+                                            >
+                                                {{
+                                                    notConnected
+                                                        ? '\u2013'
+                                                        : el.val
+                                                        ? t('on')
+                                                        : t('off')
+                                                }}
+                                            </div>
+                                        </div>
+                                        <CloseIcon
+                                            class="label-close cursor-pointer"
+                                            @click="deleteItem(el)"
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex flex-col items-center flex-none w-full">
+                            <div
+                                class="w-full h-[70px] border-y border-[#1D4162] text-sm pl-[18px] pt-[12px] sticky top-0 bg-[#092740] flex flex-col"
+                            >
+                                <div class="text-base mb-1 font-semibold">Input registers</div>
+                                <div class="flex gap-5 pr-10 text-[13px]">
+                                    <div class="flex-1">{{ t('columnsNames.name') }}</div>
+                                    <div class="w-[50px]">{{ t('columnsNames.device') }}</div>
+                                    <div class="w-[50px]">{{ t('columnsNames.reg') }}</div>
+                                    <div class="w-[50px]">{{ t('columnsNames.value') }}</div>
+                                </div>
+                            </div>
+                            <div
+                                class="w-full flex flex-col text-[#6CB5D3] items-center px-2"
+                                v-for="(s, index) in irArr"
+                                :key="index"
+                            >
+                                <div
+                                    class="label group w-full text-[#6CB5D3] select-none"
+                                    v-for="(el, i) in s.vals"
+                                    :key="i"
+                                    @dblclick="handleDblClick(el, i)"
+                                >
+                                    <div
+                                        v-if="
+                                            activeLabel?.i === i &&
+                                            JSON.stringify(activeLabel.state) === JSON.stringify(el)
+                                        "
+                                        class="activeLabel h-[68px] bg-[#092E4B] -ml-2 pl-4 pr-[28px] flex items-center justify-center flex gap-4"
+                                        :style="{ width: 'calc(100% + 16px)' }"
+                                    >
+                                        <input
+                                            class="flex-1 h-9 bg-[#183A58] rounded-[6px] px-[14px]"
+                                            type="text"
+                                            :value="activeLabelInputVal"
+                                            @input="(event) => handleInput(event as InputEvent)"
+                                        />
+                                        <div class="text-[15px] text-[#01F0FF]">
+                                            {{
+                                                curNumberingSystem === 'dec'
+                                                    ? el.val
+                                                    : el.val.toString(16)
+                                            }}
+                                        </div>
+                                    </div>
+                                    <div
+                                        v-else
+                                        class="h-[30px] flex items-center pl-[10px] pr-2 hover:bg-[#0C2F4D] transition-colors duration-500 rounded"
+                                    >
+                                        <div class="flex-1">Название регистра</div>
+                                        <div class="w-[50px] ml-5 flex justify-end text-[#ADEBFF]">
+                                            {{ el.dev_addr }}
+                                        </div>
+                                        <div class="w-[50px] ml-5 flex justify-end text-[#ADEBFF]">
+                                            {{
+                                                curNumberingSystem === 'dec'
+                                                    ? el.dev_addr
+                                                    : el.dev_addr.toString(16)
+                                            }}
+                                        </div>
+                                        <div class="w-[50px] ml-5 mr-3 flex justify-end">
+                                            <div
+                                                :class="
+                                                    notConnected
+                                                        ? 'text-[#3E688E]'
+                                                        : 'text-[#ADEBFF]'
+                                                "
+                                            >
+                                                {{
+                                                    notConnected
+                                                        ? '\u2013'
+                                                        : curNumberingSystem === 'dec'
+                                                        ? el.dev_addr
+                                                        : el.dev_addr.toString(16)
+                                                }}
+                                            </div>
+                                        </div>
+                                        <CloseIcon
+                                            class="label-close cursor-pointer"
+                                            @click="deleteItem(el)"
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex flex-col items-center flex-none w-full">
+                            <div
+                                class="w-full h-[70px] border-y border-[#1D4162] text-sm pl-[18px] pt-[12px] sticky top-0 bg-[#092740] flex flex-col"
+                            >
+                                <div class="text-base mb-1 font-semibold">Holding registers</div>
+                                <div class="flex gap-5 pr-10 text-[13px]">
+                                    <div class="flex-1">{{ t('columnsNames.name') }}</div>
+                                    <div class="w-[50px]">{{ t('columnsNames.device') }}</div>
+                                    <div class="w-[50px]">{{ t('columnsNames.reg') }}</div>
+                                    <div class="w-[50px]">{{ t('columnsNames.value') }}</div>
+                                </div>
+                            </div>
+                            <div
+                                class="w-full flex flex-col text-[#6CB5D3] items-center px-2"
+                                v-for="(s, index) in hrArr"
+                                :key="index"
+                            >
+                                <div
+                                    class="label group w-full text-[#6CB5D3] select-none"
+                                    v-for="(el, i) in s.vals"
+                                    :key="i"
+                                    @dblclick="handleDblClick(el, i)"
+                                >
+                                    <div
+                                        v-if="
+                                            activeLabel?.i === i &&
+                                            JSON.stringify(activeLabel.state) === JSON.stringify(el)
+                                        "
+                                        class="activeLabel bg-[#092E4B] -ml-2 pl-4 pr-[18px] flex flex-col items-center justify-center gap-[6px]"
+                                        :class="isInvalidData ? 'h-[88px]' : 'h-[68px]'"
+                                        :style="{ width: 'calc(100% + 16px)' }"
+                                    >
+                                        <div class="w-full flex items-center justify-center">
+                                            <input
+                                                class="flex-1 h-9 bg-[#183A58] rounded-l-[6px] px-[14px]"
+                                                type="text"
+                                                :value="String(activeLabelInputVal)"
+                                                @input="(event) => handleInput(event as InputEvent)"
+                                            />
+                                            <input
+                                                class="h-9 bg-[#04586F] rounded-r-[6px] px-2 w-[72px] text-[#01F0FF] text-center"
+                                                :class="{
+                                                    'bg-[#5C2345] text-[#F83068]': isInvalidData,
+                                                }"
+                                                type="text"
+                                                :value="
+                                                    String(
+                                                        curNumberingSystem === 'dec'
+                                                            ? Number(activeLabelInputValue)
+                                                            : Number(
+                                                                  activeLabelInputValue,
+                                                              ).toString(16),
+                                                    )
+                                                "
+                                                @input="
+                                                    (event) => handleValInput(event as InputEvent)
+                                                "
+                                            />
+                                        </div>
+                                        <div
+                                            v-if="isInvalidData"
+                                            class="w-full text-sm h-[14px] text-[#F83068]"
+                                        >
+                                            {{ t('error.text') + 0 + t('error.separator') + 65535 }}
+                                        </div>
+                                    </div>
+                                    <div
+                                        v-else
+                                        class="h-[30px] flex items-center pl-[10px] pr-2 hover:bg-[#0C2F4D] transition-colors duration-500 rounded"
+                                    >
+                                        <div class="flex-1">Название регистра</div>
+                                        <div class="w-[50px] ml-5 flex justify-end text-[#ADEBFF]">
+                                            {{ el.dev_addr }}
+                                        </div>
+                                        <div class="w-[50px] ml-5 flex justify-end text-[#ADEBFF]">
+                                            {{
+                                                curNumberingSystem === 'dec'
+                                                    ? el.reg_addr
+                                                    : el.reg_addr.toString(16)
+                                            }}
+                                        </div>
+                                        <div class="w-[50px] ml-5 mr-3 flex justify-end">
+                                            <div
+                                                :class="
+                                                    notConnected
+                                                        ? 'text-[#3E688E]'
+                                                        : 'text-[#ADEBFF]'
+                                                "
+                                            >
+                                                {{
+                                                    notConnected
+                                                        ? '\u2013'
+                                                        : curNumberingSystem === 'dec'
+                                                        ? el.val
+                                                        : el.val.toString(16)
+                                                }}
+                                            </div>
+                                        </div>
+                                        <CloseIcon
+                                            class="label-close cursor-pointer"
+                                            @click="deleteItem(el)"
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
+        <ModbusPopUp
+            v-if="showPopUp"
+            :el="popUpEl"
+            :command="popUpCommand"
+            :state="fullState"
+            :w="w"
+            @close="closePopUp"
+        />
     </div>
 </template>
 <script lang="ts" setup>
 import ArrowIcon from '@/assets/ArrowIcon.vue';
 import AddIcon from '@/assets/AddIcon.vue';
 import UpdateIcon from '@/assets/UpdateIcon.vue';
+import CloseIcon from '@/assets/CloseIcon.vue';
+import IButtonOutIcon from '@/assets/IButtonOutIcon.vue';
+import ModbusPopUp from '@/components/views/widgets/bigWidgets/ModbusPopUp.vue';
 import type { Widget } from '@/stores';
 
 const indexStore = useIndexStore();
@@ -316,6 +699,33 @@ const curChoosenDevs = ref<number[]>([]);
 const showDeviceLabel = ref(false);
 
 const deviceLabelLeft = ref(28);
+
+const activeLabelInputVal = ref('');
+
+const activeLabelInputValue = ref('0');
+
+const isInvalidData = ref(false);
+
+const showPopUp = ref(false);
+
+const popUpCommand = ref<'delete' | 'create' | 'update' | undefined>(undefined);
+
+const popUpEl = ref<{
+    type?: 'hr' | 'ir' | 'coil' | 'di';
+    reg_addr: number;
+    dev_addr: number;
+    val: number;
+} | null>(null);
+
+const hoveredBinOutItem = ref<{
+    i: number;
+    state: { type?: 'hr' | 'ir' | 'coil' | 'di'; reg_addr: number; dev_addr: number; val: number };
+} | null>(null);
+
+const activeLabel = ref<{
+    i: number;
+    state: { type?: 'hr' | 'ir' | 'coil' | 'di'; reg_addr: number; dev_addr: number; val: number };
+} | null>(null);
 
 const mouseupX = ref<number>(0);
 
@@ -553,6 +963,174 @@ function handleDeviceLeave() {
     showDeviceLabel.value = false;
 }
 
+function handleDblClick(
+    s: { type?: 'hr' | 'ir' | 'coil' | 'di'; reg_addr: number; dev_addr: number; val: number },
+    index: number,
+) {
+    activeLabel.value = { i: index, state: s };
+    activeLabelInputVal.value = 'Название регистра';
+    if (s.type === 'hr') activeLabelInputValue.value = s.val.toString();
+    window.addEventListener('click', saveData);
+    window.addEventListener('keypress', saveData);
+}
+
+function saveData(e: KeyboardEvent | MouseEvent) {
+    if (!activeLabel.value) return;
+    if (e.type === 'keypress') {
+        const event: KeyboardEvent = e as KeyboardEvent;
+        if (event.key === 'Enter') {
+            //функция замены названия регистра
+            if (!isInvalidData.value && activeLabel.value.state.type === 'hr') {
+                setData(activeLabel.value.state, +activeLabelInputValue.value);
+            }
+            isInvalidData.value = false;
+            activeLabelInputValue.value = '0';
+            activeLabel.value = null;
+            activeLabelInputVal.value = '';
+        }
+    } else if (e.type === 'click') {
+        const target = e.target as HTMLElement;
+        if (target.closest('.activeLabel')) return;
+        //функция замены названия регистра
+        if (!isInvalidData.value && activeLabel.value.state.type === 'hr') {
+            setData(activeLabel.value.state, +activeLabelInputValue.value);
+        }
+        isInvalidData.value = false;
+        activeLabelInputValue.value = '0';
+        activeLabel.value = null;
+        activeLabelInputVal.value = '';
+    }
+}
+
+async function setData(
+    el: {
+        type?: 'hr' | 'ir' | 'coil' | 'di';
+        reg_addr: number;
+        dev_addr: number;
+        val: number;
+    },
+    val: number,
+) {
+    try {
+        let newIndex;
+        for (let i = 0; i < fullState.value.length; i += 1) {
+            if (JSON.stringify(fullState.value[i]) === JSON.stringify(el)) {
+                newIndex = i;
+            }
+        }
+        if (newIndex === undefined) return;
+        const r = await api.post('set_ent_value', {
+            type: props.w.w.i,
+            device: props.w.w.d,
+            index: newIndex,
+            bus: 0,
+            value: val,
+        });
+        if (r.data.status === 'ok') {
+            const devStates = [...devicesState.value][props.w.w.d];
+            const prevStateIndex = devStates.findIndex((el) => el.type === props.w.w.i);
+            if (prevStateIndex !== -1 && devStates[prevStateIndex].value[newIndex] !== undefined)
+                devStates[prevStateIndex].value[newIndex] = val;
+            indexStore.setDevicesState(props.w.w.d, [...devStates]);
+        }
+    } catch (error) {
+        if (isAborted.value) {
+            return;
+        }
+        setTimeout(() => {
+            setData(el, val);
+        }, 5);
+    }
+}
+
+function handleInput(e: InputEvent) {
+    const target = e.target as HTMLInputElement;
+    if (!target) return;
+    activeLabelInputVal.value = target.value;
+}
+
+function handleValInput(e: InputEvent) {
+    const target = e.target as HTMLInputElement;
+    if (!target) return;
+    if (!(+target.value >= 0 && +target.value <= 65535)) {
+        isInvalidData.value = true;
+    } else {
+        isInvalidData.value = false;
+    }
+    activeLabelInputValue.value = target.value;
+}
+
+function handleBinOutMouseEnter(
+    i: number,
+    el: { type?: 'hr' | 'ir' | 'coil' | 'di'; reg_addr: number; dev_addr: number; val: number },
+) {
+    hoveredBinOutItem.value = { i: i, state: el };
+}
+
+function handleBinOutMouseLeave() {
+    hoveredBinOutItem.value = null;
+}
+
+async function handleCoilClick(el: {
+    type?: 'hr' | 'ir' | 'coil' | 'di';
+    reg_addr: number;
+    dev_addr: number;
+    val: number;
+}) {
+    try {
+        let newIndex;
+        for (let i = 0; i < fullState.value.length; i += 1) {
+            if (JSON.stringify(fullState.value[i]) === JSON.stringify(el)) {
+                newIndex = i;
+            }
+        }
+        if (newIndex === undefined) return;
+        const r = await api.post('set_ent_value', {
+            type: props.w.w.i,
+            device: props.w.w.d,
+            index: newIndex,
+            bus: 0,
+            value: el.val ? 0 : 1,
+        });
+        if (r.data.status === 'ok') {
+            const devStates = [...devicesState.value][props.w.w.d];
+            const prevStateIndex = devStates.findIndex((el) => el.type === props.w.w.i);
+            if (prevStateIndex !== -1 && devStates[prevStateIndex].value[newIndex] !== undefined)
+                devStates[prevStateIndex].value[newIndex] = el.val ? 0 : 1;
+            indexStore.setDevicesState(props.w.w.d, [...devStates]);
+        }
+    } catch (error) {
+        if (isAborted.value) {
+            return;
+        }
+        setTimeout(() => {
+            handleCoilClick(el);
+        }, 5);
+    }
+}
+
+function deleteItem(el: {
+    type?: 'hr' | 'ir' | 'coil' | 'di';
+    reg_addr: number;
+    dev_addr: number;
+    val: number;
+}) {
+    showPopUp.value = true;
+    popUpEl.value = el;
+    popUpCommand.value = 'delete';
+}
+
+function updateItem() {
+    showPopUp.value = true;
+    popUpCommand.value = 'update';
+}
+
+function closePopUp() {
+    showPopUp.value = false;
+    popUpEl.value = null;
+    popUpCommand.value = undefined;
+}
+
 watch(
     () => devicesState.value,
     () => {
@@ -593,11 +1171,33 @@ const { t } = useI18n({
             noObj: 'Объекты отсутствуют',
             on: 'ВКЛ',
             off: 'ВЫКЛ',
+            columnsNames: {
+                name: 'Название регистра',
+                device: 'Уст-во',
+                reg: 'Регистр',
+                status: 'Статус',
+                value: 'Значение',
+            },
+            error: {
+                text: 'Введите значение от ',
+                separator: ' до ',
+            },
         },
         en: {
             noObj: 'Objects disabled',
             on: 'ON',
             off: 'OFF',
+            columnsNames: {
+                name: 'Register name',
+                device: 'Device',
+                reg: 'Register',
+                status: 'Status',
+                value: 'Value',
+            },
+            error: {
+                text: 'Enter a value between ',
+                separator: ' and ',
+            },
         },
     },
 });

@@ -27,7 +27,7 @@
                 <span>label</span>
                 <span>label</span>
             </div>
-            <span v-else>label</span>
+            <span v-else>{{ curLabel ? curLabel : '' }}</span>
         </div>
         <span
             class="rounded p-[6px]"
@@ -226,7 +226,7 @@ import type { Widget } from '@/stores';
 
 const indexStore = useIndexStore();
 
-const { devicesState, tempUnit, curNumberingSystem } = storeToRefs(indexStore);
+const { devicesState, tempUnit, curNumberingSystem, labels } = storeToRefs(indexStore);
 
 const props = defineProps<{
     isInfoVisible: boolean;
@@ -261,6 +261,17 @@ const btnText = computed<string>(() => {
     } else {
         return '';
     }
+});
+
+const curLabel = computed<string | undefined>(() => {
+    if (props.activeIO && labels.value[props.w.d] && labels.value) {
+        const val = labels.value[props.w.d]?.find((el) => el.interf === props.w.i);
+        if (val) {
+            const bus = props.w.bus || 0;
+            return val.val[bus][props.activeIO.index] as string;
+        }
+    }
+    return undefined;
 });
 
 const styles = computed<string>(() => {

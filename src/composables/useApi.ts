@@ -45,7 +45,7 @@ export function useApi() {
             return {
                 ...config,
                 // url: isMisc ? config.url : `/api/${config.url}`,
-                // url: isMisc ? config.url : `http://192.168.1.30/api/${config.url}`,
+                // url: isMisc ? config.url : `http://192.168.1.99/api/${config.url}`,
                 // url: isMisc ? config.url : `http://65.21.176.66:49163/api/${config.url}`,
                 url: isMisc
                     ? `http://65.21.176.66:49163${config.url}`

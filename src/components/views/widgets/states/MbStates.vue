@@ -41,6 +41,8 @@
                 >
                     <div
                         class="absolute w-full h-full rounded left-0 top-0 z-[-1] group-hover:z-[4]"
+                        :class="{ 'cursor-pointer': s.type === 'coil' }"
+                        @click="handleClick(index, s)"
                     ></div>
                     <div
                         v-if="s.type === 'di'"
@@ -54,7 +56,6 @@
                     <div
                         v-else-if="s.type === 'coil'"
                         class="w-full flex items-center justify-between text-[#35FED0] text-xs"
-                        @click="handleClick(index, s.val)"
                     >
                         <div class="flex flex-col justify-end gap-[6px]">
                             <div class="h-[12px]"></div>
@@ -237,30 +238,38 @@ function handleScrollMove() {
     isEndScrollEl.value = wrapper.scrollWidth - wrapper.scrollLeft - 10 <= wrapper.offsetWidth;
 }
 
-async function handleClick(index: number, s: number | null) {
-    // if (s === null) return;
-    // try {
-    //     const r = await api.post('set_ent_value', {
-    //         type: props.w.w.i,
-    //         device: props.w.w.d,
-    //         index: index,
-    //         value: s ? 0 : 1,
-    //     });
-    //     if (r.data.status === 'ok') {
-    //         const devStates = [...devicesState.value][props.w.w.d];
-    //         const prevStateIndex = devStates.findIndex((el) => el.type === props.w.w.i);
-    //         if (prevStateIndex !== -1 && devStates[prevStateIndex].value[index] !== undefined)
-    //             devStates[prevStateIndex].value[index] = s ? 0 : 1;
-    //         indexStore.setDevicesState(props.w.w.d, [...devStates]);
-    //     }
-    // } catch (error) {
-    //     if (isAborted.value) {
-    //         return;
-    //     }
-    //     setTimeout(() => {
-    //         handleClick(index, s);
-    //     }, 5);
-    // }
+async function handleClick(
+    index: number,
+    s: { type?: 'hr' | 'ir' | 'coil' | 'di'; reg_addr: number; dev_addr: number; val: number },
+) {
+    if (s.type !== 'coil' || s.val === null) return;
+    try {
+        let newIndex = index;
+        for (let i = 0; i < newIndex; i += 1) {
+            if (fullState.value[i].val === null) newIndex += 1;
+        }
+        const r = await api.post('set_ent_value', {
+            type: props.w.w.i,
+            device: props.w.w.d,
+            index: newIndex,
+            bus: 0,
+            value: s.val ? 0 : 1,
+        });
+        if (r.data.status === 'ok') {
+            const devStates = [...devicesState.value][props.w.w.d];
+            const prevStateIndex = devStates.findIndex((el) => el.type === props.w.w.i);
+            if (prevStateIndex !== -1 && devStates[prevStateIndex].value[newIndex] !== undefined)
+                devStates[prevStateIndex].value[newIndex] = s ? 0 : 1;
+            indexStore.setDevicesState(props.w.w.d, [...devStates]);
+        }
+    } catch (error) {
+        if (isAborted.value) {
+            return;
+        }
+        setTimeout(() => {
+            handleClick(index, s);
+        }, 5);
+    }
 }
 
 watch(
@@ -309,7 +318,7 @@ async function getMbInfo() {
 
 function setEndArrowState() {
     const wrapper = scrollWrapper.value;
-    if (!wrapper) return;
+    if (!wrapper || wrapper.scrollLeft) return;
     const elems = curState.value.length / 2;
     const scrollWidth = elems ? elems * 90 - (elems - 1) * 4 : elems * 90;
     isEndScrollEl.value = wrapper.offsetWidth >= scrollWidth;

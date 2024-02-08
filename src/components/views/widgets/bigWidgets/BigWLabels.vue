@@ -33,13 +33,15 @@
                     <input
                         type="text"
                         :placeholder="placeholder"
-                        ref="labelInput"
+                        :value="activeLabel.label"
+                        :maxlength="32"
                         class="flex-1 bg-[#123553] h-full text-[#8DC5F6] px-3 placeholder:text-[#8DC5F6]"
                         :class="{
                             'rounded-r-[8px]': ['bin-in', 'bin-out', 'bin-var'].includes(
                                 props.w.w.i,
                             ),
                         }"
+                        @input="(e) => handleLabelInput(e as InputEvent)"
                     />
                     <span
                         v-if="['pwm-out', 'int-var', 'tim-var'].includes(props.w.w.i)"
@@ -147,7 +149,7 @@
                     >
                         <span class="w-[22px] text-end group-hover:underline">{{ index + 1 }}</span>
                         <span class="flex-1 group-hover:underline group-hover:text-[#ADEBFF]">
-                            label
+                            {{ curLabels[index] ? curLabels[index] : '\u2013' }}
                         </span>
                         <span
                             v-if="
@@ -207,7 +209,7 @@
                             >{{ index + 1 }}</span
                         >
                         <span class="flex-1 group-hover:underline group-hover:text-[#ADEBFF]">
-                            {{ s !== null ? 'label' : '' }}
+                            {{ s !== null ? curLabels[index] : '' }}
                         </span>
                         <span
                             v-if="s !== null"
@@ -243,7 +245,7 @@
                             >{{ index + 1 }}</span
                         >
                         <span class="flex-1 group-hover:underline group-hover:text-[#ADEBFF]">
-                            {{ s !== null ? 'label' : '' }}
+                            {{ s !== null ? curLabels[index] : '' }}
                         </span>
                     </div>
                 </div>
@@ -256,6 +258,8 @@
 import { useI18n } from 'vue-i18n';
 import type { Widget } from '@/stores';
 
+const { saveToFile } = useReadWriteFiles();
+
 const props = defineProps<{
     w: { w: Widget; state: number[] | [number | null][] };
 }>();
@@ -264,7 +268,20 @@ const placeholder = computed<string>(() => {
     return t('placeholder');
 });
 
-const activeLabel = ref<{ i: number; state: number | null } | null>(null);
+const curLabels = computed<[string | undefined]>(() => {
+    if (labels.value[props.w.w.d]) {
+        const val = labels.value[props.w.w.d]?.find((el) => el.interf === props.w.w.i);
+        if (val) {
+            const bus = props.w.w.bus || 0;
+            return val.val[bus] as [string | undefined];
+        }
+    }
+    return [undefined];
+});
+
+const activeLabel = ref<{ i: number; state: number | null; label: string | undefined } | null>(
+    null,
+);
 
 const isLabelChange = ref(false);
 
@@ -280,7 +297,7 @@ const dataInput = ref<HTMLInputElement | undefined>();
 
 const indexStore = useIndexStore();
 
-const { tempUnit, valuesRange, devicesState } = storeToRefs(indexStore);
+const { tempUnit, valuesRange, devicesState, labels } = storeToRefs(indexStore);
 
 const api = indexStore.getApi().api;
 
@@ -293,8 +310,6 @@ const scrollTop = ref<number>(0);
 const scrollEl = ref<HTMLElement | undefined>();
 
 const isScrolling = ref(false);
-
-const labelInput = ref<HTMLInputElement | undefined>();
 
 const state = computed<number[]>(() => {
     return props.w.state as number[];
@@ -339,9 +354,9 @@ function handleScroll() {
 function handleDblClick(s: number | null, index: number) {
     if (props.w.w.i === 'pwm-out') {
         if (s === null) return;
-        activeLabel.value = { i: index, state: s / 100 };
+        activeLabel.value = { i: index, state: s / 100, label: curLabels.value[index] };
     } else {
-        activeLabel.value = { i: index, state: s };
+        activeLabel.value = { i: index, state: s, label: curLabels.value[index] };
     }
     isLabelChange.value = true;
     setTimeout(() => {
@@ -384,28 +399,102 @@ function setActiveLabelTop() {
     }
 }
 
+function handleLabelInput(e: InputEvent) {
+    const target = e.target as HTMLInputElement;
+    if (!target || !activeLabel.value) return;
+    activeLabel.value.label = target.value;
+}
+
 function saveData(e: KeyboardEvent | MouseEvent) {
     if (!activeLabel.value) return;
     if (e.type === 'keypress') {
         const event: KeyboardEvent = e as KeyboardEvent;
         if (event.key === 'Enter') {
             if (!isInvalidData.value) setData(activeLabel.value.i, activeLabel.value.state);
+            setLabel(activeLabel.value.i, activeLabel.value.label);
             activeLabel.value = null;
             isLabelChange.value = false;
             isInvalidData.value = false;
         }
     } else if (e.type === 'click') {
         if (!isInvalidData.value) setData(activeLabel.value.i, activeLabel.value.state);
+        setLabel(activeLabel.value.i, activeLabel.value.label);
         activeLabel.value = null;
         isLabelChange.value = false;
         isInvalidData.value = false;
     }
 }
 
-async function setData(index: number, state: number | null, l?: string, d?: number | null) {
-    const label = labelInput.value;
-    const data = props.w.w.i !== 'bin-var' ? dataInput.value : label;
-    if (!label || !data) return;
+async function setLabel(index: number, label: string | undefined) {
+    if (!label) return;
+    const newLabels = [...curLabels.value];
+    newLabels[index] = label;
+    for (let i = 0; i < Math.ceil(newLabels.length / labelsFileLength); i += 1) {
+        if (
+            JSON.stringify(
+                curLabels.value.slice(i * labelsFileLength, (i + 1) * labelsFileLength),
+            ) !== JSON.stringify(newLabels.slice(i * labelsFileLength, (i + 1) * labelsFileLength))
+        ) {
+            saveLabel(
+                newLabels.slice(i * labelsFileLength, (i + 1) * labelsFileLength) as string[],
+                i,
+            );
+        }
+    }
+}
+
+async function saveLabel(labels: string[], part: number) {
+    const isSavingError = await saveToFile(
+        {
+            type: 'labels',
+            device: props.w.w.d,
+            bus: props.w.w.bus,
+            interf: props.w.w.i as
+                | '1w-rom'
+                | '1w-sens'
+                | 'adc-in'
+                | 'bin-in'
+                | 'bin-out'
+                | 'bin-var'
+                | 'int-var'
+                | 'mb-var'
+                | 'pwm-out'
+                | 'tim-var',
+        },
+        { labels: labels },
+        part,
+    );
+    if (isSavingError) {
+        if (isAborted.value) {
+            return;
+        }
+        setTimeout(() => {
+            saveLabel(labels, part);
+        }, 5);
+    } else {
+        indexStore.changeLabel(
+            props.w.w.d,
+            props.w.w.i as
+                | '1w-rom'
+                | '1w-sens'
+                | 'adc-in'
+                | 'bin-in'
+                | 'bin-out'
+                | 'bin-var'
+                | 'int-var'
+                | 'mb-var'
+                | 'pwm-out'
+                | 'tim-var',
+            labels,
+            part,
+            props.w.w.bus,
+        );
+    }
+}
+
+async function setData(index: number, state: number | null, d?: number | null) {
+    const data = dataInput.value;
+    if (!data) return;
     let val: number | null = 0;
     try {
         if (props.w.w.i === 'pwm-out') {
@@ -421,14 +510,14 @@ async function setData(index: number, state: number | null, l?: string, d?: numb
             index: index,
             value: val,
         };
-        if (l !== undefined && d !== undefined) {
+        if (d !== undefined) {
             body.value = d;
         }
         if (props.w.state[index] !== body.value) {
             setVal(body);
         }
     } catch (error) {
-        setData(index, val, label.value, val);
+        setData(index, val, val);
     }
 }
 

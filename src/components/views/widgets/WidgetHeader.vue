@@ -1,6 +1,6 @@
 <template>
     <div
-        class="flex w-full h-[3.125rem] border-b border-[#1D4162] items-center px-4 justify-between select-none"
+        class="flex w-full h-[3.125rem] border-b border-[#1D4162] items-center px-4 justify-between select-none text-base font-semibold"
         :class="notConnected ? 'text-[#3E688E]' : 'text-[#9ADBF6]'"
     >
         {{ props.w.bus === undefined ? title : title + ' (' + t('bus') + (props.w.bus + 1) + ')' }}
@@ -8,7 +8,7 @@
             <SettingsIcon :class="{ nc: notConnected }" />
             <div
                 v-if="props.w.deviceName"
-                class="px-[11px] py-[6px] rounded font-roboto"
+                class="px-[11px] py-[5px] rounded font-roboto text-xs h-[22px]"
                 :class="
                     notConnected ? 'bg-[#1B4569] text-[#3E688E]' : 'bg-[#12405b] text-[#42CBF6]'
                 "

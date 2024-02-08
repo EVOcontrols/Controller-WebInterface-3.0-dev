@@ -141,6 +141,7 @@ import DateTimeInfo from '@/components/DateTimeInfo.vue';
 import SelectedItemLine from '@/components/SelectedItemLine.vue';
 import LangNcSwitcher from '@/components/dev/LangNcSwitcher.vue';
 import type { CommonSettingsFileType } from '@/typings/files';
+import type { LabelsType } from '@/typings/files';
 import type { FuncsNumberPerPage } from '@/typings/funcs';
 import ModalWrapper from '@/components/ModalWrapper.vue';
 import gears from '@/assets/img/gears-animated.svg?raw';
@@ -700,6 +701,75 @@ async function getExtDevsCfg(d: number) {
     }
 }
 
+async function getLabelsPart(
+    d: number,
+    interf:
+        | '1w-rom'
+        | '1w-sens'
+        | 'bin-in'
+        | 'adc-in'
+        | 'bin-out'
+        | 'pwm-out'
+        | 'mb-var'
+        | 'bin-var'
+        | 'int-var'
+        | 'tim-var',
+    number: number,
+    part: number,
+    bus?: number,
+) {
+    const reqLabels = await readFile(
+        {
+            type: 'labels',
+            device: d,
+            bus: bus,
+            interf: interf,
+        },
+        part,
+    );
+    if (reqLabels === 'error') {
+        return new Promise((resolve) =>
+            setTimeout(() => {
+                getLabelsPart(d, interf, number, part, bus);
+            }, 5),
+        );
+    } else if (reqLabels === 'notFound') {
+        indexStore.setLabels(d, interf, null, part, bus);
+        return;
+    } else {
+        const { labels } = reqLabels as LabelsType;
+        indexStore.setLabels(d, interf, labels, part, bus);
+        // return reqLabels;
+    }
+}
+
+async function getLabels(
+    d: number,
+    interf:
+        | '1w-rom'
+        | '1w-sens'
+        | 'bin-in'
+        | 'adc-in'
+        | 'bin-out'
+        | 'pwm-out'
+        | 'mb-var'
+        | 'bin-var'
+        | 'int-var'
+        | 'tim-var',
+    number: number,
+    bus?: number,
+) {
+    /////временно, для теста|| !['bin-in', 'bin-var'].includes(interf) || d
+    if (!number) return;
+    const parts = [];
+    for (let i = 0; i < Math.ceil(number / labelsFileLength); i += 1) {
+        parts.push(i);
+    }
+    parts.forEach(async (part) => {
+        await getLabelsPart(d, interf, number, part, bus);
+    });
+}
+
 onMounted(async () => {
     if (route.name === 'devices-settings') return;
     await getDevices();
@@ -778,6 +848,56 @@ watch(
                         { version: devicesArr.value[i].version },
                     ),
                 );
+                interfaces.value.forEach((interf) => {
+                    let number;
+                    if (typeof devicesArr.value[i][interf.value] === 'object') {
+                        const el = devicesArr.value[i][interf.value] as {
+                            val: number;
+                            bus: number;
+                        };
+                        number = el.val;
+                    } else {
+                        number = devicesArr.value[i][interf.value] as number;
+                    }
+                    if (typeof devicesArr.value[i][interf.value] === 'object') {
+                        const el = devicesArr.value[i][interf.value] as {
+                            val: number;
+                            bus: number;
+                        };
+                        getLabels(
+                            i,
+                            interf.value as
+                                | '1w-rom'
+                                | '1w-sens'
+                                | 'bin-in'
+                                | 'adc-in'
+                                | 'bin-out'
+                                | 'pwm-out'
+                                | 'mb-var'
+                                | 'bin-var'
+                                | 'int-var'
+                                | 'tim-var',
+                            number,
+                            el.bus,
+                        );
+                    } else {
+                        getLabels(
+                            i,
+                            interf.value as
+                                | '1w-rom'
+                                | '1w-sens'
+                                | 'bin-in'
+                                | 'adc-in'
+                                | 'bin-out'
+                                | 'pwm-out'
+                                | 'mb-var'
+                                | 'bin-var'
+                                | 'int-var'
+                                | 'tim-var',
+                            number,
+                        );
+                    }
+                });
             }
         }
         indexStore.toggleChooseAllDevices(undefined, true);

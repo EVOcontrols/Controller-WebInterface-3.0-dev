@@ -11,8 +11,7 @@
                 <div
                     v-for="(s, i) in state"
                     :key="i"
-                    class="rounded group inline-flex flex-col transition-spacing duration-300 relative h-[41px]"
-                    :class="{ 'cursor-pointer': !props.isBig }"
+                    class="rounded group inline-flex flex-col transition-spacing duration-300 relative h-[41px] cursor-pointer"
                     @mouseenter="handleMouseEnter(i, s)"
                     @mouseleave="handleMouseLeave"
                     @click="handleClick(i, s)"

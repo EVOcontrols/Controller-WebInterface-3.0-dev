@@ -114,7 +114,6 @@
                                                         : 0,
                                                 )
                                             "
-                                            ref="dataInput"
                                             @input="
                                                 (event) => handleInput(event as InputEvent, index)
                                             "
@@ -166,7 +165,6 @@
                                                         : 0,
                                                 )
                                             "
-                                            ref="dataInput"
                                             @input="
                                                 (event) => handleInput(event as InputEvent, index)
                                             "
@@ -193,7 +191,6 @@
                                                             : 0,
                                                     )
                                                 "
-                                                ref="dataInput"
                                                 @input="
                                                     (event) =>
                                                         handleInput(event as InputEvent, index)
@@ -245,8 +242,6 @@ const { devicesState, valuesRange } = storeToRefs(indexStore);
 const itemsStatuses = ref<[string | number | null] | []>([]);
 
 const hoveredBinOutItem = ref<number | null>(null);
-
-const dataInput = ref<HTMLInputElement | undefined>();
 
 const min = ref(0);
 
