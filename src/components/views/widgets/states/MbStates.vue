@@ -122,7 +122,7 @@ const api = indexStore.getApi().api;
 
 const isAborted = indexStore.getApi().isAborted;
 
-const { notConnected, devicesState, numberingSystem } = storeToRefs(indexStore);
+const { notConnected, devicesState, numberingSystem, mbDevs } = storeToRefs(indexStore);
 
 const isStartScrollEl = ref(true);
 
@@ -190,10 +190,7 @@ function handleMouseEnter(
     index: number,
     s: { type?: 'hr' | 'ir' | 'coil' | 'di'; reg_addr: number; dev_addr: number; val: number },
 ) {
-    if (props.isBig) {
-        // activeIndex.value = index;
-        // activeValue.value = s;
-    } else {
+    if (!props.isBig) {
         emit('hover', index, s);
         leftArrowZ.value = 5;
     }
@@ -294,12 +291,14 @@ async function getMbInfo() {
         };
         const arr = [];
         for (let i = 0; i < state.value.length; i += 1) {
-            arr.push({
-                type: data.type[i],
-                reg_addr: data.reg_addr[i] as number,
-                dev_addr: data.dev_addr[i] as number,
-                val: state.value[i],
-            });
+            if (mbDevs.value[props.w.w.d][props.w.w.bus || 0].includes(data.dev_addr[i])) {
+                arr.push({
+                    type: data.type[i],
+                    reg_addr: data.reg_addr[i] as number,
+                    dev_addr: data.dev_addr[i] as number,
+                    val: state.value[i],
+                });
+            }
         }
         fullState.value = [...arr];
         setEndArrowState();

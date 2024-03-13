@@ -24,8 +24,8 @@
                 v-if="props.w.i === 'mb-var'"
                 class="flex flex-col"
             >
-                <span>label</span>
-                <span>label</span>
+                <span class="h-4">label</span>
+                <span class="h-4">{{ curMbDevLabel ? curMbDevLabel : '' }}</span>
             </div>
             <span v-else>{{ curLabel ? curLabel : '' }}</span>
         </div>
@@ -143,7 +143,7 @@
             v-else-if="props.isMb"
         >
             <span
-                class="h-[22px] w-16 text-sm font-Roboto flex items-center rounded-l-[8px] flex items-center justify-center"
+                class="select-none h-[22px] w-16 text-sm font-Roboto flex items-center rounded-l-[8px] flex items-center justify-center"
                 :class="
                     curNumberingSystem === 'dec'
                         ? 'bg-[#023E71] text-[#2B9BFF] select-none'
@@ -153,7 +153,7 @@
                 >DEC</span
             >
             <span
-                class="h-[22px] w-16 text-sm font-Roboto flex items-center rounded-r-[8px] flex items-center justify-center"
+                class="select-none h-[22px] w-16 text-sm font-Roboto flex items-center rounded-r-[8px] flex items-center justify-center"
                 :class="
                     curNumberingSystem === 'hex'
                         ? 'bg-[#023E71] text-[#2B9BFF] select-none'
@@ -226,7 +226,8 @@ import type { Widget } from '@/stores';
 
 const indexStore = useIndexStore();
 
-const { devicesState, tempUnit, curNumberingSystem, labels } = storeToRefs(indexStore);
+const { devicesState, tempUnit, curNumberingSystem, labels, mbDevsLabels } =
+    storeToRefs(indexStore);
 
 const props = defineProps<{
     isInfoVisible: boolean;
@@ -270,6 +271,20 @@ const curLabel = computed<string | undefined>(() => {
             const bus = props.w.bus || 0;
             return val.val[bus][props.activeIO.index] as string;
         }
+    }
+    return undefined;
+});
+
+const curMbDevLabel = computed<string | undefined>(() => {
+    if (
+        props.activeIO &&
+        mbDevsLabels.value[props.w.d] &&
+        mbDevsLabels.value &&
+        typeof props.activeIO.val === 'object' &&
+        props.activeIO.val?.dev_addr !== undefined
+    ) {
+        const val = mbDevsLabels.value[props.w.d][props.w.bus || 0];
+        return val[props.activeIO.val?.dev_addr - 1];
     }
     return undefined;
 });

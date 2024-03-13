@@ -141,7 +141,7 @@ import DateTimeInfo from '@/components/DateTimeInfo.vue';
 import SelectedItemLine from '@/components/SelectedItemLine.vue';
 import LangNcSwitcher from '@/components/dev/LangNcSwitcher.vue';
 import type { CommonSettingsFileType } from '@/typings/files';
-import type { LabelsType } from '@/typings/files';
+import type { LabelsType, MbType } from '@/typings/files';
 import type { FuncsNumberPerPage } from '@/typings/funcs';
 import ModalWrapper from '@/components/ModalWrapper.vue';
 import gears from '@/assets/img/gears-animated.svg?raw';
@@ -739,7 +739,58 @@ async function getLabelsPart(
     } else {
         const { labels } = reqLabels as LabelsType;
         indexStore.setLabels(d, interf, labels, part, bus);
-        // return reqLabels;
+    }
+}
+
+async function getMbDevsLabels(d: number, bus: number, part: number) {
+    const reqLabels = await readFile(
+        {
+            type: 'labels',
+            subType: 'mbDevices',
+            device: d,
+            bus: bus,
+            interf: 'mb-var',
+        },
+        part,
+    );
+    const arr = [];
+    for (let i = 0; i < labelsFileLength; i++) {
+        arr.push('');
+    }
+    if (reqLabels === 'error') {
+        return new Promise((resolve) =>
+            setTimeout(() => {
+                getMbDevsLabels(d, bus, part);
+            }, 5),
+        );
+    } else if (reqLabels === 'notFound') {
+        indexStore.setMbDevsLabels(d, bus, part, arr);
+        return;
+    } else {
+        const { labels } = reqLabels as LabelsType;
+        indexStore.setMbDevsLabels(d, bus, part, labels);
+    }
+}
+
+async function getMbDevs(d: number, bus: number) {
+    const mbDevs = await readFile({
+        type: 'mb',
+        subType: 'devs',
+        device: d,
+        bus: bus,
+    });
+    if (mbDevs === 'error') {
+        return new Promise((resolve) =>
+            setTimeout(() => {
+                getMbDevs(d, bus);
+            }, 5),
+        );
+    } else if (mbDevs === 'notFound') {
+        indexStore.setMbDevs(d, bus, []);
+        return;
+    } else {
+        const { devs } = mbDevs as MbType;
+        indexStore.setMbDevs(d, bus, devs);
     }
 }
 
@@ -759,15 +810,22 @@ async function getLabels(
     number: number,
     bus?: number,
 ) {
-    /////временно, для теста|| !['bin-in', 'bin-var'].includes(interf) || d
     if (!number) return;
-    const parts = [];
-    for (let i = 0; i < Math.ceil(number / labelsFileLength); i += 1) {
-        parts.push(i);
+    if (interf !== 'mb-var') {
+        const parts = [];
+        for (let i = 0; i < Math.ceil(number / labelsFileLength); i += 1) {
+            parts.push(i);
+        }
+        parts.forEach(async (part) => {
+            await getLabelsPart(d, interf, number, part, bus);
+        });
+    } else {
+        getMbDevs(d, bus || 0);
+        const parts = [0, 1, 2, 3];
+        parts.forEach(async (part) => {
+            await getMbDevsLabels(d, bus || 0, part);
+        });
     }
-    parts.forEach(async (part) => {
-        await getLabelsPart(d, interf, number, part, bus);
-    });
 }
 
 onMounted(async () => {

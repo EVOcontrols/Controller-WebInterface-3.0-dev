@@ -18,7 +18,9 @@
             :w="props.w"
             :tempUnit="tempUnit"
             :isLoading="isLoading"
+            :labels="curLabels"
             @toggleScan="handleToggle"
+            @saveLabel="saveLabel"
         />
         <ModbusPage
             v-else-if="props.isMb"
@@ -84,7 +86,9 @@ import axios from 'axios';
 
 const indexStore = useIndexStore();
 
-const { OWIds, tempUnit, devices } = storeToRefs(indexStore);
+const { OWIds, tempUnit, devices, labels } = storeToRefs(indexStore);
+
+const { saveToFile } = useReadWriteFiles();
 
 const api = indexStore.getApi().api as axios.AxiosInstance;
 
@@ -101,6 +105,17 @@ const props = defineProps<{
     isPriorWOpen: boolean;
     isMb: boolean;
 }>();
+
+const curLabels = computed<[string | undefined]>(() => {
+    if (labels.value[props.w.w.d]) {
+        const val = labels.value[props.w.w.d]?.find((el) => el.interf === props.w.w.i);
+        if (val) {
+            const bus = props.w.w.bus || 0;
+            return val.val[bus] as [string | undefined];
+        }
+    }
+    return [undefined];
+});
 
 const devStatus = computed<'on' | 'off' | 'no-conn' | 'init' | 'error' | undefined>(() => {
     return devices.value.find((el) => el.addr === props.w.w.d)?.state;
@@ -131,7 +146,7 @@ const widget = computed<Widget>(() => {
     return widget;
 });
 
-async function getIndexes() {
+async function getIndexes(labelsArr?: string[]) {
     try {
         if (props.w.w.bus !== undefined) {
             const r = await api.post('scan_ow_ids', {
@@ -145,7 +160,7 @@ async function getIndexes() {
                 }
             }
             if (isLoading.value) {
-                getEntState(props.w.w.d, [
+                await getEntState(props.w.w.d, [
                     {
                         type: props.w.w.i,
                         device: props.w.w.d,
@@ -154,6 +169,7 @@ async function getIndexes() {
                         quant: OWIds.value[props.w.w.d][props.w.w.bus].length,
                     },
                 ]);
+                if (labelsArr) saveLabel(labelsArr);
             }
             isLoading.value = false;
         }
@@ -165,7 +181,7 @@ async function getIndexes() {
     scanTimer = setTimeout(getIndexes, 500);
 }
 
-async function getOWIds() {
+async function getOWIds(labelsArr: string[]) {
     try {
         const r = await api.post('get_ow_ids', {
             device: props.w.w.d,
@@ -175,18 +191,18 @@ async function getOWIds() {
         if (props.w.w.bus !== undefined) {
             indexStore.setOWIds(props.w.w.d, props.w.w.bus, ids);
         }
-        getIndexes();
+        getIndexes(labelsArr);
     } catch (error) {
         if (isAborted.value) {
             return;
         }
         setTimeout(() => {
-            getOWIds();
+            getOWIds(labelsArr);
         }, 20);
     }
 }
 
-async function setOW(arr: string[]) {
+async function setOW(arr: string[], labelsArr: string[]) {
     try {
         const r = await api.post('set_ow_ids', {
             device: props.w.w.d,
@@ -194,13 +210,13 @@ async function setOW(arr: string[]) {
             index: 0,
             ids: arr,
         });
-        if (r.status === 200) getOWIds();
+        if (r.status === 200) getOWIds(labelsArr);
     } catch (error) {
         if (isAborted.value) {
             return;
         }
         setTimeout(() => {
-            setOW(arr);
+            setOW(arr, labelsArr);
         }, 20);
     }
 }
@@ -222,6 +238,7 @@ async function getEntState(
         const state = await r.data.state;
         const newState = state.filter((el: any) => Array.isArray(el.value));
         indexStore.setDevicesState(device, newState);
+        return;
     } catch (error) {
         if (isAborted.value) {
             return;
@@ -232,9 +249,62 @@ async function getEntState(
     }
 }
 
-function handleToggle(arr: string[]) {
+async function saveLabel(labels: string[]) {
+    const newLabels = [...labels];
+    for (let i = newLabels.length; i < labelsFileLength; i++) {
+        newLabels.push('');
+    }
+    const isSavingError = await saveToFile(
+        {
+            type: 'labels',
+            device: props.w.w.d,
+            bus: props.w.w.bus,
+            interf: props.w.w.i as
+                | '1w-rom'
+                | '1w-sens'
+                | 'adc-in'
+                | 'bin-in'
+                | 'bin-out'
+                | 'bin-var'
+                | 'int-var'
+                | 'mb-var'
+                | 'pwm-out'
+                | 'tim-var',
+        },
+        { labels: newLabels },
+        0,
+    );
+    if (isSavingError) {
+        if (isAborted.value) {
+            return;
+        }
+        setTimeout(() => {
+            saveLabel(labels);
+        }, 5);
+    } else {
+        indexStore.changeLabel(
+            props.w.w.d,
+            props.w.w.i as
+                | '1w-rom'
+                | '1w-sens'
+                | 'adc-in'
+                | 'bin-in'
+                | 'bin-out'
+                | 'bin-var'
+                | 'int-var'
+                | 'mb-var'
+                | 'pwm-out'
+                | 'tim-var',
+            newLabels,
+            0,
+            props.w.w.bus,
+        );
+    }
+}
+
+function handleToggle(arr: string[], labelsArr: string[]) {
     isLoading.value = true;
-    setOW(arr);
+    setOW(arr, labelsArr);
     clearTimeout(scanTimer);
     scanTimer = undefined;
 }

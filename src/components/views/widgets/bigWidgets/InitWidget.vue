@@ -17,7 +17,9 @@
                         :key="index"
                     >
                         <span class="w-[22px] text-end">{{ index + 1 }}</span>
-                        <span class="block w-[300px] overflow-hidden"> label </span>
+                        <span class="block w-[300px] overflow-hidden">
+                            {{ curLabels[index] ? curLabels[index] : '\u2013' }}
+                        </span>
                         <div class="flex flex-col">
                             <div class="flex">
                                 <span
@@ -237,7 +239,7 @@ const api = indexStore.getApi().api;
 
 const isAborted = indexStore.getApi().isAborted;
 
-const { devicesState, valuesRange } = storeToRefs(indexStore);
+const { devicesState, valuesRange, labels } = storeToRefs(indexStore);
 
 const itemsStatuses = ref<[string | number | null] | []>([]);
 
@@ -256,6 +258,17 @@ const props = defineProps<{
 const emit = defineEmits<{
     (e: 'init'): void;
 }>();
+
+const curLabels = computed<[string | undefined]>(() => {
+    if (labels.value[props.w.w.d]) {
+        const val = labels.value[props.w.w.d]?.find((el) => el.interf === props.w.w.i);
+        if (val) {
+            const bus = props.w.w.bus || 0;
+            return val.val[bus] as [string | undefined];
+        }
+    }
+    return [undefined];
+});
 
 async function getEntInit() {
     try {

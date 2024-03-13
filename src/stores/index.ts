@@ -76,6 +76,10 @@ export const useIndexStore = defineStore('indexStore', () => {
         | []
     >([]);
 
+    const mbDevs = ref<number[][][]>([]);
+
+    const mbDevsLabels = ref<string[][][]>([]);
+
     const OWIds = ref<string[][][]>([]);
 
     const devices = ref<Device[]>([]);
@@ -464,7 +468,7 @@ export const useIndexStore = defineStore('indexStore', () => {
                     labelsVal.push(...arr);
                 }
             }
-            labelsVal.push(...(labelsArr ? labelsArr : arr));
+            labelsVal.push(...(labelsArr?.length ? labelsArr : arr));
             val.push(labelsVal);
             const obj = { interf: interf as string, val: val as [[] | string[]] };
             if (!newArr.length) {
@@ -486,7 +490,7 @@ export const useIndexStore = defineStore('indexStore', () => {
                     for (let i = labelsVal.length / labelsFileLength; i < part; i++) {
                         labelsVal.push(...arr);
                     }
-                    labelsVal.push(...(labelsArr ? labelsArr : arr));
+                    labelsVal.push(...(labelsArr?.length ? labelsArr : arr));
                 } else {
                     for (let i = 0; i < labelsFileLength; i++) {
                         labelsVal[part * labelsFileLength + i] = labelsArr ? labelsArr[i] : arr[i];
@@ -541,7 +545,10 @@ export const useIndexStore = defineStore('indexStore', () => {
     ) {
         const newArr = [...labels.value];
         const interfObj = newArr[d]?.find((el) => el.interf === interf);
-        if (!interfObj) return;
+        if (!interfObj) {
+            setMbDevsLabels(d, bus || 0, part, labelsArr);
+            return;
+        }
         const val = [...interfObj.val];
         const labelsVal = bus ? val[bus] : val[0];
         for (let i = 0; i < labelsFileLength; i++) {
@@ -558,9 +565,117 @@ export const useIndexStore = defineStore('indexStore', () => {
         ];
     }
 
+    function setMbDevs(d: number, bus: number, devs: number[]) {
+        const prevDevs = [...mbDevs.value];
+        if (d) {
+            if (prevDevs.length < d) {
+                for (let i = prevDevs.length; i < d; i++) {
+                    prevDevs.push([]);
+                }
+                const val = [];
+                if (bus) {
+                    for (let i = 0; i < bus; i++) {
+                        val.push([]);
+                    }
+                }
+                val.push(devs);
+                prevDevs.push(val);
+            } else {
+                const val = [];
+                if (prevDevs[d].length < bus) {
+                    for (let i = prevDevs[d].length; i < bus; i++) {
+                        val.push([]);
+                    }
+
+                    val.push(devs);
+                    prevDevs[d] = val;
+                } else {
+                    prevDevs[d][bus] = devs;
+                }
+            }
+        } else {
+            if (prevDevs.length) {
+                const val = prevDevs[d];
+                if (prevDevs[d].length < bus) {
+                    for (let i = prevDevs[d].length; i < bus; i++) {
+                        val.push([]);
+                    }
+
+                    val.push(devs);
+                    prevDevs[d] = val;
+                } else {
+                    prevDevs[d][bus] = devs;
+                }
+            } else {
+                const val = [];
+                if (bus) {
+                    for (let i = 0; i < bus; i++) {
+                        val.push([]);
+                    }
+                }
+                val.push(devs);
+                prevDevs.push(val);
+            }
+        }
+        mbDevs.value = prevDevs;
+    }
+
+    function setMbDevsLabels(d: number, bus: number, part: number, labelsArr: string[]) {
+        const newArr = [...mbDevsLabels.value];
+        if (!newArr.length || !newArr[d]) {
+            if (d) {
+                for (let i = newArr.length; i < d; i++) {
+                    newArr.push([]);
+                }
+            }
+            const val = [];
+            if (bus) {
+                for (let i = 0; i < bus; i++) {
+                    val.push([]);
+                }
+            }
+            const labelsVal = [];
+            if (part) {
+                for (let i = 0; i < part; i++) {
+                    for (let j = 0; j < labelsFileLength; j++) {
+                        labelsVal.push('');
+                    }
+                }
+            }
+            labelsVal.push(...labelsArr);
+            val.push(labelsVal);
+            newArr.push(val);
+        } else {
+            const val = [...newArr[d]];
+            if (bus && val.length < bus) {
+                for (let i = val.length; i < bus; i++) {
+                    val.push([]);
+                }
+            }
+            const labelsVal = bus ? val[bus] : val[0];
+            if (labelsVal.length / labelsFileLength < part) {
+                for (let i = labelsVal.length / labelsFileLength; i < part; i++) {
+                    for (let j = 0; j < labelsFileLength; j++) {
+                        labelsVal.push('');
+                    }
+                }
+                labelsVal.push(...labelsArr);
+            } else {
+                for (let i = 0; i < labelsFileLength; i++) {
+                    labelsVal[part * labelsFileLength + i] = labelsArr[i];
+                }
+            }
+            val[bus || 0] = labelsVal;
+            newArr[d] = val;
+        }
+        mbDevsLabels.value = [...newArr];
+    }
+
     return {
         api,
         labels,
+        mbDevs,
+        mbDevsLabels,
         OWIds,
         timeout,
         devices,
@@ -625,5 +740,7 @@ export const useIndexStore = defineStore('indexStore', () => {
         setChoosenMbDevices,
         setLabels,
         changeLabel,
+        setMbDevs,
+        setMbDevsLabels,
     };
 });

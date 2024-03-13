@@ -5,7 +5,7 @@
             class="absolute bg-[#1B4569] rounded-[6px] h-10 px-3 top-[41px] flex items-center z-[1]"
             :style="[{ width: 'fit-content' }, { left: deviceLabelLeft + 'px' }]"
         >
-            Название устройства на 32 символа
+            {{ curMbDevLabels[showDeviceLabelNum - 1] || '\u2013' }}
         </div>
         <div
             class="relative h-[45px] flex items-center px-3 font-medium w-full overflow-hidden border-b-[2px] border-[#1D4162]"
@@ -94,7 +94,7 @@
                                         {{ s.dev }}
                                     </div>
                                     <div class="text-[#ADEBFF] pt-1">
-                                        Пользовательское название устройства
+                                        {{ curMbDevLabels[s.dev - 1] }}
                                     </div>
                                 </div>
                                 <div class="w-full flex mt-3 mb-[18px] gap-1 px-[18px]">
@@ -136,7 +136,7 @@
                                         {{ s.dev }}
                                     </div>
                                     <div class="text-[#ADEBFF] pt-1">
-                                        Пользовательское название устройства
+                                        {{ curMbDevLabels[s.dev - 1] }}
                                     </div>
                                 </div>
                                 <div class="w-full flex mt-3 mb-[18px] gap-1 px-[18px]">
@@ -189,7 +189,7 @@
                                         {{ s.dev }}
                                     </div>
                                     <div class="text-[#ADEBFF] pt-1">
-                                        Пользовательское название устройства
+                                        {{ curMbDevLabels[s.dev - 1] }}
                                     </div>
                                 </div>
                                 <div class="w-full flex mt-3 mb-[18px] gap-1 px-[18px]">
@@ -244,7 +244,7 @@
                                         {{ s.dev }}
                                     </div>
                                     <div class="text-[#ADEBFF] pt-1">
-                                        Пользовательское название устройства
+                                        {{ curMbDevLabels[s.dev - 1] }}
                                     </div>
                                 </div>
                                 <div class="w-full flex mt-3 mb-[18px] gap-1 px-[18px]">
@@ -288,10 +288,21 @@
                 <div class="flex overflow-y-hidden rounded-l-lg w-full">
                     <div
                         v-dragscroll.y
-                        class="flex overflow-y-auto w-full scrollbar-4 flex-1 flex-col"
+                        class="flex overflow-y-auto w-full scrollbar-4 flex-1 flex-col relative"
                         :style="{ height: 'calc(100vh - 460px)' }"
                     >
                         <div class="flex flex-col items-center flex-none w-full">
+                            <div
+                                v-if="showTableDeviceLabel"
+                                class="absolute bg-[#1B4569] rounded-[6px] p-3 flex items-center z-[1] max-w-[192px] shadow-[0_0_11px_0_rgba(27,69,105,1)]"
+                                :style="[
+                                    { width: 'fit-content' },
+                                    { left: deviceTableLabelLeft + 'px' },
+                                    { top: deviceTableLabelTop + 'px' },
+                                ]"
+                            >
+                                {{ curMbDevLabels[showTableDeviceLabelNum - 1] || '\u2013' }}
+                            </div>
                             <div
                                 class="w-full h-[70px] border-y border-[#1D4162] text-sm pl-[18px] pt-[12px] sticky top-0 bg-[#092740] flex flex-col"
                             >
@@ -334,7 +345,14 @@
                                         class="h-[30px] flex items-center pl-[10px] pr-2 hover:bg-[#0C2F4D] transition-colors duration-500 rounded"
                                     >
                                         <div class="flex-1">Название регистра</div>
-                                        <div class="w-[50px] ml-5 flex justify-end text-[#ADEBFF]">
+                                        <div
+                                            class="w-[50px] ml-5 flex justify-end text-[#ADEBFF] hover:text-[#58B1FF] transition-colors duration-500"
+                                            @mouseenter="
+                                                (e) =>
+                                                    handleTableDeviceEnter(s.dev, e as MouseEvent)
+                                            "
+                                            @mouseleave="handleTableDeviceLeave"
+                                        >
                                             {{ el.dev_addr }}
                                         </div>
                                         <div class="w-[50px] ml-5 flex justify-end text-[#ADEBFF]">
@@ -424,7 +442,14 @@
                                         class="h-[30px] flex items-center pl-[10px] pr-2 hover:bg-[#0C2F4D] transition-colors duration-500 rounded"
                                     >
                                         <div class="flex-1">Название регистра</div>
-                                        <div class="w-[50px] ml-5 flex justify-end text-[#ADEBFF]">
+                                        <div
+                                            class="w-[50px] ml-5 flex justify-end text-[#ADEBFF] hover:text-[#58B1FF] transition-colors duration-500"
+                                            @mouseenter="
+                                                (e) =>
+                                                    handleTableDeviceEnter(s.dev, e as MouseEvent)
+                                            "
+                                            @mouseleave="handleTableDeviceLeave"
+                                        >
                                             {{ el.dev_addr }}
                                         </div>
                                         <div class="w-[50px] ml-5 flex justify-end text-[#ADEBFF]">
@@ -511,7 +536,14 @@
                                         class="h-[30px] flex items-center pl-[10px] pr-2 hover:bg-[#0C2F4D] transition-colors duration-500 rounded"
                                     >
                                         <div class="flex-1">Название регистра</div>
-                                        <div class="w-[50px] ml-5 flex justify-end text-[#ADEBFF]">
+                                        <div
+                                            class="w-[50px] ml-5 flex justify-end text-[#ADEBFF] hover:text-[#58B1FF] transition-colors duration-500"
+                                            @mouseenter="
+                                                (e) =>
+                                                    handleTableDeviceEnter(s.dev, e as MouseEvent)
+                                            "
+                                            @mouseleave="handleTableDeviceLeave"
+                                        >
                                             {{ el.dev_addr }}
                                         </div>
                                         <div class="w-[50px] ml-5 flex justify-end text-[#ADEBFF]">
@@ -617,7 +649,14 @@
                                         class="h-[30px] flex items-center pl-[10px] pr-2 hover:bg-[#0C2F4D] transition-colors duration-500 rounded"
                                     >
                                         <div class="flex-1">Название регистра</div>
-                                        <div class="w-[50px] ml-5 flex justify-end text-[#ADEBFF]">
+                                        <div
+                                            class="w-[50px] ml-5 flex justify-end text-[#ADEBFF] hover:text-[#58B1FF] transition-colors duration-500"
+                                            @mouseenter="
+                                                (e) =>
+                                                    handleTableDeviceEnter(s.dev, e as MouseEvent)
+                                            "
+                                            @mouseleave="handleTableDeviceLeave"
+                                        >
                                             {{ el.dev_addr }}
                                         </div>
                                         <div class="w-[50px] ml-5 flex justify-end text-[#ADEBFF]">
@@ -677,7 +716,7 @@ import type { Widget } from '@/stores';
 
 const indexStore = useIndexStore();
 
-const { curNumberingSystem, devicesState, notConnected, choosenMbDevices } =
+const { curNumberingSystem, devicesState, notConnected, choosenMbDevices, mbDevs, mbDevsLabels } =
     storeToRefs(indexStore);
 
 const api = indexStore.getApi().api;
@@ -698,7 +737,17 @@ const curChoosenDevs = ref<number[]>([]);
 
 const showDeviceLabel = ref(false);
 
+const showDeviceLabelNum = ref(0);
+
 const deviceLabelLeft = ref(28);
+
+const showTableDeviceLabel = ref(false);
+
+const showTableDeviceLabelNum = ref(0);
+
+const deviceTableLabelLeft = ref(0);
+
+const deviceTableLabelTop = ref(70);
 
 const activeLabelInputVal = ref('');
 
@@ -732,6 +781,10 @@ const mouseupX = ref<number>(0);
 const props = defineProps<{
     w: { w: Widget; state: number[] };
 }>();
+
+const curMbDevLabels = computed<string[]>(() => {
+    return mbDevsLabels.value[props.w.w.d][props.w.w.bus || 0];
+});
 
 const state = ref<number[]>([...props.w.state]);
 
@@ -772,6 +825,12 @@ const diArr = computed<
             res.push({ dev: el.dev_addr, vals: [el] });
         }
     });
+    const curDevAddr = Array.from(new Set(arr.map((el) => el.dev_addr)));
+    curChoosenDevs.value.forEach((el) => {
+        if (!curDevAddr.includes(el)) {
+            res.push({ dev: el, vals: [] });
+        }
+    });
     return res.sort((a, b) => a.dev - b.dev);
 });
 
@@ -800,6 +859,12 @@ const coilArr = computed<
             res[index].vals.push(el);
         } else {
             res.push({ dev: el.dev_addr, vals: [el] });
+        }
+    });
+    const curDevAddr = Array.from(new Set(arr.map((el) => el.dev_addr)));
+    curChoosenDevs.value.forEach((el) => {
+        if (!curDevAddr.includes(el)) {
+            res.push({ dev: el, vals: [] });
         }
     });
     return res.sort((a, b) => a.dev - b.dev);
@@ -832,6 +897,12 @@ const irArr = computed<
             res.push({ dev: el.dev_addr, vals: [el] });
         }
     });
+    const curDevAddr = Array.from(new Set(arr.map((el) => el.dev_addr)));
+    curChoosenDevs.value.forEach((el) => {
+        if (!curDevAddr.includes(el)) {
+            res.push({ dev: el, vals: [] });
+        }
+    });
     return res.sort((a, b) => a.dev - b.dev);
 });
 
@@ -862,6 +933,12 @@ const hrArr = computed<
             res.push({ dev: el.dev_addr, vals: [el] });
         }
     });
+    const curDevAddr = Array.from(new Set(arr.map((el) => el.dev_addr)));
+    curChoosenDevs.value.forEach((el) => {
+        if (!curDevAddr.includes(el)) {
+            res.push({ dev: el, vals: [] });
+        }
+    });
     return res.sort((a, b) => a.dev - b.dev);
 });
 
@@ -882,12 +959,14 @@ async function getMbInfo() {
         };
         const arr = [];
         for (let i = 0; i < state.value.length; i += 1) {
-            arr.push({
-                type: data.type[i],
-                reg_addr: data.reg_addr[i] as number,
-                dev_addr: data.dev_addr[i] as number,
-                val: state.value[i],
-            });
+            if (mbDevs.value[props.w.w.d][props.w.w.bus || 0].includes(data.dev_addr[i])) {
+                arr.push({
+                    type: data.type[i],
+                    reg_addr: data.reg_addr[i] as number,
+                    dev_addr: data.dev_addr[i] as number,
+                    val: state.value[i],
+                });
+            }
         }
         fullState.value = [...arr];
     } catch (error) {
@@ -952,6 +1031,7 @@ function mouseup(d: number, e: MouseEvent) {
 
 function handleDeviceEnter(d: number, e: MouseEvent) {
     showDeviceLabel.value = true;
+    showDeviceLabelNum.value = d;
     const target = e.target as HTMLElement;
     const parent = target.parentElement?.parentElement as HTMLElement;
     if (target && parent) {
@@ -961,6 +1041,22 @@ function handleDeviceEnter(d: number, e: MouseEvent) {
 
 function handleDeviceLeave() {
     showDeviceLabel.value = false;
+}
+
+function handleTableDeviceEnter(d: number, e: MouseEvent) {
+    showTableDeviceLabel.value = true;
+    showTableDeviceLabelNum.value = d;
+    const target = e.target as HTMLElement;
+    const parent = target.parentElement?.parentElement as HTMLElement;
+    if (target && parent) {
+        deviceTableLabelLeft.value =
+            target.offsetLeft - parent.offsetLeft + target.offsetWidth + 18;
+        deviceTableLabelTop.value = parent.offsetTop - 5;
+    }
+}
+
+function handleTableDeviceLeave() {
+    showTableDeviceLabel.value = false;
 }
 
 function handleDblClick(
@@ -1201,4 +1297,8 @@ const { t } = useI18n({
         },
     },
 });
+
+// watch(labels, () => {
+//     console.log(labels.value);
+// });
 </script>

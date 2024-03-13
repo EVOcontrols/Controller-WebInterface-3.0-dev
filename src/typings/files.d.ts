@@ -18,8 +18,19 @@ export type LabelsFileType = {
         | 'tim-var';
 };
 
+export type MbFileType = {
+    type: 'mb';
+    subType: 'devs';
+    device: number;
+    bus: number;
+};
+
 export type LabelsType = {
     labels: string[];
+};
+
+export type MbType = {
+    devs: number[];
 };
 
 export type CommonSettingsFileType = {
@@ -32,12 +43,13 @@ export type CommonSettingsFileType = {
 export type FileType =
     | LabelsFileType
     | { type: 'settings'; subType: 'mbNs' }
-    | { type: 'settings'; subType: 'common'; user: UserRole };
+    | { type: 'settings'; subType: 'common'; user: UserRole }
+    | MbFileType;
 
-export type FileContent<T extends FileType> = T extends { type: 'labels'; subType: 'mbDevices' }
-    ? (string | null)[]
-    : T extends { type: 'labels' }
+export type FileContent<T extends FileType> = T extends { type: 'labels' }
     ? LabelsType
     : T extends { type: 'settings'; subType: 'common' }
     ? CommonSettingsFileType
+    : T extends { type: 'mb' }
+    ? MbType
     : TwoDimensionalArray<NumberingSystem>;

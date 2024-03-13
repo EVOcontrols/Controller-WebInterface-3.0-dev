@@ -27,7 +27,9 @@
                             :key="index"
                         >
                             <span class="w-[22px] text-end">{{ index + 1 }}</span>
-                            <span class="flex-1"> label </span>
+                            <span class="flex-1">
+                                {{ curLabels[index] ? curLabels[index] : '\u2013' }}
+                            </span>
                             <div class="w-1 text-[#ADEBFF] text-end mr-[10px] flex flex-col gap-1">
                                 <div
                                     class="w-1 h-1 rounded-[50%]"
@@ -68,7 +70,7 @@ const api = indexStore.getApi().api;
 
 const isAborted = indexStore.getApi().isAborted;
 
-const { calibrVals } = storeToRefs(indexStore);
+const { calibrVals, labels } = storeToRefs(indexStore);
 
 const calibratedArr = ref<{ index: number; dir: 'min' | 'max' }[]>([]);
 
@@ -77,6 +79,17 @@ const checkedArr = ref<{ index: number; dir: 'min' | 'max' }[]>([]);
 const props = defineProps<{
     w: { w: Widget; state: number[] };
 }>();
+
+const curLabels = computed<[string | undefined]>(() => {
+    if (labels.value[props.w.w.d]) {
+        const val = labels.value[props.w.w.d]?.find((el) => el.interf === props.w.w.i);
+        if (val) {
+            const bus = props.w.w.bus || 0;
+            return val.val[bus] as [string | undefined];
+        }
+    }
+    return [undefined];
+});
 
 function handleCalibrate(index: number, dir: 'min' | 'max') {
     calibratedArr.value = [...calibratedArr.value, { index: index, dir: dir }];

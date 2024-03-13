@@ -15,8 +15,11 @@
                     <input
                         type="text"
                         :placeholder="placeholder"
+                        :value="activeLabel.label"
+                        :maxlength="32"
                         ref="labelInput"
                         class="flex-1 bg-[#123553] h-full text-[#8DC5F6] px-3 placeholder:text-[#8DC5F6]"
+                        @input="(e) => handleLabelInput(e)"
                     />
                 </div>
             </div>
@@ -85,7 +88,7 @@
                             >{{ index + 1 }}</span
                         >
                         <span class="flex-1 text-[#6CB5D3]">{{
-                            element.val[0] !== null ? 'label' : ''
+                            element.val[0] !== null ? element.label : ''
                         }}</span>
                         <span
                             v-if="element.val[0] !== null"
@@ -115,7 +118,7 @@
                             index + 1
                         }}</span>
                         <span class="flex-1 text-[#6CB5D3]">{{
-                            element.val !== null ? 'label' : ''
+                            element.val !== null ? element.label : ''
                         }}</span>
                         <CloseIcon
                             v-if="element.val !== null"
@@ -145,7 +148,7 @@ export default {
         draggable,
         CloseIcon,
     },
-    props: ['idsArr', 'vals', 'OWIds', 'w', 'tempUnit', 'isLoading'],
+    props: ['idsArr', 'vals', 'OWIds', 'w', 'tempUnit', 'isLoading', 'labels'],
     data() {
         return {
             idsList: [],
@@ -203,6 +206,7 @@ export default {
                 this.$emit(
                     'toggleScan',
                     this.valsList.map((el) => el.id),
+                    this.valsList.map((el) => el.label),
                 );
                 this.awaitLoading();
                 this.loading = true;
@@ -230,7 +234,7 @@ export default {
                     arr.push(id);
                 }
             });
-            const newArr = arr.map((el) => Object.assign({ id: el, val: [null, null] }));
+            const newArr = arr.map((el) => Object.assign({ id: el, val: [null, null], label: '' }));
             this.idsList = [...newArr];
             this.idsTimer = setTimeout(this.setIds, 1000);
         },
@@ -238,7 +242,7 @@ export default {
             const curIds = this.OWIds[this.w.w.d][this.w.w.bus] || [];
             const newArr = [];
             for (let i = 0; i < this.vals.length; i += 1) {
-                newArr.push({ id: curIds[i], val: this.vals[i] });
+                newArr.push({ id: curIds[i], val: this.vals[i], label: this.labels[i] });
             }
             this.valsList = [...newArr];
             this.valsTimer = setTimeout(this.setVals, 1000);
@@ -273,6 +277,7 @@ export default {
             this.$emit(
                 'toggleScan',
                 this.valsList.map((el) => el.id),
+                this.valsList.map((el) => el.label),
             );
             this.awaitLoading();
             this.loading = true;
@@ -289,6 +294,7 @@ export default {
             this.$emit(
                 'toggleScan',
                 this.valsList.map((el) => el.id),
+                this.valsList.map((el) => el.label),
             );
             this.awaitLoading();
             this.loading = true;
@@ -299,7 +305,7 @@ export default {
         },
         handleDblClick(s, index) {
             if (s === null) return;
-            this.activeLabel = { i: index, state: s };
+            this.activeLabel = { i: index, state: s, label: this.labels[index] };
             this.setActiveLabelTop();
             window.addEventListener('click', this.saveData);
             window.addEventListener('keypress', this.saveData);
@@ -332,13 +338,30 @@ export default {
             if (!this.activeLabel) return;
             if (e.type === 'keypress') {
                 if (e.key === 'Enter') {
+                    const newLabels = [...this.labels];
+                    newLabels[this.activeLabel.i] = this.activeLabel.label;
+                    this.$emit(
+                        'saveLabel',
+                        newLabels
+                    );
                     this.activeLabel = null;
                     this.isLabelChange = false;
                 }
             } else if (e.type === 'click') {
+                const newLabels = [...this.labels];
+                newLabels[this.activeLabel.i] = this.activeLabel.label;
+                this.$emit(
+                    'saveLabel',
+                    newLabels
+                );
                 this.activeLabel = null;
                 this.isLabelChange = false;
             }
+        },
+        handleLabelInput(e) {
+            const target = e.target;
+            if (!target || !this.activeLabel) return;
+            this.activeLabel.label = target.value;
         },
     },
     watch: {

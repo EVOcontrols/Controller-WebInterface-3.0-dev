@@ -18,16 +18,18 @@
                 <div
                     v-for="(s, index) in state"
                     :key="index"
-                    class="rounded group inline-flex flex-col items-end w-[61px] h-10 justify-center gap-[6px] pt-1"
-                    :class="
+                    class="rounded group inline-flex flex-col items-end w-[61px] h-10 justify-center gap-[6px] pt-1 border border-transparent transition-all duration-300"
+                    :class="[
                         props.w.w.i !== 'bin-var'
                             ? 'bg-[#143959] px-[6px]'
                             : s
-                            ? 'bg-[#176F6F] px-1'
-                            : 'bg-[#0D424D] px-1'
-                    "
+                            ? 'bg-[#176F6F] hover:border-[#35FED0] px-1'
+                            : 'bg-[#0D424D] hover:border-[#35FED0] px-1',
+                        { 'cursor-pointer': props.w.w.i === 'bin-var' },
+                    ]"
                     @mouseenter="handleMouseEnter(index, s)"
                     @mouseleave="handleMouseLeave"
+                    @click="handleClick(index, s)"
                 >
                     <div
                         class="text-0.81 font-medium text-center leading-none select-none"
@@ -68,6 +70,10 @@ const indexStore = useIndexStore();
 
 const { notConnected, devicesState } = storeToRefs(indexStore);
 
+const api = indexStore.getApi().api;
+
+const isAborted = indexStore.getApi().isAborted;
+
 const activeIndex = ref<number | null>();
 
 const activeValue = ref(0);
@@ -103,6 +109,32 @@ function handleMouseLeave() {
         activeValue.value = 0;
     } else {
         emit('leave');
+    }
+}
+
+async function handleClick(index: number, s: number | null) {
+    if (props.w.w.i !== 'bin-var' || s === null) return;
+    try {
+        const r = await api.post('set_ent_value', {
+            type: props.w.w.i,
+            device: props.w.w.d,
+            index: index,
+            value: s ? 0 : 1,
+        });
+        if (r.data.status === 'ok') {
+            const devStates = [...devicesState.value][props.w.w.d];
+            const prevStateIndex = devStates.findIndex((el) => el.type === props.w.w.i);
+            if (prevStateIndex !== -1 && devStates[prevStateIndex].value[index] !== undefined)
+                devStates[prevStateIndex].value[index] = s ? 0 : 1;
+            indexStore.setDevicesState(props.w.w.d, [...devStates]);
+        }
+    } catch (error) {
+        if (isAborted.value) {
+            return;
+        }
+        setTimeout(() => {
+            handleClick(index, s);
+        }, 5);
     }
 }
 

@@ -34,9 +34,8 @@
                 >
                     <div
                         class="rounded items-center pb-0.5 group flex flex-col"
-                        @mouseenter="handleMouseEnter(index, s.val)"
+                        @mouseenter="handleMouseEnter(s.i, s.val)"
                         @mouseleave="handleMouseLeave"
-                        @click="handleClick(index, s.val)"
                     >
                         <IButtonIcon :class="{ active: s.val }" />
                         <div
@@ -159,31 +158,31 @@ function handleMouseLeave() {
     }
 }
 
-async function handleClick(index: number, s: number | null) {
-    if (s === null) return;
-    try {
-        const r = await api.post('set_ent_value', {
-            type: props.w.w.i,
-            device: props.w.w.d,
-            index: index,
-            value: s ? 0 : 1,
-        });
-        if (r.data.status === 'ok') {
-            const devStates = [...devicesState.value][props.w.w.d];
-            const prevStateIndex = devStates.findIndex((el) => el.type === props.w.w.i);
-            if (prevStateIndex !== -1 && devStates[prevStateIndex].value[index] !== undefined)
-                devStates[prevStateIndex].value[index] = s ? 0 : 1;
-            indexStore.setDevicesState(props.w.w.d, [...devStates]);
-        }
-    } catch (error) {
-        if (isAborted.value) {
-            return;
-        }
-        setTimeout(() => {
-            handleClick(index, s);
-        }, 5);
-    }
-}
+// async function handleClick(index: number, s: number | null) {
+//     if (s === null) return;
+//     try {
+//         const r = await api.post('set_ent_value', {
+//             type: props.w.w.i,
+//             device: props.w.w.d,
+//             index: index,
+//             value: s ? 0 : 1,
+//         });
+//         if (r.data.status === 'ok') {
+//             const devStates = [...devicesState.value][props.w.w.d];
+//             const prevStateIndex = devStates.findIndex((el) => el.type === props.w.w.i);
+//             if (prevStateIndex !== -1 && devStates[prevStateIndex].value[index] !== undefined)
+//                 devStates[prevStateIndex].value[index] = s ? 0 : 1;
+//             indexStore.setDevicesState(props.w.w.d, [...devStates]);
+//         }
+//     } catch (error) {
+//         if (isAborted.value) {
+//             return;
+//         }
+//         setTimeout(() => {
+//             handleClick(index, s);
+//         }, 5);
+//     }
+// }
 
 function handleArrowClick(direction: 'toStart' | 'toEnd') {
     const el = scrollEl.value;

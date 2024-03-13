@@ -24,13 +24,14 @@
                     v-for="(s, index) in state"
                     :key="index"
                     class="rounded group inline-flex flex-col items-end w-[61px] h-10 justify-center gap-[6px] transition-all duration-300 border border-transparent"
-                    :class="
+                    :class="[
                         props.w.w.i !== 'bin-var'
                             ? 'bg-[#143959] hover:bg-[#285C88] px-2'
                             : s
                             ? 'bg-[#176F6F] hover:border-[#35FED0] px-1'
-                            : 'bg-[#0D424D] hover:border-[#35FED0] px-1'
-                    "
+                            : 'bg-[#0D424D] hover:border-[#35FED0] px-1',
+                        { 'cursor-pointer': props.w.w.i === 'bin-var' },
+                    ]"
                     @mouseenter="handleMouseEnter(index, s)"
                     @mouseleave="handleMouseLeave"
                     @click="handleClick(index, s)"

@@ -494,30 +494,28 @@ async function saveLabel(labels: string[], part: number) {
 
 async function setData(index: number, state: number | null, d?: number | null) {
     const data = dataInput.value;
-    if (!data) return;
     let val: number | null = 0;
-    try {
+    if (props.w.w.i === 'bin-var') {
+        val = state;
+    } else {
+        if (!data) return;
         if (props.w.w.i === 'pwm-out') {
             val = +(data.value.includes(',') ? data.value.replace(',', '.') : data.value) * 100;
         } else if (props.w.w.i === 'int-var') {
             val = +(data.value.includes(',') ? data.value.replace(',', '.') : data.value);
-        } else if (props.w.w.i === 'bin-var') {
-            val = state;
         }
-        const body = {
-            type: props.w.w.i,
-            device: props.w.w.d,
-            index: index,
-            value: val,
-        };
-        if (d !== undefined) {
-            body.value = d;
-        }
-        if (props.w.state[index] !== body.value) {
-            setVal(body);
-        }
-    } catch (error) {
-        setData(index, val, val);
+    }
+    const body = {
+        type: props.w.w.i,
+        device: props.w.w.d,
+        index: index,
+        value: val,
+    };
+    if (d !== undefined) {
+        body.value = d;
+    }
+    if (props.w.state[index] !== body.value) {
+        setVal(body);
     }
 }
 

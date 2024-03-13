@@ -275,7 +275,7 @@ async function setValue(val: number, index: number) {
     }
 }
 
-async function quickChange(index: number, e: MouseEvent, currentState: number | null) {
+function quickChange(index: number, e: MouseEvent, currentState: number | null) {
     if (props.isBig && props.w.w.i === 'pwm-out') {
         activeIndex.value = index;
         mouseOffset.value = 0;
@@ -330,7 +330,7 @@ function startChange(index: number, e: MouseEvent, s: number) {
 
 async function changeValue(e: MouseEvent) {
     try {
-        if (isRequesting.value) return;
+        // if (isRequesting.value) return;
         if (activeIndex.value === null || activeIndex.value === undefined) return;
         let y = e.clientY - mouseOffset.value;
         if (!range.value) return;
@@ -359,7 +359,7 @@ async function changeValue(e: MouseEvent) {
         state.value[activeIndex.value] = Math.round(activeValue.value);
         setTimeout(() => {
             isRequesting.value = false;
-        }, 5);
+        }, 0);
     } catch (error) {
         if (isAborted.value) {
             return;
@@ -367,7 +367,7 @@ async function changeValue(e: MouseEvent) {
     }
 }
 
-async function stopChange() {
+function stopChange() {
     if (activeIndex.value === null) return;
     document.removeEventListener('mousemove', changeValue);
     setValue(Math.round(activeValue.value), activeIndex.value);
