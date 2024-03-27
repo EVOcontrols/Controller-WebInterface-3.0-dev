@@ -40,6 +40,8 @@ export function useReadWriteFiles() {
             }
         } else if (params.type === 'settings' && params.subType === 'common') {
             name += `.${params.user}`;
+        } else if (params.type === 'mb') {
+            name += `.d${params.device}.b${params.bus}`;
         }
         if (part !== undefined) name += `.p${part}`;
         try {

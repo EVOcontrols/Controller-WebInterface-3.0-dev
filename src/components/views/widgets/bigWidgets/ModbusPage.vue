@@ -2,10 +2,28 @@
     <div class="flex-1 relative w-full overflow-hidden">
         <div
             v-if="showDeviceLabel"
-            class="absolute bg-[#1B4569] rounded-[6px] h-10 px-3 top-[41px] flex items-center z-[1]"
+            class="absolute bg-[#1B4569] rounded-[6px] min-h-10 p-3 top-[41px] flex items-left z-[3] flex-col gap-3"
             :style="[{ width: 'fit-content' }, { left: deviceLabelLeft + 'px' }]"
         >
             {{ curMbDevLabels[showDeviceLabelNum - 1] || '\u2013' }}
+            <div
+                v-if="errArr.includes(showDeviceLabelNum) || initArr.includes(showDeviceLabelNum)"
+                class="flex items-center justify-center"
+            >
+                <div
+                    class="w-[5px] h-[5px] left-3 top-[50%] -translate-y-[50%] rounded-[50%] mr-[6px] mt-[5px]"
+                    :class="
+                        errArr.includes(showDeviceLabelNum)
+                            ? curChoosenDevs.includes(showDeviceLabelNum)
+                                ? 'bg-[#F83068]'
+                                : 'bg-[#FF5A88]'
+                            : curChoosenDevs.includes(showDeviceLabelNum)
+                            ? 'bg-[#ADEBFF]'
+                            : 'bg-[#84AFBD]'
+                    "
+                ></div>
+                {{ initArr.includes(showDeviceLabelNum) ? t('mbDevsInit') : t('mbDevsErr') }}
+            </div>
         </div>
         <div
             class="relative h-[45px] flex items-center px-3 font-medium w-full overflow-hidden border-b-[2px] border-[#1D4162]"
@@ -32,7 +50,7 @@
                                 <div
                                     v-for="device in curDevs"
                                     :key="device"
-                                    class="device h-6 min-w-[4rem] flex items-center mr-[6px] rounded text-0.81 font-roboto text-[#ADEBFF] cursor-pointer transition-all duration-300 justify-center select-none"
+                                    class="relative device h-6 min-w-[4rem] flex items-center mr-[6px] rounded text-0.81 font-roboto text-[#ADEBFF] cursor-pointer transition-all duration-300 justify-center select-none"
                                     :class="
                                         curChoosenDevs.includes(device)
                                             ? 'bg-[#148ef8]'
@@ -43,6 +61,19 @@
                                     @mouseenter="(e) => handleDeviceEnter(device, e as MouseEvent)"
                                     @mouseleave="handleDeviceLeave"
                                 >
+                                    <div
+                                        v-if="errArr.includes(device) || initArr.includes(device)"
+                                        class="absolute w-[5px] h-[5px] left-3 top-[50%] -translate-y-[50%] rounded-[50%]"
+                                        :class="
+                                            errArr.includes(device)
+                                                ? curChoosenDevs.includes(device)
+                                                    ? 'bg-[#F83068]'
+                                                    : 'bg-[#FF5A88]'
+                                                : curChoosenDevs.includes(device)
+                                                ? 'bg-[#ADEBFF]'
+                                                : 'bg-[#84AFBD]'
+                                        "
+                                    ></div>
                                     {{ device }}
                                 </div>
                             </div>
@@ -58,6 +89,7 @@
                         <AddIcon
                             class="cursor-pointer w-[50px] h-6 rounded-[3px] border border-[#148EF8] py-1 active:bg-[#148EF8]"
                             :class="{ disabled: notConnected }"
+                            @click="createItem"
                         />
                         <UpdateIcon
                             class="cursor-pointer w-[50px] h-6 rounded-[3px] border border-[#148EF8] py-1 active:bg-[#148EF8]"
@@ -75,10 +107,11 @@
                         v-dragscroll.y
                         class="flex overflow-y-auto w-full scrollbar-4 flex-1 flex-col"
                         :style="{ height: 'calc(100vh - 460px)' }"
+                        ref="varsWrapper"
                     >
                         <div class="flex flex-col items-center flex-none w-full">
                             <div
-                                class="w-full h-[50px] border-y border-[#1D4162] pl-5 pt-5 sticky top-0 bg-[#092740] text-base font-semibold"
+                                class="w-full h-[50px] border-y border-[#1D4162] pl-5 pt-5 sticky z-[2] top-0 bg-[#092740] text-base font-semibold"
                             >
                                 Discrete inputs
                             </div>
@@ -99,28 +132,67 @@
                                 </div>
                                 <div class="w-full flex mt-3 mb-[18px] gap-1 px-[18px]">
                                     <div
-                                        class="w-[90px] h-10 flex items-center justify-between text-[#35FED0] text-xs rounded px-[6px]"
-                                        :class="el.val ? 'bg-[#176F6F]' : 'bg-[#0D424D]'"
+                                        class="relative select-none rounded group inline-flex flex-col items-end w-[90px] h-10 justify-center gap-[6px] transition-all duration-300 border border-transparent px-[6px]"
+                                        :class="[
+                                            { 'bg-[#193550] text-[#F83068]': el.val === 'err' },
+                                            { 'bg-[#183C5E] text-[#3E688E]': el.val === null },
+                                            {
+                                                'bg-[#176F6F] text-[#35FED0]':
+                                                    el.val && el.val !== 'err',
+                                            },
+                                            {
+                                                'bg-[#0D424D] text-[#35FED0]':
+                                                    !el.val && el.val !== null,
+                                            },
+                                        ]"
                                         v-for="(el, i) in s.vals"
                                         :key="i"
+                                        @mouseenter="
+                                            (e: MouseEvent) => handleMouseEnter(e as MouseEvent)
+                                        "
                                     >
-                                        <span>RO</span>
-                                        <span>{{
-                                            curNumberingSystem === 'dec'
-                                                ? el.reg_addr
-                                                : el.reg_addr.toString(16)
-                                        }}</span>
+                                        <div
+                                            v-if="el.val === 'err'"
+                                            class="w-full flex justify-end uppercase"
+                                        >
+                                            {{ t('err') }}
+                                        </div>
+                                        <div class="w-full flex items-center justify-between">
+                                            <span>RO</span>
+                                            <span class="uppercase">{{
+                                                curNumberingSystem === 'dec'
+                                                    ? el.reg_addr
+                                                    : el.reg_addr.toString(16)
+                                            }}</span>
+                                        </div>
+                                        <div
+                                            class="absolute max-w-[192px] w-max left-0 invisible opacity-0 group-hover:visible group-hover:opacity-100 transition-[visibility,opacity] z-[3]"
+                                            :class="
+                                                labelPosition === 'top'
+                                                    ? 'bottom-[100%] pb-1'
+                                                    : 'top-[100%] pt-1'
+                                            "
+                                        >
+                                            <div
+                                                class="bg-[#1B4569] p-3 rounded-[6px] text-[#A0D5FF] text-[13px] shadow-[0_0_11px_0_rgba(160,213,255,1) hover:underline cursor-pointer"
+                                                @click="handleRegLabelClick('di', index, i)"
+                                            >
+                                                {{ el.label || '\u2013' }}
+                                            </div>
+                                        </div>
                                     </div>
                                     <AddIcon
+                                        v-if="fullState.length !== curState.length"
                                         class="cursor-pointer w-[90px] h-10 rounded-[3px] border border-[#148EF8] py-[10px] active:bg-[#148EF8]"
                                         :class="{ disabled: notConnected }"
+                                        @click="createReg(s.dev, 'di')"
                                     />
                                 </div>
                             </div>
                         </div>
                         <div class="flex flex-col items-center flex-none w-full">
                             <div
-                                class="w-full h-[50px] border-y border-[#1D4162] pl-5 pt-5 sticky top-0 bg-[#092740] text-base font-semibold"
+                                class="w-full h-[50px] border-y border-[#1D4162] pl-5 pt-5 sticky z-[2] top-0 bg-[#092740] text-base font-semibold"
                             >
                                 Coils
                             </div>
@@ -141,21 +213,62 @@
                                 </div>
                                 <div class="w-full flex mt-3 mb-[18px] gap-1 px-[18px]">
                                     <div
-                                        class="w-[90px] h-10 flex items-center justify-between text-[#35FED0] text-xs rounded px-[6px] cursor-pointer"
-                                        :class="el.val ? 'bg-[#176F6F]' : 'bg-[#0D424D]'"
+                                        class="relative select-none rounded group flex items-center w-[90px] h-10 gap-[6px] transition-all duration-300 border border-transparent px-[6px]"
+                                        :class="[
+                                            {
+                                                'bg-[#193550] text-[#F83068] justify-center':
+                                                    el.val === 'err',
+                                            },
+                                            {
+                                                'bg-[#183C5E] text-[#3E688E] justify-between':
+                                                    el.val === null,
+                                            },
+                                            {
+                                                'bg-[#176F6F] text-[#35FED0] justify-between cursor-pointer hover:border-[#35FED0]':
+                                                    el.val && el.val !== 'err',
+                                            },
+                                            {
+                                                'bg-[#0D424D] text-[#35FED0] justify-between cursor-pointer hover:border-[#35FED0]':
+                                                    !el.val && el.val !== null,
+                                            },
+                                        ]"
                                         v-for="(el, i) in s.vals"
                                         :key="i"
                                         @click="handleCoilClick(el)"
+                                        @mouseenter="
+                                            (e: MouseEvent) => handleMouseEnter(e as MouseEvent)
+                                        "
                                     >
-                                        <div class="flex flex-col justify-end gap-[6px]">
-                                            <div class="h-[12px]"></div>
-                                            <div class="h-[12px]">RW</div>
-                                        </div>
-                                        <div class="flex flex-col items-end justify-end gap-[6px]">
-                                            <div class="h-[12px] text-[#97FFE7]">
-                                                {{ el.val ? t('on') : t('off') }}
+                                        <div
+                                            v-if="el.val !== 'err'"
+                                            class="flex flex-col justify-end gap-[6px]"
+                                        >
+                                            <div class="h-[12px]">
+                                                {{
+                                                    el.type === 'wm-coil' || el.type === 'm-coil'
+                                                        ? 'M'
+                                                        : ''
+                                                }}
                                             </div>
                                             <div class="h-[12px]">
+                                                {{
+                                                    el.type === 'wm-coil' || el.type === 'w-coil'
+                                                        ? 'WO'
+                                                        : 'RW'
+                                                }}
+                                            </div>
+                                        </div>
+                                        <div
+                                            v-if="el.val !== 'err'"
+                                            class="flex flex-col items-end justify-end gap-[6px]"
+                                        >
+                                            <div
+                                                class="h-[12px]"
+                                                :class="{ 'text-[#97FFE7]': el.val !== null }"
+                                            >
+                                                {{ el.val ? t('on') : t('off') }}
+                                            </div>
+                                            <div class="h-[12px] uppercase">
                                                 {{
                                                     curNumberingSystem === 'dec'
                                                         ? el.reg_addr
@@ -163,17 +276,66 @@
                                                 }}
                                             </div>
                                         </div>
+                                        <div
+                                            v-if="el.val === 'err'"
+                                            class="flex flex-col justify-end gap-[6px]"
+                                        >
+                                            <div class="h-[12px]">
+                                                {{
+                                                    el.type === 'wm-coil'
+                                                        ? 'WM'
+                                                        : el.type === 'w-coil'
+                                                        ? 'W'
+                                                        : el.type === 'm-coil'
+                                                        ? 'M'
+                                                        : ''
+                                                }}
+                                            </div>
+                                            <div class="h-[12px]">RW</div>
+                                        </div>
+                                        <div
+                                            v-if="el.val === 'err'"
+                                            class="flex flex-col items-end justify-end gap-[6px]"
+                                        >
+                                            <div class="h-[12px] uppercase">
+                                                {{ t('err') }}
+                                            </div>
+                                            <div class="h-[12px] uppercase">
+                                                {{
+                                                    curNumberingSystem === 'dec'
+                                                        ? el.reg_addr
+                                                        : el.reg_addr.toString(16)
+                                                }}
+                                            </div>
+                                        </div>
+                                        <div
+                                            class="absolute max-w-[192px] w-max left-0 invisible opacity-0 group-hover:visible group-hover:opacity-100 transition-[visibility,opacity] z-[3]"
+                                            :class="
+                                                labelPosition === 'top'
+                                                    ? 'bottom-[100%] pb-1'
+                                                    : 'top-[100%] pt-1'
+                                            "
+                                        >
+                                            <div
+                                                class="bg-[#1B4569] p-3 rounded-[6px] text-[#A0D5FF] text-[13px] shadow-[0_0_11px_0_rgba(160,213,255,1) hover:underline cursor-pointer"
+                                                @click="handleRegLabelClick('coil', index, i)"
+                                            >
+                                                {{ el.label || '\u2013' }}
+                                            </div>
+                                        </div>
                                     </div>
                                     <AddIcon
+                                        v-if="fullState.length !== curState.length"
                                         class="cursor-pointer w-[90px] h-10 rounded-[3px] border border-[#148EF8] py-[10px] active:bg-[#148EF8]"
                                         :class="{ disabled: notConnected }"
+                                        @click="createReg(s.dev, 'coil')"
                                     />
                                 </div>
                             </div>
                         </div>
                         <div class="flex flex-col items-center flex-none w-full">
                             <div
-                                class="w-full h-[50px] border-y border-[#1D4162] pl-5 pt-5 sticky top-0 bg-[#092740] text-base font-semibold"
+                                class="w-full h-[50px] border-y border-[#1D4162] pl-5 pt-5 sticky z-[2] top-0 bg-[#092740] text-base font-semibold"
                             >
                                 Input registers
                             </div>
@@ -194,23 +356,57 @@
                                 </div>
                                 <div class="w-full flex mt-3 mb-[18px] gap-1 px-[18px]">
                                     <div
-                                        class="w-[90px] h-10 flex items-center justify-between text-[#35FED0] text-xs rounded px-[6px] bg-[#006B83]"
+                                        class="w-[90px] h-10 flex items-center justify-between text-[#35FED0] text-xs rounded px-[6px] bg-[#006B83] relative group"
+                                        :class="[
+                                            {
+                                                'bg-[#193550] text-[#F83068]': el.val === 'err',
+                                            },
+                                            {
+                                                'bg-[#183C5E] text-[#3E688E]': el.val === null,
+                                            },
+                                            {
+                                                'bg-[#006B83] text-[#01F0FF]':
+                                                    el.val !== null && el.val !== 'err',
+                                            },
+                                            {
+                                                'hover:border-[#01F0FF]':
+                                                    el.val !== null && el.val !== 'err',
+                                            },
+                                        ]"
                                         v-for="(el, i) in s.vals"
                                         :key="i"
+                                        @mouseenter="
+                                            (e: MouseEvent) => handleMouseEnter(e as MouseEvent)
+                                        "
                                     >
                                         <div class="flex flex-col justify-end gap-[6px]">
                                             <div class="h-[12px]"></div>
-                                            <div class="h-[12px] text-[#01F0FF]">RO</div>
+                                            <div class="h-[12px]">RO</div>
                                         </div>
                                         <div class="flex flex-col items-end justify-end gap-[6px]">
-                                            <div class="h-[12px] text-[#9BE7FF]">
+                                            <div
+                                                v-if="el.val !== null && el.val !== 'err'"
+                                                class="h-[12px] text-[#9BE7FF] uppercase"
+                                            >
                                                 {{
                                                     curNumberingSystem === 'dec'
                                                         ? el.val
                                                         : el.val.toString(16)
                                                 }}
                                             </div>
-                                            <div class="h-[12px] text-[#01F0FF]">
+                                            <div
+                                                v-else-if="el.val === 'err'"
+                                                class="h-[12px] text-[#F83068] uppercase"
+                                            >
+                                                {{ t('err') }}
+                                            </div>
+                                            <div
+                                                v-else
+                                                class="h-[12px] text-[#3E688E]"
+                                            >
+                                                -
+                                            </div>
+                                            <div class="h-[12px] uppercase">
                                                 {{
                                                     curNumberingSystem === 'dec'
                                                         ? el.reg_addr
@@ -218,17 +414,34 @@
                                                 }}
                                             </div>
                                         </div>
+                                        <div
+                                            class="absolute max-w-[192px] w-max left-0 invisible opacity-0 group-hover:visible group-hover:opacity-100 transition-[visibility,opacity] z-[3]"
+                                            :class="
+                                                labelPosition === 'top'
+                                                    ? 'bottom-[100%] pb-1'
+                                                    : 'top-[100%] pt-1'
+                                            "
+                                        >
+                                            <div
+                                                class="bg-[#1B4569] p-3 rounded-[6px] text-[#A0D5FF] text-[13px] shadow-[0_0_11px_0_rgba(160,213,255,1) hover:underline cursor-pointer"
+                                                @click="handleRegLabelClick('ir', index, i)"
+                                            >
+                                                {{ el.label || '\u2013' }}
+                                            </div>
+                                        </div>
                                     </div>
                                     <AddIcon
+                                        v-if="fullState.length !== curState.length"
                                         class="cursor-pointer w-[90px] h-10 rounded-[3px] border border-[#148EF8] py-[10px] active:bg-[#148EF8]"
                                         :class="{ disabled: notConnected }"
+                                        @click="createReg(s.dev, 'ir')"
                                     />
                                 </div>
                             </div>
                         </div>
                         <div class="flex flex-col items-center flex-none w-full">
                             <div
-                                class="w-full h-[50px] border-y border-[#1D4162] pl-5 pt-5 sticky top-0 bg-[#092740] text-base font-semibold"
+                                class="w-full h-[50px] border-y border-[#1D4162] pl-5 pt-5 sticky z-[2] top-0 bg-[#092740] text-base font-semibold"
                             >
                                 Holding registers
                             </div>
@@ -249,23 +462,69 @@
                                 </div>
                                 <div class="w-full flex mt-3 mb-[18px] gap-1 px-[18px]">
                                     <div
-                                        class="w-[90px] h-10 flex items-center justify-between text-[#35FED0] text-xs rounded px-[6px] bg-[#006B83]"
+                                        class="w-[90px] h-10 flex items-center justify-between text-[#35FED0] text-xs rounded px-[6px] bg-[#006B83] relative group"
+                                        :class="[
+                                            {
+                                                'bg-[#193550] text-[#F83068]': el.val === 'err',
+                                            },
+                                            {
+                                                'bg-[#183C5E] text-[#3E688E]': el.val === null,
+                                            },
+                                            {
+                                                'bg-[#006B83] text-[#01F0FF]':
+                                                    el.val !== null && el.val !== 'err',
+                                            },
+                                            {
+                                                'hover:border-[#01F0FF]':
+                                                    el.val !== null && el.val !== 'err',
+                                            },
+                                        ]"
                                         v-for="(el, i) in s.vals"
                                         :key="i"
+                                        @mouseenter="
+                                            (e: MouseEvent) => handleMouseEnter(e as MouseEvent)
+                                        "
                                     >
                                         <div class="flex flex-col justify-end gap-[6px]">
-                                            <div class="h-[12px]"></div>
-                                            <div class="h-[12px] text-[#01F0FF]">RW</div>
+                                            <div class="h-[12px]">
+                                                {{
+                                                    el.type === 'm-hr' || el.type === 'wm-hr'
+                                                        ? 'M'
+                                                        : ''
+                                                }}
+                                            </div>
+                                            <div class="h-[12px]">
+                                                {{
+                                                    el.type === 'w-hr' || el.type === 'wm-hr'
+                                                        ? 'WO'
+                                                        : 'RW'
+                                                }}
+                                            </div>
                                         </div>
                                         <div class="flex flex-col items-end justify-end gap-[6px]">
-                                            <div class="h-[12px] text-[#9BE7FF]">
+                                            <div
+                                                v-if="el.val !== null && el.val !== 'err'"
+                                                class="h-[12px] text-[#9BE7FF] uppercase"
+                                            >
                                                 {{
                                                     curNumberingSystem === 'dec'
                                                         ? el.val
                                                         : el.val.toString(16)
                                                 }}
                                             </div>
-                                            <div class="h-[12px] text-[#01F0FF]">
+                                            <div
+                                                v-else-if="el.val === 'err'"
+                                                class="h-[12px] text-[#F83068] uppercase"
+                                            >
+                                                {{ t('err') }}
+                                            </div>
+                                            <div
+                                                v-else
+                                                class="h-[12px] text-[#3E688E]"
+                                            >
+                                                -
+                                            </div>
+                                            <div class="h-[12px] uppercase">
                                                 {{
                                                     curNumberingSystem === 'dec'
                                                         ? el.reg_addr
@@ -273,10 +532,27 @@
                                                 }}
                                             </div>
                                         </div>
+                                        <div
+                                            class="absolute max-w-[192px] w-max left-0 invisible opacity-0 group-hover:visible group-hover:opacity-100 transition-[visibility,opacity] z-[3]"
+                                            :class="
+                                                labelPosition === 'top'
+                                                    ? 'bottom-[100%] pb-1'
+                                                    : 'top-[100%] pt-1'
+                                            "
+                                        >
+                                            <div
+                                                class="bg-[#1B4569] p-3 rounded-[6px] text-[#A0D5FF] text-[13px] shadow-[0_0_11px_0_rgba(160,213,255,1) hover:underline cursor-pointer"
+                                                @click="handleRegLabelClick('hr', index, i)"
+                                            >
+                                                {{ el.label || '\u2013' }}
+                                            </div>
+                                        </div>
                                     </div>
                                     <AddIcon
+                                        v-if="fullState.length !== curState.length"
                                         class="cursor-pointer w-[90px] h-10 rounded-[3px] border border-[#148EF8] py-[10px] active:bg-[#148EF8]"
                                         :class="{ disabled: notConnected }"
+                                        @click="createReg(s.dev, 'hr')"
                                     />
                                 </div>
                             </div>
@@ -287,11 +563,14 @@
             <div class="w-[42%] h-full border-l border-[#1D4162]">
                 <div class="flex overflow-y-hidden rounded-l-lg w-full">
                     <div
-                        v-dragscroll.y
                         class="flex overflow-y-auto w-full scrollbar-4 flex-1 flex-col relative"
                         :style="{ height: 'calc(100vh - 460px)' }"
+                        ref="tableWrapper"
                     >
-                        <div class="flex flex-col items-center flex-none w-full">
+                        <div
+                            class="flex flex-col items-center flex-none w-full"
+                            ref="di"
+                        >
                             <div
                                 v-if="showTableDeviceLabel"
                                 class="absolute bg-[#1B4569] rounded-[6px] p-3 flex items-center z-[1] max-w-[192px] shadow-[0_0_11px_0_rgba(27,69,105,1)]"
@@ -335,18 +614,39 @@
                                     >
                                         <input
                                             class="w-full h-9 bg-[#183A58] rounded-[6px] px-[14px]"
+                                            :class="[
+                                                {
+                                                    'text-[#F83068]':
+                                                        activeLabel.state.val === 'err',
+                                                },
+                                                {
+                                                    'text-[#3E688E]':
+                                                        activeLabel.state.val === null,
+                                                },
+                                            ]"
                                             type="text"
-                                            :value="String(activeLabelInputVal)"
+                                            :value="activeLabelInputVal"
+                                            :maxlength="32"
                                             @input="(event) => handleInput(event as InputEvent)"
                                         />
                                     </div>
                                     <div
                                         v-else
                                         class="h-[30px] flex items-center pl-[10px] pr-2 hover:bg-[#0C2F4D] transition-colors duration-500 rounded"
+                                        :class="[
+                                            { 'text-[#3E688E]': el.val === null },
+                                            { 'text-[#F83068]': el.val === 'err' },
+                                        ]"
                                     >
-                                        <div class="flex-1">Название регистра</div>
+                                        <div class="flex-1">{{ el.label }}</div>
                                         <div
-                                            class="w-[50px] ml-5 flex justify-end text-[#ADEBFF] hover:text-[#58B1FF] transition-colors duration-500"
+                                            :class="
+                                                el.val === 'err'
+                                                    ? 'text-[#F83068]'
+                                                    : el.val === null
+                                                    ? 'text-[#3E688E]'
+                                                    : 'text-[#ADEBFF] hover:text-[#58B1FF]'
+                                            "
                                             @mouseenter="
                                                 (e) =>
                                                     handleTableDeviceEnter(s.dev, e as MouseEvent)
@@ -355,7 +655,13 @@
                                         >
                                             {{ el.dev_addr }}
                                         </div>
-                                        <div class="w-[50px] ml-5 flex justify-end text-[#ADEBFF]">
+                                        <div
+                                            class="w-[50px] ml-5 flex justify-end uppercase"
+                                            :class="[
+                                                { 'text-[#3E688E]': el.val === null },
+                                                { 'text-[#F83068]': el.val === 'err' },
+                                            ]"
+                                        >
                                             {{
                                                 curNumberingSystem === 'dec'
                                                     ? el.reg_addr
@@ -366,8 +672,10 @@
                                             <div
                                                 class="w-[9px] h-[9px] rounded-[2px]"
                                                 :class="
-                                                    notConnected
+                                                    el.val === null
                                                         ? 'bg-[#193E60]'
+                                                        : el.val === 'err'
+                                                        ? 'bg-[#F83068]'
                                                         : el.val
                                                         ? 'bg-[#35FED0]'
                                                         : 'bg-[#176F6F]'
@@ -382,7 +690,10 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="flex flex-col items-center flex-none w-full">
+                        <div
+                            class="flex flex-col items-center flex-none w-full"
+                            ref="coil"
+                        >
                             <div
                                 class="w-full h-[70px] border-y border-[#1D4162] text-sm pl-[18px] pt-[12px] sticky top-0 bg-[#092740] flex flex-col"
                             >
@@ -415,14 +726,37 @@
                                     >
                                         <input
                                             class="flex-1 h-9 bg-[#183A58] rounded-[6px] px-[14px]"
+                                            :class="[
+                                                {
+                                                    'text-[#F83068]':
+                                                        activeLabel.state.val === 'err',
+                                                },
+                                                {
+                                                    'text-[#3E688E]':
+                                                        activeLabel.state.val === null,
+                                                },
+                                            ]"
                                             type="text"
-                                            :value="String(activeLabelInputVal)"
+                                            :value="activeLabelInputVal"
+                                            :maxlength="32"
                                             @input="(event) => handleInput(event as InputEvent)"
                                         />
                                         <div
-                                            class="h-9 pl-[10px] w-[88px] rounded-[6px] flex items-center justify-start gap-[6px] bg-[#0D424D] text-xs"
+                                            class="h-9 pl-[10px] w-[88px] rounded-[6px] flex items-center justify-start gap-[6px] text-xs"
+                                            :class="[
+                                                el.val === null || el.val === 'err'
+                                                    ? 'justify-center'
+                                                    : 'justify-start bg-[#0D424D]',
+                                                { 'text-[#3E688E]': el.val === null },
+                                                { 'text-[#F83068]': el.val === 'err' },
+                                            ]"
                                         >
                                             <IButtonOutIcon
+                                                v-if="
+                                                    el.val !== null &&
+                                                    el.val !== 'err' &&
+                                                    !el.type.includes('w')
+                                                "
                                                 class="cursor-pointer"
                                                 :isHovered="
                                                     hoveredBinOutItem?.i === i &&
@@ -434,16 +768,33 @@
                                                 @mouseleave="handleBinOutMouseLeave"
                                                 @click="handleCoilClick(el)"
                                             />
-                                            {{ el.val ? t('on') : t('off') }}
+                                            {{
+                                                el.val === null || el.val === 'err'
+                                                    ? '\u2013'
+                                                    : el.val
+                                                    ? t('on')
+                                                    : t('off')
+                                            }}
                                         </div>
                                     </div>
                                     <div
                                         v-else
                                         class="h-[30px] flex items-center pl-[10px] pr-2 hover:bg-[#0C2F4D] transition-colors duration-500 rounded"
+                                        :class="[
+                                            { 'text-[#3E688E]': el.val === null },
+                                            { 'text-[#F83068]': el.val === 'err' },
+                                        ]"
                                     >
-                                        <div class="flex-1">Название регистра</div>
+                                        <div class="flex-1">{{ el.label }}</div>
                                         <div
-                                            class="w-[50px] ml-5 flex justify-end text-[#ADEBFF] hover:text-[#58B1FF] transition-colors duration-500"
+                                            class="w-[50px] ml-5 flex justify-end transition-colors duration-500"
+                                            :class="
+                                                el.val === 'err'
+                                                    ? 'text-[#F83068]'
+                                                    : el.val === null
+                                                    ? 'text-[#3E688E]'
+                                                    : 'text-[#ADEBFF] hover:text-[#58B1FF]'
+                                            "
                                             @mouseenter="
                                                 (e) =>
                                                     handleTableDeviceEnter(s.dev, e as MouseEvent)
@@ -452,7 +803,7 @@
                                         >
                                             {{ el.dev_addr }}
                                         </div>
-                                        <div class="w-[50px] ml-5 flex justify-end text-[#ADEBFF]">
+                                        <div class="w-[50px] ml-5 flex justify-end uppercase">
                                             {{
                                                 curNumberingSystem === 'dec'
                                                     ? el.reg_addr
@@ -462,7 +813,9 @@
                                         <div class="w-[50px] ml-5 mr-3 flex justify-end">
                                             <div
                                                 :class="
-                                                    notConnected
+                                                    el.val === 'err'
+                                                        ? 'text-[#F83068]'
+                                                        : el.val === null
                                                         ? 'text-[#3E688E]'
                                                         : el.val
                                                         ? 'text-[#35FED0]'
@@ -470,7 +823,7 @@
                                                 "
                                             >
                                                 {{
-                                                    notConnected
+                                                    el.val === 'err' || el.val === null
                                                         ? '\u2013'
                                                         : el.val
                                                         ? t('on')
@@ -486,7 +839,10 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="flex flex-col items-center flex-none w-full">
+                        <div
+                            class="flex flex-col items-center flex-none w-full"
+                            ref="ir"
+                        >
                             <div
                                 class="w-full h-[70px] border-y border-[#1D4162] text-sm pl-[18px] pt-[12px] sticky top-0 bg-[#092740] flex flex-col"
                             >
@@ -519,13 +875,35 @@
                                     >
                                         <input
                                             class="flex-1 h-9 bg-[#183A58] rounded-[6px] px-[14px]"
+                                            :class="[
+                                                {
+                                                    'text-[#F83068]':
+                                                        activeLabel.state.val === 'err',
+                                                },
+                                                {
+                                                    'text-[#3E688E]':
+                                                        activeLabel.state.val === null,
+                                                },
+                                            ]"
                                             type="text"
                                             :value="activeLabelInputVal"
+                                            :maxlength="32"
                                             @input="(event) => handleInput(event as InputEvent)"
                                         />
-                                        <div class="text-[15px] text-[#01F0FF]">
+                                        <div
+                                            class="text-[15px] uppercase"
+                                            :class="
+                                                el.val === 'err'
+                                                    ? 'text-[#F83068]'
+                                                    : el.val === null
+                                                    ? 'text-[#3E688E]'
+                                                    : 'text-[#01F0FF]'
+                                            "
+                                        >
                                             {{
-                                                curNumberingSystem === 'dec'
+                                                el.val === 'err' || el.val === null
+                                                    ? '\u2013'
+                                                    : curNumberingSystem === 'dec'
                                                     ? el.val
                                                     : el.val.toString(16)
                                             }}
@@ -534,10 +912,25 @@
                                     <div
                                         v-else
                                         class="h-[30px] flex items-center pl-[10px] pr-2 hover:bg-[#0C2F4D] transition-colors duration-500 rounded"
+                                        :class="[
+                                            {
+                                                'text-[#F83068]': el.val === 'err',
+                                            },
+                                            {
+                                                'text-[#3E688E]': el.val === null,
+                                            },
+                                        ]"
                                     >
-                                        <div class="flex-1">Название регистра</div>
+                                        <div class="flex-1">{{ el.label }}</div>
                                         <div
-                                            class="w-[50px] ml-5 flex justify-end text-[#ADEBFF] hover:text-[#58B1FF] transition-colors duration-500"
+                                            class="w-[50px] ml-5 flex justify-end transition-colors duration-500"
+                                            :class="
+                                                el.val === 'err'
+                                                    ? 'text-[#F83068]'
+                                                    : el.val === null
+                                                    ? 'text-[#3E688E]'
+                                                    : 'text-[#ADEBFF] hover:text-[#58B1FF]'
+                                            "
                                             @mouseenter="
                                                 (e) =>
                                                     handleTableDeviceEnter(s.dev, e as MouseEvent)
@@ -546,27 +939,29 @@
                                         >
                                             {{ el.dev_addr }}
                                         </div>
-                                        <div class="w-[50px] ml-5 flex justify-end text-[#ADEBFF]">
+                                        <div class="w-[50px] ml-5 flex justify-end uppercase">
                                             {{
                                                 curNumberingSystem === 'dec'
-                                                    ? el.dev_addr
-                                                    : el.dev_addr.toString(16)
+                                                    ? el.reg_addr
+                                                    : el.reg_addr.toString(16)
                                             }}
                                         </div>
-                                        <div class="w-[50px] ml-5 mr-3 flex justify-end">
+                                        <div class="w-[50px] ml-5 mr-3 flex justify-end uppercase">
                                             <div
                                                 :class="
-                                                    notConnected
+                                                    el.val === 'err'
+                                                        ? 'text-[#F83068]'
+                                                        : el.val === null
                                                         ? 'text-[#3E688E]'
                                                         : 'text-[#ADEBFF]'
                                                 "
                                             >
                                                 {{
-                                                    notConnected
+                                                    el.val === 'err' || el.val === null
                                                         ? '\u2013'
                                                         : curNumberingSystem === 'dec'
-                                                        ? el.dev_addr
-                                                        : el.dev_addr.toString(16)
+                                                        ? el.val
+                                                        : el.val.toString(16)
                                                 }}
                                             </div>
                                         </div>
@@ -578,7 +973,10 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="flex flex-col items-center flex-none w-full">
+                        <div
+                            class="flex flex-col items-center flex-none w-full"
+                            ref="hr"
+                        >
                             <div
                                 class="w-full h-[70px] border-y border-[#1D4162] text-sm pl-[18px] pt-[12px] sticky top-0 bg-[#092740] flex flex-col"
                             >
@@ -613,15 +1011,54 @@
                                         <div class="w-full flex items-center justify-center">
                                             <input
                                                 class="flex-1 h-9 bg-[#183A58] rounded-l-[6px] px-[14px]"
+                                                :class="[
+                                                    {
+                                                        'text-[#F83068] rounded-[6px]':
+                                                            activeLabel.state.val === 'err',
+                                                    },
+                                                    {
+                                                        'text-[#3E688E] rounded-[6px]':
+                                                            activeLabel.state.val === null,
+                                                    },
+                                                ]"
                                                 type="text"
-                                                :value="String(activeLabelInputVal)"
+                                                :value="activeLabelInputVal"
+                                                :maxlength="32"
                                                 @input="(event) => handleInput(event as InputEvent)"
                                             />
+                                            <div
+                                                v-if="
+                                                    activeLabel.state.val === 'err' ||
+                                                    activeLabel.state.val === null ||
+                                                    activeLabel.state.type.includes('w')
+                                                "
+                                                class="ml-4"
+                                                :class="[
+                                                    {
+                                                        'text-[#F83068] rounded-[6px]':
+                                                            activeLabel.state.val === 'err',
+                                                    },
+                                                    {
+                                                        'text-[#3E688E] rounded-[6px]':
+                                                            activeLabel.state.val === null,
+                                                    },
+                                                ]"
+                                            >
+                                                {{
+                                                    activeLabel.state.val === 'err' ||
+                                                    activeLabel.state.val === null
+                                                        ? '\u2013'
+                                                        : activeLabel.state.val
+                                                }}
+                                            </div>
                                             <input
-                                                class="h-9 bg-[#04586F] rounded-r-[6px] px-2 w-[72px] text-[#01F0FF] text-center"
-                                                :class="{
-                                                    'bg-[#5C2345] text-[#F83068]': isInvalidData,
-                                                }"
+                                                v-else
+                                                class="h-9 rounded-r-[6px] px-2 w-[72px] text-center uppercase"
+                                                :class="
+                                                    isInvalidData
+                                                        ? 'bg-[#5C2345] text-[#F83068]'
+                                                        : 'bg-[#04586F] text-[#01F0FF]'
+                                                "
                                                 type="text"
                                                 :value="
                                                     String(
@@ -647,10 +1084,25 @@
                                     <div
                                         v-else
                                         class="h-[30px] flex items-center pl-[10px] pr-2 hover:bg-[#0C2F4D] transition-colors duration-500 rounded"
+                                        :class="[
+                                            {
+                                                'text-[#F83068]': el.val === 'err',
+                                            },
+                                            {
+                                                'text-[#3E688E]': el.val === null,
+                                            },
+                                        ]"
                                     >
-                                        <div class="flex-1">Название регистра</div>
+                                        <div class="flex-1">{{ el.label }}</div>
                                         <div
-                                            class="w-[50px] ml-5 flex justify-end text-[#ADEBFF] hover:text-[#58B1FF] transition-colors duration-500"
+                                            class="w-[50px] ml-5 flex justify-end transition-colors duration-500"
+                                            :class="
+                                                el.val === 'err'
+                                                    ? 'text-[#F83068]'
+                                                    : el.val === null
+                                                    ? 'text-[#3E688E]'
+                                                    : 'text-[#ADEBFF] hover:text-[#58B1FF]'
+                                            "
                                             @mouseenter="
                                                 (e) =>
                                                     handleTableDeviceEnter(s.dev, e as MouseEvent)
@@ -659,23 +1111,25 @@
                                         >
                                             {{ el.dev_addr }}
                                         </div>
-                                        <div class="w-[50px] ml-5 flex justify-end text-[#ADEBFF]">
+                                        <div class="w-[50px] ml-5 flex justify-end uppercase">
                                             {{
                                                 curNumberingSystem === 'dec'
                                                     ? el.reg_addr
                                                     : el.reg_addr.toString(16)
                                             }}
                                         </div>
-                                        <div class="w-[50px] ml-5 mr-3 flex justify-end">
+                                        <div class="w-[50px] ml-5 mr-3 flex justify-end uppercase">
                                             <div
                                                 :class="
-                                                    notConnected
+                                                    el.val === 'err'
+                                                        ? 'text-[#F83068]'
+                                                        : el.val === null
                                                         ? 'text-[#3E688E]'
                                                         : 'text-[#ADEBFF]'
                                                 "
                                             >
                                                 {{
-                                                    notConnected
+                                                    el.val === 'err' || el.val === null
                                                         ? '\u2013'
                                                         : curNumberingSystem === 'dec'
                                                         ? el.val
@@ -701,6 +1155,7 @@
             :command="popUpCommand"
             :state="fullState"
             :w="w"
+            :newReg="newReg"
             @close="closePopUp"
         />
     </div>
@@ -716,8 +1171,17 @@ import type { Widget } from '@/stores';
 
 const indexStore = useIndexStore();
 
-const { curNumberingSystem, devicesState, notConnected, choosenMbDevices, mbDevs, mbDevsLabels } =
-    storeToRefs(indexStore);
+const {
+    curNumberingSystem,
+    devicesState,
+    notConnected,
+    choosenMbDevices,
+    mbDevs,
+    mbDevsLabels,
+    labels,
+} = storeToRefs(indexStore);
+
+const { saveToFile } = useReadWriteFiles();
 
 const api = indexStore.getApi().api;
 
@@ -757,26 +1221,72 @@ const isInvalidData = ref(false);
 
 const showPopUp = ref(false);
 
-const popUpCommand = ref<'delete' | 'create' | 'update' | undefined>(undefined);
+const popUpCommand = ref<'delete' | 'create' | 'update' | 'createReg' | undefined>(undefined);
+
+const tableWrapper = ref<HTMLElement | undefined>();
+
+const di = ref<HTMLElement | undefined>();
+
+const coil = ref<HTMLElement | undefined>();
+
+const ir = ref<HTMLElement | undefined>();
+
+const hr = ref<HTMLElement | undefined>();
+
+const varsWrapper = ref<HTMLElement | undefined>();
+
+const labelPosition = ref<'top' | 'bottom'>('bottom');
 
 const popUpEl = ref<{
-    type?: 'hr' | 'ir' | 'coil' | 'di';
+    type?:
+        | 'hr'
+        | 'wm-hr'
+        | 'w-hr'
+        | 'm-hr'
+        | 'ir'
+        | 'coil'
+        | 'wm-coil'
+        | 'w-coil'
+        | 'm-coil'
+        | 'di';
     reg_addr: number;
     dev_addr: number;
-    val: number;
+    val: number | null | 'err';
 } | null>(null);
 
 const hoveredBinOutItem = ref<{
     i: number;
-    state: { type?: 'hr' | 'ir' | 'coil' | 'di'; reg_addr: number; dev_addr: number; val: number };
+    state: {
+        type?: 'hr' | 'ir' | 'coil' | 'di';
+        reg_addr: number;
+        dev_addr: number;
+        val: number | null | 'err';
+    };
 } | null>(null);
 
 const activeLabel = ref<{
     i: number;
-    state: { type?: 'hr' | 'ir' | 'coil' | 'di'; reg_addr: number; dev_addr: number; val: number };
+    state: {
+        type:
+            | 'hr'
+            | 'wm-hr'
+            | 'w-hr'
+            | 'm-hr'
+            | 'ir'
+            | 'coil'
+            | 'wm-coil'
+            | 'w-coil'
+            | 'm-coil'
+            | 'di';
+        reg_addr: number;
+        dev_addr: number;
+        val: number | null | 'err';
+    };
 } | null>(null);
 
 const mouseupX = ref<number>(0);
+
+const newReg = ref<{ dev: number; type: 'hr' | 'ir' | 'coil' | 'di' } | null>(null);
 
 const props = defineProps<{
     w: { w: Widget; state: number[] };
@@ -786,22 +1296,86 @@ const curMbDevLabels = computed<string[]>(() => {
     return mbDevsLabels.value[props.w.w.d][props.w.w.bus || 0];
 });
 
-const state = ref<number[]>([...props.w.state]);
+const state = ref<(number | null | 'err')[]>([...props.w.state]);
 
 const fullState = ref<
-    { type?: 'hr' | 'ir' | 'coil' | 'di'; reg_addr: number; dev_addr: number; val: number }[]
+    {
+        type:
+            | 'hr'
+            | 'wm-hr'
+            | 'w-hr'
+            | 'm-hr'
+            | 'ir'
+            | 'coil'
+            | 'wm-coil'
+            | 'w-coil'
+            | 'm-coil'
+            | 'di'
+            | 'none';
+        reg_addr: number;
+        dev_addr: number;
+        val: number | null | 'err';
+        label: string;
+    }[]
 >([]);
 
 const curState = computed<
-    { type?: 'hr' | 'ir' | 'coil' | 'di'; reg_addr: number; dev_addr: number; val: number }[] | []
+    | {
+          type:
+              | 'hr'
+              | 'wm-hr'
+              | 'w-hr'
+              | 'm-hr'
+              | 'ir'
+              | 'coil'
+              | 'wm-coil'
+              | 'w-coil'
+              | 'm-coil'
+              | 'di';
+          reg_addr: number;
+          dev_addr: number;
+          val: number | null | 'err';
+          label: string;
+      }[]
+    | []
 >(() => {
-    return fullState.value.filter((el) => el.val !== null);
+    return fullState.value.filter((el) => el.type !== 'none') as {
+        type:
+            | 'hr'
+            | 'wm-hr'
+            | 'w-hr'
+            | 'm-hr'
+            | 'ir'
+            | 'coil'
+            | 'wm-coil'
+            | 'w-coil'
+            | 'm-coil'
+            | 'di';
+        reg_addr: number;
+        dev_addr: number;
+        val: number | null | 'err';
+        label: string;
+    }[];
+});
+
+const errArr = computed<number[]>(() => {
+    return curState.value.filter((el) => el.val === 'err').map((el) => el.dev_addr);
+});
+
+const initArr = computed<number[]>(() => {
+    return curState.value.filter((el) => el.val === null).map((el) => el.dev_addr);
 });
 
 const diArr = computed<
     | {
           dev: number;
-          vals: { type: 'di'; reg_addr: number; dev_addr: number; val: number }[];
+          vals: {
+              type: 'di';
+              reg_addr: number;
+              dev_addr: number;
+              val: number | null | 'err';
+              label: string;
+          }[];
       }[]
     | []
 >(() => {
@@ -812,10 +1386,11 @@ const diArr = computed<
         reg_addr: number;
         dev_addr: number;
         val: number;
+        label: string;
     }[];
     const res: {
         dev: number;
-        vals: { type: 'di'; reg_addr: number; dev_addr: number; val: number }[];
+        vals: { type: 'di'; reg_addr: number; dev_addr: number; val: number; label: string }[];
     }[] = [];
     arr.forEach((el) => {
         const index = res.findIndex((elem) => elem.dev === el.dev_addr);
@@ -837,21 +1412,39 @@ const diArr = computed<
 const coilArr = computed<
     | {
           dev: number;
-          vals: { type: 'coil'; reg_addr: number; dev_addr: number; val: number }[];
+          vals: {
+              type: 'coil' | 'wm-coil' | 'w-coil' | 'm-coil';
+              reg_addr: number;
+              dev_addr: number;
+              val: number | null | 'err';
+              label: string;
+          }[];
       }[]
     | []
 >(() => {
     const arr = curState.value.filter(
-        (el) => el.type === 'coil' && curChoosenDevs.value.includes(el.dev_addr),
+        (el) =>
+            (el.type === 'coil' ||
+                el.type === 'wm-coil' ||
+                el.type === 'w-coil' ||
+                el.type === 'm-coil') &&
+            curChoosenDevs.value.includes(el.dev_addr),
     ) as {
-        type: 'coil';
+        type: 'coil' | 'wm-coil' | 'w-coil' | 'm-coil';
         reg_addr: number;
         dev_addr: number;
         val: number;
+        label: string;
     }[];
     const res: {
         dev: number;
-        vals: { type: 'coil'; reg_addr: number; dev_addr: number; val: number }[];
+        vals: {
+            type: 'coil' | 'wm-coil' | 'w-coil' | 'm-coil';
+            reg_addr: number;
+            dev_addr: number;
+            val: number;
+            label: string;
+        }[];
     }[] = [];
     arr.forEach((el) => {
         const index = res.findIndex((elem) => elem.dev === el.dev_addr);
@@ -873,7 +1466,13 @@ const coilArr = computed<
 const irArr = computed<
     | {
           dev: number;
-          vals: { type: 'ir'; reg_addr: number; dev_addr: number; val: number }[];
+          vals: {
+              type: 'ir';
+              reg_addr: number;
+              dev_addr: number;
+              val: number | null | 'err';
+              label: string;
+          }[];
       }[]
     | []
 >(() => {
@@ -884,10 +1483,11 @@ const irArr = computed<
         reg_addr: number;
         dev_addr: number;
         val: number;
+        label: string;
     }[];
     const res: {
         dev: number;
-        vals: { type: 'ir'; reg_addr: number; dev_addr: number; val: number }[];
+        vals: { type: 'ir'; reg_addr: number; dev_addr: number; val: number; label: string }[];
     }[] = [];
     arr.forEach((el) => {
         const index = res.findIndex((elem) => elem.dev === el.dev_addr);
@@ -909,21 +1509,36 @@ const irArr = computed<
 const hrArr = computed<
     | {
           dev: number;
-          vals: { type: 'hr'; reg_addr: number; dev_addr: number; val: number }[];
+          vals: {
+              type: 'hr' | 'wm-hr' | 'w-hr' | 'm-hr';
+              reg_addr: number;
+              dev_addr: number;
+              val: number | null | 'err';
+              label: string;
+          }[];
       }[]
     | []
 >(() => {
     const arr = curState.value.filter(
-        (el) => el.type === 'hr' && curChoosenDevs.value.includes(el.dev_addr),
+        (el) =>
+            (el.type === 'hr' || el.type === 'wm-hr' || el.type === 'w-hr' || el.type === 'm-hr') &&
+            curChoosenDevs.value.includes(el.dev_addr),
     ) as {
-        type: 'hr';
+        type: 'hr' | 'wm-hr' | 'w-hr' | 'm-hr';
         reg_addr: number;
         dev_addr: number;
         val: number;
+        label: string;
     }[];
     const res: {
         dev: number;
-        vals: { type: 'hr'; reg_addr: number; dev_addr: number; val: number }[];
+        vals: {
+            type: 'hr' | 'wm-hr' | 'w-hr' | 'm-hr';
+            reg_addr: number;
+            dev_addr: number;
+            val: number;
+            label: string;
+        }[];
     }[] = [];
     arr.forEach((el) => {
         const index = res.findIndex((elem) => elem.dev === el.dev_addr);
@@ -943,7 +1558,7 @@ const hrArr = computed<
 });
 
 const curDevs = computed<number[]>(() => {
-    return [...new Set(curState.value.map((el) => el.dev_addr))].sort((a, b) => a - b);
+    return mbDevs.value[props.w.w.d][props.w.w.bus || 0];
 });
 
 async function getMbInfo() {
@@ -953,11 +1568,15 @@ async function getMbInfo() {
             bus: 0,
         });
         const data = (await r.data) as {
-            type: ['hr' | 'di' | 'coil' | 'ir'];
+            type: ['hr' | 'di' | 'coil' | 'wm-coil' | 'w-coil' | 'm-coil' | 'ir'];
             dev_addr: number[];
             reg_addr: number[];
         };
         const arr = [];
+        const curLabels =
+            labels.value[props.w.w.d]?.find((el) => el.interf === props.w.w.i)?.val[
+                props.w.w.bus || 0
+            ] || [];
         for (let i = 0; i < state.value.length; i += 1) {
             if (mbDevs.value[props.w.w.d][props.w.w.bus || 0].includes(data.dev_addr[i])) {
                 arr.push({
@@ -965,6 +1584,7 @@ async function getMbInfo() {
                     reg_addr: data.reg_addr[i] as number,
                     dev_addr: data.dev_addr[i] as number,
                     val: state.value[i],
+                    label: curLabels[i] || '\u2013',
                 });
             }
         }
@@ -1060,12 +1680,29 @@ function handleTableDeviceLeave() {
 }
 
 function handleDblClick(
-    s: { type?: 'hr' | 'ir' | 'coil' | 'di'; reg_addr: number; dev_addr: number; val: number },
+    s: {
+        type:
+            | 'hr'
+            | 'wm-hr'
+            | 'w-hr'
+            | 'm-hr'
+            | 'ir'
+            | 'coil'
+            | 'wm-coil'
+            | 'w-coil'
+            | 'm-coil'
+            | 'di';
+        reg_addr: number;
+        dev_addr: number;
+        val: number | null | 'err';
+        label: string;
+    },
     index: number,
 ) {
     activeLabel.value = { i: index, state: s };
-    activeLabelInputVal.value = 'Название регистра';
-    if (s.type === 'hr') activeLabelInputValue.value = s.val.toString();
+    activeLabelInputVal.value = s.label === '\u2013' ? '' : s.label;
+    if (s.type === 'hr' || s.type === 'wm-hr' || s.type === 'w-hr' || s.type === 'm-hr')
+        activeLabelInputValue.value = s.val === null ? '\u2013' : s.val.toString();
     window.addEventListener('click', saveData);
     window.addEventListener('keypress', saveData);
 }
@@ -1075,8 +1712,17 @@ function saveData(e: KeyboardEvent | MouseEvent) {
     if (e.type === 'keypress') {
         const event: KeyboardEvent = e as KeyboardEvent;
         if (event.key === 'Enter') {
-            //функция замены названия регистра
-            if (!isInvalidData.value && activeLabel.value.state.type === 'hr') {
+            setLabel(
+                activeLabel.value.state as {
+                    type?: 'hr' | 'ir' | 'coil' | 'di';
+                    reg_addr: number;
+                    dev_addr: number;
+                    val: number;
+                    label: string;
+                },
+                activeLabelInputVal.value,
+            );
+            if (!isInvalidData.value && activeLabel.value.state.type.includes('hr')) {
                 setData(activeLabel.value.state, +activeLabelInputValue.value);
             }
             isInvalidData.value = false;
@@ -1087,8 +1733,17 @@ function saveData(e: KeyboardEvent | MouseEvent) {
     } else if (e.type === 'click') {
         const target = e.target as HTMLElement;
         if (target.closest('.activeLabel')) return;
-        //функция замены названия регистра
-        if (!isInvalidData.value && activeLabel.value.state.type === 'hr') {
+        setLabel(
+            activeLabel.value.state as {
+                type?: 'hr' | 'ir' | 'coil' | 'di';
+                reg_addr: number;
+                dev_addr: number;
+                val: number;
+                label: string;
+            },
+            activeLabelInputVal.value,
+        );
+        if (!isInvalidData.value && activeLabel.value.state.type.includes('hr')) {
             setData(activeLabel.value.state, +activeLabelInputValue.value);
         }
         isInvalidData.value = false;
@@ -1098,15 +1753,103 @@ function saveData(e: KeyboardEvent | MouseEvent) {
     }
 }
 
-async function setData(
-    el: {
+async function setLabel(
+    s: {
         type?: 'hr' | 'ir' | 'coil' | 'di';
         reg_addr: number;
         dev_addr: number;
         val: number;
+        label: string;
+    },
+    label: string,
+) {
+    const vals = [...fullState.value.map((el) => el.label)];
+    const newLabels = [...vals];
+    const index = fullState.value.findIndex((el) => JSON.stringify(el) === JSON.stringify(s));
+    if (index === -1) return;
+    newLabels[index] = label;
+    for (let i = 0; i < Math.ceil(newLabels.length / labelsFileLength); i += 1) {
+        if (
+            JSON.stringify(vals.slice(i * labelsFileLength, (i + 1) * labelsFileLength)) !==
+            JSON.stringify(newLabels.slice(i * labelsFileLength, (i + 1) * labelsFileLength))
+        ) {
+            saveLabel(
+                newLabels.slice(i * labelsFileLength, (i + 1) * labelsFileLength) as string[],
+                i,
+            );
+        }
+    }
+}
+
+async function saveLabel(labels: string[], part: number) {
+    const isSavingError = await saveToFile(
+        {
+            type: 'labels',
+            device: props.w.w.d,
+            bus: props.w.w.bus || 0,
+            interf: props.w.w.i as
+                | '1w-rom'
+                | '1w-sens'
+                | 'adc-in'
+                | 'bin-in'
+                | 'bin-out'
+                | 'bin-var'
+                | 'int-var'
+                | 'mb-var'
+                | 'pwm-out'
+                | 'tim-var',
+        },
+        { labels: labels },
+        part,
+    );
+    if (isSavingError) {
+        if (isAborted.value) {
+            return;
+        }
+        setTimeout(() => {
+            saveLabel(labels, part);
+        }, 5);
+    } else {
+        indexStore.changeLabel(
+            props.w.w.d,
+            props.w.w.i as
+                | '1w-rom'
+                | '1w-sens'
+                | 'adc-in'
+                | 'bin-in'
+                | 'bin-out'
+                | 'bin-var'
+                | 'int-var'
+                | 'mb-var'
+                | 'pwm-out'
+                | 'tim-var',
+            labels,
+            part,
+            props.w.w.bus,
+        );
+    }
+}
+
+async function setData(
+    el: {
+        type:
+            | 'hr'
+            | 'ir'
+            | 'coil'
+            | 'di'
+            | 'wm-hr'
+            | 'w-hr'
+            | 'm-hr'
+            | 'wm-coil'
+            | 'w-coil'
+            | 'm-coil';
+        reg_addr: number;
+        dev_addr: number;
+        val: number | null | 'err';
     },
     val: number,
 ) {
+    if ((el.type !== 'hr' && el.type !== 'm-hr') || el.val === 'err' || el.val === null) return;
     try {
         let newIndex;
         for (let i = 0; i < fullState.value.length; i += 1) {
@@ -1148,19 +1891,51 @@ function handleInput(e: InputEvent) {
 function handleValInput(e: InputEvent) {
     const target = e.target as HTMLInputElement;
     if (!target) return;
-    if (!(+target.value >= 0 && +target.value <= 65535)) {
-        isInvalidData.value = true;
+
+    if (curNumberingSystem.value === 'dec') {
+        if (isNaN(+target.value)) return;
+        if (+target.value < 0) {
+            activeLabelInputValue.value = String(0);
+        } else if (+target.value > 65535) {
+            activeLabelInputValue.value = String(65535);
+        } else {
+            activeLabelInputValue.value = target.value;
+        }
     } else {
-        isInvalidData.value = false;
+        const val = parseInt(target.value, 16);
+        if (isNaN(val)) return;
+        if (val < 0) {
+            activeLabelInputValue.value = String(0);
+        } else if (val > 65535) {
+            activeLabelInputValue.value = String(65535);
+        } else {
+            activeLabelInputValue.value = String(val);
+        }
     }
-    activeLabelInputValue.value = target.value;
 }
 
 function handleBinOutMouseEnter(
     i: number,
-    el: { type?: 'hr' | 'ir' | 'coil' | 'di'; reg_addr: number; dev_addr: number; val: number },
+    el: {
+        type: 'hr' | 'ir' | 'coil' | 'wm-coil' | 'w-coil' | 'm-coil' | 'di';
+        reg_addr: number;
+        dev_addr: number;
+        val: number | null | 'err';
+    },
 ) {
-    hoveredBinOutItem.value = { i: i, state: el };
+    hoveredBinOutItem.value = {
+        i: i,
+        state: {
+            type: (el.type.includes('hr') ? 'hr' : el.type.includes('coil') ? 'coil' : el.type) as
+                | 'hr'
+                | 'ir'
+                | 'coil'
+                | 'di',
+            reg_addr: el.reg_addr,
+            dev_addr: el.dev_addr,
+            val: el.val,
+        },
+    };
 }
 
 function handleBinOutMouseLeave() {
@@ -1168,11 +1943,20 @@ function handleBinOutMouseLeave() {
 }
 
 async function handleCoilClick(el: {
-    type?: 'hr' | 'ir' | 'coil' | 'di';
+    type: 'hr' | 'ir' | 'coil' | 'wm-coil' | 'w-coil' | 'm-coil' | 'di';
     reg_addr: number;
     dev_addr: number;
-    val: number;
+    val: number | null | 'err';
 }) {
+    if (
+        (el.type !== 'coil' &&
+            el.type !== 'wm-coil' &&
+            el.type !== 'w-coil' &&
+            el.type !== 'm-coil') ||
+        el.val === null ||
+        el.val === 'err'
+    )
+        return;
     try {
         let newIndex;
         for (let i = 0; i < fullState.value.length; i += 1) {
@@ -1206,13 +1990,18 @@ async function handleCoilClick(el: {
 }
 
 function deleteItem(el: {
-    type?: 'hr' | 'ir' | 'coil' | 'di';
+    type: 'hr' | 'wm-hr' | 'w-hr' | 'm-hr' | 'ir' | 'coil' | 'wm-coil' | 'w-coil' | 'm-coil' | 'di';
     reg_addr: number;
     dev_addr: number;
-    val: number;
+    val: number | null | 'err';
 }) {
     showPopUp.value = true;
-    popUpEl.value = el;
+    popUpEl.value = {
+        type: el.type,
+        reg_addr: el.reg_addr,
+        dev_addr: el.dev_addr,
+        val: el.val,
+    };
     popUpCommand.value = 'delete';
 }
 
@@ -1221,10 +2010,63 @@ function updateItem() {
     popUpCommand.value = 'update';
 }
 
+function createItem() {
+    showPopUp.value = true;
+    popUpCommand.value = 'create';
+}
+
+function createReg(dev: number, type: 'hr' | 'ir' | 'coil' | 'di') {
+    showPopUp.value = true;
+    newReg.value = { dev: dev, type: type };
+    popUpCommand.value = 'createReg';
+}
+
 function closePopUp() {
     showPopUp.value = false;
+    newReg.value = null;
     popUpEl.value = null;
     popUpCommand.value = undefined;
+}
+
+function handleRegLabelClick(type: 'di' | 'coil' | 'ir' | 'hr', index: number, i: number) {
+    if (!tableWrapper.value || !di.value || !coil.value || !ir.value || !hr.value) return;
+    let top = 0; // 70 - height of table header; 30 - hight of table line;
+    let n = i;
+    if (type === 'di') {
+        for (let j = 0; j < index; j++) {
+            n += diArr.value[j].vals.length;
+        }
+        top = n * 30;
+    } else if (type === 'coil') {
+        for (let j = 0; j < index; j++) {
+            n += coilArr.value[j].vals.length;
+        }
+        top = di.value.offsetHeight + n * 30;
+    } else if (type === 'ir') {
+        for (let j = 0; j < index; j++) {
+            n += irArr.value[j].vals.length;
+        }
+        top = di.value.offsetHeight + coil.value.offsetHeight + n * 30;
+    } else {
+        for (let j = 0; j < index; j++) {
+            n += hrArr.value[j].vals.length;
+        }
+        top = di.value.offsetHeight + coil.value.offsetHeight + ir.value.offsetHeight + n * 30;
+    }
+    tableWrapper.value.scrollTo({
+        top: top,
+        behavior: 'smooth',
+    });
+}
+
+function handleMouseEnter(e: MouseEvent) {
+    const target = e.target as HTMLElement;
+    if (!target || !varsWrapper.value) return;
+    // 56 - max label height
+    labelPosition.value =
+        target.offsetTop - varsWrapper.value.scrollTop + 56 >= varsWrapper.value.offsetHeight
+            ? 'top'
+            : 'bottom';
 }
 
 watch(
@@ -1239,10 +2081,12 @@ watch(
 watch(
     () => curDevs.value,
     () => {
-        if (choosenMbDevices.value[props.w.w.d] === undefined) {
-            curChoosenDevs.value = curDevs.value;
-            indexStore.setChoosenMbDevices(props.w.w.d, curChoosenDevs.value);
-        }
+        // if (choosenMbDevices.value[props.w.w.d] === undefined) {
+        //     console.log('!!');
+        //     curChoosenDevs.value = [...curDevs.value];
+        //     indexStore.setChoosenMbDevices(props.w.w.d, curChoosenDevs.value);
+        // }
+        curChoosenDevs.value = [...curChoosenDevs.value].filter((el) => curDevs.value.includes(el));
     },
 );
 
@@ -1252,8 +2096,11 @@ onMounted(() => {
     const el = scrollEl.value;
     if (!wrapper || !el) return;
     isEndScrollEl.value = !(wrapper.offsetWidth <= el.offsetWidth);
-    if (choosenMbDevices.value[props.w.w.d])
+    if (choosenMbDevices.value[props.w.w.d]) {
         curChoosenDevs.value = choosenMbDevices.value[props.w.w.d];
+    } else {
+        curChoosenDevs.value = curDevs.value;
+    }
 });
 
 onBeforeUnmount(() => {
@@ -1278,6 +2125,9 @@ const { t } = useI18n({
                 text: 'Введите значение от ',
                 separator: ' до ',
             },
+            err: 'ошибка',
+            mbDevsInit: 'Есть регистры в состоянии инициализации',
+            mbDevsErr: 'Есть регистры в состоянии ошибки',
         },
         en: {
             noObj: 'Objects disabled',
@@ -1294,11 +2144,10 @@ const { t } = useI18n({
                 text: 'Enter a value between ',
                 separator: ' and ',
             },
+            err: 'error',
+            mbDevsInit: 'There are registers in initialization state',
+            mbDevsErr: 'There are registers in an error state',
         },
     },
 });
-
-// watch(labels, () => {
-//     console.log(labels.value);
-// });
 </script>

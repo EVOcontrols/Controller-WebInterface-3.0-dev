@@ -28,20 +28,41 @@ import MbStates from '@/components/views/widgets/states/MbStates.vue';
 const activeIO = ref<{
     index: number;
     val: {
-        type?: 'hr' | 'ir' | 'coil' | 'di';
+        type:
+            | 'hr'
+            | 'wm-hr'
+            | 'w-hr'
+            | 'm-hr'
+            | 'ir'
+            | 'coil'
+            | 'wm-coil'
+            | 'w-coil'
+            | 'm-coil'
+            | 'di';
         reg_addr: number;
         dev_addr: number;
-        val: number;
+        val: number | null | 'err';
     } | null;
 } | null>(null);
 
 const lastActiveIO = ref<{
     index: number;
+    newIndex: number;
     val: {
-        type?: 'hr' | 'ir' | 'coil' | 'di';
+        type:
+            | 'hr'
+            | 'wm-hr'
+            | 'w-hr'
+            | 'm-hr'
+            | 'ir'
+            | 'coil'
+            | 'wm-coil'
+            | 'w-coil'
+            | 'm-coil'
+            | 'di';
         reg_addr: number;
         dev_addr: number;
-        val: number;
+        val: number | null | 'err';
     } | null;
 } | null>(null);
 
@@ -55,16 +76,27 @@ const props = defineProps<{
 
 function setActiveIO(
     index: number,
+    newIndex: number,
     s: {
-        type?: 'hr' | 'ir' | 'coil' | 'di';
+        type:
+            | 'hr'
+            | 'wm-hr'
+            | 'w-hr'
+            | 'm-hr'
+            | 'ir'
+            | 'coil'
+            | 'wm-coil'
+            | 'w-coil'
+            | 'm-coil'
+            | 'di';
         reg_addr: number;
         dev_addr: number;
-        val: number;
+        val: number | null | 'err';
     } | null,
 ) {
     clearTimeout(mouseenterTimer.value);
     clearTimeout(mouseleaveTimer.value);
-    lastActiveIO.value = { index: index, val: s };
+    lastActiveIO.value = { index: index, newIndex: newIndex, val: s };
     mouseenterTimer.value = setTimeout(() => {
         if (lastActiveIO.value !== null) activeIO.value = lastActiveIO.value;
     }, 50);

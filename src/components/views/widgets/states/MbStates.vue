@@ -27,13 +27,64 @@
             >
                 <div
                     v-for="(s, index) in curState"
-                    class="relative rounded group inline-flex flex-col items-end w-[90px] h-10 justify-center gap-[6px] transition-all duration-300 border border-transparent px-[6px]"
+                    class="relative select-none rounded group inline-flex flex-col items-end w-[90px] h-10 justify-center gap-[6px] transition-all duration-300 border border-transparent px-[6px]"
                     :class="[
-                        { 'hover:border-[#35FED0]': s.type === 'di' || s.type === 'coil' },
-                        { 'bg-[#176F6F]': (s.type === 'di' || s.type === 'coil') && s.val },
-                        { 'bg-[#0D424D]': (s.type === 'di' || s.type === 'coil') && !s.val },
-                        { 'bg-[#006B83]': s.type === 'hr' || s.type === 'ir' },
-                        { 'hover:border-[#01F0FF]': s.type === 'hr' || s.type === 'ir' },
+                        {
+                            'bg-[#193550]': s.val === 'err',
+                        },
+                        {
+                            'bg-[#183C5E]': s.val === null,
+                        },
+                        {
+                            'hover:border-[#35FED0]':
+                                s.val !== null &&
+                                s.val !== 'err' &&
+                                (s.type === 'di' ||
+                                    s.type === 'coil' ||
+                                    s.type === 'wm-coil' ||
+                                    s.type === 'w-coil' ||
+                                    s.type === 'm-coil'),
+                        },
+                        {
+                            'bg-[#176F6F]':
+                                (s.type === 'di' ||
+                                    s.type === 'coil' ||
+                                    s.type === 'wm-coil' ||
+                                    s.type === 'w-coil' ||
+                                    s.type === 'm-coil') &&
+                                s.val &&
+                                s.val !== 'err',
+                        },
+                        {
+                            'bg-[#0D424D]':
+                                (s.type === 'di' ||
+                                    s.type === 'coil' ||
+                                    s.type === 'wm-coil' ||
+                                    s.type === 'w-coil' ||
+                                    s.type === 'm-coil') &&
+                                !s.val &&
+                                s.val !== null,
+                        },
+                        {
+                            'bg-[#006B83]':
+                                (s.type === 'hr' ||
+                                    s.type === 'wm-hr' ||
+                                    s.type === 'w-hr' ||
+                                    s.type === 'm-hr' ||
+                                    s.type === 'ir') &&
+                                s.val !== null &&
+                                s.val !== 'err',
+                        },
+                        {
+                            'hover:border-[#01F0FF]':
+                                (s.type === 'hr' ||
+                                    s.type === 'wm-hr' ||
+                                    s.type === 'w-hr' ||
+                                    s.type === 'm-hr' ||
+                                    s.type === 'ir') &&
+                                s.val !== null &&
+                                s.val !== 'err',
+                        },
                     ]"
                     :key="index"
                     @mouseenter="handleMouseEnter(index, s)"
@@ -41,31 +92,109 @@
                 >
                     <div
                         class="absolute w-full h-full rounded left-0 top-0 z-[-1] group-hover:z-[4]"
-                        :class="{ 'cursor-pointer': s.type === 'coil' }"
+                        :class="{
+                            'cursor-pointer':
+                                (s.type === 'coil' ||
+                                    s.type === 'wm-coil' ||
+                                    s.type === 'w-coil' ||
+                                    s.type === 'm-coil') &&
+                                s.val !== 'err' &&
+                                s.val !== null,
+                        }"
                         @click="handleClick(index, s)"
                     ></div>
                     <div
                         v-if="s.type === 'di'"
-                        class="w-full flex items-center justify-between text-[#35FED0] text-xs"
+                        class="w-full flex flex-col items-center justify-between"
+                        :class="
+                            s.val === null
+                                ? 'text-[#3E688E]'
+                                : s.val === 'err'
+                                ? 'text-[#F83068]'
+                                : 'text-[#35FED0]'
+                        "
                     >
-                        <span>RO</span>
-                        <span>{{
-                            numberingSystem === 'dec' ? s.reg_addr : s.reg_addr.toString(16)
-                        }}</span>
+                        <div
+                            v-if="s.val === 'err'"
+                            class="w-full flex justify-end"
+                        >
+                            {{ t('error') }}
+                        </div>
+                        <div class="w-full flex items-center justify-between">
+                            <span>RO</span>
+                            <span class="uppercase">{{
+                                numberingSystem === 'dec' ? s.reg_addr : s.reg_addr.toString(16)
+                            }}</span>
+                        </div>
                     </div>
                     <div
-                        v-else-if="s.type === 'coil'"
-                        class="w-full flex items-center justify-between text-[#35FED0] text-xs"
+                        v-else-if="
+                            s.type === 'coil' ||
+                            s.type === 'wm-coil' ||
+                            s.type === 'w-coil' ||
+                            s.type === 'm-coil'
+                        "
+                        class="w-full flex items-center justify-between"
+                        :class="
+                            s.val === null
+                                ? 'text-[#3E688E]'
+                                : s.val === 'err'
+                                ? 'text-[#F83068]'
+                                : 'text-[#35FED0]'
+                        "
                     >
-                        <div class="flex flex-col justify-end gap-[6px]">
-                            <div class="h-[12px]"></div>
-                            <div class="h-[12px]">RW</div>
-                        </div>
-                        <div class="flex flex-col items-end justify-end gap-[6px]">
-                            <div class="h-[12px] text-[#97FFE7]">
-                                {{ s.val ? t('on') : t('off') }}
+                        <div
+                            v-if="s.val !== 'err'"
+                            class="flex flex-col justify-end gap-[6px]"
+                        >
+                            <div class="h-[12px]">
+                                {{ s.type === 'wm-coil' || s.type === 'm-coil' ? 'M' : '' }}
                             </div>
                             <div class="h-[12px]">
+                                {{ s.type === 'wm-coil' || s.type === 'w-coil' ? 'WO' : 'RW' }}
+                            </div>
+                        </div>
+                        <div
+                            v-if="s.val !== 'err'"
+                            class="flex flex-col items-end justify-end gap-[6px]"
+                        >
+                            <div
+                                class="h-[12px]"
+                                :class="{ 'text-[#97FFE7]': s.val !== null }"
+                            >
+                                {{ s.val ? t('on') : t('off') }}
+                            </div>
+                            <div class="h-[12px] uppercase">
+                                {{
+                                    numberingSystem === 'dec' ? s.reg_addr : s.reg_addr.toString(16)
+                                }}
+                            </div>
+                        </div>
+                        <div
+                            v-if="s.val === 'err'"
+                            class="flex flex-col justify-end gap-[6px]"
+                        >
+                            <div class="h-[12px]">
+                                {{
+                                    s.type === 'wm-coil'
+                                        ? 'WM'
+                                        : s.type === 'w-coil'
+                                        ? 'W'
+                                        : s.type === 'm-coil'
+                                        ? 'M'
+                                        : ''
+                                }}
+                            </div>
+                            <div class="h-[12px]">RW</div>
+                        </div>
+                        <div
+                            v-if="s.val === 'err'"
+                            class="flex flex-col items-end justify-end gap-[6px]"
+                        >
+                            <div class="h-[12px]">
+                                {{ t('error') }}
+                            </div>
+                            <div class="h-[12px] uppercase">
                                 {{
                                     numberingSystem === 'dec' ? s.reg_addr : s.reg_addr.toString(16)
                                 }}
@@ -73,20 +202,52 @@
                         </div>
                     </div>
                     <div
-                        v-else-if="s.type === 'ir' || s.type === 'hr'"
-                        class="w-full flex items-center justify-between text-[#35FED0] text-xs"
+                        v-else-if="
+                            s.type === 'ir' || s.type === 'hr' || 'wm-hr' || ' w-hr' || 'm-hr'
+                        "
+                        class="w-full flex items-center justify-between"
+                        :class="
+                            s.val === null
+                                ? 'text-[#3E688E]'
+                                : s.val === 'err'
+                                ? 'text-[#F83068]'
+                                : 'text-[#01F0FF]'
+                        "
                     >
                         <div class="flex flex-col justify-end gap-[6px]">
-                            <div class="h-[12px]"></div>
-                            <div class="h-[12px] text-[#01F0FF]">
-                                {{ s.type === 'hr' ? 'RW' : 'RO' }}
+                            <div class="h-[12px]">
+                                {{ s.type === 'm-hr' || s.type === 'wm-hr' ? 'M' : '' }}
+                            </div>
+                            <div class="h-[12px]">
+                                {{
+                                    s.type === 'ir'
+                                        ? 'RO'
+                                        : s.type === 'w-hr' || s.type === 'wm-hr'
+                                        ? 'WO'
+                                        : 'RW'
+                                }}
                             </div>
                         </div>
                         <div class="flex flex-col items-end justify-end gap-[6px]">
-                            <div class="h-[12px] text-[#9BE7FF]">
+                            <div
+                                v-if="s.val !== null && s.val !== 'err'"
+                                class="h-[12px] text-[#9BE7FF] uppercase"
+                            >
                                 {{ numberingSystem === 'dec' ? s.val : s.val.toString(16) }}
                             </div>
-                            <div class="h-[12px] text-[#01F0FF]">
+                            <div
+                                v-else-if="s.val === 'err'"
+                                class="h-[12px] text-[#F83068]"
+                            >
+                                {{ t('error') }}
+                            </div>
+                            <div
+                                v-else
+                                class="h-[12px] text-[#3E688E]"
+                            >
+                                -
+                            </div>
+                            <div class="h-[12px] uppercase">
                                 {{
                                     numberingSystem === 'dec' ? s.reg_addr : s.reg_addr.toString(16)
                                 }}
@@ -146,52 +307,154 @@ const props = defineProps<{
     activeIO?: {
         index: number;
         val: {
-            type?: 'hr' | 'ir' | 'coil' | 'di';
+            type:
+                | 'hr'
+                | 'wm-hr'
+                | 'w-hr'
+                | 'm-hr'
+                | 'ir'
+                | 'coil'
+                | 'wm-coil'
+                | 'w-coil'
+                | 'm-coil'
+                | 'di';
             reg_addr: number;
             dev_addr: number;
-            val: number;
+            val: number | null | 'err';
         } | null;
     } | null;
     lastActiveIO?: {
         index: number;
         val: {
-            type?: 'hr' | 'ir' | 'coil' | 'di';
+            type:
+                | 'hr'
+                | 'wm-hr'
+                | 'w-hr'
+                | 'm-hr'
+                | 'ir'
+                | 'coil'
+                | 'wm-coil'
+                | 'w-coil'
+                | 'm-coil'
+                | 'di';
             reg_addr: number;
             dev_addr: number;
-            val: number;
+            val: number | null | 'err';
         } | null;
     } | null;
     mouseenterTimer?: number;
     mouseleaveTimer?: number;
 }>();
 
-const state = ref<number[]>([...props.w.state]);
+const state = ref<(number | null | 'err')[]>([...props.w.state]);
 
 const fullState = ref<
-    { type?: 'hr' | 'ir' | 'coil' | 'di'; reg_addr: number; dev_addr: number; val: number }[]
+    {
+        type:
+            | 'hr'
+            | 'wm-hr'
+            | 'w-hr'
+            | 'm-hr'
+            | 'ir'
+            | 'coil'
+            | 'wm-coil'
+            | 'w-coil'
+            | 'm-coil'
+            | 'di'
+            | 'none';
+        reg_addr: number;
+        dev_addr: number;
+        val: number | null | 'err';
+    }[]
 >([]);
 
 const curState = computed<
-    { type?: 'hr' | 'ir' | 'coil' | 'di'; reg_addr: number; dev_addr: number; val: number }[] | []
+    | {
+          type:
+              | 'hr'
+              | 'wm-hr'
+              | 'w-hr'
+              | 'm-hr'
+              | 'ir'
+              | 'coil'
+              | 'wm-coil'
+              | 'w-coil'
+              | 'm-coil'
+              | 'di';
+          reg_addr: number;
+          dev_addr: number;
+          val: number | null | 'err';
+      }[]
+    | []
 >(() => {
-    return fullState.value.filter((el) => el.val !== null);
+    return fullState.value.filter((el) => el.type !== 'none') as {
+        type:
+            | 'hr'
+            | 'wm-hr'
+            | 'w-hr'
+            | 'm-hr'
+            | 'ir'
+            | 'coil'
+            | 'wm-coil'
+            | 'w-coil'
+            | 'm-coil'
+            | 'di';
+        reg_addr: number;
+        dev_addr: number;
+        val: number | null | 'err';
+    }[];
 });
 
 const emit = defineEmits<{
     (
         e: 'hover',
         index: number,
-        s: { type?: 'hr' | 'ir' | 'coil' | 'di'; reg_addr: number; dev_addr: number; val: number },
+        newIndex: number,
+        s: {
+            type:
+                | 'hr'
+                | 'wm-hr'
+                | 'w-hr'
+                | 'm-hr'
+                | 'ir'
+                | 'coil'
+                | 'wm-coil'
+                | 'w-coil'
+                | 'm-coil'
+                | 'di';
+            reg_addr: number;
+            dev_addr: number;
+            val: number | null | 'err';
+        },
     ): void;
     (e: 'leave'): void;
 }>();
 
 function handleMouseEnter(
     index: number,
-    s: { type?: 'hr' | 'ir' | 'coil' | 'di'; reg_addr: number; dev_addr: number; val: number },
+    s: {
+        type:
+            | 'hr'
+            | 'wm-hr'
+            | 'w-hr'
+            | 'm-hr'
+            | 'ir'
+            | 'coil'
+            | 'wm-coil'
+            | 'w-coil'
+            | 'm-coil'
+            | 'di';
+        reg_addr: number;
+        dev_addr: number;
+        val: number | null | 'err';
+    },
 ) {
     if (!props.isBig) {
-        emit('hover', index, s);
+        let newIndex = index;
+        for (let i = 0; i <= newIndex; i += 1) {
+            if (fullState.value[i].type !== 'none') newIndex += 1;
+        }
+        emit('hover', index, newIndex, s);
         leftArrowZ.value = 5;
     }
 }
@@ -237,13 +500,33 @@ function handleScrollMove() {
 
 async function handleClick(
     index: number,
-    s: { type?: 'hr' | 'ir' | 'coil' | 'di'; reg_addr: number; dev_addr: number; val: number },
+    s: {
+        type:
+            | 'hr'
+            | 'wm-hr'
+            | 'w-hr'
+            | 'm-hr'
+            | 'ir'
+            | 'coil'
+            | 'wm-coil'
+            | 'w-coil'
+            | 'm-coil'
+            | 'di';
+        reg_addr: number;
+        dev_addr: number;
+        val: number | null | 'err';
+    },
 ) {
-    if (s.type !== 'coil' || s.val === null) return;
+    if (
+        (s.type !== 'coil' && s.type !== 'wm-coil' && s.type !== 'w-coil' && s.type !== 'm-coil') ||
+        s.val === null ||
+        s.val === 'err'
+    )
+        return;
     try {
         let newIndex = index;
-        for (let i = 0; i < newIndex; i += 1) {
-            if (fullState.value[i].val === null) newIndex += 1;
+        for (let i = 0; i <= newIndex; i += 1) {
+            if (fullState.value[i].type === 'none') newIndex += 1;
         }
         const r = await api.post('set_ent_value', {
             type: props.w.w.i,
@@ -285,7 +568,19 @@ async function getMbInfo() {
             bus: 0,
         });
         const data = (await r.data) as {
-            type: ['hr' | 'di' | 'coil' | 'ir'];
+            type: [
+                | 'hr'
+                | 'wm-hr'
+                | 'w-hr'
+                | 'm-hr'
+                | 'di'
+                | 'coil'
+                | 'wm-coil'
+                | 'w-coil'
+                | 'm-coil'
+                | 'ir'
+                | 'none',
+            ];
             dev_addr: number[];
             reg_addr: number[];
         };
@@ -338,11 +633,13 @@ const { t } = useI18n({
             noObj: 'Объекты отсутствуют',
             on: 'ВКЛ',
             off: 'ВЫКЛ',
+            error: 'ОШИБКА',
         },
         en: {
             noObj: 'Objects disabled',
             on: 'ON',
             off: 'OFF',
+            error: 'ERROR',
         },
     },
 });

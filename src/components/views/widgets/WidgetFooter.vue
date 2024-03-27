@@ -23,11 +23,16 @@
             <div
                 v-if="props.w.i === 'mb-var'"
                 class="flex flex-col"
+                :class="
+                    typeof props.activeIO.val === 'object' && props.activeIO.val?.val === null
+                        ? 'text-[#3E688E]'
+                        : 'text-[#8DC5F6]'
+                "
             >
-                <span class="h-4">label</span>
-                <span class="h-4">{{ curMbDevLabel ? curMbDevLabel : '' }}</span>
+                <span class="h-4">{{ curLabel ? curLabel : '\u2013' }}</span>
+                <span class="h-4">{{ curMbDevLabel ? curMbDevLabel : '\u2013' }}</span>
             </div>
-            <span v-else>{{ curLabel ? curLabel : '' }}</span>
+            <span v-else>{{ curLabel ? curLabel : '\u2013' }}</span>
         </div>
         <span
             class="rounded p-[6px]"
@@ -74,7 +79,11 @@
             >
                 {{
                     props.activeIO.val && typeof props.activeIO.val == 'object'
-                        ? props.activeIO.val.type
+                        ? props.activeIO.val.type?.includes('coil')
+                            ? 'co'
+                            : props.activeIO.val.type?.includes('hr')
+                            ? 'hr'
+                            : props.activeIO.val.type
                         : ''
                 }}
             </div>
@@ -236,12 +245,23 @@ const props = defineProps<{
         val:
             | number
             | {
-                  type?: 'hr' | 'ir' | 'coil' | 'di';
+                  type:
+                      | 'hr'
+                      | 'wm-hr'
+                      | 'w-hr'
+                      | 'm-hr'
+                      | 'ir'
+                      | 'coil'
+                      | 'wm-coil'
+                      | 'w-coil'
+                      | 'm-coil'
+                      | 'di';
                   reg_addr: number;
                   dev_addr: number;
-                  val: number;
+                  val: number | null | 'err';
               }
             | null;
+        newIndex?: number;
     } | null;
     isBig?: boolean;
     w: Widget;
@@ -269,7 +289,9 @@ const curLabel = computed<string | undefined>(() => {
         const val = labels.value[props.w.d]?.find((el) => el.interf === props.w.i);
         if (val) {
             const bus = props.w.bus || 0;
-            return val.val[bus][props.activeIO.index] as string;
+            return props.w.i === 'mb-var'
+                ? (val.val[bus][props.activeIO.newIndex || 0] as string)
+                : (val.val[bus][props.activeIO.index] as string);
         }
     }
     return undefined;
@@ -303,7 +325,15 @@ const styles = computed<string>(() => {
         props.activeIO.val &&
         typeof props.activeIO?.val === 'object'
     ) {
-        return props.activeIO.val.type === 'hr' || props.activeIO.val.type === 'ir'
+        return props.activeIO.val.val === null
+            ? 'bg-[#0F3351] text-[#3E688E]'
+            : props.activeIO.val.val === 'err'
+            ? 'bg-[#193550] text-[#F83068]'
+            : props.activeIO.val.type === 'hr' ||
+              props.activeIO.val.type === 'wm-hr' ||
+              props.activeIO.val.type === 'w-hr' ||
+              props.activeIO.val.type === 'm-hr' ||
+              props.activeIO.val.type === 'ir'
             ? 'bg-[#006B83] text-[#01F0FF]'
             : props.activeIO.val.val
             ? 'bg-[#176F6F] text-[#35FED0]'

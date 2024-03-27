@@ -772,6 +772,36 @@ async function getMbDevsLabels(d: number, bus: number, part: number) {
     }
 }
 
+// async function getMbLabels(d: number, bus: number, part: number) {
+//     // const reqLabels = await readFile(
+//     //     {
+//     //         type: 'labels',
+//     //         subType: 'mbDevices',
+//     //         device: d,
+//     //         bus: bus,
+//     //         interf: 'mb-var',
+//     //     },
+//     //     part,
+//     // );
+//     // const arr = [];
+//     // for (let i = 0; i < labelsFileLength; i++) {
+//     //     arr.push('');
+//     // }
+//     // if (reqLabels === 'error') {
+//     //     return new Promise((resolve) =>
+//     //         setTimeout(() => {
+//     //             getMbDevsLabels(d, bus, part);
+//     //         }, 5),
+//     //     );
+//     // } else if (reqLabels === 'notFound') {
+//     //     indexStore.setMbDevsLabels(d, bus, part, arr);
+//     //     return;
+//     // } else {
+//     //     const { labels } = reqLabels as LabelsType;
+//     //     indexStore.setMbDevsLabels(d, bus, part, labels);
+//     // }
+// }
+
 async function getMbDevs(d: number, bus: number) {
     const mbDevs = await readFile({
         type: 'mb',
@@ -811,15 +841,14 @@ async function getLabels(
     bus?: number,
 ) {
     if (!number) return;
-    if (interf !== 'mb-var') {
-        const parts = [];
-        for (let i = 0; i < Math.ceil(number / labelsFileLength); i += 1) {
-            parts.push(i);
-        }
-        parts.forEach(async (part) => {
-            await getLabelsPart(d, interf, number, part, bus);
-        });
-    } else {
+    const parts = [];
+    for (let i = 0; i < Math.ceil(number / labelsFileLength); i += 1) {
+        parts.push(i);
+    }
+    parts.forEach(async (part) => {
+        await getLabelsPart(d, interf, number, part, bus);
+    });
+    if (interf === 'mb-var') {
         getMbDevs(d, bus || 0);
         const parts = [0, 1, 2, 3];
         parts.forEach(async (part) => {
