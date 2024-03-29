@@ -216,11 +216,15 @@
         <div class="h-[3.125rem] border-t border-[#1D4162] px-4 flex items-center justify-end">
             <div class="flex">
                 <OutlinedButton
-                    class="mr-2"
+                    class="mr-2 min-w-[104px]"
                     @click="$emit('init')"
                     >{{ t('back') }}</OutlinedButton
                 >
-                <PrimaryButton @click="handleSaveClick">{{ t('save') }}</PrimaryButton>
+                <PrimaryButton
+                    class="min-w-[84px]"
+                    @click="handleSaveClick"
+                    >{{ t('save') }}</PrimaryButton
+                >
             </div>
         </div>
     </div>

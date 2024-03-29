@@ -200,18 +200,18 @@ const { t } = useI18n({
 });
 
 onMounted(() => {
-    if (props.deviceAddr === 0 && props.isRebootRequired) {
-        const toastId = toast.info(t('rebootRequired'), [
-            `${t('press')} `,
-            {
-                text: t('here'),
-                action: () => {
-                    indexStore.deleteToast(toastId);
-                    isRebootModalOpen.value = true;
-                },
-            },
-            ` ${t('forReboot')}`,
-        ]);
-    }
+    // if (props.deviceAddr === 0 && props.isRebootRequired) {
+    //     const toastId = toast.info(t('rebootRequired'), [
+    //         `${t('press')} `,
+    //         {
+    //             text: t('here'),
+    //             action: () => {
+    //                 indexStore.deleteToast(toastId);
+    //                 isRebootModalOpen.value = true;
+    //             },
+    //         },
+    //         ` ${t('forReboot')}`,
+    //     ]);
+    // }
 });
 </script>

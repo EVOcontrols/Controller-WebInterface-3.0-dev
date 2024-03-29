@@ -23,11 +23,10 @@
                                 <slot name="title"></slot>
                             </h2>
                         </div>
-                        <button
-                            class="h-5 w-5 flex justify-center items-center group"
-                            v-html="closeIcon"
+                        <CloseIcon
+                            class="cursor-pointer h-5 w-5 flex justify-center items-center group"
                             @click="close()"
-                        ></button>
+                        />
                     </div>
                     <div class="flex flex-col mt-3">
                         <slot name="content"></slot>
@@ -61,6 +60,7 @@
 <script setup lang="ts">
 import OutlinedButton from './Ui/OutlinedButton.vue';
 import SaveButton from './Ui/SaveButton.vue';
+import CloseIcon from '@/assets/CloseIcon.vue';
 
 const props = withDefaults(
     defineProps<{

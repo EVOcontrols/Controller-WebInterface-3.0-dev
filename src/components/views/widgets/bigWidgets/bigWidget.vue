@@ -2,7 +2,7 @@
     <div class="flex flex-col z-[2] relative">
         <WidgetHeader :w="props.w.w" />
         <InitWidget
-            v-if="props.isInitialization"
+            v-if="props.isInitialization && !props.isMb"
             :w="props.w"
             @init="$emit('init')"
         />
@@ -25,7 +25,9 @@
         <ModbusPage
             v-else-if="props.isMb"
             :w="props.w"
+            :isInit="props.isInitialization"
             @mb="$emit('mb')"
+            @init="$emit('init')"
         />
         <div
             v-else

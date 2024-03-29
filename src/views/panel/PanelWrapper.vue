@@ -25,7 +25,10 @@
                 </span>
             </div>
         </div>
-        <DIChoice :activeMenuItem="showChoice" />
+        <DIChoice
+            v-if="!isMbInit"
+            :activeMenuItem="showChoice"
+        />
         <WidgetsPage />
         <div
             class="absolute left-0 top-0 h-full w-full"
@@ -44,7 +47,7 @@ const indexStore = useIndexStore();
 
 const showChoice = ref<string>('devices');
 
-const { notConnected, chosenDevices, chosenInterfaces } = storeToRefs(indexStore);
+const { notConnected, chosenDevices, chosenInterfaces, isMbInit } = storeToRefs(indexStore);
 
 const chosenDevicesCount = ref<number>(chosenDevices.value.length);
 const chosenInterfacesCount = ref<number>(chosenInterfaces.value.length || 0);

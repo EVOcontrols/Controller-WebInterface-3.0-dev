@@ -15,7 +15,7 @@
             >
                 {{
                     props.w.d === 0
-                        ? props.w.deviceName.slice(0, props.w.deviceName.indexOf('-'))
+                        ? 'NGC'
                         : props.w.deviceName.slice(props.w.deviceName.indexOf('-') + 3)
                 }}
             </div>

@@ -169,6 +169,8 @@ export const useIndexStore = defineStore('indexStore', () => {
 
     const choosenMbDevices = ref<number[][]>([]);
 
+    const isMbInit = ref(false);
+
     function getApi() {
         if (!api.value) {
             api.value = useApi();
@@ -671,6 +673,10 @@ export const useIndexStore = defineStore('indexStore', () => {
         mbDevsLabels.value = [...newArr];
     }
 
+    function toggleIsMbInit(res: boolean) {
+        isMbInit.value = res;
+    }
+
     return {
         api,
         labels,
@@ -708,6 +714,7 @@ export const useIndexStore = defineStore('indexStore', () => {
         isPriorWOpen,
         calibrVals,
         choosenMbDevices,
+        isMbInit,
         getApi,
         setDevices,
         setIsAuth,
@@ -742,5 +749,6 @@ export const useIndexStore = defineStore('indexStore', () => {
         changeLabel,
         setMbDevs,
         setMbDevsLabels,
+        toggleIsMbInit,
     };
 });

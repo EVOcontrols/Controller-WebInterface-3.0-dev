@@ -50,7 +50,7 @@
                             ></div>
                             {{
                                 device.addr === 0
-                                    ? device.type.slice(0, device.type.indexOf('-'))
+                                    ? 'NGC'
                                     : device.type.slice(device.type.indexOf('-') + 3)
                             }}
                         </div>

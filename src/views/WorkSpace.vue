@@ -170,6 +170,7 @@ const {
     chosenDevices,
     chosenInterfaces,
     isPriorWOpen,
+    devicesState,
 } = storeToRefs(indexStore);
 
 const funcsStore = useFuncsStore();
@@ -401,6 +402,9 @@ async function getEntState(
         quant: number;
     }[],
 ) {
+    if (!window.location.pathname.includes('panel')) {
+        return;
+    }
     try {
         const r = await api.post('get_ent_state', {
             list: filteredReqArr,
@@ -636,6 +640,9 @@ async function setMbMode() {
 }
 
 async function getExtDevs() {
+    if (!window.location.pathname.includes('panel')) {
+        return;
+    }
     try {
         const r = (await (await api.get('get_ext_devs')).data).list as Device[];
         const newR = [];
@@ -659,27 +666,29 @@ async function getExtDevs() {
 }
 
 async function getExtStatuses() {
-    try {
-        const r = (await (await api.get('get_ext_devs')).data).list as Device[];
-        const newR = [];
-        for (let i = 0; i < r.length; i += 1) {
-            newR.push(Object.assign(r[i], { index: i + 1 }));
-        }
-        const devs = newR.filter((item) => item.type !== 'none');
-        devs.forEach(async (d) => {
-            if (d.state !== devices.value.find((el) => el.addr === d.addr)?.state) {
-                indexStore.changeDeviceState(d.addr, d.state);
+    if (window.location.pathname.includes('panel')) {
+        try {
+            const r = (await (await api.get('get_ext_devs')).data).list as Device[];
+            const newR = [];
+            for (let i = 0; i < r.length; i += 1) {
+                newR.push(Object.assign(r[i], { index: i + 1 }));
             }
-        });
-    } catch (error) {
-        if (isAborted.value) {
-            return;
+            const devs = newR.filter((item) => item.type !== 'none');
+            devs.forEach(async (d) => {
+                if (d.state !== devices.value.find((el) => el.addr === d.addr)?.state) {
+                    indexStore.changeDeviceState(d.addr, d.state);
+                }
+            });
+        } catch (error) {
+            if (isAborted.value) {
+                return;
+            }
+            return new Promise((resolve) =>
+                setTimeout(() => {
+                    getExtStatuses();
+                }, 20),
+            );
         }
-        return new Promise((resolve) =>
-            setTimeout(() => {
-                getExtStatuses();
-            }, 20),
-        );
     }
     getExtStatusesTimer = setTimeout(getExtStatuses, 1000);
 }
@@ -841,20 +850,22 @@ async function getLabels(
     bus?: number,
 ) {
     if (!number) return;
-    const parts = [];
-    for (let i = 0; i < Math.ceil(number / labelsFileLength); i += 1) {
-        parts.push(i);
-    }
-    parts.forEach(async (part) => {
-        await getLabelsPart(d, interf, number, part, bus);
-    });
-    if (interf === 'mb-var') {
-        getMbDevs(d, bus || 0);
-        const parts = [0, 1, 2, 3];
+    setTimeout(() => {
+        const parts = [];
+        for (let i = 0; i < Math.ceil(number / labelsFileLength); i += 1) {
+            parts.push(i);
+        }
         parts.forEach(async (part) => {
-            await getMbDevsLabels(d, bus || 0, part);
+            await getLabelsPart(d, interf, number, part, bus);
         });
-    }
+        if (interf === 'mb-var') {
+            getMbDevs(d, bus || 0);
+            const parts = [0, 1, 2, 3];
+            parts.forEach(async (part) => {
+                await getMbDevsLabels(d, bus || 0, part);
+            });
+        }
+    }, 3000);
 }
 
 onMounted(async () => {

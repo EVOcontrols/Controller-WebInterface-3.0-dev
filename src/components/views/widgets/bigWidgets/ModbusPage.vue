@@ -1149,6 +1149,220 @@
                 </div>
             </div>
         </div>
+        <!-- <div
+            v-else
+            class="w-full"
+            :style="{ height: 'calc(100vh - 378px)' }"
+        >
+            <div class="w-full h-full overflow-y-hidden">
+                <div
+                    class="flex h-full overflow-y-auto w-full scrollbar-4 flex-1 flex-col relative"
+                >
+                    <div class="flex flex-col items-center flex-none w-full">
+                        <div
+                            class="w-full h-[70px] border-y border-[#1D4162] text-sm pl-[18px] pt-[12px] sticky top-0 bg-[#092740] flex flex-col"
+                        >
+                            <div class="text-base mb-1 font-semibold">Coils</div>
+                            <div class="flex gap-5 pr-10 text-[13px]">
+                                <div class="w-[260px]">{{ t('columnsNames.name') }}</div>
+                                <div class="w-[50px]">{{ t('columnsNames.device') }}</div>
+                                <div class="w-[50px]">{{ t('columnsNames.reg') }}</div>
+                            </div>
+                        </div>
+                        <div
+                            class="w-full flex flex-col text-[#6CB5D3] items-center px-2 gap-[10px]"
+                            v-for="(s, index) in coilArr"
+                            :key="index"
+                        >
+                            <div
+                                class="label group w-full text-[#6CB5D3] select-none"
+                                v-for="(el, i) in s.vals"
+                                :key="i"
+                                @dblclick="handleDblClick(el, i)"
+                            >
+                                <div
+                                    class="h-9 flex items-center pl-[10px] pr-2 rounded"
+                                    :class="[
+                                        { 'text-[#3E688E]': el.val === null },
+                                        { 'text-[#F83068]': el.val === 'err' },
+                                    ]"
+                                >
+                                    <div class="w-[260px]">{{ el.label }}</div>
+                                    <div
+                                        class="w-[50px] ml-5 flex justify-end transition-colors duration-500"
+                                        :class="
+                                            el.val === 'err'
+                                                ? 'text-[#F83068]'
+                                                : el.val === null
+                                                ? 'text-[#3E688E]'
+                                                : 'text-[#ADEBFF]'
+                                        "
+                                    >
+                                        {{ el.dev_addr }}
+                                    </div>
+                                    <div class="w-[50px] ml-5 flex justify-end uppercase">
+                                        {{
+                                            curNumberingSystem === 'dec'
+                                                ? el.reg_addr
+                                                : el.reg_addr.toString(16)
+                                        }}
+                                    </div>
+                                    <div class="flex-1 flex">
+                                        <span
+                                            class="h-9 px-4 text-sm font-Roboto flex items-center rounded-l-[8px]"
+                                            :class="
+                                                itemsStatuses[i] === null ||
+                                                itemsStatuses[i] === undefined
+                                                    ? 'bg-[#023E71] text-[#2B9BFF]'
+                                                    : 'bg-[#0F304B] text-[#5F93C2] cursor-pointer'
+                                            "
+                                            @click="changeItemStatus(i, null)"
+                                            >{{ t('items.not') }}</span
+                                        >
+                                        <span
+                                            class="h-9 px-4 text-sm font-Roboto flex items-center"
+                                            :class="
+                                                itemsStatuses[i] === 'l'
+                                                    ? 'bg-[#023E71] text-[#2B9BFF]'
+                                                    : 'bg-[#0F304B] text-[#5F93C2] cursor-pointer'
+                                            "
+                                            @click="changeItemStatus(i, 'l')"
+                                            >{{ t('items.download') }}</span
+                                        >
+                                        <span
+                                            class="h-9 px-4 text-sm font-Roboto flex items-center rounded-r-[8px]"
+                                            :class="
+                                                itemsStatuses[i] !== null &&
+                                                itemsStatuses[i] !== 'l' &&
+                                                itemsStatuses[i] !== undefined
+                                                    ? 'bg-[#023E71] text-[#2B9BFF]'
+                                                    : 'bg-[#0F304B] text-[#5F93C2] cursor-pointer'
+                                            "
+                                            @click="changeItemStatus(i, 'const')"
+                                            >{{ t('items.const') }}</span
+                                        >
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flex flex-col items-center flex-none w-full">
+                        <div
+                            class="w-full h-[70px] border-y border-[#1D4162] text-sm pl-[18px] pt-[12px] sticky top-0 bg-[#092740] flex flex-col"
+                        >
+                            <div class="text-base mb-1 font-semibold">Holding registers</div>
+                            <div class="flex gap-5 pr-10 text-[13px]">
+                                <div class="w-[260px]">{{ t('columnsNames.name') }}</div>
+                                <div class="w-[50px]">{{ t('columnsNames.device') }}</div>
+                                <div class="w-[50px]">{{ t('columnsNames.reg') }}</div>
+                            </div>
+                        </div>
+                        <div
+                            class="w-full flex flex-col text-[#6CB5D3] items-center px-2 gap-[10px]"
+                            v-for="(s, index) in hrArr"
+                            :key="index"
+                        >
+                            <div
+                                class="label group w-full text-[#6CB5D3] select-none"
+                                v-for="(el, i) in s.vals"
+                                :key="i"
+                                @dblclick="handleDblClick(el, i)"
+                            >
+                                <div
+                                    class="h-9 flex items-center pl-[10px] pr-2 rounded"
+                                    :class="[
+                                        {
+                                            'text-[#F83068]': el.val === 'err',
+                                        },
+                                        {
+                                            'text-[#3E688E]': el.val === null,
+                                        },
+                                    ]"
+                                >
+                                    <div class="w-[260px]">{{ el.label }}</div>
+                                    <div
+                                        class="w-[50px] ml-5 flex justify-end transition-colors duration-500"
+                                        :class="
+                                            el.val === 'err'
+                                                ? 'text-[#F83068]'
+                                                : el.val === null
+                                                ? 'text-[#3E688E]'
+                                                : 'text-[#ADEBFF]'
+                                        "
+                                    >
+                                        {{ el.dev_addr }}
+                                    </div>
+                                    <div class="w-[50px] ml-5 flex justify-end uppercase">
+                                        {{
+                                            curNumberingSystem === 'dec'
+                                                ? el.reg_addr
+                                                : el.reg_addr.toString(16)
+                                        }}
+                                    </div>
+                                    <div class="flex-1 ml-5 mr-3 flex justify-start uppercase">
+                                        <div
+                                            :class="
+                                                el.val === 'err'
+                                                    ? 'text-[#F83068]'
+                                                    : el.val === null
+                                                    ? 'text-[#3E688E]'
+                                                    : 'text-[#ADEBFF]'
+                                            "
+                                        >
+                                            {{
+                                                el.val === 'err' || el.val === null
+                                                    ? '\u2013'
+                                                    : curNumberingSystem === 'dec'
+                                                    ? el.val
+                                                    : el.val.toString(16)
+                                            }}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div
+                class="h-[3.125rem] border-t border-[#1D4162] px-4 flex items-center justify-between"
+            >
+                <div class="flex">
+                    <span
+                        class="select-none h-[22px] w-16 text-sm font-Roboto flex items-center rounded-l-[8px] flex items-center justify-center"
+                        :class="
+                            curNumberingSystem === 'dec'
+                                ? 'bg-[#023E71] text-[#2B9BFF] select-none'
+                                : 'bg-[#0F304B] text-[#5F93C2] cursor-pointer'
+                        "
+                        @click="indexStore.setCurNumberingSystem('dec')"
+                        >DEC</span
+                    >
+                    <span
+                        class="select-none h-[22px] w-16 text-sm font-Roboto flex items-center rounded-r-[8px] flex items-center justify-center"
+                        :class="
+                            curNumberingSystem === 'hex'
+                                ? 'bg-[#023E71] text-[#2B9BFF] select-none'
+                                : 'bg-[#0F304B] text-[#5F93C2] cursor-pointer'
+                        "
+                        @click="indexStore.setCurNumberingSystem('hex')"
+                        >HEX</span
+                    >
+                </div>
+                <div class="flex">
+                    <OutlinedButton
+                        class="mr-2 min-w-[104px]"
+                        @click="$emit('init')"
+                        >{{ t('back') }}</OutlinedButton
+                    >
+                    <PrimaryButton
+                        class="min-w-[84px]"
+                        @click="handleSaveClick"
+                        >{{ t('save') }}</PrimaryButton
+                    >
+                </div>
+            </div>
+        </div> -->
         <ModbusPopUp
             v-if="showPopUp"
             :el="popUpEl"
@@ -1167,6 +1381,8 @@ import UpdateIcon from '@/assets/UpdateIcon.vue';
 import CloseIcon from '@/assets/CloseIcon.vue';
 import IButtonOutIcon from '@/assets/IButtonOutIcon.vue';
 import ModbusPopUp from '@/components/views/widgets/bigWidgets/ModbusPopUp.vue';
+import PrimaryButton from '@/components/Ui/PrimaryButton.vue';
+import OutlinedButton from '@/components/Ui/OutlinedButton.vue';
 import type { Widget } from '@/stores';
 
 const indexStore = useIndexStore();
@@ -1236,6 +1452,8 @@ const hr = ref<HTMLElement | undefined>();
 const varsWrapper = ref<HTMLElement | undefined>();
 
 const labelPosition = ref<'top' | 'bottom'>('bottom');
+
+const itemsStatuses = ref<[string | number | null] | []>([]);
 
 const popUpEl = ref<{
     type?:
@@ -1363,7 +1581,9 @@ const errArr = computed<number[]>(() => {
 });
 
 const initArr = computed<number[]>(() => {
-    return curState.value.filter((el) => el.val === null).map((el) => el.dev_addr);
+    return curState.value
+        .filter((el) => el.val === null && !el.type.includes('w'))
+        .map((el) => el.dev_addr);
 });
 
 const diArr = computed<
@@ -2081,11 +2301,6 @@ watch(
 watch(
     () => curDevs.value,
     () => {
-        // if (choosenMbDevices.value[props.w.w.d] === undefined) {
-        //     console.log('!!');
-        //     curChoosenDevs.value = [...curDevs.value];
-        //     indexStore.setChoosenMbDevices(props.w.w.d, curChoosenDevs.value);
-        // }
         curChoosenDevs.value = [...curChoosenDevs.value].filter((el) => curDevs.value.includes(el));
     },
 );
@@ -2128,6 +2343,8 @@ const { t } = useI18n({
             err: 'ошибка',
             mbDevsInit: 'Есть регистры в состоянии инициализации',
             mbDevsErr: 'Есть регистры в состоянии ошибки',
+            back: 'Назад',
+            save: 'Сохранить',
         },
         en: {
             noObj: 'Objects disabled',
@@ -2147,6 +2364,8 @@ const { t } = useI18n({
             err: 'error',
             mbDevsInit: 'There are registers in initialization state',
             mbDevsErr: 'There are registers in an error state',
+            back: 'Back',
+            save: 'Save',
         },
     },
 });

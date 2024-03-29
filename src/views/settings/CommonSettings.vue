@@ -21,7 +21,13 @@
                         <div
                             v-for="(params, rowIndex) in rows"
                             :key="rowIndex"
-                            :class="[topic === 'rtc' ? 'table-row-group' : 'flex flex-row gap-x-3']"
+                            :class="[
+                                topic === 'rtc' ? 'table-row-group' : 'flex flex-row gap-x-3',
+                                {
+                                    hidden:
+                                        topic === 'lan' && params.length > 1 && addrMode === 'dhcp',
+                                },
+                            ]"
                         >
                             <div
                                 v-for="field in params"
@@ -69,7 +75,17 @@
                                     v-else-if="field.type === 'btn-group'"
                                     :buttons="field.values"
                                     :value="field.value"
-                                    @change="field.value = $event"
+                                    @change="
+                                        ($event) => {
+                                            field.value = $event;
+                                            if (
+                                                topic === 'lan' &&
+                                                ($event === 'dhcp' || $event === 'static')
+                                            ) {
+                                                addrMode = $event;
+                                            }
+                                        }
+                                    "
                                 />
                                 <DropDown
                                     v-else-if="field.param === 'time-zone'"
@@ -297,6 +313,8 @@ import celsius from '@/assets/img/settings/celsius.svg?raw';
 import fahrenheit from '@/assets/img/settings/fahrenheit.svg?raw';
 import { useStoreCommonSettingsFile } from '@/composables/useStoreCommonSettingsFile';
 
+const router = useRouter();
+
 const { api } = useApiStore();
 
 const indexStore = useIndexStore();
@@ -371,6 +389,8 @@ const fields = ref<CommonSettingsFields | undefined>();
 const fieldsInit = ref<CommonSettingsFields | undefined>();
 
 const isSaving = ref(false);
+
+const addrMode = ref<'dhcp' | 'static' | undefined>();
 
 const timeZones = computed(() => {
     const t = controllerDateTime.value;
@@ -750,6 +770,7 @@ function setFields(settings: ControllerSettings) {
 async function save() {
     isSaving.value = true;
     const { changes } = changesAndErrors.value;
+    // console.log(changes);
     try {
         if (changes.files) {
             const r = await storeCommonSettingsFile(
@@ -764,9 +785,12 @@ async function save() {
             }
         }
         if (changes.settings) {
-            await api.post('set_config', changes.settings);
+            const r = await api.post('set_config', changes.settings);
             const newIp = changes.settings?.lan?.['ip-addr'];
             const newPort = changes.settings?.lan?.['serv-port'];
+            if (r.data['reboot-req']) {
+                setRebootToast();
+            }
             if (newIp || newPort) {
                 const initIp = fieldsInit.value?.lan
                     .find((row) => row.find((p) => p.param === 'ip-addr'))
@@ -801,6 +825,20 @@ async function save() {
         console.log(error);
     }
     isSaving.value = false;
+}
+
+function setRebootToast() {
+    const toastId = toast.info(t('toast.reboot.rebootRequired'), [
+        `${t('toast.reboot.press')} `,
+        {
+            text: t('toast.reboot.here'),
+            action: () => {
+                indexStore.deleteToast(toastId);
+                router.push('devices');
+            },
+        },
+        ` ${t('toast.reboot.forReboot')}`,
+    ]);
 }
 
 const { t } = useI18n({
@@ -945,6 +983,12 @@ const { t } = useI18n({
                     header: 'Error',
                     text: 'Check entered values',
                 },
+                reboot: {
+                    rebootRequired: 'Reboot required',
+                    press: 'Press',
+                    here: 'here',
+                    forReboot: 'for reboot',
+                },
             },
         },
         ru: {
@@ -1087,6 +1131,12 @@ const { t } = useI18n({
                     header: 'Ошибка',
                     text: 'Проверьте введённые значения',
                 },
+                reboot: {
+                    rebootRequired: 'Требуется перезагрузка',
+                    press: 'Нажмите',
+                    here: 'сюда',
+                    forReboot: 'для перезагрузки',
+                },
             },
         },
     },
@@ -1096,6 +1146,7 @@ onMounted(async () => {
     await new Promise((resolve) => setTimeout(resolve, 150));
     try {
         let r = await api.get<ControllerSettings>('get_config');
+        addrMode.value = r.data.lan['addr-mode'];
         setFields(r.data);
     } catch (error) {
         //

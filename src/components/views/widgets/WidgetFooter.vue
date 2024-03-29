@@ -178,7 +178,8 @@
                     isBig &&
                     !['bin-in'].includes(props.w.i) &&
                     !props.isCalibration &&
-                    !props.isPriorWOpen
+                    !props.isPriorWOpen &&
+                    props.w.i !== 'mb-var'
                 "
                 @click="
                     $emit(
@@ -189,7 +190,7 @@
                             : 'init',
                     )
                 "
-                class="mr-2"
+                class="mr-2 min-w-[84px]"
                 >{{ btnText }}</OutlinedButton
             >
             <div
@@ -213,11 +214,13 @@
             </div>
             <PrimaryButton
                 v-if="props.isCalibration || props.isPriorWOpen"
+                class="min-w-[84px]"
                 @click="$emit('back')"
                 >{{ t('btn.back') }}</PrimaryButton
             >
             <PrimaryButton
                 v-else
+                class="min-w-[84px]"
                 @click="$emit('enter')"
                 >{{ isBig ? t('btn.close') : t('btn.open') }}</PrimaryButton
             >

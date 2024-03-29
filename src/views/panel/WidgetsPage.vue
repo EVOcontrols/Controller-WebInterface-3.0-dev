@@ -6,7 +6,7 @@
         <div
             class="gap-4 mt-4"
             :class="gridClasses.all"
-            :style="{ height: 'calc(100vh - 310px)' }"
+            :style="{ height: isMbInit ? 'calc(100vh - 230px)' : 'calc(100vh - 310px)' }"
             v-if="widgets.small.length || widgets.big"
         >
             <BigWidget
@@ -75,6 +75,7 @@ const {
     devicesState,
     sortedChosenDevices,
     sortedChosenInterfaces,
+    isMbInit,
 } = storeToRefs(indexStore);
 
 const bigWidget = ref<{ d: number; i: string } | null>(null);
@@ -188,9 +189,13 @@ function setBigWidget(d: number, i: string) {
 function setInitStatus(w?: Widget) {
     if (!w) {
         isInitialization.value = false;
+        indexStore.toggleIsMbInit(false);
     } else {
         bigWidget.value = { d: w.d, i: w.i };
         isInitialization.value = true;
+        if (isMb.value) {
+            indexStore.toggleIsMbInit(true);
+        }
     }
 }
 
@@ -280,6 +285,7 @@ watch(
             if (bigWidget.value && !chosenDevices.value.includes(bigWidget.value.d)) {
                 bigWidget.value = null;
                 isInitialization.value = false;
+                indexStore.toggleIsMbInit(false);
                 isMb.value = false;
             }
         }
@@ -318,6 +324,7 @@ watch(
             if (bigWidget.value && !chosenInterfaces.value.includes(bigWidget.value.i)) {
                 bigWidget.value = null;
                 isInitialization.value = false;
+                indexStore.toggleIsMbInit(false);
                 isMb.value = false;
             }
         }

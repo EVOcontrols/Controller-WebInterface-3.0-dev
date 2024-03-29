@@ -43,6 +43,10 @@
                                 ? t('init')
                                 : shownStatus.state === 'error'
                                 ? t('error')
+                                : shownStatus.state === 'on'
+                                ? t('on')
+                                : shownStatus.state === 'off'
+                                ? t('off')
                                 : t('noConnection')
                         }}
                     </div>
@@ -98,7 +102,7 @@ function handleMouseEnter(device: Device, e: MouseEvent) {
         statusFormLeft.value = target.offsetLeft - parent.offsetLeft - parent.scrollLeft + 28;
     }
     isMouseOnDevice.value = true;
-    if (!device.addr || device.state === 'on' || device.state === 'off') return;
+    if (!device.addr) return;
     if (!shownStatus.value) {
         shownStatus.value = {
             serial: device.serial,
@@ -148,6 +152,8 @@ const { t } = useI18n({
             noConnection: 'нет соединения',
             init: 'инициализация',
             error: 'ошибка',
+            on: 'включено',
+            off: 'выключено',
             addr: 'Адрес: ',
             firmWare: 'Прошивка: ',
         },
@@ -156,6 +162,8 @@ const { t } = useI18n({
             noConnection: 'no connection',
             init: 'initialization',
             error: 'error',
+            on: 'on',
+            off: 'off',
             addr: 'Address: ',
             firmWare: 'Firmware: ',
         },
