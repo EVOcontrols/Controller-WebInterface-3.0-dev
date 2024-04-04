@@ -15,6 +15,12 @@ export type ControllerSettings = {
         'main-url': string;
         'main-port': number;
     };
+    gsm: {
+        mode: (typeof gsmModes)[number];
+        apn: string;
+        user: string;
+        password: string;
+    };
     rtc: {
         source: (typeof rtcSources)[number];
         'ntp1-url': string;
@@ -80,7 +86,7 @@ export type ControllerSettings = {
 
 export type CommonControllerSettings = Pick<
     ControllerSettings,
-    'lan' | 'cloud' | 'rtc' | 'gnss'
+    'lan' | 'cloud' | 'gsm' | 'rtc' | 'gnss'
 > & {
     'root-login': Pick<ControllerSettings['login'], 'root-name' | 'root-pass'> & {
         'root-pass-repeat': string;
@@ -117,7 +123,12 @@ export type CommonSettingsFields = {
                     }) & {
                   widthClass: string;
                   status: InputFieldStatus;
-                  validationType?: ('ip' | 'url')[] | ['int'] | ['latitude'] | ['longitude'];
+                  validationType?:
+                      | ('ip' | 'url')[]
+                      | ['int']
+                      | ['latitude']
+                      | ['longitude']
+                      | ['string'];
                   isRequired?: boolean;
               }
             : {

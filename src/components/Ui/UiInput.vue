@@ -45,7 +45,7 @@ const props = withDefaults(
         notAllowedValues?: (number | string)[];
         placeholder?: string;
         disabled?: boolean;
-        inputType?: ('ip' | 'url')[] | ['int'] | ['latitude'] | ['longitude'];
+        inputType?: ('ip' | 'url')[] | ['int'] | ['latitude'] | ['longitude'] | ['string'];
         nullable?: U;
     }>(),
     {
@@ -79,11 +79,11 @@ function isUrl(v: string) {
 }
 
 function isLatitude(v: string) {
-    return /^-?([1-8]?[1-9]|[1-9]0)\.{1}\d{1,6}n?$/i.test(v);
+    return /^\d{1,4}\.\d{1,4}[NS]$/i.test(v);
 }
 
 function isLongitude(v: string) {
-    return /^-?([1]?[0-7]?[0-9]|[1]?[0-8]?[0]|[1]?[0-8]?[0]\.{1}\d{1,6})e?$/i.test(v);
+    return /^\d{1,4}\.\d{1,4}[EW]$/i.test(v);
 }
 
 function isFitValidationType(v: string) {
@@ -125,6 +125,18 @@ function valueChangedHandler() {
             setStatus('invalid');
             return;
         }
+        if (['apn', 'user', 'password'].includes(props.name)) {
+            setStatus(/^(?![\d+_@.-]+$)[a-zA-Z0-9+_@.-]{1,31}$/i.test(v) ? 'valid' : 'invalid');
+            lastInitValue = v as V;
+            emit('valueChanged', v as V);
+            return;
+        }
+        if (['root-name', 'user-name'].includes(props.name)) {
+            setStatus(/^[a-zA-Z0-9]{5,31}$/.test(v) ? 'valid' : 'invalid');
+            lastInitValue = v as V;
+            emit('valueChanged', v as V);
+            return;
+        }
         lastInitValue = v as V;
         emit('valueChanged', v as V);
     } else if (v) {
@@ -149,7 +161,14 @@ function valueChangedHandler() {
             setStatus('invalid');
             return;
         }
-        // console.log(v, parsed);
+        if (props.name.includes('port') && +v > 65535) {
+            setStatus('invalid');
+            return;
+        }
+        if (props.name === 'interval' && +v > 300000) {
+            setStatus('invalid');
+            return;
+        }
         lastInitValue = parsed as V;
         emit('valueChanged', parsed as V);
     } else if (props.nullable === true) {

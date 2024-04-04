@@ -562,50 +562,52 @@ watch(
 );
 
 async function getMbInfo() {
-    try {
-        const r = await api.post('get_mb_info', {
-            device: props.w.w.d,
-            bus: 0,
-        });
-        const data = (await r.data) as {
-            type: [
-                | 'hr'
-                | 'wm-hr'
-                | 'w-hr'
-                | 'm-hr'
-                | 'di'
-                | 'coil'
-                | 'wm-coil'
-                | 'w-coil'
-                | 'm-coil'
-                | 'ir'
-                | 'none',
-            ];
-            dev_addr: number[];
-            reg_addr: number[];
-        };
-        const arr = [];
-        for (let i = 0; i < state.value.length; i += 1) {
-            if (mbDevs.value[props.w.w.d][props.w.w.bus || 0].includes(data.dev_addr[i])) {
-                arr.push({
-                    type: data.type[i],
-                    reg_addr: data.reg_addr[i] as number,
-                    dev_addr: data.dev_addr[i] as number,
-                    val: state.value[i],
-                });
+    if (window.location.pathname.includes('panel')) {
+        try {
+            const r = await api.post('get_mb_info', {
+                device: props.w.w.d,
+                bus: 0,
+            });
+            const data = (await r.data) as {
+                type: [
+                    | 'hr'
+                    | 'wm-hr'
+                    | 'w-hr'
+                    | 'm-hr'
+                    | 'di'
+                    | 'coil'
+                    | 'wm-coil'
+                    | 'w-coil'
+                    | 'm-coil'
+                    | 'ir'
+                    | 'none',
+                ];
+                dev_addr: number[];
+                reg_addr: number[];
+            };
+            const arr = [];
+            for (let i = 0; i < state.value.length; i += 1) {
+                if (mbDevs.value[props.w.w.d][props.w.w.bus || 0].includes(data.dev_addr[i])) {
+                    arr.push({
+                        type: data.type[i],
+                        reg_addr: data.reg_addr[i] as number,
+                        dev_addr: data.dev_addr[i] as number,
+                        val: state.value[i],
+                    });
+                }
             }
+            fullState.value = [...arr];
+            setEndArrowState();
+        } catch (error) {
+            if (isAborted.value) {
+                return;
+            }
+            return new Promise((resolve) =>
+                setTimeout(() => {
+                    getMbInfo();
+                }, 5),
+            );
         }
-        fullState.value = [...arr];
-        setEndArrowState();
-    } catch (error) {
-        if (isAborted.value) {
-            return;
-        }
-        return new Promise((resolve) =>
-            setTimeout(() => {
-                getMbInfo();
-            }, 5),
-        );
     }
     getMbInfoTimer = setTimeout(getMbInfo, 1000);
 }

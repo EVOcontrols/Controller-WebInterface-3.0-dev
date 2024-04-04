@@ -640,9 +640,6 @@ async function setMbMode() {
 }
 
 async function getExtDevs() {
-    if (!window.location.pathname.includes('panel')) {
-        return;
-    }
     try {
         const r = (await (await api.get('get_ext_devs')).data).list as Device[];
         const newR = [];

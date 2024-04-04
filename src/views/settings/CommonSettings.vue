@@ -6,7 +6,10 @@
                     v-for="(rows, topic) in fields"
                     :key="topic"
                     class="mt-8 mx-8 flex flex-col gap-y-6 border-b border-[#0b3d68] last:border-none"
-                    :class="[topic === 'rtc' ? 'pb-4' : 'pb-10']"
+                    :class="[
+                        topic === 'rtc' ? 'pb-4' : 'pb-10',
+                        { hidden: topic === 'gsm' && cloudMode !== 'gsm' },
+                    ]"
                 >
                     <h2 class="font-semibold text-xl leading-[1.2] whitespace-pre">
                         {{ t(`${topic}.param`) }}
@@ -83,6 +86,13 @@
                                                 ($event === 'dhcp' || $event === 'static')
                                             ) {
                                                 addrMode = $event;
+                                            } else if (
+                                                topic === 'cloud' &&
+                                                ($event === 'none' ||
+                                                    $event === 'ethernet' ||
+                                                    $event === 'gsm')
+                                            ) {
+                                                cloudMode = $event;
                                             }
                                         }
                                     "
@@ -149,7 +159,14 @@
                                         :isDisabled="false"
                                         :isError="
                                             !!isPasswordMismatch[field.param] ||
-                                            !!isPasswordMissed[field.param]
+                                            !!isPasswordMissed[field.param] ||
+                                            !isPassworValid[field.param]
+                                        "
+                                        :isSuccess="
+                                            !isPasswordMismatch[field.param] &&
+                                            field.param.includes('repeat') &&
+                                            !!field.value &&
+                                            !!field.value.length
                                         "
                                         :name="field.param"
                                         :init-value="field.value as string"
@@ -190,41 +207,78 @@
                                                     on:
                                                         isPasswordFocus[field.param] &&
                                                         !isPasswordMismatch[field.param] &&
-                                                        !isPasswordMissed[field.param],
+                                                        !isPasswordMissed[field.param] &&
+                                                        isPassworValid[field.param],
                                                     error:
                                                         isPasswordMismatch[field.param] ||
-                                                        isPasswordMissed[field.param],
+                                                        isPasswordMissed[field.param] ||
+                                                        !isPassworValid[field.param],
+                                                    success:
+                                                        !isPasswordMismatch[field.param] &&
+                                                        field.param.includes('repeat') &&
+                                                        !!field.value &&
+                                                        !!field.value.length &&
+                                                        isPassworValid[field.param],
                                                 }"
                                             ></span>
                                         </Transition>
                                     </button>
                                     <div
-                                        class="absolute left-full ml-3 top-0 bottom-0 whitespace-nowrap my-auto flex items-center text-[#f83068] opacity-0 invisible transition-[opacity,visibility]"
+                                        class="absolute top-full mt-[0.375rem] ml-[0.375rem] left-0 whitespace-nowrap flex items-center gap-[0.375rem] text-[#f83068] opacity-0 invisible transition-[opacity,visibility]"
                                         :class="{
                                             '!opacity-100 !visible':
                                                 isPasswordMismatch[field.param],
                                         }"
                                     >
-                                        {{ t('errors.password.mismatch') }}
+                                        <span v-html="stop"></span>
+                                        <div class="h-[1.125rem] flex items-end">
+                                            {{ t('errors.password.mismatch') }}
+                                        </div>
                                     </div>
                                     <div
+                                        class="absolute top-full mt-[0.375rem] ml-[0.375rem] left-0 whitespace-nowrap flex items-center gap-[0.375rem] text-[#37C3A2] opacity-0 invisible transition-[opacity,visibility]"
+                                        :class="{
+                                            '!opacity-100 !visible':
+                                                !isPasswordMismatch[field.param] &&
+                                                field.param.includes('repeat') &&
+                                                !!field.value &&
+                                                !!field.value.length &&
+                                                isPassworValid[field.param],
+                                        }"
+                                    >
+                                        <span v-html="doneGreen"></span>
+                                        <div class="h-[1.125rem] flex items-end">
+                                            {{ t('errors.password.ok') }}
+                                        </div>
+                                    </div>
+                                    <!-- <div
                                         class="absolute left-full ml-3 top-0 bottom-0 whitespace-nowrap my-auto flex items-center text-[#f83068] opacity-0 invisible transition-[opacity,visibility]"
                                         :class="{
                                             '!opacity-100 !visible': isPasswordMissed[field.param],
                                         }"
                                     >
                                         {{ t('errors.password.required') }}
-                                    </div>
+                                    </div> -->
                                 </div>
                                 <div v-else>
                                     <UiInput
                                         :init-type="field.type"
                                         :init-value="field.value"
                                         :name="field.param"
+                                        :placeholder="
+                                            topic === 'gsm'
+                                                ? t(`${topic}.fields.${field.param}.param`)
+                                                : ''
+                                        "
                                         class="table-cell"
                                         :class="[field.widthClass]"
                                         :input-type="field.validationType"
                                         :status="field.status"
+                                        :minMax="
+                                            topic === 'rtc' && field.param === 'interval'
+                                                ? [3, undefined]
+                                                : undefined
+                                        "
                                         :required="
                                             field.isRequired ||
                                             (field.param === 'root-name' &&
@@ -243,29 +297,35 @@
                                         class="text-[#4b7ca8] text-sm leading-[1.143] ml-3"
                                         v-if="topic === 'rtc' && field.param === 'interval'"
                                     >
-                                        {{ t('ms') }}
+                                        {{ t('minutes') }}
                                     </span>
-                                    <span
+                                    <!-- <span
                                         class="ml-3 text-sm text-[#f83068] opacity-0 invisible transition-[opacity,visibility]"
                                         v-if="
                                             isKeyOf(isUsernameMissed, field.param) ||
-                                            isKeyOf(isUsernameShort, field.param)
+                                            isKeyOf(isUsernameShort, field.param) ||
+                                            isKeyOf(isUsernameLong, field.param)
                                         "
                                         :class="{
                                             '!opacity-100 !visible':
                                                 (isKeyOf(isUsernameMissed, field.param) &&
                                                     isUsernameMissed[field.param]) ||
                                                 (isKeyOf(isUsernameShort, field.param) &&
-                                                    isUsernameShort[field.param]),
+                                                    isUsernameShort[field.param]) ||
+                                                (isKeyOf(isUsernameLong, field.param) &&
+                                                    isUsernameLong[field.param]),
                                         }"
                                     >
                                         {{
                                             isKeyOf(isUsernameMissed, field.param) &&
                                             isUsernameMissed[field.param]
                                                 ? t('errors.login.required')
-                                                : t('errors.login.minLength')
+                                                : isKeyOf(isUsernameShort, field.param) &&
+                                                  isUsernameShort[field.param]
+                                                ? t('errors.login.minLength')
+                                                : t('errors.login.maxLength')
                                         }}
-                                    </span>
+                                    </span> -->
                                 </div>
                             </div>
                         </div>
@@ -303,6 +363,8 @@ import type { PartialDeep } from 'type-fest';
 import LoginInput from '@/components/Ui/LoginInput.vue';
 import openEye from '@/assets/img/open-eye.svg?raw';
 import closedEye from '@/assets/img/closed-eye.svg?raw';
+import stop from '@/assets/img/stop.svg?raw';
+import doneGreen from '@/assets/img/done-green.svg?raw';
 import DropDown from '@/components/Ui/DropDown.vue';
 import { DateTime } from 'luxon';
 import SaveButton from '@/components/Ui/SaveButton.vue';
@@ -340,6 +402,19 @@ const isPasswordMismatch = computed<Partial<Record<PasswordFieldName, boolean>>>
         fields.value?.['user-login'][2][0].value !== fields.value?.['user-login'][1][0].value,
 }));
 
+const isPassworValid = computed<Partial<Record<PasswordFieldName, boolean>>>(() => {
+    const rootPass = fields.value?.['root-login'][1][0].value;
+    const userPass = fields.value?.['user-login'][1][0].value;
+    const rootPassRepeat = fields.value?.['root-login'][2][0].value;
+    const userPassRepeat = fields.value?.['user-login'][2][0].value;
+    return {
+        'root-pass': rootPass ? /^[a-zA-Z0-9]{1,31}$/.test(rootPass) : true,
+        'user-pass': userPass ? /^[a-zA-Z0-9]{1,31}$/.test(userPass) : true,
+        'root-pass-repeat': rootPassRepeat ? /^[a-zA-Z0-9]{1,31}$/.test(rootPassRepeat) : true,
+        'user-pass-repeat': userPassRepeat ? /^[a-zA-Z0-9]{1,31}$/.test(userPassRepeat) : true,
+    };
+});
+
 const isPasswordMissed = computed<Partial<Record<PasswordFieldName, boolean>>>(() => ({
     'root-pass':
         !!changesAndErrors.value.changes.settings?.login?.['root-name'] &&
@@ -349,40 +424,58 @@ const isPasswordMissed = computed<Partial<Record<PasswordFieldName, boolean>>>((
         !changesAndErrors.value.changes.settings?.login?.['user-pass'],
 }));
 
-const isUsernameMissed = computed(() => ({
-    'root-name':
-        !fields.value?.['root-login'][0][0].value &&
-        !!changesAndErrors.value.changes.settings?.login?.['root-pass'],
-    'user-name':
-        !fields.value?.['user-login'][0][0].value &&
-        !!changesAndErrors.value.changes.settings?.login?.['user-pass'],
-}));
+// const isUsernameMissed = computed(() => ({
+//     'root-name':
+//         !fields.value?.['root-login'][0][0].value &&
+//         !!changesAndErrors.value.changes.settings?.login?.['root-pass'],
+//     'user-name':
+//         !fields.value?.['user-login'][0][0].value &&
+//         !!changesAndErrors.value.changes.settings?.login?.['user-pass'],
+// }));
 
-const isUsernameShort = computed(() => {
-    const rootName = fields.value?.['root-login'][0][0].value;
-    const userName = fields.value?.['user-login'][0][0].value;
-    return {
-        'root-name':
-            rootName &&
-            !!changesAndErrors.value.changes.settings?.login?.['root-pass'] &&
-            rootName.length < 6,
-        'user-name':
-            userName &&
-            !!changesAndErrors.value.changes.settings?.login?.['user-pass'] &&
-            userName.length < 6,
-    };
-});
+// const isUsernameShort = computed(() => {
+//     const rootName = fields.value?.['root-login'][0][0].value;
+//     const userName = fields.value?.['user-login'][0][0].value;
+//     return {
+//         'root-name':
+//             rootName &&
+//             !!changesAndErrors.value.changes.settings?.login?.['root-pass'] &&
+//             rootName.length < 6,
+//         'user-name':
+//             userName &&
+//             !!changesAndErrors.value.changes.settings?.login?.['user-pass'] &&
+//             userName.length < 6,
+//     };
+// });
 
-const isSaveButtonDisabled = computed(
-    () =>
+// const isUsernameLong = computed(() => {
+//     const rootName = fields.value?.['root-login'][0][0].value;
+//     const userName = fields.value?.['user-login'][0][0].value;
+//     return {
+//         'root-name':
+//             rootName &&
+//             !!changesAndErrors.value.changes.settings?.login?.['root-pass'] &&
+//             rootName.length > 31,
+//         'user-name':
+//             userName &&
+//             !!changesAndErrors.value.changes.settings?.login?.['user-pass'] &&
+//             userName.length > 31,
+//     };
+// });
+
+const isSaveButtonDisabled = computed(() => {
+    return (
         (isEmpty(changesAndErrors.value.changes.settings) &&
             isEmpty(changesAndErrors.value.changes.files)) ||
         changesAndErrors.value.isErrors ||
         isPasswordMismatch.value['root-pass-repeat'] ||
         isPasswordMismatch.value['user-pass-repeat'] ||
         isPasswordMissed.value['root-pass'] ||
-        isPasswordMissed.value['user-pass'],
-);
+        isPasswordMissed.value['user-pass'] ||
+        !isPassworValid.value['user-pass'] ||
+        !isPassworValid.value['root-pass']
+    );
+});
 
 const fields = ref<CommonSettingsFields | undefined>();
 
@@ -391,6 +484,8 @@ const fieldsInit = ref<CommonSettingsFields | undefined>();
 const isSaving = ref(false);
 
 const addrMode = ref<'dhcp' | 'static' | undefined>();
+
+const cloudMode = ref<'none' | 'ethernet' | 'gsm' | undefined>();
 
 const timeZones = computed(() => {
     const t = controllerDateTime.value;
@@ -460,7 +555,11 @@ const changesAndErrors = computed(() => {
                         }
                     }
                     if (!isErrors && param.type !== 'btn-group') {
-                        isErrors = param.status === 'invalid' || param.status === 'not-allowed';
+                        isErrors =
+                            param.status === 'invalid' ||
+                            param.status === 'not-allowed' ||
+                            (param.status === 'empty' &&
+                                ['apn', 'user', 'password'].includes(param.param));
                     }
                 });
             });
@@ -591,6 +690,49 @@ function setFields(settings: ControllerSettings) {
                 },
             ],
         ],
+        gsm: [
+            [
+                {
+                    param: 'mode',
+                    type: 'btn-group',
+                    values: gsmModes.map((v) => ({
+                        text: t(`gsm.fields.mode.values.${v}`),
+                        value: v,
+                    })),
+                    orientation: 'h',
+                    value: settings.gsm.mode,
+                },
+            ],
+            [
+                {
+                    param: 'apn',
+                    type: 'string',
+                    orientation: 'v',
+                    value: settings.gsm.apn,
+                    widthClass: 'w-[14.25rem]',
+                    status: 'valid',
+                    validationType: ['string'],
+                },
+                {
+                    param: 'user',
+                    type: 'string',
+                    orientation: 'v',
+                    value: settings.gsm.user,
+                    widthClass: 'w-[14.25rem]',
+                    status: 'valid',
+                    validationType: ['string'],
+                },
+                {
+                    param: 'password',
+                    type: 'string',
+                    orientation: 'v',
+                    value: settings.gsm.password,
+                    widthClass: 'w-[14.25rem]',
+                    status: 'valid',
+                    validationType: ['string'],
+                },
+            ],
+        ],
         rtc: [
             [
                 {
@@ -630,7 +772,7 @@ function setFields(settings: ControllerSettings) {
                     param: 'interval',
                     type: 'number',
                     orientation: 'h',
-                    value: settings.rtc.interval,
+                    value: settings.rtc.interval / 60,
                     widthClass: 'w-[3.563rem] !text-center !px-2',
                     status: 'valid',
                     validationType: ['int'],
@@ -646,6 +788,7 @@ function setFields(settings: ControllerSettings) {
                     value: settings.gnss.latitude,
                     widthClass: 'w-[14.25rem]',
                     status: 'valid',
+                    validationType: ['latitude'],
                 },
                 {
                     param: 'longitude',
@@ -654,6 +797,7 @@ function setFields(settings: ControllerSettings) {
                     value: settings.gnss.longitude,
                     widthClass: 'w-[14.25rem]',
                     status: 'valid',
+                    validationType: ['longitude'],
                 },
             ],
         ],
@@ -666,6 +810,7 @@ function setFields(settings: ControllerSettings) {
                     value: settings.login['root-name'],
                     widthClass: 'w-[17.938rem]',
                     status: 'valid',
+                    isRequired: true,
                 },
             ],
             [
@@ -676,6 +821,7 @@ function setFields(settings: ControllerSettings) {
                     value: '',
                     widthClass: 'w-[17.938rem]',
                     status: 'valid',
+                    isRequired: true,
                 },
             ],
             [
@@ -686,6 +832,7 @@ function setFields(settings: ControllerSettings) {
                     value: '',
                     widthClass: 'w-[17.938rem]',
                     status: 'valid',
+                    isRequired: true,
                 },
             ],
         ],
@@ -698,6 +845,7 @@ function setFields(settings: ControllerSettings) {
                     value: settings.login['user-name'],
                     widthClass: 'w-[17.938rem]',
                     status: 'valid',
+                    isRequired: true,
                 },
             ],
             [
@@ -708,6 +856,7 @@ function setFields(settings: ControllerSettings) {
                     value: '',
                     widthClass: 'w-[17.938rem]',
                     status: 'valid',
+                    isRequired: true,
                 },
             ],
             [
@@ -718,6 +867,7 @@ function setFields(settings: ControllerSettings) {
                     value: '',
                     widthClass: 'w-[17.938rem]',
                     status: 'valid',
+                    isRequired: true,
                 },
             ],
         ],
@@ -770,7 +920,12 @@ function setFields(settings: ControllerSettings) {
 async function save() {
     isSaving.value = true;
     const { changes } = changesAndErrors.value;
-    // console.log(changes);
+    if (changes.settings?.rtc?.interval) {
+        changes.settings.rtc.interval *= 60;
+    }
+    if (changes.settings?.gsm && cloudMode.value !== 'gsm') {
+        delete changes.settings.gsm;
+    }
     try {
         if (changes.files) {
             const r = await storeCommonSettingsFile(
@@ -890,6 +1045,29 @@ const { t } = useI18n({
                     },
                 },
             },
+            gsm: {
+                param: 'GSM',
+                fields: {
+                    mode: {
+                        param: 'Modem operating mode',
+                        values: {
+                            auto: 'AUTO',
+                            nbiot: 'NBIOT',
+                            'cat-m': 'CAT-M',
+                            off: 'OFF',
+                        },
+                    },
+                    apn: {
+                        param: 'APN',
+                    },
+                    user: {
+                        param: 'Login',
+                    },
+                    password: {
+                        param: 'Password',
+                    },
+                },
+            },
             rtc: {
                 param: 'EVO NG clock',
                 fields: {
@@ -966,15 +1144,16 @@ const { t } = useI18n({
                 param: 'Language',
             },
             minutes: 'minutes',
-            ms: 'ms',
             errors: {
                 login: {
                     minLength: 'The minimum login length is 6 characters',
+                    maxLength: 'The maximum login length is 31 characters',
                     required: 'Login is required when changing password',
                 },
                 password: {
-                    mismatch: 'Passwords do not match',
+                    mismatch: 'Password does not match',
                     required: 'Password is required when changing login',
+                    ok: 'Password matches',
                 },
             },
             toast: {
@@ -1035,6 +1214,29 @@ const { t } = useI18n({
                     },
                     'main-port': {
                         param: 'Порт',
+                    },
+                },
+            },
+            gsm: {
+                param: 'GSM',
+                fields: {
+                    mode: {
+                        param: 'Режим работы модема',
+                        values: {
+                            auto: 'AUTO',
+                            nbiot: 'NBIOT',
+                            'cat-m': 'CAT-M',
+                            off: 'OFF',
+                        },
+                    },
+                    apn: {
+                        param: 'APN',
+                    },
+                    user: {
+                        param: 'Логин',
+                    },
+                    password: {
+                        param: 'Пароль',
                     },
                 },
             },
@@ -1114,15 +1316,16 @@ const { t } = useI18n({
                 param: 'Язык',
             },
             minutes: 'минут',
-            ms: 'мс',
             errors: {
                 login: {
                     minLength: 'Минимальная длина логина 6 символов',
+                    maxLength: 'Максимальная длина логина 31 символ',
                     required: 'Логин обязателен при смене пароля',
                 },
                 password: {
-                    mismatch: 'Пароли не совпадают',
+                    mismatch: 'Пароль не совпадает',
                     required: 'Пароль обязателен при смене логина',
+                    ok: 'Пароль совпадает',
                 },
             },
             toast: {
@@ -1147,6 +1350,7 @@ onMounted(async () => {
     try {
         let r = await api.get<ControllerSettings>('get_config');
         addrMode.value = r.data.lan['addr-mode'];
+        cloudMode.value = r.data.cloud.mode;
         setFields(r.data);
     } catch (error) {
         //
