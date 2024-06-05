@@ -14,7 +14,7 @@
                 {{ t('state') }}
             </div>
             <ButtonGroup
-                :value="deviceState === 'on' ? 'on' : 'off'"
+                :value="deviceState === 'on' ? 'on' : deviceState === 'off' ? 'off' : undefined"
                 :buttons="
                     [
                         { text: t('on'), value: 'on' },
@@ -25,7 +25,10 @@
                 @change="emit('changeDeviceState', $event)"
             />
         </div>
-        <div class="flex flex-row items-center">
+        <div
+            class="flex flex-row items-center"
+            v-if="deviceAddr === 0 || (deviceAddr !== 0 && curDeviceState === 'on')"
+        >
             <div class="text-[#6d9cc5] text-sm leading-[1.143] mr-6">
                 {{ isRebootRequired ? t('rebootRequired') : t('rebootNoRequired') }}
             </div>
@@ -42,7 +45,11 @@
             :confirm-text="t('reboot')"
             :is-saving="isRebootingStarted"
             :trigger-close="rebootingDeviceAddr !== undefined"
-            @confirm="reboot('manual')"
+            @confirm="
+                () => {
+                    reboot('manual');
+                }
+            "
         >
             <template #title-icon>
                 <span v-html="successRound"></span>
@@ -92,7 +99,9 @@ const props = defineProps<{
     isRebootRequired: boolean;
     deviceAddr: T;
     deviceState: T extends 0 ? undefined : DeviceWorkState;
+    curDeviceState?: T extends 0 ? undefined : DeviceWorkState;
     rebootTrigger?: number;
+    rebootModalOpen?: boolean;
 }>();
 
 const emit = defineEmits<{
@@ -128,6 +137,15 @@ watch(
     () => reboot('auto'),
 );
 
+watch(
+    () => props.rebootModalOpen,
+    () => {
+        if (props.rebootModalOpen) {
+            isRebootModalOpen.value = true;
+        }
+    },
+);
+
 async function reboot(cause: 'manual' | 'auto') {
     isRebootingStarted.value = true;
     try {
@@ -153,10 +171,12 @@ async function checkIfExtDeviceRebooted() {
         return;
     }
     try {
-        await api.post('get_ext_cfg', { device: props.deviceAddr });
-        const r = await api.get('get_ext_devs');
-        indexStore.setExtDevsList(r.data.list);
-        indexStore.setRebootingDeviceAddr(undefined);
+        if (!props.isRebootRequired) {
+            await api.post('get_ext_cfg', { device: props.deviceAddr });
+            const r = await api.get('get_ext_devs');
+            indexStore.setExtDevsList(r.data.list);
+            indexStore.setRebootingDeviceAddr(undefined);
+        }
     } catch (error) {
         setTimeout(checkIfExtDeviceRebooted, 1000);
     }

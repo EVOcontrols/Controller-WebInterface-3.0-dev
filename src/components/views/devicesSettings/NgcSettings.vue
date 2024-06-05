@@ -5,7 +5,13 @@
             :device-addr="0"
             :device-state="undefined"
             :reboot-trigger="rebootTrigger"
-            @ngc-rebooted-manually="isRebootRequired = false"
+            :rebootModalOpen="isRebootModalOpen"
+            @ngc-rebooted-manually="
+                () => {
+                    isRebootRequired = false;
+                    indexStore.setIsRebootRequired(false);
+                }
+            "
         />
         <Rs485Settings
             :settings="settings.modbus"
@@ -118,16 +124,6 @@
                                             $event === undefined ? '' : (w[p.param] = $event)
                                         "
                                     />
-                                    <div
-                                        class="text-[#ed4272] text-sm leading-[1.143] invisible opacity-0 transition-[opacity,visibility] error:visible error:opacity-100 pl-4 table-cell"
-                                        :class="{
-                                            error: fieldsInvalidStatuses.has(
-                                                `1-wire-${i}-${p.param}`,
-                                            ),
-                                        }"
-                                    >
-                                        {{ t('integerFromTo', { from: p.min, to: p.max }) }}
-                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -154,7 +150,7 @@
                             name="avg-size"
                             initType="number"
                             class="table-cell w-16 text-center !px-2"
-                            :min-max="[2, 32]"
+                            :min-max="[0, 32]"
                             :status="
                                 fieldsInvalidStatuses.has(`adc-avg-${i}`) ? 'invalid' : 'valid'
                             "
@@ -176,7 +172,7 @@
                                 error: fieldsInvalidStatuses.has(`adc-avg-${i}`),
                             }"
                         >
-                            {{ t('integerFromTo', { from: 2, to: 32 }) }}
+                            {{ t('integerFromTo', { from: 0, to: 32 }) }}
                         </div>
                     </div>
                 </div>
@@ -208,7 +204,7 @@
                                 :name="m"
                                 initType="number"
                                 class="table-cell w-16 text-center !px-2"
-                                :min-max="[0, undefined]"
+                                :min-max="[0, 65535]"
                                 :status="
                                     fieldsInvalidStatuses.has(`adc-${prefix}-${m}-${i}`)
                                         ? 'invalid'
@@ -227,7 +223,7 @@
                                         : (settings['adc-in'][`${prefix}-${m}`][i] = $event)
                                 "
                             />
-                            <div
+                            <!-- <div
                                 v-if="m === 'min'"
                                 class="text-[#ed4272] text-sm leading-[1.143] invisible opacity-0 transition-[opacity,visibility] error:visible error:opacity-100 pl-4 table-cell"
                                 :class="{
@@ -237,7 +233,7 @@
                                 }"
                             >
                                 {{ t('positiveInteger') }}
-                            </div>
+                            </div> -->
                         </template>
                     </div>
                 </div>
@@ -254,7 +250,7 @@
                     name="min-delay"
                     initType="number"
                     class="table-cell w-16 text-center !px-2"
-                    :min-max="[0, 10000]"
+                    :min-max="[0, 200]"
                     :status="fieldsInvalidStatuses.has('bin-out') ? 'invalid' : 'valid'"
                     :input-type="['int']"
                     @status-changed="
@@ -269,14 +265,14 @@
                 <span class="text-[#3e688e] text-sm leading-[1.143] ml-3">
                     {{ t('ms') }}
                 </span>
-                <div
+                <!-- <div
                     class="text-[#ed4272] text-sm leading-[1.143] invisible opacity-0 transition-[opacity,visibility] error:visible error:opacity-100 pl-4 table-cell"
                     :class="{
                         error: fieldsInvalidStatuses.has('bin-out'),
                     }"
                 >
                     {{ t('integerFromTo', { from: 0, to: 10000 }) }}
-                </div>
+                </div> -->
             </div>
             <div v-else-if="topic === 'pwm-out'">
                 <div class="table w-max border-spacing-y-3.5 -mb-3.5 mt-1.5">
@@ -312,14 +308,14 @@
                         <span class="text-[#3e688e] text-sm leading-[1.143] pl-3 table-cell">
                             {{ t('hz') }}
                         </span>
-                        <div
+                        <!-- <div
                             class="text-[#ed4272] text-sm leading-[1.143] invisible opacity-0 transition-[opacity,visibility] error:visible error:opacity-100 pl-4 table-cell"
                             :class="{
                                 error: fieldsInvalidStatuses.has(`pwm-out-${i}`),
                             }"
                         >
                             {{ t('integerFromTo', { from: 50, to: 5000 }) }}
-                        </div>
+                        </div> -->
                     </div>
                 </div>
             </div>
@@ -349,9 +345,13 @@ const emit = defineEmits<{
     (e: 'setIsSaving', isSaving: boolean): void;
 }>();
 
+const route = useRoute();
+
+const router = useRouter();
+
 const indexStore = useIndexStore();
 
-const { rebootingDeviceAddr, numberingSystem } = storeToRefs(indexStore);
+const { devices, rebootingDeviceAddr, numberingSystem } = storeToRefs(indexStore);
 
 const { api } = useApiStore();
 
@@ -387,20 +387,20 @@ const oneWiresParams = computed<
               {
                   param: 'cycle-pause',
                   label: 'cycle-delay',
-                  min: 5,
-                  max: w.mode === 'rom' ? 100 : w.mode === 'sens' ? 1000 : 100,
+                  min: 0,
+                  max: 65535,
               },
               {
                   param: 'db-time',
                   label: 'debounce-time',
                   min: 0,
-                  max: w.mode === 'rom' ? 100 : 100,
+                  max: 65535,
               },
               {
                   param: 'ct-time',
                   label: 'comert-time',
-                  min: 50,
-                  max: w.mode === 'rom' ? 100 : w.mode === 'sens' ? 500 : 100,
+                  min: 0,
+                  max: 65535,
               },
           ]),
 );
@@ -441,11 +441,15 @@ const areThereChanges = computed(() => {
 
 const needToSave = computed(() => areThereChanges.value && !fieldsInvalidStatuses.value.size);
 
+const isRebootModalOpen = ref(false);
+
 watch(needToSave, () => {
     emit('setNeedToSave', needToSave.value);
 });
 
 watch(() => props.saveTrigger, save);
+
+onBeforeUnmount(() => emit('setNeedToSave', false));
 
 const { t } = useI18n({
     messages: {
@@ -481,6 +485,19 @@ const { t } = useI18n({
             press: 'Press',
             here: 'here',
             forReboot: 'for reboot',
+            toast: {
+                success: 'Saved',
+                error: {
+                    header: 'Error',
+                    text: 'Check entered values',
+                },
+                reboot: {
+                    rebootRequired: 'Reboot required',
+                    press: 'Press',
+                    here: 'here',
+                    forReboot: 'for reboot',
+                },
+            },
         },
         ru: {
             '1-wire': 'Настройки шин 1-wire',
@@ -514,6 +531,19 @@ const { t } = useI18n({
             press: 'Нажмите',
             here: 'сюда',
             forReboot: 'для перезагрузки',
+            toast: {
+                success: 'Сохранено',
+                error: {
+                    header: 'Ошибка',
+                    text: 'Проверьте введённые значения',
+                },
+                reboot: {
+                    rebootRequired: 'Требуется перезагрузка',
+                    press: 'Нажмите',
+                    here: 'сюда',
+                    forReboot: 'для перезагрузки',
+                },
+            },
         },
     },
 });
@@ -570,6 +600,7 @@ function setNgcSettings(data: ControllerSettings) {
         numberingSystem: numberingSystem.value,
     };
     isRebootRequired.value = data['reboot-req'];
+    indexStore.setIsRebootRequired(data['reboot-req']);
     settingsInit.value = cloneDeep(settings.value);
 }
 
@@ -602,6 +633,7 @@ async function save() {
         if (!isEmpty(settingsToSave)) {
             const r = await api.post('set_config', settingsToSave, { timeout: 60000 });
             isRebootRequired.value = r.data['reboot-req'];
+            indexStore.setIsRebootRequired(r.data['reboot-req']);
         }
         if (current.numberingSystem !== init.numberingSystem) {
             const r = await storeCommonSettingsFile(
@@ -614,18 +646,37 @@ async function save() {
             indexStore.setNumberingSystem(current.numberingSystem);
         }
         if (current.modbus.mode !== init.modbus.mode) {
-            if (current.modbus.mode === 'ext-devs' && init.modbus.mode !== 'ext-devs') {
-                rebootTrigger.value += 1;
-                await until(rebootingDeviceAddr).toBe(0);
-                await until(rebootingDeviceAddr).toBe(undefined);
+            if (
+                current.modbus.mode === 'ext-devs' &&
+                init.modbus.mode !== 'ext-devs' &&
+                !isRebootRequired
+            ) {
+                // await until(rebootingDeviceAddr).toBe(0);
+                // await until(rebootingDeviceAddr).toBe(undefined);
                 const r = await api.get<{ list: ExtDevsListRaw }>('get_ext_devs');
                 indexStore.setExtDevsList(r.data.list);
             }
             indexStore.setNGCModbusMode(current.modbus.mode);
             const r = await api.get<ControllerSettings>('get_config');
             setNgcSettings(r.data);
+            const mainDev = devices.value[0];
+            indexStore.setDevicesToInitState();
+            indexStore.setDevicesStateToInitState();
+            indexStore.setOWIdsToInitState();
+            indexStore.setCalibrValsToInitState();
+            indexStore.setMbDevsToInitState();
+            indexStore.setDevices(mainDev);
+            indexStore.toggleDevice(0);
         } else {
             settingsInit.value = cloneDeep(settings.value);
+        }
+        if (settingsToSave['1-wire']) {
+            for (let i = 0; i < settingsToSave['1-wire'].length; i++) {
+                if (JSON.stringify(current['1-wire'][i]) !== JSON.stringify(init['1-wire'][i])) {
+                    indexStore.setOWIds(0, i, []);
+                    indexStore.removeOWInterf(0, i);
+                }
+            }
         }
     } catch (error) {
         toast.error(t('toast.error.header'), t('toast.error.text'));
@@ -634,4 +685,28 @@ async function save() {
 }
 
 setNgcSettings(props.controllerSettings);
+
+watch(isRebootRequired, () => {
+    if (isRebootRequired.value) {
+        const toastId = toast.info(
+            t('toast.reboot.rebootRequired'),
+            [
+                `${t('toast.reboot.press')} `,
+                {
+                    text: t('toast.reboot.here'),
+                    action: () => {
+                        indexStore.deleteToast(toastId);
+                        if (route.name !== 'devices-settings') {
+                            router.push({ name: 'devices-settings' });
+                        } else {
+                            isRebootModalOpen.value = true;
+                        }
+                    },
+                },
+                ` ${t('toast.reboot.forReboot')}`,
+            ],
+            0,
+        );
+    }
+});
 </script>

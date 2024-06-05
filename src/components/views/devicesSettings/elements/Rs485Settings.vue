@@ -4,7 +4,7 @@
             {{ t('rsSettings') }}
         </h2>
         <div class="flex flex-row items-center">
-            <div class="text-[#6d9cc5] text-sm leading-[1.143] mr-6">
+            <div class="text-[#6d9cc5] text-sm leading-[1.143] mr-[0.875rem]">
                 {{ t('portMode') }}
             </div>
             <ButtonGroup
@@ -17,7 +17,7 @@
         <CollapseTransition :duration="300">
             <div v-if="props.settings.mode !== 'off'">
                 <div class="flex flex-row mt-[2.8rem]">
-                    <div class="text-[#6d9cc5] text-sm leading-[1.143] mr-10">
+                    <div class="text-[#6d9cc5] text-sm leading-[1.143] mr-[0.875rem]">
                         {{ t('speed') }}
                     </div>
                     <InputRange
@@ -26,7 +26,7 @@
                     />
                 </div>
                 <div class="flex flex-row items-center mt-[2.5rem]">
-                    <div class="text-[#6d9cc5] text-sm leading-[1.143] mr-6">
+                    <div class="text-[#6d9cc5] text-sm leading-[1.143] mr-[0.875rem]">
                         {{ t('parity') }}
                     </div>
                     <ButtonGroup
@@ -39,7 +39,7 @@
                     />
                 </div>
                 <div class="flex flex-row items-center mt-[2.75rem]">
-                    <div class="text-[#6d9cc5] text-sm leading-[1.143] mr-5">
+                    <div class="text-[#6d9cc5] text-sm leading-[1.143] mr-[0.875rem]">
                         {{ t('stop') }}
                     </div>
                     <ButtonGroup
@@ -49,7 +49,10 @@
                         @change="emit('changeStop', $event)"
                     />
                 </div>
-                <div class="flex flex-row items-center mt-[2.75rem]">
+                <div
+                    v-if="props.settings.mode === 'variables'"
+                    class="flex flex-row items-center mt-[2.75rem]"
+                >
                     <div class="text-[#6d9cc5] text-sm leading-[1.143] mr-5 whitespace-pre">
                         {{ t('numberingSystem') }}
                     </div>
@@ -120,7 +123,7 @@
                                         }
                                     "
                                 />
-                                <div
+                                <!-- <div
                                     class="text-[#ed4272] text-sm leading-[1.143] invisible opacity-0 transition-[opacity,visibility] error:visible error:opacity-100 pl-4 table-cell"
                                     :class="{
                                         error: fieldsInvalidStatuses.has(`modbus-${p.param}`),
@@ -132,7 +135,7 @@
                                             to: p.max,
                                         })
                                     }}
-                                </div>
+                                </div> -->
                             </div>
                         </div>
                     </div>
@@ -176,18 +179,18 @@ const advancedSettingsHaveError = computed(() => props.fieldsInvalidStatuses.siz
 
 const rsAdvancedParams = {
     variables: [
-        { param: 'rd-tmo', label: 'rd-tmo', min: 5, max: 50000 },
-        { param: 'wr-tmo', label: 'wr-tmo', min: 5, max: 50000 },
-        { param: 'rd-pause', label: 'rd-ddy', min: 0, max: 50000 },
-        { param: 'wr-pause', label: 'wr-ddy', min: 0, max: 50000 },
-        { param: 'cycle-pause', label: 'cm-ddy', min: 0, max: 50000 },
+        { param: 'rd-tmo', label: 'rd-tmo', min: 0, max: 65535 },
+        { param: 'wr-tmo', label: 'wr-tmo', min: 0, max: 65535 },
+        { param: 'rd-pause', label: 'rd-ddy', min: 0, max: 65535 },
+        { param: 'wr-pause', label: 'wr-ddy', min: 0, max: 65535 },
+        { param: 'cycle-pause', label: 'cm-ddy', min: 0, max: 65535 },
     ],
     'ext-devs': [
-        { param: 'get-tmo', label: 'get-tmo', min: 1, max: 50000 },
-        { param: 'set-tmo', label: 'set-tmo', min: 1, max: 50000 },
-        { param: 'ow-scan-tmo', label: 'ow-scan-tmo', min: 100, max: 50000 },
-        { param: 'set-cfg-tmo', label: 'set-cfg-tmo', min: 100, max: 50000 },
-        { param: 'cycle-pause', label: 'cycle-pause', min: 0, max: 50000 },
+        { param: 'get-tmo', label: 'get-tmo', min: 0, max: 65535 },
+        { param: 'set-tmo', label: 'set-tmo', min: 0, max: 65535 },
+        { param: 'ow-scan-tmo', label: 'ow-scan-tmo', min: 0, max: 65535 },
+        { param: 'set-cfg-tmo', label: 'set-cfg-tmo', min: 0, max: 65535 },
+        { param: 'cycle-pause', label: 'cycle-pause', min: 0, max: 65535 },
     ],
 } as const;
 

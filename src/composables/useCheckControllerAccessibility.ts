@@ -9,7 +9,7 @@ export function useCheckControllerAccessibility() {
 
     watch([notConnected, rebootingDeviceAddr], () => {
         if ((notConnected.value || rebootingDeviceAddr.value === 0) && isInterfaceStarted.value) {
-            checkAccessibility();
+            setTimeout(checkAccessibility, 5000);
         }
     });
 
@@ -19,7 +19,13 @@ export function useCheckControllerAccessibility() {
             if (notConnected.value) {
                 indexStore.setIsNotConnected(false);
             } else if (rebootingDeviceAddr.value === 0) {
+                indexStore.setDevicesToInitState();
+                indexStore.setDevicesStateToInitState();
+                indexStore.setOWIdsToInitState();
+                indexStore.setCalibrValsToInitState();
+                indexStore.setMbDevsToInitState();
                 indexStore.setRebootingDeviceAddr(undefined);
+                indexStore.setNeedToReqData(true);
             }
         } catch (error) {
             setTimeout(checkAccessibility, 1000);

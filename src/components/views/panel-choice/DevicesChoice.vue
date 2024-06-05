@@ -19,7 +19,7 @@
                         ref="scrollEl"
                     >
                         <div
-                            v-for="device in devices"
+                            v-for="device in [...new Set(devices)]"
                             :key="device.addr"
                             class="device h-6 min-w-[4rem] pr-2 flex items-center mr-[6px] rounded text-0.81 font-roboto text-[#ADEBFF] cursor-pointer transition-all duration-300 justify-center select-none"
                             :class="[

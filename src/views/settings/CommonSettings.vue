@@ -983,17 +983,21 @@ async function save() {
 }
 
 function setRebootToast() {
-    const toastId = toast.info(t('toast.reboot.rebootRequired'), [
-        `${t('toast.reboot.press')} `,
-        {
-            text: t('toast.reboot.here'),
-            action: () => {
-                indexStore.deleteToast(toastId);
-                router.push('devices');
+    const toastId = toast.info(
+        t('toast.reboot.rebootRequired'),
+        [
+            `${t('toast.reboot.press')} `,
+            {
+                text: t('toast.reboot.here'),
+                action: () => {
+                    indexStore.deleteToast(toastId);
+                    router.push({ name: 'devices' });
+                },
             },
-        },
-        ` ${t('toast.reboot.forReboot')}`,
-    ]);
+            ` ${t('toast.reboot.forReboot')}`,
+        ],
+        0,
+    );
 }
 
 const { t } = useI18n({

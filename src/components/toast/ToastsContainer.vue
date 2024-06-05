@@ -23,7 +23,7 @@ import ToastEl from './ToastEl.vue';
 
 const indexStore = useIndexStore();
 
-const { newToast } = storeToRefs(indexStore);
+const { newToast, rebootingDeviceAddr } = storeToRefs(indexStore);
 
 const route = useRoute();
 
@@ -48,7 +48,14 @@ function closeToast(index: number) {
 watch(
     () => route.name,
     () => {
-        toasts.value = [];
+        const prevToasts = toasts.value;
+        toasts.value = [...prevToasts.filter((el) => el.type === 'info')];
     },
 );
+
+watch(rebootingDeviceAddr, () => {
+    if (rebootingDeviceAddr.value === 0) {
+        toasts.value = [];
+    }
+});
 </script>

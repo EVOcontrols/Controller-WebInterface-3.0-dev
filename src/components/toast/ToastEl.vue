@@ -43,7 +43,7 @@
             </p>
         </div>
         <close-icon
-            v-if="timeout"
+            v-if="timeout || props.type === 'info'"
             class="w-5 cursor-pointer"
             @click="close"
         />

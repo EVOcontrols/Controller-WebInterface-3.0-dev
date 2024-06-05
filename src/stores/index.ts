@@ -64,7 +64,6 @@ export interface InterfVal {
 
 export const useIndexStore = defineStore('indexStore', () => {
     const timeout = ref(500);
-
     const labels = ref<
         | [
               | {
@@ -108,7 +107,15 @@ export const useIndexStore = defineStore('indexStore', () => {
 
     const sortedChosenInterfaces = ref<string[]>([]);
 
-    const visibleWidgets = ref<any[][]>([]);
+    const visibleWidgets = ref<
+        {
+            w: {
+                d: number;
+                i: string;
+                bus?: number;
+            };
+        }[][]
+    >([]);
 
     const devicesState = ref<InterfVal[][]>([]);
 
@@ -170,6 +177,18 @@ export const useIndexStore = defineStore('indexStore', () => {
     const choosenMbDevices = ref<number[][]>([]);
 
     const isMbInit = ref(false);
+
+    const isEditPopUpShown = ref(false);
+
+    const needToReqData = ref(false);
+
+    const isRebootRequired = ref(false);
+
+    const needToRequestMainData = ref(false);
+
+    function setNeedToReqData(res: boolean) {
+        needToReqData.value = res;
+    }
 
     function getApi() {
         if (!api.value) {
@@ -239,7 +258,95 @@ export const useIndexStore = defineStore('indexStore', () => {
     }
 
     function setDevices(device: Device) {
-        devices.value = [...devices.value, device];
+        const newArr = [...devices.value];
+        for (let i = newArr.length; i < device.addr; i++) {
+            newArr.push(devices.value[0]);
+        }
+        newArr.push(device);
+        devices.value = newArr;
+        setSortedDevices();
+        setSortedChosenInterfaces();
+    }
+
+    function removeOWInterf(device: number, bus: number) {
+        const newArr = [...devices.value];
+        const newInterf = newArr[device].interf.filter(
+            (el) => typeof el === 'string' || el.bus !== bus,
+        );
+        newArr[device].interf = newInterf as [
+            | { interf: '1w-gpio'; bus: number }
+            | { interf: '1w-rom'; bus: number }
+            | { interf: '1w-sens'; bus: number }
+            | '1w-gpio'
+            | '1w-rom'
+            | '1w-sens'
+            | 'adc-in'
+            | 'bin-in'
+            | 'bin-out'
+            | 'bin-var'
+            | 'int-var'
+            | 'mb-var'
+            | { interf: 'mb-var'; bus: number }
+            | 'pwm-out'
+            | 'tim-var',
+        ];
+        devices.value = newArr;
+        if (visibleWidgets.value.length) {
+            const newWidgets = [...visibleWidgets.value];
+            newWidgets[device] = newWidgets[device].filter(
+                (el) => !el.w.i.includes('1w') || (el.w.i.includes('1w') && el.w.bus !== bus),
+            );
+            visibleWidgets.value = [...newWidgets];
+        }
+        if (devicesState.value.length) {
+            const newState = [...devicesState.value];
+            newState[device] = newState[device].filter(
+                (el) => !el.type.includes('1w') || (el.type.includes('1w') && el.bus !== bus),
+            );
+            devicesState.value = [...newState];
+        }
+    }
+
+    function removeMbInterf(device: number) {
+        const newArr = [...devices.value];
+        const newInterf = newArr[device]?.interf.filter(
+            (el) => typeof el === 'string' || el.bus !== 0,
+        );
+        if (newInterf) {
+            newArr[device].interf = newInterf as [
+                | { interf: '1w-gpio'; bus: number }
+                | { interf: '1w-rom'; bus: number }
+                | { interf: '1w-sens'; bus: number }
+                | '1w-gpio'
+                | '1w-rom'
+                | '1w-sens'
+                | 'adc-in'
+                | 'bin-in'
+                | 'bin-out'
+                | 'bin-var'
+                | 'int-var'
+                | 'mb-var'
+                | { interf: 'mb-var'; bus: number }
+                | 'pwm-out'
+                | 'tim-var',
+            ];
+            devices.value = newArr;
+            if (visibleWidgets.value.length) {
+                const newWidgets = [...visibleWidgets.value];
+                newWidgets[device] = newWidgets[device].filter((el) => el.w.i !== 'mb-var');
+                visibleWidgets.value = [...newWidgets];
+            }
+            if (devicesState.value.length) {
+                const newState = [...devicesState.value];
+                newState[device] = newState[device].filter((el) => el.type !== 'mb-var');
+                devicesState.value = [...newState];
+            }
+        }
+    }
+
+    function setDevicesToInitState() {
+        devices.value = [];
+        chosenDevices.value = [];
         setSortedDevices();
         setSortedChosenInterfaces();
     }
@@ -266,7 +373,7 @@ export const useIndexStore = defineStore('indexStore', () => {
             devices.value.forEach((d) => {
                 arr.push(d.addr);
             });
-            chosenDevices.value = arr;
+            chosenDevices.value = [...new Set(arr)];
         }
         setSortedDevices();
     }
@@ -327,6 +434,10 @@ export const useIndexStore = defineStore('indexStore', () => {
         }
     }
 
+    function setDevicesStateToInitState() {
+        devicesState.value = [];
+    }
+
     function setSortedChosenInterfaces() {
         sortedChosenInterfaces.value = [...chosenInterfaces.value].sort((i1, i2) => {
             const index1 = interfaces.value.findIndex((i) => i.value === i1);
@@ -351,7 +462,12 @@ export const useIndexStore = defineStore('indexStore', () => {
     }
 
     function setVisibleWidgets(entities: { w: { d: number; i: string } }[]) {
-        const newArr: any[][] = [];
+        const newArr: {
+            w: {
+                d: number;
+                i: string;
+            };
+        }[][] = [];
         for (let i = 0; i < visibleWidgets.value.length; i += 1) {
             newArr.push([]);
         }
@@ -396,12 +512,20 @@ export const useIndexStore = defineStore('indexStore', () => {
         }
     }
 
+    function setOWIdsToInitState() {
+        OWIds.value = [];
+    }
+
     function changeIsPriorWOpen(isStart?: boolean) {
         isPriorWOpen.value = !!isStart;
     }
 
     function setCalibrVals(arrMin: [number | null], arrMax: [number | null]) {
         calibrVals.value = [arrMin, arrMax];
+    }
+
+    function setCalibrValsToInitState() {
+        calibrVals.value = [];
     }
 
     function changeDeviceState(addr: number, state: 'on' | 'off' | 'error' | 'init' | 'no-conn') {
@@ -588,7 +712,6 @@ export const useIndexStore = defineStore('indexStore', () => {
                     for (let i = prevDevs[d].length; i < bus; i++) {
                         val.push([]);
                     }
-
                     val.push(devs);
                     prevDevs[d] = val;
                 } else {
@@ -620,6 +743,9 @@ export const useIndexStore = defineStore('indexStore', () => {
             }
         }
         mbDevs.value = prevDevs;
+    }
+    function setMbDevsToInitState() {
+        mbDevs.value = [];
     }
 
     function setMbDevsLabels(d: number, bus: number, part: number, labelsArr: string[]) {
@@ -677,6 +803,18 @@ export const useIndexStore = defineStore('indexStore', () => {
         isMbInit.value = res;
     }
 
+    function toggleIsEditPopUpShown(res: boolean) {
+        isEditPopUpShown.value = res;
+    }
+
+    function setIsRebootRequired(res: boolean) {
+        isRebootRequired.value = res;
+    }
+
+    function setNeedToRequestMainData(res: boolean) {
+        needToRequestMainData.value = res;
+    }
+
     return {
         api,
         labels,
@@ -715,6 +853,11 @@ export const useIndexStore = defineStore('indexStore', () => {
         calibrVals,
         choosenMbDevices,
         isMbInit,
+        isEditPopUpShown,
+        needToReqData,
+        isRebootRequired,
+        needToRequestMainData,
+        setNeedToReqData,
         getApi,
         setDevices,
         setIsAuth,
@@ -750,5 +893,15 @@ export const useIndexStore = defineStore('indexStore', () => {
         setMbDevs,
         setMbDevsLabels,
         toggleIsMbInit,
+        toggleIsEditPopUpShown,
+        setDevicesToInitState,
+        setDevicesStateToInitState,
+        setOWIdsToInitState,
+        setCalibrValsToInitState,
+        setMbDevsToInitState,
+        setIsRebootRequired,
+        setNeedToRequestMainData,
+        removeOWInterf,
+        removeMbInterf,
     };
 });

@@ -1,7 +1,10 @@
 <template>
     <div class="h-full flex flex-col">
-        <div class="flex flex-col flex-1 overflow-y-auto overflow-x-hidden scrollbar-4 relative">
-            <template v-if="controllerSettings && (ngcModbusMode !== 'ext-devs' || extDevsList)">
+        <div
+            class="flex flex-col flex-1 overflow-y-auto overflow-x-hidden scrollbar-4 relative"
+            :id="'devicesSettings'"
+        >
+            <template v-if="controllerSettings">
                 <div class="flex flex-col px-8">
                     <div class="mt-8 flex flex-col border-b border-[#0b3d68] pb-9 w-full">
                         <h2
@@ -25,28 +28,55 @@
                                     "
                                 >
                                     <button
-                                        v-for="(extDev, i) in [
-                                            { addr: 0, state: 'on', serial: '' },
-                                            ...(ngcModbusMode === 'ext-devs'
-                                                ? extDevsList || []
-                                                : []),
-                                        ]"
+                                        v-for="(device, i) in [...new Set(devices)]"
                                         :key="i"
                                         type="button"
-                                        class="h-[1.563rem] w-[3.188rem] bg-[#1b4569] hover:bg-[#214e76] on:bg-[#148ef8] font-roboto rounded flex items-center justify-center"
+                                        class="h-[1.563rem] w-[3.188rem] bg-[#1b4569] hover:bg-[#214e76] on:bg-[#148ef8] font-roboto rounded flex items-center justify-center relative"
                                         :class="{
-                                            on: extDev.addr === activeDeviceAddr,
+                                            on: device.addr === activeIndex,
                                         }"
                                         @click="onClick(i)"
                                     >
-                                        {{ extDev.addr > 0 ? `IO ${i}` : 'NGC' }}
+                                        <div
+                                            v-if="
+                                                device.addr !== 0 &&
+                                                device.state !== 'on' &&
+                                                device.state !== 'off'
+                                            "
+                                            class="w-[5px] h-[5px] rounded-[50%] mr-[6px]"
+                                            :class="[
+                                                { 'bg-[#84AFBD]': device.state === 'init' },
+                                                { 'bg-[#3E688E]': device.state === 'no-conn' },
+                                                { 'bg-[#FF5A88]': device.state === 'error' },
+                                            ]"
+                                        ></div>
+                                        {{
+                                            device.addr > 0
+                                                ? devices.findIndex(
+                                                      (el) => el.serial === device.serial,
+                                                  ) !== -1
+                                                    ? `IO ${devices.findIndex(
+                                                          (el) => el.serial === device.serial,
+                                                      )}`
+                                                    : 'IO'
+                                                : 'NGC'
+                                        }}
                                     </button>
                                 </ScrollBooster>
                             </div>
-                            <button
+                            <span
                                 v-html="edit"
                                 class="group ml-3"
-                            ></button>
+                                :class="
+                                    ngcModbusMode === 'ext-devs' ? 'cursor-pointer' : 'cursor-auto'
+                                "
+                                @mouseenter="
+                                    () => {
+                                        if (ngcModbusMode !== 'ext-devs')
+                                            indexStore.toggleIsEditPopUpShown(true);
+                                    }
+                                "
+                            ></span>
                         </div>
                     </div>
                     <Transition
@@ -62,22 +92,15 @@
                         />
                         <EditExtDeviceSettings
                             v-else-if="activeExtDevice"
+                            :deviceIndex="activeExtDevice.index"
                             :device-addr="activeDeviceAddr"
                             :device-state="activeExtDevice.state"
+                            :save-trigger="saveTrigger"
+                            @change-state="activeExtDevice.state = $event"
+                            @set-need-to-save="needToSave = $event"
+                            @set-is-saving="isSaving = $event"
                         />
                     </Transition>
-                    <!-- <ExtDevicesSettings
-            :active-device-index="activeDeviceAddr"
-            :device-count="5"
-            :reboot-required="isNgcRebootRequired"
-            :modbus-settings-init="settingsInit.modbus"
-            :numbering-system="settings.numberingSystem"
-            :fields-invalid-statuses="fieldsInvalidStatuses"
-            :advanced-settings-have-error="advancedSettingsHaveError.modbus"
-            @select-device="activeDeviceAddr = $event"
-            @set-modbus-settings="settings['modbus'] = $event"
-            @set-numbering-system="settings.numberingSystem = $event"
-          /> -->
                 </div>
             </template>
         </div>
@@ -101,13 +124,16 @@ import ScrollBooster from '@/components/ScrollBooster.vue';
 import edit from '@/assets/img/edit.svg?raw';
 import EditNGCSettings from '@/components/views/devicesSettings/NgcSettings.vue';
 import EditExtDeviceSettings from '@/components/views/devicesSettings/ExtDeviceSettings.vue';
+import axios from 'axios';
 import type { DeviceAddr } from '@/typings/common';
 
 const indexStore = useIndexStore();
 
-const { api } = useApiStore();
+const api = indexStore.getApi().api as axios.AxiosInstance;
 
-const { extDevsList, ngcModbusMode } = storeToRefs(indexStore);
+const isAborted = indexStore.getApi().isAborted;
+
+const { extDevsList, ngcModbusMode, devices } = storeToRefs(indexStore);
 
 const controllerSettings = ref<ControllerSettings>();
 
@@ -118,9 +144,16 @@ const saveTrigger = ref(0);
 const activeDeviceAddr = useStorage<DeviceAddr>('devicesSettings.activeDeviceAddr', 0, undefined, {
     mergeDefaults: (val: any) => {
         const parsed = parseInt(val, 10);
-        if (!Number.isNaN(parsed) && parsed >= 0 && parsed <= 247) return parsed as DeviceAddr;
+        if (!Number.isNaN(parsed) && parsed >= 0 && parsed <= 247) {
+            return parsed as DeviceAddr;
+        }
         return 0;
     },
+});
+
+const activeIndex = computed(() => {
+    const index = extDevsList.value?.find((el) => el.addr === activeDeviceAddr.value)?.index;
+    return index || 0;
 });
 
 const needToSave = ref(false);
@@ -159,15 +192,24 @@ const { t } = useI18n({
     },
 });
 
-onMounted(async () => {
+async function getConfig() {
     try {
         const r = await api.get<ControllerSettings>('get_config');
         controllerSettings.value = r.data;
         indexStore.setNGCModbusMode(r.data.modbus[0]?.mode || 'off');
-        if (r.data.modbus[0]?.mode === 'ext-devs') {
-            const r2 = await api.get<{ list: ExtDevsListRaw }>('get_ext_devs');
-            indexStore.setExtDevsList(r2.data.list);
+    } catch (error) {
+        if (isAborted.value) {
+            return;
         }
+        setTimeout(() => {
+            getConfig();
+        }, 20);
+    }
+}
+
+onMounted(async () => {
+    try {
+        await getConfig();
     } catch (error) {
         console.error(error);
     }

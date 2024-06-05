@@ -28,7 +28,7 @@
                     class="bg-[#1B4569] rounded-[10px] py-4 px-6 text-sm text-[#A0D5FF] leading-[100%] flex flex-col gap-1"
                 >
                     <div>ID: {{ shownStatus.serial }}</div>
-                    <div>
+                    <div class="relative">
                         <div
                             class="absolute w-[5px] h-[5px] rounded-[50%] left-[-11px] top-[5px]"
                             :class="[

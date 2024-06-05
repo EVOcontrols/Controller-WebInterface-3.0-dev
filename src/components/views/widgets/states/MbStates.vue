@@ -602,10 +602,11 @@ async function getMbInfo() {
             if (isAborted.value) {
                 return;
             }
-            return new Promise((resolve) =>
-                setTimeout(() => {
-                    getMbInfo();
-                }, 5),
+            return new Promise(
+                (resolve) =>
+                    (getMbInfoTimer = setTimeout(() => {
+                        getMbInfo();
+                    }, 5)),
             );
         }
     }
