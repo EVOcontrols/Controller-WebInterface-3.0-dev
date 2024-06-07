@@ -781,7 +781,7 @@ export const useIndexStore = defineStore('indexStore', () => {
                 }
             }
             const labelsVal = bus ? val[bus] : val[0];
-            if (labelsVal.length / labelsFileLength < part) {
+            if (labelsVal && labelsVal.length / labelsFileLength < part) {
                 for (let i = labelsVal.length / labelsFileLength; i < part; i++) {
                     for (let j = 0; j < labelsFileLength; j++) {
                         labelsVal.push('');
@@ -790,7 +790,7 @@ export const useIndexStore = defineStore('indexStore', () => {
                 labelsVal.push(...labelsArr);
             } else {
                 for (let i = 0; i < labelsFileLength; i++) {
-                    labelsVal[part * labelsFileLength + i] = labelsArr[i];
+                    if (labelsVal) labelsVal[part * labelsFileLength + i] = labelsArr[i];
                 }
             }
             val[bus || 0] = labelsVal;

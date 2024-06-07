@@ -87,15 +87,10 @@
                         v-if="ngcModbusMode !== 'ext-devs'"
                         class="absolute flex flex-col gap-3 py-4 px-5 w-[270px] h-[130px] bg-[#1B4569] right-5 -top-[116px] rounded-[10px] invisible opacity-0 group-hover:visible group-hover:opacity-100 transition-[visibility,opacity] z-[1]"
                     >
-                        <span
-                            class="w-full text-[#A0D5FF] font-semibold"
-                            :style="{ 'text-wrap': 'wrap' }"
-                            >{{ t('infoBlock.title') }}</span
-                        >
-                        <div
-                            class="w-full text-balance text-[#77C3FF]"
-                            :style="{ 'text-wrap': 'wrap' }"
-                        >
+                        <span class="w-full text-[#A0D5FF] font-semibold text_wrap">{{
+                            t('infoBlock.title')
+                        }}</span>
+                        <div class="w-full text-balance text-[#77C3FF] text_wrap">
                             {{ t('infoBlock.text.p1')
                             }}{{
                                 ngcModbusMode === 'off'
@@ -245,5 +240,9 @@ const { t } = useI18n({
     &.active {
         background: #148ef8;
     }
+}
+
+.text_wrap {
+    text-wrap: wrap;
 }
 </style>

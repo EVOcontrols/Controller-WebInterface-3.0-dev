@@ -154,7 +154,7 @@ import AdvancedSettingsButton from '@/components/views/devicesSettings/elements/
 import CollapseTransition from '@/components/CollapseTransition.vue';
 
 const props = defineProps<{
-    settings: T;
+    settings: NGCSettings['modbus'];
     fieldsInvalidStatuses: Set<string>; // Only fields with 'modbus-' prefix
     numberingSystem: NGCSettings['numberingSystem'];
 }>();

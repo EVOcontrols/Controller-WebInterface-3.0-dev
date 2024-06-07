@@ -251,7 +251,7 @@ async function getEntState(
     }
 }
 
-async function saveLabel(labels: string[]) {
+async function saveLabel(labels: (string | undefined)[]) {
     const newLabels = [...labels];
     for (let i = newLabels.length; i < labelsFileLength; i++) {
         newLabels.push('');
@@ -273,7 +273,7 @@ async function saveLabel(labels: string[]) {
                 | 'pwm-out'
                 | 'tim-var',
         },
-        { labels: newLabels },
+        { labels: newLabels as string[] },
         0,
     );
     if (isSavingError) {
@@ -297,7 +297,7 @@ async function saveLabel(labels: string[]) {
                 | 'mb-var'
                 | 'pwm-out'
                 | 'tim-var',
-            newLabels,
+            newLabels as string[],
             0,
             props.w.w.bus,
         );

@@ -27,7 +27,7 @@
     </svg>
 </template>
 
-<script setup></script>
+<script setup lang="ts"></script>
 
 <style lang="postcss" scoped>
 rect {

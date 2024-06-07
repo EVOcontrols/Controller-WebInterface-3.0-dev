@@ -698,14 +698,69 @@ async function createReg() {
         }, 750);
         return;
     }
-    let newType = choosenType.value;
+    let newType:
+        | 'hr'
+        | 'wm-hr'
+        | 'w-hr'
+        | 'm-hr'
+        | 'ir'
+        | 'coil'
+        | 'wm-coil'
+        | 'w-coil'
+        | 'm-coil'
+        | 'di'
+        | 'none' = choosenType.value as
+        | 'hr'
+        | 'wm-hr'
+        | 'w-hr'
+        | 'm-hr'
+        | 'ir'
+        | 'coil'
+        | 'wm-coil'
+        | 'w-coil'
+        | 'm-coil'
+        | 'di'
+        | 'none';
     if (choosenType.value === 'coil' || choosenType.value === 'hr') {
         if (newRegWOption.value && newRegMOption.value) {
-            newType = 'wm-' + newType;
+            newType = ('wm-' + newType) as
+                | 'hr'
+                | 'wm-hr'
+                | 'w-hr'
+                | 'm-hr'
+                | 'ir'
+                | 'coil'
+                | 'wm-coil'
+                | 'w-coil'
+                | 'm-coil'
+                | 'di'
+                | 'none';
         } else if (newRegWOption.value) {
-            newType = 'w-' + newType;
+            newType = ('w-' + newType) as
+                | 'hr'
+                | 'wm-hr'
+                | 'w-hr'
+                | 'm-hr'
+                | 'ir'
+                | 'coil'
+                | 'wm-coil'
+                | 'w-coil'
+                | 'm-coil'
+                | 'di'
+                | 'none';
         } else if (newRegMOption.value) {
-            newType = 'm-' + newType;
+            newType = ('m-' + newType) as
+                | 'hr'
+                | 'wm-hr'
+                | 'w-hr'
+                | 'm-hr'
+                | 'ir'
+                | 'coil'
+                | 'wm-coil'
+                | 'w-coil'
+                | 'm-coil'
+                | 'di'
+                | 'none';
         }
     }
     const index = props.state.findIndex((el) => el.type === 'none');

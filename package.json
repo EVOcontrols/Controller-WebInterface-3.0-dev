@@ -12,6 +12,7 @@
         "format": "prettier --write src/"
     },
     "dependencies": {
+        "@types/scrollbooster": "^3.0.3",
         "@types/vuedraggable": "^2.24.0",
         "@vueuse/core": "^10.4.1",
         "axios": "^1.5.0",

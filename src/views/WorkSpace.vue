@@ -80,15 +80,10 @@
                 @mouseleave="indexStore.toggleIsEditPopUpShown(false)"
                 class="absolute flex flex-col gap-3 py-5 px-5 left-[136px] top-[174px] w-[270px] bg-[#1B4569] rounded-[10px] transition-[visibility,opacity] z-[1]"
             >
-                <span
-                    class="w-full text-[#A0D5FF] font-semibold"
-                    :style="{ 'text-wrap': 'wrap' }"
-                    >{{ t('infoBlock.title') }}</span
-                >
-                <div
-                    class="w-full text-balance text-[#77C3FF]"
-                    :style="{ 'text-wrap': 'wrap' }"
-                >
+                <span class="w-full text-[#A0D5FF] font-semibold text_wrap">{{
+                    t('infoBlock.title')
+                }}</span>
+                <div class="w-full text-balance text-[#77C3FF] text_wrap">
                     {{ t('infoBlock.text.p1')
                     }}{{ ngcModbusMode === 'off' ? t('infoBlock.text.off') : t('infoBlock.text.mb')
                     }}{{ t('infoBlock.text.p2') }}
@@ -1192,3 +1187,8 @@ onBeforeUnmount(() => {
     getExtStatusesTimer = undefined;
 });
 </script>
+<style scoped>
+.text_wrap {
+    text-wrap: wrap;
+}
+</style>

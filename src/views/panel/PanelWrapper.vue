@@ -17,10 +17,10 @@
                 <span
                     class="flex chosen-count bg-[#1B4569] px-3 py-[3px] rounded-[5px] flex items-center cursor-pointer transition-all duration-300 text-xs font-roboto text-[#8DC5F6] hover:bg-[#148EF8] hover:text-[#ADEBFF] active:bg-[#306add]"
                     :class="{ active: showChoice === di }"
-                    v-if="diCount[di]"
+                    v-if="diCount[di as 'devices' | 'interfaces']"
                     @click="reset(di)"
                 >
-                    {{ diCount[di] }}
+                    {{ diCount[di as 'devices' | 'interfaces'] }}
                     <CloseIconVue class="w-4 h-4" />
                 </span>
             </div>

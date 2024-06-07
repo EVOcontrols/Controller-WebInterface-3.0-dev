@@ -64,7 +64,7 @@
 
 <script setup lang="ts">
 import { useElementSize, useScroll } from '@vueuse/core';
-import ScrollBooster from '@/assets/js/scrollbooster';
+// import ScrollBooster from '@/assets/js/scrollbooster';
 import scrollArrow from '@/assets/img/scroll-arrow.svg?raw';
 
 const props = defineProps<{
@@ -102,7 +102,7 @@ const { width: viewportElWidth } = useElementSize(viewport);
 
 const { x: scrollX } = useScroll(viewport);
 
-let scrollBooster: ScrollBooster | undefined;
+// let scrollBooster: ScrollBooster | undefined;
 
 let startMovePosition = 0;
 
@@ -150,7 +150,8 @@ const isRightArrowVisible = computed(() => {
 });
 
 function scrollElIntoView() {
-    if (!scrollBooster || !content.value || props.activeIndex === undefined) return;
+    // if (!scrollBooster || !content.value || props.activeIndex === undefined) return;
+    if (!content.value || props.activeIndex === undefined) return;
     const { children } = content.value;
     const active = children[props.activeIndex.index] as HTMLElement | undefined;
     if (!active) return;
@@ -168,7 +169,7 @@ function scrollElIntoView() {
     } else if (scroll < 0) {
         scroll = 0;
     }
-    scrollBooster.scrollTo({ x: scroll });
+    // scrollBooster.scrollTo({ x: scroll });
 }
 
 watch(
@@ -182,23 +183,23 @@ watch(
 function startScrollBooster() {
     setTimeout(() => {
         if (!viewport.value || !content.value) return;
-        scrollBooster = new ScrollBooster({
-            viewport: viewport.value,
-            content: content.value,
-            scrollMode: 'native',
-            direction: 'horizontal',
-            bounce: true,
-            onUpdate(e: { position: { x: number } }) {
-                if (!scrollBooster?.edgeX) return;
-                let { x } = e.position;
-                if (x < 0) {
-                    x = 0;
-                } else if (x > -scrollBooster.edgeX.from) {
-                    x = -scrollBooster.edgeX.from;
-                }
-                emit('updateScrollX', x);
-            },
-        });
+        // scrollBooster = new ScrollBooster({
+        //     viewport: viewport.value,
+        //     content: content.value,
+        //     scrollMode: 'native',
+        //     direction: 'horizontal',
+        //     bounce: true,
+        //     onUpdate(e: { position: { x: number } }) {
+        //         if (!scrollBooster?.edgeX) return;
+        //         let { x } = e.position;
+        //         if (x < 0) {
+        //             x = 0;
+        //         } else if (x > -scrollBooster.edgeX.from) {
+        //             x = -scrollBooster.edgeX.from;
+        //         }
+        //         emit('updateScrollX', x);
+        //     },
+        // });
         if (props.activeIndex !== undefined) scrollElIntoView();
     }, 0);
 }
@@ -214,7 +215,7 @@ function scrollDevices(direction: 'right' | 'left') {
         x = scrollX.value - viewportElWidth.value / 1.2;
         if (x < 0) x = 0;
     }
-    scrollBooster?.scrollTo({ x });
+    // scrollBooster?.scrollTo({ x });
 }
 
 watch(
@@ -224,16 +225,16 @@ watch(
             return;
         }
         emit('updateScrollableWidth', contentElWidth.value);
-        if (!scrollBooster) {
-            startScrollBooster();
-        } else {
-            scrollBooster.updateMetrics();
-        }
+        // if (!scrollBooster) {
+        //     startScrollBooster();
+        // } else {
+        //     scrollBooster.updateMetrics();
+        // }
     },
     { immediate: true },
 );
 
 onBeforeUnmount(() => {
-    scrollBooster?.destroy();
+    // scrollBooster?.destroy();
 });
 </script>

@@ -19,7 +19,7 @@
                         :maxlength="32"
                         ref="labelInput"
                         class="flex-1 bg-[#123553] h-full text-[#8DC5F6] px-3 placeholder:text-[#8DC5F6]"
-                        @input="(e) => handleLabelInput(e)"
+                        @input="(e) => handleLabelInput(e as InputEvent)"
                     />
                 </div>
             </div>
@@ -73,7 +73,7 @@
             >
                 <template #item="{ element, index }">
                     <div
-                        v-if="w.w.i === '1w-sens'"
+                        v-if="props.w.w.i === '1w-sens'"
                         class="list-group-item group w-full flex items-center transition-colors duration-500 rounded select-none gap-2 min-h-[30px] px-[18px]"
                         :class="[
                             { label: element.val[0] !== null },
@@ -94,7 +94,7 @@
                             v-if="element.val[0] !== null"
                             :class="element.val[0] > 0 ? 'text-[#EB8246]' : 'text-[#35A1FF]'"
                             >{{
-                                tempUnit === '°C'
+                                props.tempUnit === '°C'
                                     ? `${Math.round(element.val[0] / 10) / 10}°C`
                                     : `${(Math.round(element.val[0] / 10) / 10) * 1.8 + 32}°F`
                             }}</span
@@ -138,266 +138,298 @@
         </div>
     </div>
 </template>
-<script>
+<script setup lang="ts">
 import draggable from 'vuedraggable';
 import CloseIcon from '@/components/toast/CloseIcon.vue';
-import delay from 'delay';
+import { useI18n } from 'vue-i18n';
+import type { Widget } from '@/stores';
+import type { TempUnit } from '@/typings/common';
 
-export default {
-    components: {
-        draggable,
-        CloseIcon,
-    },
-    props: ['idsArr', 'vals', 'OWIds', 'w', 'tempUnit', 'isLoading', 'labels'],
-    data() {
-        return {
-            idsList: [],
-            valsList: [],
-            idsTimer: undefined,
-            valsTimer: undefined,
-            loadTimer: undefined,
-            loading: false,
-            activeLabel: null,
-            isActiveLabel: false,
-            activeLabelTop: 10,
-            scrollTop: 0,
-            isScrolling: false,
-            labelInput: undefined,
-        };
-    },
-    computed: {
-        placeholder() {
-            return this.t('placeholder');
-        },
-    },
-    methods: {
-        handleDragEndItem() {
-            if (this.originalList === this.futureList) {
-                this.movingItem = this[this.futureList][this.originalIndex];
-                this.futureItem = this[this.futureList][this.futureIndex];
+interface DraggedContext {
+    index: number;
+    futIndex: number;
+}
 
-                if (this.movingItem && this.futureItem) {
-                    let _list = Object.assign([], this[this.futureList]);
-                    _list[this.futureIndex] = this.movingItem;
-                    _list[this.originalIndex] = this.futureItem;
-                    this[this.futureList] = _list;
-                }
-            } else {
-                this.movingItem = this[this.originalList][this.originalIndex];
-                this.futureItem = this[this.futureList][this.futureIndex];
+interface DragEvent {
+    draggedContext: DraggedContext;
+    from: Element;
+    to: Element;
+    relatedContext: { index: number };
+}
 
-                if (this.movingItem && this.futureItem) {
-                    let _listFrom = Object.assign([], this[this.originalList]);
-                    let _listTo = Object.assign([], this[this.futureList]);
-                    _listTo[this.futureIndex] = this.movingItem;
-                    _listFrom[this.originalIndex] = this.futureItem;
-                    this[this.originalList] = _listFrom;
-                    this[this.futureList] = _listTo;
-                }
-            }
-            document
-                .querySelectorAll('.list-group-item')
-                .forEach((el) => el.classList.remove('bg-[#0C2F4D]'));
-            if (!(this.originalList === this.futureList && this.originalList === 'idsList')) {
-                clearTimeout(this.idsTimer);
-                clearTimeout(this.valsTimer);
-                this.idsTimer = undefined;
-                this.valsTimer = undefined;
-                this.$emit(
-                    'toggleScan',
-                    this.valsList.map((el) => el.id),
-                    this.valsList.map((el) => el.label),
-                );
-                this.awaitLoading();
-                this.loading = true;
-            }
-        },
-        handleMoveItem(event) {
-            document
-                .querySelectorAll('.list-group-item')
-                .forEach((el) => el.classList.remove('bg-[#0C2F4D]'));
-            const { index, futureIndex } = event.draggedContext;
-            this.originalIndex = index;
-            this.futureIndex = futureIndex;
-            this.originalList = event.from.getAttribute('data-list');
-            this.futureList = event.to.getAttribute('data-list');
-            if (this[this.futureList][this.futureIndex]) {
-                event.to.children[this.futureIndex].classList.add('bg-[#0C2F4D]');
-            }
-            return false;
-        },
-        setIds() {
-            const curIds = this.OWIds[this.w.w.d][this.w.w.bus] || [];
-            const arr = [];
-            this.idsArr.forEach((id) => {
-                if (!curIds.includes(id)) {
-                    arr.push(id);
-                }
+const props = defineProps<{
+    idsArr: string[];
+    vals: number[];
+    OWIds: string[][][];
+    w: { w: Widget; state: number[] };
+    tempUnit: TempUnit;
+    isLoading: boolean;
+    labels: [string | undefined];
+}>();
+
+const emit = defineEmits<{
+    (e: 'saveLabel', labels: (string | undefined)[]): void;
+    (e: 'toggleScan', arr: string[], labelsArr: string[]): void;
+}>();
+
+const idsList = ref<
+    { id: string; val: number | null | (number | null)[]; label: string | undefined }[]
+>([]);
+const valsList = ref<
+    { id: string; val: number | null | (number | null)[]; label: string | undefined }[]
+>([]);
+let idsTimer: ReturnType<typeof setTimeout> | undefined;
+let valsTimer: ReturnType<typeof setTimeout> | undefined;
+let loadTimer: ReturnType<typeof setTimeout> | undefined;
+const loading = ref(false);
+const activeLabel = ref<{ i: number; state: number; label: string | undefined } | null>(null);
+const activeLabelTop = ref(10);
+const scrollTop = ref(0);
+const isScrolling = ref(false);
+const labelInput = ref<HTMLElement | null>(null);
+const originalList = ref('');
+const futureList = ref('');
+const originalIndex = ref(0);
+const futureIndex = ref(0);
+const movingItem = ref<{
+    id: string;
+    val: number | null | (number | null)[];
+    label: string | undefined;
+} | null>(null);
+const futureItem = ref<{
+    id: string;
+    val: number | null | (number | null)[];
+    label: string | undefined;
+} | null>(null);
+
+const placeholder = computed(() => t('placecholder'));
+
+function delay(ms: number) {
+    return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function handleDragEndItem() {
+    if (originalList.value === futureList.value) {
+        movingItem.value = valsList.value[originalIndex.value];
+        futureItem.value = valsList.value[futureIndex.value];
+
+        if (movingItem.value && futureItem.value) {
+            let _list = [...valsList.value];
+            _list[futureIndex.value] = movingItem.value;
+            _list[originalIndex.value] = futureItem.value;
+            valsList.value = _list;
+        }
+    } else {
+        movingItem.value = idsList.value[originalIndex.value];
+        futureItem.value = valsList.value[futureIndex.value];
+
+        if (movingItem.value && futureItem.value) {
+            let _listFrom = [...idsList.value];
+            let _listTo = [...valsList.value];
+            _listTo[futureIndex.value] = movingItem.value;
+            _listFrom[originalIndex.value] = futureItem.value;
+            idsList.value = _listFrom;
+            valsList.value = _listTo;
+        }
+    }
+    document
+        .querySelectorAll('.list-group-item')
+        .forEach((el) => el.classList.remove('bg-[#0C2F4D]'));
+    if (!(originalList.value === futureList.value && originalList.value === 'idsList')) {
+        clearTimeout(idsTimer);
+        clearTimeout(valsTimer);
+        idsTimer = undefined;
+        valsTimer = undefined;
+        emit(
+            'toggleScan',
+            valsList.value.map((el) => el.id),
+            valsList.value.map((el) => el.label) as string[],
+        );
+        awaitLoading();
+        loading.value = true;
+    }
+}
+function handleMoveItem(event: DragEvent) {
+    document
+        .querySelectorAll('.list-group-item')
+        .forEach((el) => el.classList.remove('bg-[#0C2F4D]'));
+    const { index } = event.draggedContext;
+    const futIndex = event.relatedContext.index;
+    originalIndex.value = index;
+    futureIndex.value = futIndex;
+    originalList.value = event.from.getAttribute('data-list') || '';
+    futureList.value = event.to.getAttribute('data-list') || '';
+    if (valsList.value[futureIndex.value]) {
+        event.to.children[futureIndex.value].classList.add('bg-[#0C2F4D]');
+    }
+    return false;
+}
+function setIds() {
+    const curIds = props.OWIds[props.w.w.d][props.w.w.bus || 0] || [];
+    const arr: string[] = [];
+    props.idsArr.forEach((id) => {
+        if (!curIds.includes(id)) {
+            arr.push(id);
+        }
+    });
+    const newArr = arr.map((el: string) => Object.assign({ id: el, val: [null, null], label: '' }));
+    idsList.value = [...newArr];
+    idsTimer = setTimeout(setIds, 1000);
+}
+function setVals() {
+    const curIds = props.OWIds[props.w.w.d][props.w.w.bus || 0] || [];
+    const newArr = [];
+    for (let i = 0; i < props.vals.length; i += 1) {
+        newArr.push({ id: curIds[i], val: props.vals[i], label: props.labels[i] });
+    }
+    valsList.value = [...newArr];
+    valsTimer = setTimeout(setVals, 1000);
+}
+async function awaitLoading() {
+    if (props.isLoading) {
+        clearTimeout(loadTimer);
+        loadTimer = undefined;
+        setIds();
+        setVals();
+        await delay(2000);
+        loading.value = false;
+    } else {
+        loadTimer = setTimeout(awaitLoading, 200);
+    }
+}
+function addId(id: string, index: number) {
+    const place =
+        props.w.w.i === '1w-sens'
+            ? valsList.value.findIndex(
+                  (el) => el.val && typeof el.val !== 'number' && el.val[0] === null,
+              )
+            : valsList.value.findIndex((el) => el.val === null);
+    const values = [...valsList.value];
+    values[place].id = id;
+    valsList.value = [...values];
+    let ids = [...idsList.value];
+    ids.splice(index, 1);
+    idsList.value = [...ids];
+    clearTimeout(idsTimer);
+    clearTimeout(valsTimer);
+    idsTimer = undefined;
+    valsTimer = undefined;
+    emit(
+        'toggleScan',
+        valsList.value.map((el) => el.id),
+        valsList.value.map((el) => el.label) as string[],
+    );
+    awaitLoading();
+    loading.value = true;
+}
+function removeId(index: number) {
+    const values = [...valsList.value];
+    values[index].id = '0000000000000000';
+    values[index].val = [null, null];
+    valsList.value = [...values];
+    clearTimeout(idsTimer);
+    clearTimeout(valsTimer);
+    idsTimer = undefined;
+    valsTimer = undefined;
+    emit(
+        'toggleScan',
+        valsList.value.map((el) => el.id),
+        valsList.value.map((el) => el.label) as string[],
+    );
+    awaitLoading();
+    loading.value = true;
+}
+function handleScroll() {
+    const el = document.getElementById('scrollWrapper');
+    if (!el) return;
+    scrollTop.value = el.scrollTop;
+}
+function handleDblClick(s: number | null, index: number) {
+    if (s === null) return;
+    activeLabel.value = { i: index, state: s, label: props.labels[index] };
+    setActiveLabelTop();
+    window.addEventListener('click', saveData);
+    window.addEventListener('keypress', saveData);
+}
+function setActiveLabelTop() {
+    const wrapper = document.getElementById('scrollWrapper');
+    const el = document.getElementById('scrollEl');
+    if (!activeLabel.value || !wrapper || !el) return;
+    const top = activeLabel.value.i * 30 - scrollTop.value + 10;
+    if (top < 0) {
+        activeLabelTop.value = 0;
+    } else if (Math.round(top) > wrapper.offsetHeight - 68) {
+        setTimeout(() => {
+            if (!activeLabel.value) return;
+            isScrolling.value = true;
+            wrapper.scrollTo({
+                top: activeLabel.value.i * 30 + 78 - wrapper.offsetHeight,
+                behavior: 'smooth',
             });
-            const newArr = arr.map((el) => Object.assign({ id: el, val: [null, null], label: '' }));
-            this.idsList = [...newArr];
-            this.idsTimer = setTimeout(this.setIds, 1000);
+        }, 0);
+        setTimeout(() => {
+            isScrolling.value = false;
+        }, 300);
+        activeLabelTop.value = wrapper.offsetHeight - 68;
+    } else {
+        activeLabelTop.value = top;
+    }
+}
+function saveData(e: KeyboardEvent | MouseEvent) {
+    if (!activeLabel.value) return;
+    if (e.type === 'keypress') {
+        const event: KeyboardEvent = e as KeyboardEvent;
+        if (event.key === 'Enter') {
+            const newLabels = [...props.labels];
+            newLabels[activeLabel.value.i] = activeLabel.value.label;
+            emit('saveLabel', newLabels);
+            activeLabel.value = null;
+        }
+    } else if (e.type === 'click') {
+        const newLabels = [...props.labels];
+        newLabels[activeLabel.value.i] = activeLabel.value.label;
+        emit('saveLabel', newLabels);
+        activeLabel.value = null;
+    }
+}
+function handleLabelInput(e: InputEvent) {
+    const target = e.target as HTMLInputElement;
+    if (!target || !activeLabel.value) return;
+    activeLabel.value.label = target.value;
+}
+
+watch(scrollTop, () => {
+    if (!isScrolling.value) setActiveLabelTop();
+});
+
+onMounted(() => {
+    setIds();
+    setVals();
+});
+
+onBeforeUnmount(() => {
+    clearTimeout(idsTimer);
+    clearTimeout(valsTimer);
+    clearTimeout(loadTimer);
+    loadTimer = undefined;
+    idsTimer = undefined;
+    valsTimer = undefined;
+    window.removeEventListener('click', saveData);
+    window.removeEventListener('keypress', saveData);
+});
+
+const { t } = useI18n({
+    messages: {
+        ru: {
+            placeholder: 'Ввод названия',
         },
-        setVals() {
-            const curIds = this.OWIds[this.w.w.d][this.w.w.bus] || [];
-            const newArr = [];
-            for (let i = 0; i < this.vals.length; i += 1) {
-                newArr.push({ id: curIds[i], val: this.vals[i], label: this.labels[i] });
-            }
-            this.valsList = [...newArr];
-            this.valsTimer = setTimeout(this.setVals, 1000);
-        },
-        async awaitLoading() {
-            if (this.isLoading) {
-                clearTimeout(this.loadTimer);
-                this.loadTimer = undefined;
-                this.setIds();
-                this.setVals();
-                await delay(2000);
-                this.loading = false;
-            } else {
-                this.loadTimer = setTimeout(this.awaitLoading, 200);
-            }
-        },
-        addId(id, index) {
-            const place =
-                this.w.w.i === '1w-sens'
-                    ? this.valsList.findIndex((el) => el.val[0] === null)
-                    : this.valsList.findIndex((el) => el.val === null);
-            const vals = [...this.valsList];
-            vals[place].id = id;
-            this.valsList = [...vals];
-            let ids = [...this.idsList];
-            ids.splice(index, 1);
-            this.idsList = [...ids];
-            clearTimeout(this.idsTimer);
-            clearTimeout(this.valsTimer);
-            this.idsTimer = undefined;
-            this.valsTimer = undefined;
-            this.$emit(
-                'toggleScan',
-                this.valsList.map((el) => el.id),
-                this.valsList.map((el) => el.label),
-            );
-            this.awaitLoading();
-            this.loading = true;
-        },
-        removeId(index) {
-            const vals = [...this.valsList];
-            vals[index].id = '0000000000000000';
-            vals[index].val = [null, null];
-            this.valsList = [...vals];
-            clearTimeout(this.idsTimer);
-            clearTimeout(this.valsTimer);
-            this.idsTimer = undefined;
-            this.valsTimer = undefined;
-            this.$emit(
-                'toggleScan',
-                this.valsList.map((el) => el.id),
-                this.valsList.map((el) => el.label),
-            );
-            this.awaitLoading();
-            this.loading = true;
-        },
-        handleScroll() {
-            const el = document.getElementById('scrollWrapper');
-            this.scrollTop = el.scrollTop;
-        },
-        handleDblClick(s, index) {
-            if (s === null) return;
-            this.activeLabel = { i: index, state: s, label: this.labels[index] };
-            this.setActiveLabelTop();
-            window.addEventListener('click', this.saveData);
-            window.addEventListener('keypress', this.saveData);
-        },
-        setActiveLabelTop() {
-            const wrapper = document.getElementById('scrollWrapper');
-            const el = document.getElementById('scrollEl');
-            if (!this.activeLabel || !wrapper || !el) return;
-            const top = this.activeLabel.i * 30 - this.scrollTop + 10;
-            if (top < 0) {
-                this.activeLabelTop = 0;
-            } else if (Math.round(top) > wrapper.offsetHeight - 68) {
-                setTimeout(() => {
-                    if (!this.activeLabel) return;
-                    this.isScrolling = true;
-                    wrapper.scrollTo({
-                        top: this.activeLabel.i * 30 + 78 - wrapper.offsetHeight,
-                        behavior: 'smooth',
-                    });
-                }, 0);
-                setTimeout(() => {
-                    this.isScrolling = false;
-                }, 300);
-                this.activeLabelTop = wrapper.offsetHeight - 68;
-            } else {
-                this.activeLabelTop = top;
-            }
-        },
-        saveData(e) {
-            if (!this.activeLabel) return;
-            if (e.type === 'keypress') {
-                if (e.key === 'Enter') {
-                    const newLabels = [...this.labels];
-                    newLabels[this.activeLabel.i] = this.activeLabel.label;
-                    this.$emit(
-                        'saveLabel',
-                        newLabels
-                    );
-                    this.activeLabel = null;
-                    this.isLabelChange = false;
-                }
-            } else if (e.type === 'click') {
-                const newLabels = [...this.labels];
-                newLabels[this.activeLabel.i] = this.activeLabel.label;
-                this.$emit(
-                    'saveLabel',
-                    newLabels
-                );
-                this.activeLabel = null;
-                this.isLabelChange = false;
-            }
-        },
-        handleLabelInput(e) {
-            const target = e.target;
-            if (!target || !this.activeLabel) return;
-            this.activeLabel.label = target.value;
+        en: {
+            placeholder: 'Entering a title',
         },
     },
-    watch: {
-        scrollTop() {
-            if (!this.isScrolling) this.setActiveLabelTop();
-        },
-    },
-    mounted() {
-        this.setIds();
-        this.setVals();
-    },
-    unmounted() {
-        clearTimeout(this.idsTimer);
-        clearTimeout(this.valsTimer);
-        clearTimeout(this.loadTimer);
-        this.loadTimer = undefined;
-        this.idsTimer = undefined;
-        this.valsTimer = undefined;
-        window.removeEventListener('click', this.saveData);
-        window.removeEventListener('keypress', this.saveData);
-    },
-    setup() {
-        const { t } = useI18n({
-            messages: {
-                ru: {
-                    placeholder: 'Ввод названия',
-                },
-                en: {
-                    placeholder: 'Entering a title',
-                },
-            },
-        });
-        return { t };
-    },
-};
+});
 </script>
+
 <style scoped>
 .label {
     cursor: move;

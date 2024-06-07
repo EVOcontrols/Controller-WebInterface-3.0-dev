@@ -34,7 +34,7 @@
             @change-stop="settings.modbus.stop = $event"
             @change-numbering-system="settings.numberingSystem = $event"
             @change-advanced-param="
-                (param, value) => {
+                (param: 'cycle-pause', value: number | undefined) => {
                     if (!settings || settings.modbus.mode === 'off') return;
                     settings.modbus.advanced[settings.modbus.mode][param] = value;
                 }
@@ -329,7 +329,7 @@ import CollapseTransition from '@/components/CollapseTransition.vue';
 import UiInput from '@/components/Ui/UiInput.vue';
 import AdvancedSettingsButton from '@/components/views/devicesSettings/elements/AdvancedSettingsButton.vue';
 import type { ControllerSettings, ExtDevsListRaw, NGCSettings } from '@/typings/settings';
-import { cloneDeep, isEmpty, isEqual, isEqualWith, omit, pick } from 'lodash-es';
+import { _ } from '@/plugins/lodash';
 import ManageDevice from './elements/ManageDevice.vue';
 import Rs485Settings from './elements/Rs485Settings.vue';
 import type { PartialDeep } from 'type-fest/source/partial-deep';
@@ -547,6 +547,13 @@ const { t } = useI18n({
         },
     },
 });
+
+const cloneDeep = await _.cloneDeep();
+const isEmpty = await _.isEmpty();
+const isEqual = await _.isEqual();
+const isEqualWith = await _.isEqualWith();
+const omit = await _.omit();
+const pick = await _.pick();
 
 const oneWireBuses = oneWiresModes.map((m) => ({
     text: t(`buses.${m}`),

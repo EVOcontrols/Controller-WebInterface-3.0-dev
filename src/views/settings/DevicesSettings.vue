@@ -28,7 +28,7 @@
                                     "
                                 >
                                     <button
-                                        v-for="(device, i) in [...new Set(devices)]"
+                                        v-for="(device, i) in [...new Set(fullDevs)]"
                                         :key="i"
                                         type="button"
                                         class="h-[1.563rem] w-[3.188rem] bg-[#1b4569] hover:bg-[#214e76] on:bg-[#148ef8] font-roboto rounded flex items-center justify-center relative"
@@ -52,12 +52,18 @@
                                         ></div>
                                         {{
                                             device.addr > 0
-                                                ? devices.findIndex(
+                                                ? fullDevs.findIndex(
                                                       (el) => el.serial === device.serial,
                                                   ) !== -1
-                                                    ? `IO ${devices.findIndex(
-                                                          (el) => el.serial === device.serial,
-                                                      )}`
+                                                    ? `IO ${
+                                                          fullDevs.find(
+                                                              (el) => el.serial === device.serial,
+                                                          )?.index ||
+                                                          fullDevs.find(
+                                                              (el) => el.serial === device.serial,
+                                                          )?.addr ||
+                                                          ''
+                                                      }`
                                                     : 'IO'
                                                 : 'NGC'
                                         }}
@@ -118,7 +124,7 @@
 </template>
 
 <script lang="ts" setup>
-import { type ControllerSettings, type ExtDevsListRaw } from '@/typings/settings';
+import type { ControllerSettings } from '@/typings/settings';
 import SaveButton from '@/components/Ui/SaveButton.vue';
 import ScrollBooster from '@/components/ScrollBooster.vue';
 import edit from '@/assets/img/edit.svg?raw';
@@ -134,6 +140,123 @@ const api = indexStore.getApi().api as axios.AxiosInstance;
 const isAborted = indexStore.getApi().isAborted;
 
 const { extDevsList, ngcModbusMode, devices } = storeToRefs(indexStore);
+
+const fullDevs = computed<
+    {
+        addr: number;
+        type: string;
+        interf: [
+            | { interf: '1w-gpio'; bus: number }
+            | { interf: '1w-rom'; bus: number }
+            | { interf: '1w-sens'; bus: number }
+            | '1w-gpio'
+            | '1w-rom'
+            | '1w-sens'
+            | 'adc-in'
+            | 'bin-in'
+            | 'bin-out'
+            | 'bin-var'
+            | 'int-var'
+            | 'mb-var'
+            | { interf: 'mb-var'; bus: number }
+            | 'pwm-out'
+            | 'tim-var',
+        ];
+        state: 'on' | 'off' | 'init' | 'no-conn' | 'error';
+        serial: string;
+        version: string;
+        index?: number;
+    }[]
+>(() => {
+    if (extDevsList.value) {
+        const arr: {
+            addr: number;
+            type: string;
+            interf: [
+                | { interf: '1w-gpio'; bus: number }
+                | { interf: '1w-rom'; bus: number }
+                | { interf: '1w-sens'; bus: number }
+                | '1w-gpio'
+                | '1w-rom'
+                | '1w-sens'
+                | 'adc-in'
+                | 'bin-in'
+                | 'bin-out'
+                | 'bin-var'
+                | 'int-var'
+                | 'mb-var'
+                | { interf: 'mb-var'; bus: number }
+                | 'pwm-out'
+                | 'tim-var',
+            ];
+            state: 'on' | 'off' | 'init' | 'no-conn' | 'error';
+            serial: string;
+            version: string;
+            index?: number;
+        }[] = [];
+        devices.value.forEach((d) => {
+            if (!arr.find((el) => el.serial === d.serial)) arr.push(d);
+        });
+        extDevsList.value.forEach((d) => {
+            if (!arr.find((el) => el.serial === d.serial))
+                arr.push(
+                    d as {
+                        addr: number;
+                        type: string;
+                        interf: [
+                            | { interf: '1w-gpio'; bus: number }
+                            | { interf: '1w-rom'; bus: number }
+                            | { interf: '1w-sens'; bus: number }
+                            | '1w-gpio'
+                            | '1w-rom'
+                            | '1w-sens'
+                            | 'adc-in'
+                            | 'bin-in'
+                            | 'bin-out'
+                            | 'bin-var'
+                            | 'int-var'
+                            | 'mb-var'
+                            | { interf: 'mb-var'; bus: number }
+                            | 'pwm-out'
+                            | 'tim-var',
+                        ];
+                        state: 'on' | 'off' | 'init' | 'no-conn' | 'error';
+                        serial: string;
+                        version: string;
+                        index?: number;
+                    },
+                );
+        });
+        console.log(devices.value);
+        return [...arr];
+    } else {
+        return [...devices.value] as {
+            addr: number;
+            type: string;
+            interf: [
+                | { interf: '1w-gpio'; bus: number }
+                | { interf: '1w-rom'; bus: number }
+                | { interf: '1w-sens'; bus: number }
+                | '1w-gpio'
+                | '1w-rom'
+                | '1w-sens'
+                | 'adc-in'
+                | 'bin-in'
+                | 'bin-out'
+                | 'bin-var'
+                | 'int-var'
+                | 'mb-var'
+                | { interf: 'mb-var'; bus: number }
+                | 'pwm-out'
+                | 'tim-var',
+            ];
+            state: 'on' | 'off' | 'init' | 'no-conn' | 'error';
+            serial: string;
+            version: string;
+            index?: number;
+        }[];
+    }
+});
 
 const controllerSettings = ref<ControllerSettings>();
 

@@ -6,9 +6,9 @@
             :device-state="curDevState"
             :curDeviceState="deviceState"
             @change-device-state="
-                ($event) => {
-                    curDevState = $event;
-                    emit('setNeedToSave', $event !== deviceState);
+                (event: 'on' | 'off') => {
+                    curDevState = event;
+                    emit('setNeedToSave', event !== deviceState);
                 }
             "
         />
@@ -229,12 +229,12 @@
                                         "
                                         :input-type="['int']"
                                         @status-changed="
-                                            ($event) => {
+                                            (event: InputFieldStatus) => {
                                                 if (
                                                     devSettings?.['mb-master'][0].mode ===
                                                     'variables'
                                                 ) {
-                                                    if ($event !== 'valid') {
+                                                    if (event !== 'valid') {
                                                         fieldsInvalidStatuses.add(
                                                             `modbus-${p.param}`,
                                                         );
@@ -364,13 +364,14 @@ import type { DeviceWorkState } from '@/typings/settings';
 import ManageDevice from './elements/ManageDevice.vue';
 import type { DeviceAddr } from '@/typings/common';
 import type { ExtDeviceSettings } from '@/typings/settings';
-import { cloneDeep, isEmpty, isEqual } from 'lodash-es';
+import { _ } from '@/plugins/lodash';
 import UiInput from '@/components/Ui/UiInput.vue';
 import type { PartialDeep } from 'type-fest/source/partial-deep';
 import InputRange from '@/components/views/devicesSettings/elements/InputRange.vue';
 import CollapseTransition from '@/components/CollapseTransition.vue';
 import ButtonGroup from '@/components/Ui/ButtonGroup.vue';
 import AdvancedSettingsButton from '@/components/views/devicesSettings/elements/AdvancedSettingsButton.vue';
+import type { InputFieldStatus } from '@/typings/common';
 
 const props = defineProps<{
     deviceIndex: number;
@@ -418,6 +419,10 @@ const curNumberingSystem = ref<'dec' | 'hex'>(numberingSystem.value);
 const isAdvancedSettingsExpanded = ref(false);
 
 const isAdvancedSettingsExpanded1Wire = ref(false);
+
+const cloneDeep = await _.cloneDeep();
+const isEmpty = await _.isEmpty();
+const isEqual = await _.isEqual();
 
 const rsAdvancedParams = [
     { param: 'rd-tmo', min: 0, max: 65535 },

@@ -18,6 +18,7 @@ declare global {
   const WidgetHeader: typeof import('./src/components/views/widgets/WidgetHeader.vue')['default']
   const Widgets: typeof import('./src/components/views/widgets/Widgets.vue')['default']
   const WidgetsPage: typeof import('./src/views/panel/WidgetsPage.vue')['default']
+  const _: typeof import('./src/plugins/lodash')['_']
   const acceptHMRUpdate: typeof import('pinia')['acceptHMRUpdate']
   const asyncComputed: typeof import('@vueuse/core')['asyncComputed']
   const autoResetRef: typeof import('@vueuse/core')['autoResetRef']
@@ -349,7 +350,7 @@ import { UnwrapRef } from 'vue'
 declare module 'vue' {
   interface ComponentCustomProperties {
     readonly EffectScope: UnwrapRef<typeof import('vue')['EffectScope']>
-    readonly ScanWidget: UnwrapRef<typeof import('./src/components/views/widgets/bigWidgets/ScanWidget.vue')['default']>
+    readonly _: UnwrapRef<typeof import('./src/plugins/lodash')['_']>
     readonly acceptHMRUpdate: UnwrapRef<typeof import('pinia')['acceptHMRUpdate']>
     readonly asyncComputed: UnwrapRef<typeof import('@vueuse/core')['asyncComputed']>
     readonly autoResetRef: UnwrapRef<typeof import('@vueuse/core')['autoResetRef']>
@@ -670,7 +671,7 @@ declare module 'vue' {
 declare module '@vue/runtime-core' {
   interface ComponentCustomProperties {
     readonly EffectScope: UnwrapRef<typeof import('vue')['EffectScope']>
-    readonly ScanWidget: UnwrapRef<typeof import('./src/components/views/widgets/bigWidgets/ScanWidget.vue')['default']>
+    readonly _: UnwrapRef<typeof import('./src/plugins/lodash')['_']>
     readonly acceptHMRUpdate: UnwrapRef<typeof import('pinia')['acceptHMRUpdate']>
     readonly asyncComputed: UnwrapRef<typeof import('@vueuse/core')['asyncComputed']>
     readonly autoResetRef: UnwrapRef<typeof import('@vueuse/core')['autoResetRef']>
