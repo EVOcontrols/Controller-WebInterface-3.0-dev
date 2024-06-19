@@ -47,19 +47,21 @@ export function useApi() {
                 // url: isMisc ? config.url : `/api/${config.url}`,
                 // url: isMisc ? config.url : `http://192.168.1.99/api/${config.url}`,
                 // url: isMisc ? config.url : `http://65.21.176.66:49163/api/${config.url}`,
-                // url: isMisc
-                //     ? `http://192.168.1.99${config.url}`
-                //     : `http://192.168.1.99/api/${config.url}`,
                 url: isMisc
-                    ? `http://10.8.0.1:49163${config.url}`
-                    : `http://10.8.0.1:49163/api/${config.url}`,
+                    ? `http://192.168.1.99${config.url}`
+                    : `http://192.168.1.99/api/${config.url}`,
+                // url: isMisc
+                //     ? `http://10.8.0.1:49163${config.url}`
+                //     : `http://10.8.0.1:49163/api/${config.url}`,
                 // url: isMisc
                 //     ? `http://65.21.176.66:49163${config.url}`
                 //     : `http://65.21.176.66:49163/api/${config.url}`,
                 data: isMisc ? config.data : JSON.stringify(config.data),
                 timeout:
-                    (config.url && ['calibr_adc_in', 'get_config'].includes(config.url)) ||
-                    config.url?.includes('misc')
+                    config.url && config.url === 'scan_ext_devs'
+                        ? 60000
+                        : (config.url && ['calibr_adc_in', 'get_config'].includes(config.url)) ||
+                          config.url?.includes('misc')
                         ? 10000
                         : 5000,
                 headers: isMisc

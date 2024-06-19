@@ -514,10 +514,27 @@ async function setDevState() {
         if (r.status === 200) {
             isMainSaving.value = false;
             emit('changeState', curDevState.value);
+            // const curDevices = devices.value;
+            indexStore.setDevicesToInitState();
+            indexStore.setDevicesStateToInitState();
+            indexStore.setOWIdsToInitState();
+            indexStore.setCalibrValsToInitState();
+            indexStore.setMbDevsToInitState();
+            // curDevices.forEach((d) => {
+            //     indexStore.setDevices(d);
+            // });
+            indexStore.setNeedToReqData(true);
+            indexStore.toggleDevice(0);
         }
     } catch (error) {
-        toast.error(t('toast.error.header'), t('toast.error.text'));
-        isMainSaving.value = false;
+        if (isAborted.value) {
+            toast.error(t('toast.error.header'), t('toast.error.text'));
+            isMainSaving.value = false;
+            return;
+        }
+        setTimeout(() => {
+            setDevState();
+        }, 10);
     }
 }
 
@@ -632,7 +649,11 @@ async function save(count: number = 0) {
 }
 
 function waitForInitStatus() {
-    if (props.deviceState === 'init' || props.deviceState === 'no-conn') {
+    if (
+        props.deviceState === 'init' ||
+        props.deviceState === 'no-conn' ||
+        props.deviceState === 'on'
+    ) {
         isInit.value = false;
         waitForOnStatus();
     } else {
@@ -661,7 +682,7 @@ onMounted(async () => {
 });
 
 watch(
-    () => props.deviceState,
+    () => [props.deviceState, props.deviceIndex],
     () =>
         setTimeout(() => {
             if (props.deviceState === 'on') {

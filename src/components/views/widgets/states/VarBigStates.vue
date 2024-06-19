@@ -8,7 +8,7 @@
         ></div>
         <div
             v-dragscroll.y
-            class="flex overflow-y-auto w-full scrollbar-4 flex-1 p-[18px]"
+            class="flex flex-col overflow-y-auto w-full scrollbar-4 flex-1 p-[14px]"
             :style="{ height: 'calc(100vh - 410px)' }"
         >
             <div
@@ -52,6 +52,7 @@
                         {{ index + 1 }}
                     </div>
                 </div>
+                <div class="w-full h-[18px] bottom-0"></div>
             </div>
         </div>
         <div

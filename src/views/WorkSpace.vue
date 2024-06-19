@@ -107,7 +107,7 @@
             </transition>
         </router-view>
         <ModalWrapper
-            v-if="extDeviceInInitIndex !== undefined"
+            v-if="extDeviceInInitIndex !== undefined && !isAddingDev"
             :is-saving="true"
             :trigger-close="extDeviceInInitState !== undefined"
             @close="extDeviceInInitIndex = undefined"
@@ -196,6 +196,7 @@ const {
     isRebootRequired,
     needToReqData,
     mbDevs,
+    isAddingDev,
 } = storeToRefs(indexStore);
 
 const { toast } = useToast();
@@ -709,7 +710,7 @@ async function getDevices(
             return;
         }
         setTimeout(() => {
-            getDevices();
+            getDevices(device, index, state, serial, version);
         }, 20);
     }
 }
@@ -1104,66 +1105,6 @@ watch(
         }
     },
 );
-
-// watch(
-//     () => route.name,
-//     () => {
-//         if (route.fullPath.includes('panel') && !indexStore.labels.length) {
-//             for (let i = 0; i < devicesArr.value.length; i += 1) {
-//                 interfaces.value.forEach((interf) => {
-//                     let number;
-//                     if (typeof devicesArr.value[i][interf.value] === 'object') {
-//                         const el = devicesArr.value[i][interf.value] as {
-//                             val: number;
-//                             bus: number;
-//                         };
-//                         number = el.val;
-//                     } else {
-//                         number = devicesArr.value[i][interf.value] as number;
-//                     }
-//                     if (typeof devicesArr.value[i][interf.value] === 'object') {
-//                         const el = devicesArr.value[i][interf.value] as {
-//                             val: number;
-//                             bus: number;
-//                         };
-//                         getLabels(
-//                             i,
-//                             interf.value as
-//                                 | '1w-rom'
-//                                 | '1w-sens'
-//                                 | 'bin-in'
-//                                 | 'adc-in'
-//                                 | 'bin-out'
-//                                 | 'pwm-out'
-//                                 | 'mb-var'
-//                                 | 'bin-var'
-//                                 | 'int-var'
-//                                 | 'tim-var',
-//                             number,
-//                             el.bus,
-//                         );
-//                     } else {
-//                         getLabels(
-//                             i,
-//                             interf.value as
-//                                 | '1w-rom'
-//                                 | '1w-sens'
-//                                 | 'bin-in'
-//                                 | 'adc-in'
-//                                 | 'bin-out'
-//                                 | 'pwm-out'
-//                                 | 'mb-var'
-//                                 | 'bin-var'
-//                                 | 'int-var'
-//                                 | 'tim-var',
-//                             number,
-//                         );
-//                     }
-//                 });
-//             }
-//         }
-//     },
-// );
 
 watch(needToReqData, async () => {
     if (needToReqData.value) {

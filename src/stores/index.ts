@@ -186,6 +186,8 @@ export const useIndexStore = defineStore('indexStore', () => {
 
     const needToRequestMainData = ref(false);
 
+    const isAddingDev = ref(false);
+
     function setNeedToReqData(res: boolean) {
         needToReqData.value = res;
     }
@@ -815,6 +817,10 @@ export const useIndexStore = defineStore('indexStore', () => {
         needToRequestMainData.value = res;
     }
 
+    function setIsAddingDev(res: boolean) {
+        isAddingDev.value = res;
+    }
+
     return {
         api,
         labels,
@@ -857,6 +863,7 @@ export const useIndexStore = defineStore('indexStore', () => {
         needToReqData,
         isRebootRequired,
         needToRequestMainData,
+        isAddingDev,
         setNeedToReqData,
         getApi,
         setDevices,
@@ -903,5 +910,6 @@ export const useIndexStore = defineStore('indexStore', () => {
         setNeedToRequestMainData,
         removeOWInterf,
         removeMbInterf,
+        setIsAddingDev,
     };
 });

@@ -89,31 +89,38 @@
                         <span
                             class="text-sm w-[73px] h-full rounded-l-[6px] font-roboto flex items-center justify-center"
                             :class="
-                                activeLabel.state === 1
+                                activeLabel.state &&
+                                typeof activeLabel.state === 'string' &&
+                                activeLabel.state.includes('ms')
                                     ? 'bg-[#004A89] text-[#2A9BFF]'
                                     : 'bg-[#123A5B] text-[#5F93C2]'
                             "
-                            @click="handleBinVarClick(true)"
+                            @click="handleTimVarClick('ms')"
                             >{{ t('ms') }}</span
                         >
                         <span
                             class="text-[#97FFE7] text-sm w-[73px] h-full font-roboto flex items-center justify-center"
                             :class="
-                                activeLabel.state === 0
+                                activeLabel.state &&
+                                typeof activeLabel.state === 'string' &&
+                                !activeLabel.state.includes('ms') &&
+                                activeLabel.state.includes('s')
                                     ? 'bg-[#004A89] text-[#2A9BFF]'
                                     : 'bg-[#123A5B] text-[#5F93C2]'
                             "
-                            @click="handleBinVarClick(false)"
+                            @click="handleTimVarClick('s')"
                             >{{ t('s') }}</span
                         >
                         <span
                             class="text-[#97FFE7] text-sm w-[73px] h-full rounded-r-[6px] font-roboto flex items-center justify-center"
                             :class="
-                                activeLabel.state === 0
+                                activeLabel.state &&
+                                typeof activeLabel.state === 'string' &&
+                                activeLabel.state.includes('min')
                                     ? 'bg-[#004A89] text-[#2A9BFF]'
                                     : 'bg-[#123A5B] text-[#5F93C2]'
                             "
-                            @click="handleBinVarClick(false)"
+                            @click="handleTimVarClick('min')"
                             >{{ t('min') }}</span
                         >
                     </div>
@@ -279,9 +286,11 @@ const curLabels = computed<[string | undefined]>(() => {
     return [undefined];
 });
 
-const activeLabel = ref<{ i: number; state: number | null; label: string | undefined } | null>(
-    null,
-);
+const activeLabel = ref<{
+    i: number;
+    state: number | string | null;
+    label: string | undefined;
+} | null>(null);
 
 const isLabelChange = ref(false);
 
@@ -345,6 +354,11 @@ function handleBinVarClick(res: boolean) {
     activeLabel.value.state = res ? 1 : 0;
 }
 
+function handleTimVarClick(res: 'ms' | 's' | 'min') {
+    if (!activeLabel.value) return;
+    activeLabel.value.state += res;
+}
+
 function handleScroll() {
     const el = scrollWrapper.value;
     if (!el) return;
@@ -366,7 +380,7 @@ function handleDblClick(s: number | null, index: number) {
             if (s === null) return;
             data.value = String(s / 100);
         } else {
-            data.value = s === null ? '\u2013' : String(s);
+            data.value = s === null ? '' : String(s);
         }
     }, 20);
     setActiveLabelTop();
@@ -494,7 +508,7 @@ async function saveLabel(labels: string[], part: number) {
 
 async function setData(index: number, state: number | null, d?: number | null) {
     const data = dataInput.value;
-    let val: number | null = 0;
+    let val: number | null = null;
     if (props.w.w.i === 'bin-var') {
         val = state;
     } else {
