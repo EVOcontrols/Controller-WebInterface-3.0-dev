@@ -36,7 +36,8 @@
             @change-advanced-param="
                 (param: 'cycle-pause', value: number | undefined) => {
                     if (!settings || settings.modbus.mode === 'off') return;
-                    settings.modbus.advanced[settings.modbus.mode][param] = value;
+                    const curMode = settings.modbus.mode as 'variables' | 'ext-devs';
+                    settings.modbus.advanced[curMode][param] = value;
                 }
             "
         />
@@ -70,6 +71,12 @@
                     </div>
                 </div>
                 <AdvancedSettingsButton
+                    v-if="
+                        settings['1-wire'].filter((el) => el.mode !== 'off').length &&
+                        settings['1-wire']
+                            .filter((el) => el.mode !== 'off')
+                            .filter((elem) => Object.entries(elem).length > 1).length
+                    "
                     :is-expanded="isAdvancedSettingsExpanded.oneWire"
                     :is-error="!!advancedSettingsHaveError.oneWire"
                     @click="
@@ -77,53 +84,69 @@
                     "
                 />
                 <CollapseTransition :duration="300">
-                    <div v-show="isAdvancedSettingsExpanded.oneWire">
+                    <div
+                        v-show="
+                            isAdvancedSettingsExpanded.oneWire &&
+                            settings['1-wire'].filter((el) => el.mode !== 'off').length &&
+                            settings['1-wire']
+                                .filter((el) => el.mode !== 'off')
+                                .filter((elem) => Object.entries(elem).length > 1).length
+                        "
+                    >
                         <div class="table w-max mt-5 border-collapse">
                             <div
                                 v-for="(w, i) in settings['1-wire']"
                                 :key="i"
-                                class="table-row-group [&:last-child>div:last-child]:!h-10"
                             >
                                 <div
-                                    v-for="(p, y) in oneWiresParams[i]"
-                                    :key="p.param"
-                                    class="table-row h-[3.43rem] align-top"
+                                    v-if="w.mode !== 'off' && Object.entries(w).length > 1"
+                                    class="table-row [&:last-child]:!h-10"
                                 >
                                     <div
                                         class="text-[#6d9cc5] text-sm leading-[1.143] table-cell pr-9"
                                     >
-                                        {{ y ? '' : `${t('bus')} ${i + 1}` }}
+                                        {{ `${t('bus')} ${i + 1}` }}
                                     </div>
                                     <div
-                                        class="text-[#6d9cc5] text-sm leading-[1.143] table-cell pr-2.5"
+                                        v-for="(p, y) in Object.entries(w).filter(
+                                            (el) => el[0] !== 'mode',
+                                        )"
+                                        :key="y"
+                                        class="table-row h-[3.43rem] align-top"
                                     >
-                                        {{ p.label }}
+                                        <div
+                                            class="text-[#6d9cc5] text-sm leading-[1.143] table-cell pr-2.5 !w-[7rem]"
+                                        >
+                                            {{ p[0] }}
+                                        </div>
+                                        <UiInput
+                                            :init-value="p[1] as number | null | undefined"
+                                            :name="p[0]"
+                                            initType="number"
+                                            class="table-cell w-16 text-center !px-2"
+                                            :min-max="[0, 65535]"
+                                            :status="
+                                                fieldsInvalidStatuses.has(`1-wire-${i}-${p[0]}`)
+                                                    ? 'invalid'
+                                                    : 'valid'
+                                            "
+                                            :input-type="['int']"
+                                            @status-changed="
+                                                $event === 'invalid' || $event === 'not-allowed'
+                                                    ? fieldsInvalidStatuses.add(
+                                                          `1-wire-${i}-${p[0]}`,
+                                                      )
+                                                    : fieldsInvalidStatuses.delete(
+                                                          `1-wire-${i}-${p[0]}`,
+                                                      )
+                                            "
+                                            @value-changed="
+                                                $event === undefined
+                                                    ? ''
+                                                    : (settings['1-wire'][i][`${p[0]}`] = $event)
+                                            "
+                                        />
                                     </div>
-                                    <UiInput
-                                        :init-value="w[p.param]"
-                                        :name="p.param"
-                                        initType="number"
-                                        class="table-cell w-16 text-center !px-2"
-                                        :min-max="[p.min, p.max]"
-                                        :status="
-                                            fieldsInvalidStatuses.has(`1-wire-${i}-${p.param}`)
-                                                ? 'invalid'
-                                                : 'valid'
-                                        "
-                                        :input-type="['int']"
-                                        @status-changed="
-                                            $event === 'invalid' || $event === 'not-allowed'
-                                                ? fieldsInvalidStatuses.add(
-                                                      `1-wire-${i}-${p.param}`,
-                                                  )
-                                                : fieldsInvalidStatuses.delete(
-                                                      `1-wire-${i}-${p.param}`,
-                                                  )
-                                        "
-                                        @value-changed="
-                                            $event === undefined ? '' : (w[p.param] = $event)
-                                        "
-                                    />
                                 </div>
                             </div>
                         </div>
@@ -204,7 +227,7 @@
                                 :name="m"
                                 initType="number"
                                 class="table-cell w-16 text-center !px-2"
-                                :min-max="[0, 65535]"
+                                :min-max="[-32768, 32767]"
                                 :status="
                                     fieldsInvalidStatuses.has(`adc-${prefix}-${m}-${i}`)
                                         ? 'invalid'
@@ -274,10 +297,10 @@
                     {{ t('integerFromTo', { from: 0, to: 10000 }) }}
                 </div> -->
             </div>
-            <div v-else-if="topic === 'pwm-out'">
+            <div v-else-if="topic === 'pwm'">
                 <div class="table w-max border-spacing-y-3.5 -mb-3.5 mt-1.5">
                     <div
-                        v-for="(freq, i) in settings['pwm-out']['frequency']"
+                        v-for="(freq, i) in settings.pwm['freq']"
                         :key="i"
                         class="table-row text-[#6d9cc5] text-sm leading-[1.143]"
                     >
@@ -285,24 +308,20 @@
                             {{ `${t('output')} ${i + 1}:` }}
                         </div>
                         <UiInput
-                            :init-value="settings['pwm-out']['frequency'][i]"
+                            :init-value="settings.pwm['freq'][i]"
                             name="frequency"
                             initType="number"
                             class="table-cell w-16 text-center !px-2"
                             :min-max="[50, 5000]"
-                            :status="
-                                fieldsInvalidStatuses.has(`pwm-out-${i}`) ? 'invalid' : 'valid'
-                            "
+                            :status="fieldsInvalidStatuses.has(`pwm-${i}`) ? 'invalid' : 'valid'"
                             :input-type="['int']"
                             @status-changed="
                                 $event === 'invalid' || $event === 'not-allowed'
-                                    ? fieldsInvalidStatuses.add(`pwm-out-${i}`)
-                                    : fieldsInvalidStatuses.delete(`pwm-out-${i}`)
+                                    ? fieldsInvalidStatuses.add(`pwm-${i}`)
+                                    : fieldsInvalidStatuses.delete(`pwm-${i}`)
                             "
                             @value-changed="
-                                $event === undefined
-                                    ? ''
-                                    : (settings['pwm-out']['frequency'][i] = $event)
+                                $event === undefined ? '' : (settings.pwm['freq'][i] = $event)
                             "
                         />
                         <span class="text-[#3e688e] text-sm leading-[1.143] pl-3 table-cell">
@@ -311,7 +330,7 @@
                         <!-- <div
                             class="text-[#ed4272] text-sm leading-[1.143] invisible opacity-0 transition-[opacity,visibility] error:visible error:opacity-100 pl-4 table-cell"
                             :class="{
-                                error: fieldsInvalidStatuses.has(`pwm-out-${i}`),
+                                error: fieldsInvalidStatuses.has(`pwm-${i}`),
                             }"
                         >
                             {{ t('integerFromTo', { from: 50, to: 5000 }) }}
@@ -367,43 +386,12 @@ const isRebootRequired = ref(false);
 
 const rebootTrigger = ref(0);
 
-const topics: (keyof NGCSettings)[] = ['1-wire', 'adc-in', 'bin-out', 'pwm-out'];
+// const topics: (keyof NGCSettings)[] = ['1-wire', 'adc-in', 'bin-out', 'pwm'];
+const topics: (keyof NGCSettings)[] = ['1-wire', 'adc-in', 'bin-out'];
 
 const isAdvancedSettingsExpanded = ref<{ oneWire: boolean }>({
     oneWire: false,
 });
-
-const oneWiresParams = computed<
-    {
-        param: Exclude<keyof NGCSettings['1-wire'][number], 'mode'>;
-        label: string;
-        min: number;
-        max: number;
-    }[][]
->(() =>
-    settings.value === undefined
-        ? []
-        : settings.value['1-wire'].map((w) => [
-              {
-                  param: 'cycle-pause',
-                  label: 'cycle-delay',
-                  min: 0,
-                  max: 65535,
-              },
-              {
-                  param: 'db-time',
-                  label: 'debounce-time',
-                  min: 0,
-                  max: 65535,
-              },
-              {
-                  param: 'ct-time',
-                  label: 'comert-time',
-                  min: 0,
-                  max: 65535,
-              },
-          ]),
-);
 
 const fieldsInvalidStatuses = ref<Set<string>>(new Set());
 
@@ -444,7 +432,7 @@ const needToSave = computed(() => areThereChanges.value && !fieldsInvalidStatuse
 const isRebootModalOpen = ref(false);
 
 watch(needToSave, () => {
-    emit('setNeedToSave', needToSave.value);
+    emit('setNeedToSave', !!needToSave.value);
 });
 
 watch(() => props.saveTrigger, save);
@@ -457,7 +445,7 @@ const { t } = useI18n({
             '1-wire': '1-wire settings',
             'adc-in': 'Analog inputs settings',
             'bin-out': 'Simultaneous activation of discrete outputs',
-            'pwm-out': 'PWM outputs frequency',
+            pwm: 'PWM outputs frequency',
             'work-mode': 'Mode',
             bus: 'Bus',
             buses: {
@@ -503,7 +491,7 @@ const { t } = useI18n({
             '1-wire': 'Настройки шин 1-wire',
             'adc-in': 'Настройки аналоговых входов',
             'bin-out': 'Одновременное включение дискретных выходов',
-            'pwm-out': 'Частота ШИМ выходов',
+            pwm: 'Частота ШИМ выходов',
             'work-mode': 'Режим работы',
             bus: 'Шина',
             buses: {
@@ -562,45 +550,53 @@ const oneWireBuses = oneWiresModes.map((m) => ({
 
 function setNgcSettings(data: ControllerSettings) {
     settings.value = {
-        ...pick(data, ['1-wire', 'adc-in', 'bin-out', 'pwm-out']),
+        ...pick(data, ['1-wire', 'adc-in', 'bin-out', 'pwm']),
         modbus: {
-            ...pick(data.modbus[0], ['rate', 'parity', 'stop', 'mode']),
+            ...pick(data['rs-485'][0], ['rate', 'parity', 'stop', 'mode']),
             advanced: {
                 variables: {
                     'cycle-pause':
-                        data.modbus[0].mode === 'variables'
-                            ? data.modbus[0]['cycle-pause']
+                        data['rs-485'][0].mode === 'variables'
+                            ? data['rs-485'][0]['cycle-pause']
                             : undefined,
                     'rd-pause':
-                        data.modbus[0].mode === 'variables'
-                            ? data.modbus[0]['rd-pause']
+                        data['rs-485'][0].mode === 'variables'
+                            ? data['rs-485'][0]['rd-pause']
                             : undefined,
                     'rd-tmo':
-                        data.modbus[0].mode === 'variables' ? data.modbus[0]['rd-tmo'] : undefined,
+                        data['rs-485'][0].mode === 'variables'
+                            ? data['rs-485'][0]['rd-tmo']
+                            : undefined,
                     'wr-pause':
-                        data.modbus[0].mode === 'variables'
-                            ? data.modbus[0]['wr-pause']
+                        data['rs-485'][0].mode === 'variables'
+                            ? data['rs-485'][0]['wr-pause']
                             : undefined,
                     'wr-tmo':
-                        data.modbus[0].mode === 'variables' ? data.modbus[0]['wr-tmo'] : undefined,
+                        data['rs-485'][0].mode === 'variables'
+                            ? data['rs-485'][0]['wr-tmo']
+                            : undefined,
                 },
                 'ext-devs': {
                     'cycle-pause':
-                        data.modbus[0].mode === 'ext-devs'
-                            ? data.modbus[0]['cycle-pause']
+                        data['rs-485'][0].mode === 'ext-devs'
+                            ? data['rs-485'][0]['cycle-pause']
                             : undefined,
                     'get-tmo':
-                        data.modbus[0].mode === 'ext-devs' ? data.modbus[0]['get-tmo'] : undefined,
-                    'ow-scan-tmo':
-                        data.modbus[0].mode === 'ext-devs'
-                            ? data.modbus[0]['ow-scan-tmo']
+                        data['rs-485'][0].mode === 'ext-devs'
+                            ? data['rs-485'][0]['get-tmo']
+                            : undefined,
+                    '1w-scan-tmo':
+                        data['rs-485'][0].mode === 'ext-devs'
+                            ? data['rs-485'][0]['1w-scan-tmo']
                             : undefined,
                     'set-cfg-tmo':
-                        data.modbus[0].mode === 'ext-devs'
-                            ? data.modbus[0]['set-cfg-tmo']
+                        data['rs-485'][0].mode === 'ext-devs'
+                            ? data['rs-485'][0]['set-cfg-tmo']
                             : undefined,
                     'set-tmo':
-                        data.modbus[0].mode === 'ext-devs' ? data.modbus[0]['set-tmo'] : undefined,
+                        data['rs-485'][0].mode === 'ext-devs'
+                            ? data['rs-485'][0]['set-tmo']
+                            : undefined,
                 },
             },
         },
@@ -617,7 +613,7 @@ async function save() {
     const init = settingsInit.value;
     if (!current || !init) return;
     const settingsToSave: PartialDeep<ControllerSettings, { recurseIntoArrays: true }> = {};
-    (['1-wire', 'pwm-out', 'bin-out', 'adc-in'] as const).forEach((k) => {
+    (['1-wire', 'pwm', 'bin-out', 'adc-in'] as const).forEach((k) => {
         if (isKeyOfBoth(current, init, k) && !isEqual(current[k], init[k])) {
             if (k === '1-wire') {
                 settingsToSave['1-wire'] = current['1-wire'].map(
@@ -629,11 +625,12 @@ async function save() {
             }
         }
     });
-    if (!isEqual(current.modbus, init.modbus)) {
-        settingsToSave.modbus = [];
-        settingsToSave.modbus[0] = {
+    if (JSON.stringify(current.modbus) !== JSON.stringify(init.modbus)) {
+        settingsToSave['rs-485'] = [];
+        const curMode = current.modbus.mode as 'variables' | 'ext-devs';
+        settingsToSave['rs-485'][0] = {
             ...pick(current.modbus, ['rate', 'parity', 'stop', 'mode']),
-            ...(current.modbus.mode === 'off' ? {} : current.modbus.advanced[current.modbus.mode]),
+            ...(current.modbus.mode === 'off' ? {} : current.modbus.advanced[curMode]),
         };
     }
     try {

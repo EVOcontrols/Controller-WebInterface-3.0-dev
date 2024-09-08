@@ -110,13 +110,16 @@ const props = defineProps<{
 
 const curLabels = computed<[string | undefined]>(() => {
     if (labels.value[props.w.w.d]) {
-        const val = labels.value[props.w.w.d]?.find((el) => el.interf === props.w.w.i);
+        const val = labels.value[props.w.w.d]?.find(
+            (el: { interf: string; val: [string[] | []] }) => el.interf === props.w.w.i,
+        );
         if (val) {
             const bus = props.w.w.bus || 0;
             return val.val[bus] as [string | undefined];
         }
     }
-    return [undefined];
+    const arr: [string | undefined] = [''];
+    return arr;
 });
 
 const devStatus = computed<'on' | 'off' | 'no-conn' | 'init' | 'error' | undefined>(() => {
@@ -154,12 +157,18 @@ async function getIndexes(labelsArr?: string[]) {
             const r = await api.post('scan_ow_ids', {
                 device: props.w.w.d,
                 bus: props.w.w.bus,
+                type: props.w.w.i,
             });
+            const curIds = OWIds.value[props.w.w.d][props.w.w.bus || 0];
             const ids = (await r.data.ids) as string[];
+            const newIds: string[] = [];
             for (const id of ids) {
-                if (!idsArr.value.includes(id)) {
-                    idsArr.value = [...idsArr.value, id];
+                if (!newIds.includes(id) && !curIds.includes(id)) {
+                    newIds.push(id);
                 }
+            }
+            if (JSON.stringify(idsArr.value.sort()) !== JSON.stringify(newIds.sort())) {
+                idsArr.value = [...newIds];
             }
             if (isLoading.value) {
                 await getEntState(props.w.w.d, [
@@ -168,7 +177,7 @@ async function getIndexes(labelsArr?: string[]) {
                         device: props.w.w.d,
                         index: 0,
                         bus: props.w.w.bus,
-                        quant: OWIds.value[props.w.w.d][props.w.w.bus].length,
+                        quantity: OWIds.value[props.w.w.d][props.w.w.bus].length,
                     },
                 ]);
                 if (labelsArr) saveLabel(labelsArr);
@@ -188,6 +197,7 @@ async function getOWIds(labelsArr: string[]) {
         const r = await api.post('get_ow_ids', {
             device: props.w.w.d,
             bus: props.w.w.bus,
+            type: props.w.w.i,
         });
         const ids = await r.data.ids;
         if (props.w.w.bus !== undefined) {
@@ -205,12 +215,17 @@ async function getOWIds(labelsArr: string[]) {
 }
 
 async function setOW(arr: string[], labelsArr: string[]) {
+    const newArr: string[] = [];
+    for (const id of arr) {
+        newArr.push(id || '0000000000000000');
+    }
     try {
         const r = await api.post('set_ow_ids', {
             device: props.w.w.d,
             bus: props.w.w.bus,
             index: 0,
-            ids: arr,
+            ids: newArr,
+            type: props.w.w.i,
         });
         if (r.status === 200) getOWIds(labelsArr);
     } catch (error) {
@@ -229,16 +244,16 @@ async function getEntState(
         type: string;
         device: number;
         index: number;
-        quant: number;
+        quantity: number;
         bus: number;
     }[],
 ) {
     try {
         const r = await api.post('get_ent_state', {
-            list: filteredReqArr,
+            entities: filteredReqArr,
         });
-        const state = await r.data.state;
-        const newState = state.filter((el: any) => Array.isArray(el.value));
+        const state = await r.data.entities;
+        const newState = state.filter((el: any) => Array.isArray(el.state));
         indexStore.setDevicesState(device, newState);
         return;
     } catch (error) {
@@ -274,7 +289,6 @@ async function saveLabel(labels: (string | undefined)[]) {
                 | 'tim-var',
         },
         { labels: newLabels as string[] },
-        0,
     );
     if (isSavingError) {
         if (isAborted.value) {
@@ -298,7 +312,6 @@ async function saveLabel(labels: (string | undefined)[]) {
                 | 'pwm-out'
                 | 'tim-var',
             newLabels as string[],
-            0,
             props.w.w.bus,
         );
     }

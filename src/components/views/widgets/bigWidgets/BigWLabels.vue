@@ -52,6 +52,7 @@
                             <input
                                 type="text"
                                 :maxlength="props.w.w.i === 'pwm-out' ? 5 : 6"
+                                :disabled="props.w.w.i === 'tim-var' && !activeLabel.units"
                                 ref="dataInput"
                                 class="w-full flex-1 bg-transparent h-full text-[#8DC5F6] text-[#8DC5F6] text-end transition-colors duration-300"
                                 :class="{ 'text-[#F83068]': isInvalidData }"
@@ -89,39 +90,47 @@
                         <span
                             class="text-sm w-[73px] h-full rounded-l-[6px] font-roboto flex items-center justify-center"
                             :class="
-                                activeLabel.state &&
-                                typeof activeLabel.state === 'string' &&
-                                activeLabel.state.includes('ms')
+                                activeLabel.units === 'ms'
                                     ? 'bg-[#004A89] text-[#2A9BFF]'
-                                    : 'bg-[#123A5B] text-[#5F93C2]'
+                                    : 'bg-[#123A5B] text-[#5F93C2] cursor-pointer'
                             "
-                            @click="handleTimVarClick('ms')"
-                            >{{ t('ms') }}</span
+                            @click="
+                                () => {
+                                    if (activeLabel) activeLabel.units = 'ms';
+                                    checkValue();
+                                }
+                            "
+                            >{{ t('10ms') }}</span
                         >
                         <span
-                            class="text-[#97FFE7] text-sm w-[73px] h-full font-roboto flex items-center justify-center"
+                            class="text-sm w-[73px] h-full font-roboto flex items-center justify-center"
                             :class="
-                                activeLabel.state &&
-                                typeof activeLabel.state === 'string' &&
-                                !activeLabel.state.includes('ms') &&
-                                activeLabel.state.includes('s')
+                                activeLabel.units === 's'
                                     ? 'bg-[#004A89] text-[#2A9BFF]'
-                                    : 'bg-[#123A5B] text-[#5F93C2]'
+                                    : 'bg-[#123A5B] text-[#5F93C2] cursor-pointer'
                             "
-                            @click="handleTimVarClick('s')"
-                            >{{ t('s') }}</span
+                            @click="
+                                () => {
+                                    if (activeLabel) activeLabel.units = 's';
+                                    checkValue();
+                                }
+                            "
+                            >{{ t('1s') }}</span
                         >
                         <span
-                            class="text-[#97FFE7] text-sm w-[73px] h-full rounded-r-[6px] font-roboto flex items-center justify-center"
+                            class="text-sm w-[73px] h-full rounded-r-[6px] font-roboto flex items-center justify-center"
                             :class="
-                                activeLabel.state &&
-                                typeof activeLabel.state === 'string' &&
-                                activeLabel.state.includes('min')
+                                activeLabel.units === 'min'
                                     ? 'bg-[#004A89] text-[#2A9BFF]'
-                                    : 'bg-[#123A5B] text-[#5F93C2]'
+                                    : 'bg-[#123A5B] text-[#5F93C2] cursor-pointer'
                             "
-                            @click="handleTimVarClick('min')"
-                            >{{ t('min') }}</span
+                            @click="
+                                () => {
+                                    if (activeLabel) activeLabel.units = 'min';
+                                    checkValue();
+                                }
+                            "
+                            >{{ t('1min') }}</span
                         >
                     </div>
                 </div>
@@ -173,7 +182,7 @@
                             >{{ s / 100 }}%</span
                         >
                         <span
-                            v-else-if="['int-var', 'bin-var', 'tim-var'].includes(props.w.w.i)"
+                            v-else-if="['int-var', 'bin-var'].includes(props.w.w.i)"
                             class="w-[53px] text-end pr-[10px] group-hover:underline"
                             :class="
                                 props.w.w.i !== 'bin-var'
@@ -190,6 +199,19 @@
                                     : s
                                     ? t('true')
                                     : t('false')
+                            }}</span
+                        >
+                        <span
+                            v-else-if="props.w.w.i === 'tim-var'"
+                            class="w-[53px] text-end pr-[10px] group-hover:underline text-[#ADEBFF]"
+                            >{{
+                                s === null
+                                    ? '\u2013'
+                                    : s <= 150000
+                                    ? `${s} ${t('ms')}`
+                                    : s > 150000 && s % 60000 === 0
+                                    ? `${s / 60000} ${t('min')}`
+                                    : `${s / 1000} ${t('s')}`
                             }}</span
                         >
                     </div>
@@ -290,6 +312,7 @@ const activeLabel = ref<{
     i: number;
     state: number | string | null;
     label: string | undefined;
+    units?: 'ms' | 's' | 'min';
 } | null>(null);
 
 const isLabelChange = ref(false);
@@ -320,6 +343,8 @@ const scrollEl = ref<HTMLElement | undefined>();
 
 const isScrolling = ref(false);
 
+const isNotMainScrolling = ref(false);
+
 const state = computed<number[]>(() => {
     return props.w.state as number[];
 });
@@ -336,7 +361,11 @@ const tempState = computed<[number | null]>(() => {
 
 function checkValue() {
     const data = dataInput.value;
-    const values = valuesRange.value.find((obj) => obj.interf === props.w.w.i)?.values;
+    const values =
+        props.w.w.i === 'tim-var' && activeLabel.value
+            ? valuesRange.value.find((obj) => obj.interf === props.w.w.i + activeLabel.value?.units)
+                  ?.values
+            : valuesRange.value.find((obj) => obj.interf === props.w.w.i)?.values;
     if (!data || !values) return;
     min.value = values.min;
     max.value = values.max;
@@ -347,6 +376,15 @@ function checkValue() {
     } else {
         isInvalidData.value = false;
     }
+    if (
+        props.w.w.i !== 'pwm-out' &&
+        val.includes('.') &&
+        activeLabel.value &&
+        activeLabel.value.units !== 's'
+    ) {
+        val = val.slice(0, val.indexOf('.'));
+    }
+    data.value = val;
 }
 
 function handleBinVarClick(res: boolean) {
@@ -354,14 +392,10 @@ function handleBinVarClick(res: boolean) {
     activeLabel.value.state = res ? 1 : 0;
 }
 
-function handleTimVarClick(res: 'ms' | 's' | 'min') {
-    if (!activeLabel.value) return;
-    activeLabel.value.state += res;
-}
-
 function handleScroll() {
     const el = scrollWrapper.value;
     if (!el) return;
+    isNotMainScrolling.value = false;
     scrollTop.value = el.scrollTop;
 }
 
@@ -369,9 +403,26 @@ function handleDblClick(s: number | null, index: number) {
     if (props.w.w.i === 'pwm-out') {
         if (s === null) return;
         activeLabel.value = { i: index, state: s / 100, label: curLabels.value[index] };
+    } else if (props.w.w.i === 'tim-var') {
+        let newS = s;
+        let units: 'ms' | 's' | 'min' | undefined = undefined;
+        if (s) {
+            if (s <= 150000) {
+                units = 'ms';
+                newS = s / 10;
+            } else if (s > 150000 && s % 60000 === 0) {
+                units = 'min';
+                newS = s / 60000;
+            } else {
+                units = 's';
+                newS = s / 1000;
+            }
+        }
+        activeLabel.value = { i: index, state: newS, label: curLabels.value[index], units: units };
     } else {
         activeLabel.value = { i: index, state: s, label: curLabels.value[index] };
     }
+    isNotMainScrolling.value = true;
     isLabelChange.value = true;
     setTimeout(() => {
         const data = dataInput.value;
@@ -380,7 +431,7 @@ function handleDblClick(s: number | null, index: number) {
             if (s === null) return;
             data.value = String(s / 100);
         } else {
-            data.value = s === null ? '' : String(s);
+            data.value = s === null ? '' : String(activeLabel.value?.state);
         }
     }, 20);
     setActiveLabelTop();
@@ -396,17 +447,20 @@ function setActiveLabelTop() {
     if (top < 0) {
         activeLabelTop.value = 0;
     } else if (Math.round(top) > wrapper.offsetHeight - 68) {
-        setTimeout(() => {
-            if (!activeLabel.value) return;
-            isScrolling.value = true;
-            wrapper.scrollTo({
-                top: activeLabel.value.i * 30 + 78 - wrapper.offsetHeight,
-                behavior: 'smooth',
-            });
-        }, 0);
-        setTimeout(() => {
-            isScrolling.value = false;
-        }, 300);
+        if (isNotMainScrolling.value) {
+            setTimeout(() => {
+                if (!activeLabel.value) return;
+                isScrolling.value = true;
+                wrapper.scrollTo({
+                    top: activeLabel.value.i * 30 + 78 - wrapper.offsetHeight,
+                    behavior: 'smooth',
+                });
+            }, 0);
+            setTimeout(() => {
+                isScrolling.value = false;
+                isNotMainScrolling.value = false;
+            }, 300);
+        }
         activeLabelTop.value = wrapper.offsetHeight - 68;
     } else {
         activeLabelTop.value = top;
@@ -443,21 +497,22 @@ async function setLabel(index: number, label: string | undefined) {
     if (!label) return;
     const newLabels = [...curLabels.value];
     newLabels[index] = label;
-    for (let i = 0; i < Math.ceil(newLabels.length / labelsFileLength); i += 1) {
-        if (
-            JSON.stringify(
-                curLabels.value.slice(i * labelsFileLength, (i + 1) * labelsFileLength),
-            ) !== JSON.stringify(newLabels.slice(i * labelsFileLength, (i + 1) * labelsFileLength))
-        ) {
-            saveLabel(
-                newLabels.slice(i * labelsFileLength, (i + 1) * labelsFileLength) as string[],
-                i,
-            );
-        }
-    }
+    saveLabel(newLabels as string[]);
+    // for (let i = 0; i < Math.ceil(newLabels.length / labelsFileLength); i += 1) {
+    //     if (
+    //         JSON.stringify(
+    //             curLabels.value.slice(i * labelsFileLength, (i + 1) * labelsFileLength),
+    //         ) !== JSON.stringify(newLabels.slice(i * labelsFileLength, (i + 1) * labelsFileLength))
+    //     ) {
+    //         saveLabel(
+    //             newLabels.slice(i * labelsFileLength, (i + 1) * labelsFileLength) as string[],
+    //             i,
+    //         );
+    //     }
+    // }
 }
 
-async function saveLabel(labels: string[], part: number) {
+async function saveLabel(labels: string[]) {
     const isSavingError = await saveToFile(
         {
             type: 'labels',
@@ -476,14 +531,13 @@ async function saveLabel(labels: string[], part: number) {
                 | 'tim-var',
         },
         { labels: labels },
-        part,
     );
     if (isSavingError) {
         if (isAborted.value) {
             return;
         }
         setTimeout(() => {
-            saveLabel(labels, part);
+            saveLabel(labels);
         }, 5);
     } else {
         indexStore.changeLabel(
@@ -500,23 +554,31 @@ async function saveLabel(labels: string[], part: number) {
                 | 'pwm-out'
                 | 'tim-var',
             labels,
-            part,
             props.w.w.bus,
         );
     }
 }
 
-async function setData(index: number, state: number | null, d?: number | null) {
+async function setData(index: number, state: string | number | null, d?: number | null) {
     const data = dataInput.value;
     let val: number | null = null;
     if (props.w.w.i === 'bin-var') {
-        val = state;
+        val = state as number | null;
     } else {
         if (!data) return;
         if (props.w.w.i === 'pwm-out') {
-            val = +(data.value.includes(',') ? data.value.replace(',', '.') : data.value) * 100;
+            val = Math.round(+data.value * 100);
         } else if (props.w.w.i === 'int-var') {
-            val = +(data.value.includes(',') ? data.value.replace(',', '.') : data.value);
+            val = +data.value;
+        } else if (props.w.w.i === 'tim-var') {
+            val = +data.value;
+            if (activeLabel.value?.units === 'ms') {
+                val *= 10;
+            } else if (activeLabel.value?.units === 's') {
+                val *= 1000;
+            } else if (activeLabel.value?.units === 'min') {
+                val *= 60000;
+            }
         }
     }
     const body = {
@@ -539,8 +601,8 @@ async function setVal(body: { type: string; device: number; index: number; value
         if (r.data.status === 'ok' && body.value !== null) {
             const devStates = [...devicesState.value][props.w.w.d];
             const prevStateIndex = devStates.findIndex((el) => el.type === props.w.w.i);
-            if (prevStateIndex !== -1 && devStates[prevStateIndex].value[body.index] !== undefined)
-                devStates[prevStateIndex].value[body.index] = body.value;
+            if (prevStateIndex !== -1 && devStates[prevStateIndex].state[body.index] !== undefined)
+                devStates[prevStateIndex].state[body.index] = body.value;
             indexStore.setDevicesState(props.w.w.d, [...devStates]);
         }
     } catch (error) {
@@ -575,9 +637,12 @@ const { t } = useI18n({
             },
             true: 'ИСТИНА',
             false: 'ЛОЖЬ',
-            ms: 'х10 МС',
-            s: 'х1 СЕК',
-            min: 'х1 МИН',
+            '10ms': 'х10 МС',
+            '1s': 'х1 СЕК',
+            '1min': 'х1 МИН',
+            ms: 'мс',
+            s: 'с',
+            min: 'мин',
         },
         en: {
             placeholder: 'Entering a title',
@@ -587,9 +652,12 @@ const { t } = useI18n({
             },
             true: 'TRUE',
             false: 'FALSE',
-            ms: 'х10 MS',
-            s: 'х1 SEC',
-            min: 'х1 MIN',
+            '10ms': 'х10 MS',
+            '1s': 'х1 SEC',
+            '1min': 'х1 MIN',
+            ms: 'ms',
+            s: 's',
+            min: 'min',
         },
     },
 });

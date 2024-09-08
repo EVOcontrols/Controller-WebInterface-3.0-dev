@@ -31,19 +31,27 @@ export type ControllerSettings = {
         latitude: string;
         longitude: string;
     };
-    login: {
-        'user-name': string;
-        'user-pass': string;
-        'root-name': string;
-        'root-pass': string;
+    // login: {
+    //     login: string;
+    //     password: string;
+    //     // 'user-name': string;
+    //     // 'user-pass': string;
+    //     // 'root-name': string;
+    //     // 'root-pass': string;
+    // };
+    'root-acc': {
+        login: string;
+        password: string;
+    };
+    'user-acc': {
+        login: string;
+        password: string;
     };
     '1-wire': {
         mode: (typeof oneWiresModes)[number];
-        'cycle-pause': number;
-        'db-time': number;
-        'ct-time': number;
+        [key: string]: any;
     }[];
-    modbus: ({
+    'rs-485': ({
         rate: number;
         parity: (typeof modbusParities)[number];
         stop: 1 | 2;
@@ -60,7 +68,7 @@ export type ControllerSettings = {
               mode: 'ext-devs';
               'get-tmo'?: number;
               'set-tmo'?: number;
-              'ow-scan-tmo'?: number;
+              '1w-scan-tmo'?: number;
               'set-cfg-tmo'?: number;
               'cycle-pause'?: number;
           }
@@ -75,8 +83,8 @@ export type ControllerSettings = {
         'lim-min': (number | null)[];
         'lim-max': (number | null)[];
     };
-    'pwm-out': {
-        frequency: (number | null)[];
+    pwm: {
+        freq: (number | null)[];
     };
     'bin-out': {
         'min-delay': number;
@@ -143,7 +151,7 @@ export type CommonSettingsFields = {
     }[keyof CommonControllerSettings[P]][][];
 };
 
-export type NGCSettings = Pick<ControllerSettings, '1-wire' | 'pwm-out' | 'bin-out' | 'adc-in'> & {
+export type NGCSettings = Pick<ControllerSettings, '1-wire' | 'pwm' | 'bin-out' | 'adc-in'> & {
     modbus: Pick<ControllerSettings['modbus'][number], 'rate' | 'parity' | 'stop' | 'mode'> & {
         advanced: {
             variables: Omit<
@@ -174,40 +182,40 @@ export type ExtDevsListRaw = (
       }
 )[];
 
-export type ExtDevsList = {
+export type ExtDev = {
     index: number;
     type: 'NG3-EDIO';
     addr: Exclude<DeviceAddr, 0>;
     state: DeviceWorkState;
     serial: string;
     version: string;
-}[];
+};
+
+export type ExtDevsList = ExtDev[];
 
 export type ExtDeviceSettings = {
-    'mb-slave': {
+    slave: {
         addr: number;
         rate: number;
         parity: (typeof modbusParities)[number];
         stop: 1 | 2;
     };
-    'mb-master': (
+    'rs-485': (
         | {
               mode: 'variables';
               parity: (typeof modbusParities)[number];
               rate: number;
               stop: 1 | 2;
-              'rd-tmo': number;
-              'wr-tmo': number;
-              'rd-dly': number;
-              'wr-dly': number;
-              'cm-dly': number;
+              'read-tmo': number;
+              'write-tmo': number;
+              'read-delay': number;
+              'write-delay': number;
+              'cycle-delay': number;
           }
         | { mode: 'off' }
     )[];
     '1-wire': {
         mode: (typeof oneWiresModes)[number];
-        'cycle-delay': number;
-        'debounce-time': number;
-        'convert-time': number;
+        [key: string]: any;
     }[];
 };

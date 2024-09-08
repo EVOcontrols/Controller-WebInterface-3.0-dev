@@ -282,13 +282,11 @@
                                         :required="
                                             field.isRequired ||
                                             (field.param === 'root-name' &&
-                                                !!changesAndErrors.changes.settings?.login?.[
-                                                    'root-pass'
-                                                ]) ||
+                                                !!changesAndErrors.changes.settings?.['root-acc']
+                                                    ?.password) ||
                                             (field.param === 'user-name' &&
-                                                !!changesAndErrors.changes.settings?.login?.[
-                                                    'user-pass'
-                                                ])
+                                                !!changesAndErrors.changes.settings?.['user-acc']
+                                                    ?.password)
                                         "
                                         @valueChanged="field.value = $event"
                                         @statusChanged="field.status = $event"
@@ -417,11 +415,11 @@ const isPassworValid = computed<Partial<Record<PasswordFieldName, boolean>>>(() 
 
 const isPasswordMissed = computed<Partial<Record<PasswordFieldName, boolean>>>(() => ({
     'root-pass':
-        !!changesAndErrors.value.changes.settings?.login?.['root-name'] &&
-        !changesAndErrors.value.changes.settings?.login?.['root-pass'],
+        !!changesAndErrors.value.changes.settings?.['root-acc']?.login &&
+        !changesAndErrors.value.changes.settings?.['root-acc']?.password,
     'user-pass':
-        !!changesAndErrors.value.changes.settings?.login?.['user-name'] &&
-        !changesAndErrors.value.changes.settings?.login?.['user-pass'],
+        !!changesAndErrors.value.changes.settings?.['user-acc']?.login &&
+        !changesAndErrors.value.changes.settings?.['user-acc']?.password,
 }));
 
 // const isUsernameMissed = computed(() => ({
@@ -550,23 +548,24 @@ const changesAndErrors = computed(() => {
                             ) {
                                 set(changes, ['files', param.param], param.value);
                             } else {
-                                set(changes, ['settings', topic, param.param], param.value);
+                                // TODO
+                                if (topic !== 'gsm')
+                                    set(changes, ['settings', topic, param.param], param.value);
                             }
                         }
                     }
                     if (!isErrors && param.type !== 'btn-group') {
-                        isErrors =
-                            param.status === 'invalid' ||
-                            param.status === 'not-allowed' ||
-                            (param.status === 'empty' &&
-                                ['apn', 'user', 'password'].includes(param.param));
+                        isErrors = param.status === 'invalid' || param.status === 'not-allowed';
+                        // ||
+                        // (param.status === 'empty' &&
+                        //     ['apn', 'user', 'password'].includes(param.param));
                     }
                 });
             });
         });
         if (
-            changes.settings?.login?.['root-pass'] &&
-            !changes.settings.login['root-name'] &&
+            changes.settings?.['root-acc']?.password &&
+            !changes.settings['root-acc'].login &&
             fields.value?.['root-login'][0][0].value
         ) {
             set(
@@ -576,8 +575,8 @@ const changesAndErrors = computed(() => {
             );
         }
         if (
-            changes.settings?.login?.['user-pass'] &&
-            !changes.settings.login['user-name'] &&
+            changes.settings?.['user-acc']?.password &&
+            !changes.settings['user-acc'].login &&
             fields.value?.['user-login'][0][0].value
         ) {
             set(
@@ -807,7 +806,7 @@ function setFields(settings: ControllerSettings) {
                     param: 'root-name',
                     type: 'string',
                     orientation: 'v',
-                    value: settings.login['root-name'],
+                    value: settings['root-acc'].login,
                     widthClass: 'w-[17.938rem]',
                     status: 'valid',
                     isRequired: true,
@@ -842,7 +841,7 @@ function setFields(settings: ControllerSettings) {
                     param: 'user-name',
                     type: 'string',
                     orientation: 'v',
-                    value: settings.login['user-name'],
+                    value: settings['user-acc'].login,
                     widthClass: 'w-[17.938rem]',
                     status: 'valid',
                     isRequired: true,

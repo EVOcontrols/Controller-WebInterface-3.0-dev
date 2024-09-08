@@ -16,7 +16,7 @@
                 >{{ t('device')
                 }}{{
                     props.activeIO.val && typeof props.activeIO.val == 'object'
-                        ? props.activeIO.val.dev_addr
+                        ? props.activeIO.val['dev-addr']
                         : ''
                 }}</span
             >
@@ -176,10 +176,9 @@
             <OutlinedButton
                 v-if="
                     isBig &&
-                    !['bin-in'].includes(props.w.i) &&
+                    !['bin-in', 'mb-var'].includes(props.w.i) &&
                     !props.isCalibration &&
-                    !props.isPriorWOpen &&
-                    props.w.i !== 'mb-var'
+                    !props.isPriorWOpen
                 "
                 @click="
                     $emit(
@@ -234,7 +233,7 @@ import PrimaryButton from '@/components/Ui/PrimaryButton.vue';
 import OutlinedButton from '@/components/Ui/OutlinedButton.vue';
 import info from '@/assets/img/info.svg?raw';
 import calibrationArrow from '@/assets/img/calibration-arrow.svg?raw';
-import type { Widget } from '@/stores';
+import type { Widget, InterfVal } from '@/stores';
 
 const indexStore = useIndexStore();
 
@@ -259,8 +258,8 @@ const props = defineProps<{
                       | 'w-coil'
                       | 'm-coil'
                       | 'di';
-                  reg_addr: number;
-                  dev_addr: number;
+                  'reg-addr': number;
+                  'dev-addr': number;
                   val: number | null | 'err';
               }
             | null;
@@ -306,10 +305,11 @@ const curMbDevLabel = computed<string | undefined>(() => {
         mbDevsLabels.value[props.w.d] &&
         mbDevsLabels.value &&
         typeof props.activeIO.val === 'object' &&
-        props.activeIO.val?.dev_addr !== undefined
+        props.activeIO.val &&
+        props.activeIO.val['dev-addr'] !== undefined
     ) {
         const val = mbDevsLabels.value[props.w.d][props.w.bus || 0];
-        return val[props.activeIO.val?.dev_addr - 1];
+        return val[props.activeIO.val['dev-addr'] - 1];
     }
     return undefined;
 });
@@ -341,6 +341,10 @@ const styles = computed<string>(() => {
             : props.activeIO.val.val
             ? 'bg-[#176F6F] text-[#35FED0]'
             : 'bg-[#0D424D] text-[#35FED0]';
+    } else if (props.w.i === '1w-sens') {
+        return props.activeIO && props.activeIO.val
+            ? 'bg-[#4d4242] text-[#EB8246]'
+            : 'bg-[#123f66] text-[#35A1FF]';
     } else {
         return 'bg-[#07435c] text-[#00b3cb]';
     }
@@ -359,9 +363,23 @@ watch(
     () => devicesState.value,
     () => {
         if (!props.activeIO) return;
-        const newState = devicesState.value[props.w.d].find((obj) => obj.type === props.w.i)?.value;
+        const newState = devicesState.value[props.w.d].find(
+            (obj: InterfVal) => obj.type === props.w.i,
+        )?.state;
         if (newState) {
             activeIOVal.value = newState[props.activeIO.index] as number;
+        }
+    },
+);
+
+watch(
+    () => props.activeIO,
+    () => {
+        if (props.activeIO) {
+            activeIOVal.value =
+                typeof props.activeIO.val === 'number'
+                    ? (props.activeIO.val as number)
+                    : (props.activeIO.val?.val as number);
         }
     },
 );

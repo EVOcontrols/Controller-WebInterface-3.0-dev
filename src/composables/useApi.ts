@@ -3,7 +3,7 @@ import axios, { AxiosError, type InternalAxiosRequestConfig } from 'axios';
 export function useApi() {
     const indexStore = useIndexStore();
 
-    const { authToken, notConnected, rebootingDeviceAddr } = storeToRefs(indexStore);
+    const { authToken, notConnected, rebootingDeviceAddr, ip } = storeToRefs(indexStore);
 
     const route = useRoute();
 
@@ -37,34 +37,37 @@ export function useApi() {
             if (!isFree) {
                 throw new Error('isBusy');
             }
-            const isMisc = config.url?.startsWith('/misc/');
+            const isUser = config.url?.startsWith('/user/');
             if (!signal || signal.aborted) {
                 createNewAbortController();
             }
             isFree = false;
             return {
                 ...config,
-                // url: isMisc ? config.url : `/api/${config.url}`,
-                // url: isMisc ? config.url : `http://192.168.1.99/api/${config.url}`,
-                // url: isMisc ? config.url : `http://65.21.176.66:49163/api/${config.url}`,
-                url: isMisc
-                    ? `http://192.168.1.99${config.url}`
-                    : `http://192.168.1.99/api/${config.url}`,
-                // url: isMisc
+                // url: isUser ? config.url : `/api/${config.url}`,
+                // url: isUser ? config.url : `http://192.168.1.99/api/${config.url}`,
+                // url: isUser ? config.url : `http://65.21.176.66:49163/api/${config.url}`,
+                // url: isUser
+                //     ? `http://192.168.1.99${config.url}`
+                //     : `http://192.168.1.99/api/v3/${config.url}`,
+                url: isUser
+                    ? `http://${ip.value}${config.url}`
+                    : `http://${ip.value}/api/v3/${config.url}`,
+                // url: isUser
                 //     ? `http://10.8.0.1:49163${config.url}`
-                //     : `http://10.8.0.1:49163/api/${config.url}`,
-                // url: isMisc
+                //     : `http://10.8.0.1:49163/api/v3/${config.url}`,
+                // url: isUser
                 //     ? `http://65.21.176.66:49163${config.url}`
                 //     : `http://65.21.176.66:49163/api/${config.url}`,
-                data: isMisc ? config.data : JSON.stringify(config.data),
+                data: isUser ? config.data : JSON.stringify(config.data),
                 timeout:
                     config.url && config.url === 'scan_ext_devs'
                         ? 60000
                         : (config.url && ['calibr_adc_in', 'get_config'].includes(config.url)) ||
-                          config.url?.includes('misc')
+                          config.url?.includes('user')
                         ? 10000
                         : 5000,
-                headers: isMisc
+                headers: isUser
                     ? {
                           'Content-Type': 'text/plain; charset=utf-8',
                           //   'Auth-Token': authToken.value,

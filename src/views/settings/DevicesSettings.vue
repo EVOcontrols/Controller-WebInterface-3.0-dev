@@ -13,65 +13,6 @@
                             {{ t('selectDevice') }}
                         </h2>
                         <div class="flex flex-row items-center overflow-hidden">
-                            <!-- <div class="relative overflow-x-hidden">
-                                <ScrollBooster
-                                    :arrow-css="{ width: 'w-7', bg: 'bg-[#092740]' }"
-                                    :render-params="{ type: 'row', marginRightClass: 'mr-1' }"
-                                    v-slot="{ onClick }"
-                                    class="h-8"
-                                    @selectItem="
-                                        (e) => {
-                                            if (!extDevsList) return;
-                                            activeDeviceAddr =
-                                                e === 0 ? 0 : extDevsList[e - 1]?.addr;
-                                        }
-                                    "
-                                >
-                                    <button
-                                        v-for="(device, i) in fullDevs"
-                                        :key="i"
-                                        type="button"
-                                        class="h-[1.563rem] w-[3.188rem] bg-[#1b4569] hover:bg-[#214e76] on:bg-[#148ef8] font-roboto rounded flex items-center justify-center relative"
-                                        :class="{
-                                            on:
-                                                device.addr === activeIndex ||
-                                                device.index === activeIndex,
-                                        }"
-                                        @click="onClick(i)"
-                                    >
-                                        <div
-                                            v-if="
-                                                device.addr !== 0 &&
-                                                device.state !== 'on' &&
-                                                device.state !== 'off'
-                                            "
-                                            class="w-[5px] h-[5px] rounded-[50%] mr-[6px]"
-                                            :class="[
-                                                { 'bg-[#84AFBD]': device.state === 'init' },
-                                                { 'bg-[#3E688E]': device.state === 'no-conn' },
-                                                { 'bg-[#FF5A88]': device.state === 'error' },
-                                            ]"
-                                        ></div>
-                                        {{
-                                            device.addr > 0
-                                                ? fullDevs.findIndex(
-                                                      (el) => el.serial === device.serial,
-                                                  ) !== -1
-                                                    ? `IO ${
-                                                          fullDevs.find(
-                                                              (el) => el.serial === device.serial,
-                                                          )?.index ||
-                                                          fullDevs.find(
-                                                              (el) => el.serial === device.serial,
-                                                          )?.addr ||
-                                                          ''
-                                                      }`
-                                                    : 'IO'
-                                                : 'NGC'
-                                        }}
-                                    </button>
-                                </ScrollBooster>
-                            </div> -->
                             <div class="flex overflow-x-hidden ml-2 bg-113 pl-2 pr-1 rounded-l-lg">
                                 <div
                                     v-dragscroll.x
@@ -287,7 +228,8 @@
                                                     'exclude-this-item':
                                                         extDevsList &&
                                                         extDevsList.find(
-                                                            (el) => el.serial === element.serial,
+                                                            (el: ExtDev) =>
+                                                                el.serial === element.serial,
                                                         ),
                                                 }"
                                             >
@@ -309,7 +251,8 @@
                                                     v-if="
                                                         extDevsList &&
                                                         extDevsList.find(
-                                                            (el) => el.serial === element.serial,
+                                                            (el: ExtDev) =>
+                                                                el.serial === element.serial,
                                                         )
                                                     "
                                                     class="flex-1 pr-2 text-end select-none"
@@ -391,7 +334,7 @@
                                         "
                                         :input-type="['string']"
                                         @value-changed="
-                                            ($event) => {
+                                            ($event: string | undefined) => {
                                                 $event === undefined
                                                     ? (startAddr = '')
                                                     : (startAddr = $event);
@@ -572,7 +515,8 @@
                                                         scanDevs.find((el) => {
                                                             if (!extDevsList) return false;
                                                             return !extDevsList.find(
-                                                                (elem) => elem.serial === el.serial,
+                                                                (elem: ExtDev) =>
+                                                                    elem.serial === el.serial,
                                                             );
                                                         })
                                                             ? 'cursor-pointer hover:border-[#3e7df9] hover:text-[#3e7df9] active:border-[#3e7df9] active:bg-[#3e7df9] active:text-[#adebff]'
@@ -583,7 +527,7 @@
                                                             const el = scanDevs?.find((el) => {
                                                                 if (!extDevsList) return false;
                                                                 return !extDevsList.find(
-                                                                    (elem) =>
+                                                                    (elem: ExtDev) =>
                                                                         elem.serial === el.serial,
                                                                 );
                                                             });
@@ -957,7 +901,6 @@
 import type { ControllerSettings } from '@/typings/settings';
 import SaveButton from '@/components/Ui/SaveButton.vue';
 import OutlinedButton from '@/components/Ui/OutlinedButton.vue';
-import ScrollBooster from '@/components/ScrollBooster.vue';
 import edit from '@/assets/img/edit.svg?raw';
 import EditNGCSettings from '@/components/views/devicesSettings/NgcSettings.vue';
 import EditExtDeviceSettings from '@/components/views/devicesSettings/ExtDeviceSettings.vue';
@@ -972,6 +915,7 @@ import type { Device } from '@/stores';
 import draggable from 'vuedraggable';
 import IButtonOutIcon from '@/assets/IButtonOutIcon.vue';
 import spinner from '@/assets/img/arrow-spinner.svg?raw';
+import type { ExtDev } from '@/typings/settings';
 
 interface DraggedContext {
     index: number;
@@ -1047,10 +991,10 @@ const fullDevs = computed<
             version: string;
             index?: number;
         }[] = [];
-        devices.value.forEach((d) => {
+        devices.value.forEach((d: Device) => {
             if (!arr.find((el) => el.serial === d.serial)) arr.push(d);
         });
-        extDevsList.value.forEach((d) => {
+        extDevsList.value.forEach((d: ExtDev) => {
             if (!arr.find((el) => el.serial === d.serial))
                 arr.push(
                     d as {
@@ -1131,7 +1075,8 @@ const activeDeviceAddr = useStorage<DeviceAddr>('devicesSettings.activeDeviceAdd
 });
 
 const activeIndex = computed(() => {
-    const index = extDevsList.value?.find((el) => el.addr === activeDeviceAddr.value)?.index;
+    const index = extDevsList.value?.find((el: ExtDev) => el.addr === activeDeviceAddr.value)
+        ?.index;
     return index || 0;
 });
 
@@ -1141,7 +1086,7 @@ const isSaveButtonDisabled = computed(() => isSaving.value || !needToSave.value)
 
 const activeExtDevice = computed(() => {
     if (activeDeviceAddr.value === 0 || !extDevsList.value) return undefined;
-    return extDevsList.value.find((d) => d.addr === activeDeviceAddr.value);
+    return extDevsList.value.find((d: ExtDev) => d.addr === activeDeviceAddr.value);
 });
 
 const isModalOpen = ref(false);
@@ -1248,7 +1193,7 @@ watch(
     extDevsList,
     () => {
         if (!extDevsList.value || activeDeviceAddr.value === 0) return;
-        if (!extDevsList.value.find((d) => d.addr === activeDeviceAddr.value)) {
+        if (!extDevsList.value.find((d: ExtDev) => d.addr === activeDeviceAddr.value)) {
             console.log('goToNgc');
             activeDeviceAddr.value = 0;
         }
@@ -1463,7 +1408,7 @@ async function getConfig() {
     try {
         const r = await api.get<ControllerSettings>('get_config');
         controllerSettings.value = r.data;
-        indexStore.setNGCModbusMode(r.data.modbus[0]?.mode || 'off');
+        indexStore.setNGCModbusMode(r.data['rs-485'][0]?.mode || 'off');
     } catch (error) {
         if (isAborted.value) {
             return;
@@ -1524,7 +1469,7 @@ function setExtDevs() {
     };
     const arr = Array(devNum.value);
     if (extDevsList.value) {
-        extDevsList.value.forEach((el) => {
+        extDevsList.value.forEach((el: ExtDev) => {
             arr[el.index - 1] = el;
         });
     }

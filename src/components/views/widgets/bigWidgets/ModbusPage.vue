@@ -100,13 +100,176 @@
                 </div>
             </div>
         </div>
-        <div class="w-full h-full flex">
-            <div class="w-[58%] h-full">
+        <div
+            class="w-full flex"
+            :style="{
+                height: props.isInit ? 'calc(100% - 95px)' : '100%',
+            }"
+        >
+            <div
+                v-if="props.isInit"
+                class="flex-1 flex overflow-y-hidden rounded-l-lg w-full pb-3"
+            >
+                <div
+                    v-dragscroll.y
+                    class="flex overflow-y-auto w-full scrollbar-4 flex-1 flex-col px-4 items-center flex-none"
+                    :style="{
+                        height: 'calc(100vh - 460px)',
+                    }"
+                >
+                    <div
+                        class="w-full h-[70px] border-y border-[#1D4162] text-sm pl-[18px] pt-[12px] sticky top-0 bg-[#092740] flex flex-col"
+                    >
+                        <div class="text-base mb-1 font-semibold">Coils</div>
+                        <div class="flex gap-5 pr-10 text-[13px]">
+                            <div class="w-[260px]">{{ t('columnsNames.name') }}</div>
+                            <div class="w-[50px]">{{ t('columnsNames.device') }}</div>
+                            <div class="w-[50px]">{{ t('columnsNames.reg') }}</div>
+                        </div>
+                    </div>
+                    <div
+                        class="w-full flex flex-col text-[#6CB5D3] items-center px-2"
+                        v-for="(s, index) in coilArr"
+                        :key="index"
+                    >
+                        <div
+                            class="label group w-full text-[#6CB5D3] select-none"
+                            v-for="(el, i) in s.vals"
+                            :key="i"
+                            @dblclick="handleDblClick(el, i)"
+                        >
+                            <div
+                                v-if="
+                                    activeLabel?.i === i &&
+                                    JSON.stringify(activeLabel.state) === JSON.stringify(el)
+                                "
+                                class="activeLabel h-[68px] bg-[#092E4B] -ml-2 pl-4 pr-[18px] flex items-center justify-center flex gap-2"
+                                :style="{ width: 'calc(100% + 16px)' }"
+                            >
+                                <input
+                                    class="flex-1 h-9 bg-[#183A58] rounded-[6px] px-[14px]"
+                                    :class="[
+                                        {
+                                            'text-[#F83068]': activeLabel.state.val === 'err',
+                                        },
+                                        {
+                                            'text-[#3E688E]': activeLabel.state.val === null,
+                                        },
+                                    ]"
+                                    type="text"
+                                    :value="activeLabelInputVal"
+                                    :maxlength="32"
+                                    @input="(event) => handleInput(event as InputEvent)"
+                                />
+                                <div
+                                    class="h-9 pl-[10px] w-[88px] rounded-[6px] flex items-center justify-start gap-[6px] text-xs"
+                                    :class="[
+                                        el.val === null || el.val === 'err'
+                                            ? 'justify-center'
+                                            : 'justify-start bg-[#0D424D]',
+                                        { 'text-[#3E688E]': el.val === null },
+                                        { 'text-[#F83068]': el.val === 'err' },
+                                    ]"
+                                >
+                                    <IButtonOutIcon
+                                        v-if="
+                                            el.val !== null &&
+                                            el.val !== 'err' &&
+                                            !el.type.includes('w')
+                                        "
+                                        class="cursor-pointer"
+                                        :isHovered="
+                                            hoveredBinOutItem?.i === i &&
+                                            JSON.stringify(hoveredBinOutItem.state) ===
+                                                JSON.stringify(el)
+                                        "
+                                        :isActive="!!el.val"
+                                        @mouseenter="handleBinOutMouseEnter(i, el)"
+                                        @mouseleave="handleBinOutMouseLeave"
+                                        @click="handleCoilClick(el)"
+                                    />
+                                    {{
+                                        el.val === null || el.val === 'err'
+                                            ? '\u2013'
+                                            : el.val
+                                            ? t('on')
+                                            : t('off')
+                                    }}
+                                </div>
+                            </div>
+                            <div
+                                v-else
+                                class="h-[30px] flex items-center pl-[10px] pr-2 hover:bg-[#0C2F4D] transition-colors duration-500 rounded"
+                                :class="[
+                                    { 'text-[#3E688E]': el.val === null },
+                                    { 'text-[#F83068]': el.val === 'err' },
+                                ]"
+                            >
+                                <div class="flex-1">{{ el.label }}</div>
+                                <div
+                                    class="w-[50px] ml-5 flex justify-end transition-colors duration-500"
+                                    :class="
+                                        el.val === 'err'
+                                            ? 'text-[#F83068]'
+                                            : el.val === null
+                                            ? 'text-[#3E688E]'
+                                            : 'text-[#ADEBFF] hover:text-[#58B1FF]'
+                                    "
+                                    @mouseenter="
+                                        (e) => handleTableDeviceEnter(s.dev, e as MouseEvent)
+                                    "
+                                    @mouseleave="handleTableDeviceLeave"
+                                >
+                                    {{ el['dev-addr'] }}
+                                </div>
+                                <div class="w-[50px] ml-5 flex justify-end uppercase">
+                                    {{
+                                        curNumberingSystem === 'dec'
+                                            ? el['reg-addr']
+                                            : el['reg-addr'].toString(16)
+                                    }}
+                                </div>
+                                <div class="w-[50px] ml-5 mr-3 flex justify-end">
+                                    <div
+                                        :class="
+                                            el.val === 'err'
+                                                ? 'text-[#F83068]'
+                                                : el.val === null
+                                                ? 'text-[#3E688E]'
+                                                : el.val
+                                                ? 'text-[#35FED0]'
+                                                : 'text-[#176F6F]'
+                                        "
+                                    >
+                                        {{
+                                            el.val === 'err' || el.val === null
+                                                ? '\u2013'
+                                                : el.val
+                                                ? t('on')
+                                                : t('off')
+                                        }}
+                                    </div>
+                                </div>
+                                <CloseIcon
+                                    class="label-close cursor-pointer"
+                                    @click="deleteItem(el)"
+                                />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div
+                v-if="!props.isInit"
+                class="w-[58%] h-full"
+            >
                 <div class="flex overflow-y-hidden rounded-l-lg w-full">
                     <div
                         v-dragscroll.y
                         class="flex overflow-y-auto w-full scrollbar-4 flex-1 flex-col"
-                        :style="{ height: 'calc(100vh - 460px)' }"
+                        :style="{
+                            height: 'calc(100vh - 460px)',
+                        }"
                         ref="varsWrapper"
                     >
                         <div class="flex flex-col items-center flex-none w-full">
@@ -161,8 +324,8 @@
                                             <span>RO</span>
                                             <span class="uppercase">{{
                                                 curNumberingSystem === 'dec'
-                                                    ? el.reg_addr
-                                                    : el.reg_addr.toString(16)
+                                                    ? el['reg-addr']
+                                                    : el['reg-addr'].toString(16)
                                             }}</span>
                                         </div>
                                         <div
@@ -182,7 +345,10 @@
                                         </div>
                                     </div>
                                     <AddIcon
-                                        v-if="fullState.length !== curState.length"
+                                        v-if="
+                                            !fullState.length ||
+                                            fullState.length !== curState.length
+                                        "
                                         class="cursor-pointer w-[90px] h-10 rounded-[3px] border border-[#148EF8] py-[10px] active:bg-[#148EF8]"
                                         :class="{ disabled: notConnected }"
                                         @click="createReg(s.dev, 'di')"
@@ -271,8 +437,8 @@
                                             <div class="h-[12px] uppercase">
                                                 {{
                                                     curNumberingSystem === 'dec'
-                                                        ? el.reg_addr
-                                                        : el.reg_addr.toString(16)
+                                                        ? el['reg-addr']
+                                                        : el['reg-addr'].toString(16)
                                                 }}
                                             </div>
                                         </div>
@@ -303,8 +469,8 @@
                                             <div class="h-[12px] uppercase">
                                                 {{
                                                     curNumberingSystem === 'dec'
-                                                        ? el.reg_addr
-                                                        : el.reg_addr.toString(16)
+                                                        ? el['reg-addr']
+                                                        : el['reg-addr'].toString(16)
                                                 }}
                                             </div>
                                         </div>
@@ -325,7 +491,10 @@
                                         </div>
                                     </div>
                                     <AddIcon
-                                        v-if="fullState.length !== curState.length"
+                                        v-if="
+                                            !fullState.length ||
+                                            fullState.length !== curState.length
+                                        "
                                         class="cursor-pointer w-[90px] h-10 rounded-[3px] border border-[#148EF8] py-[10px] active:bg-[#148EF8]"
                                         :class="{ disabled: notConnected }"
                                         @click="createReg(s.dev, 'coil')"
@@ -409,8 +578,8 @@
                                             <div class="h-[12px] uppercase">
                                                 {{
                                                     curNumberingSystem === 'dec'
-                                                        ? el.reg_addr
-                                                        : el.reg_addr.toString(16)
+                                                        ? el['reg-addr']
+                                                        : el['reg-addr'].toString(16)
                                                 }}
                                             </div>
                                         </div>
@@ -431,7 +600,10 @@
                                         </div>
                                     </div>
                                     <AddIcon
-                                        v-if="fullState.length !== curState.length"
+                                        v-if="
+                                            !fullState.length ||
+                                            fullState.length !== curState.length
+                                        "
                                         class="cursor-pointer w-[90px] h-10 rounded-[3px] border border-[#148EF8] py-[10px] active:bg-[#148EF8]"
                                         :class="{ disabled: notConnected }"
                                         @click="createReg(s.dev, 'ir')"
@@ -527,8 +699,8 @@
                                             <div class="h-[12px] uppercase">
                                                 {{
                                                     curNumberingSystem === 'dec'
-                                                        ? el.reg_addr
-                                                        : el.reg_addr.toString(16)
+                                                        ? el['reg-addr']
+                                                        : el['reg-addr'].toString(16)
                                                 }}
                                             </div>
                                         </div>
@@ -549,7 +721,10 @@
                                         </div>
                                     </div>
                                     <AddIcon
-                                        v-if="fullState.length !== curState.length"
+                                        v-if="
+                                            !fullState.length ||
+                                            fullState.length !== curState.length
+                                        "
                                         class="cursor-pointer w-[90px] h-10 rounded-[3px] border border-[#148EF8] py-[10px] active:bg-[#148EF8]"
                                         :class="{ disabled: notConnected }"
                                         @click="createReg(s.dev, 'hr')"
@@ -560,11 +735,16 @@
                     </div>
                 </div>
             </div>
-            <div class="w-[42%] h-full border-l border-[#1D4162]">
+            <div
+                v-if="!props.isInit"
+                class="w-[42%] h-full border-l border-[#1D4162]"
+            >
                 <div class="flex overflow-y-hidden rounded-l-lg w-full">
                     <div
                         class="flex overflow-y-auto w-full scrollbar-4 flex-1 flex-col relative"
-                        :style="{ height: 'calc(100vh - 460px)' }"
+                        :style="{
+                            height: 'calc(100vh - 460px)',
+                        }"
                         ref="tableWrapper"
                     >
                         <div
@@ -653,7 +833,7 @@
                                             "
                                             @mouseleave="handleTableDeviceLeave"
                                         >
-                                            {{ el.dev_addr }}
+                                            {{ el['dev-addr'] }}
                                         </div>
                                         <div
                                             class="w-[50px] ml-5 flex justify-end uppercase"
@@ -664,8 +844,8 @@
                                         >
                                             {{
                                                 curNumberingSystem === 'dec'
-                                                    ? el.reg_addr
-                                                    : el.reg_addr.toString(16)
+                                                    ? el['reg-addr']
+                                                    : el['reg-addr'].toString(16)
                                             }}
                                         </div>
                                         <div class="w-[50px] ml-5 mr-3 flex justify-end">
@@ -801,13 +981,13 @@
                                             "
                                             @mouseleave="handleTableDeviceLeave"
                                         >
-                                            {{ el.dev_addr }}
+                                            {{ el['dev-addr'] }}
                                         </div>
                                         <div class="w-[50px] ml-5 flex justify-end uppercase">
                                             {{
                                                 curNumberingSystem === 'dec'
-                                                    ? el.reg_addr
-                                                    : el.reg_addr.toString(16)
+                                                    ? el['reg-addr']
+                                                    : el['reg-addr'].toString(16)
                                             }}
                                         </div>
                                         <div class="w-[50px] ml-5 mr-3 flex justify-end">
@@ -937,13 +1117,13 @@
                                             "
                                             @mouseleave="handleTableDeviceLeave"
                                         >
-                                            {{ el.dev_addr }}
+                                            {{ el['dev-addr'] }}
                                         </div>
                                         <div class="w-[50px] ml-5 flex justify-end uppercase">
                                             {{
                                                 curNumberingSystem === 'dec'
-                                                    ? el.reg_addr
-                                                    : el.reg_addr.toString(16)
+                                                    ? el['reg-addr']
+                                                    : el['reg-addr'].toString(16)
                                             }}
                                         </div>
                                         <div class="w-[50px] ml-5 mr-3 flex justify-end uppercase">
@@ -1109,13 +1289,13 @@
                                             "
                                             @mouseleave="handleTableDeviceLeave"
                                         >
-                                            {{ el.dev_addr }}
+                                            {{ el['dev-addr'] }}
                                         </div>
                                         <div class="w-[50px] ml-5 flex justify-end uppercase">
                                             {{
                                                 curNumberingSystem === 'dec'
-                                                    ? el.reg_addr
-                                                    : el.reg_addr.toString(16)
+                                                    ? el['reg-addr']
+                                                    : el['reg-addr'].toString(16)
                                             }}
                                         </div>
                                         <div class="w-[50px] ml-5 mr-3 flex justify-end uppercase">
@@ -1149,6 +1329,45 @@
                 </div>
             </div>
         </div>
+        <div
+            v-if="props.isInit"
+            class="h-[3.125rem] border-t border-[#1D4162] px-4 flex items-center justify-between"
+        >
+            <div class="flex">
+                <span
+                    class="select-none h-[22px] w-16 text-sm font-Roboto flex items-center rounded-l-[8px] flex items-center justify-center"
+                    :class="
+                        curNumberingSystem === 'dec'
+                            ? 'bg-[#023E71] text-[#2B9BFF] select-none'
+                            : 'bg-[#0F304B] text-[#5F93C2] cursor-pointer'
+                    "
+                    @click="indexStore.setCurNumberingSystem('dec')"
+                    >DEC</span
+                >
+                <span
+                    class="select-none h-[22px] w-16 text-sm font-Roboto flex items-center rounded-r-[8px] flex items-center justify-center"
+                    :class="
+                        curNumberingSystem === 'hex'
+                            ? 'bg-[#023E71] text-[#2B9BFF] select-none'
+                            : 'bg-[#0F304B] text-[#5F93C2] cursor-pointer'
+                    "
+                    @click="indexStore.setCurNumberingSystem('hex')"
+                    >HEX</span
+                >
+            </div>
+            <div class="flex">
+                <OutlinedButton
+                    class="mr-2 min-w-[104px]"
+                    @click="$emit('init')"
+                    >{{ t('back') }}</OutlinedButton
+                >
+                <PrimaryButton
+                    class="min-w-[84px]"
+                    @click="handleSaveClick"
+                    >{{ t('save') }}</PrimaryButton
+                >
+            </div>
+        </div>
         <ModbusPopUp
             v-if="showPopUp"
             :el="popUpEl"
@@ -1171,6 +1390,15 @@ import PrimaryButton from '@/components/Ui/PrimaryButton.vue';
 import OutlinedButton from '@/components/Ui/OutlinedButton.vue';
 import type { Widget } from '@/stores';
 
+const props = defineProps<{
+    w: { w: Widget; state: number[] };
+    isInit: boolean;
+}>();
+
+const emit = defineEmits<{
+    (e: 'init'): void;
+}>();
+
 const indexStore = useIndexStore();
 
 const {
@@ -1189,7 +1417,7 @@ const api = indexStore.getApi().api;
 
 const isAborted = indexStore.getApi().isAborted;
 
-let getMbInfoTimer: ReturnType<typeof setTimeout> | undefined;
+let getMbInfoTimer: ReturnType<typeof setTimeout> | undefined | null = null;
 
 const isStartScrollEl = ref(true);
 
@@ -1253,8 +1481,8 @@ const popUpEl = ref<{
         | 'w-coil'
         | 'm-coil'
         | 'di';
-    reg_addr: number;
-    dev_addr: number;
+    'reg-addr': number;
+    'dev-addr': number;
     val: number | null | 'err';
 } | null>(null);
 
@@ -1262,8 +1490,8 @@ const hoveredBinOutItem = ref<{
     i: number;
     state: {
         type?: 'hr' | 'ir' | 'coil' | 'di';
-        reg_addr: number;
-        dev_addr: number;
+        'reg-addr': number;
+        'dev-addr': number;
         val: number | null | 'err';
     };
 } | null>(null);
@@ -1282,8 +1510,8 @@ const activeLabel = ref<{
             | 'w-coil'
             | 'm-coil'
             | 'di';
-        reg_addr: number;
-        dev_addr: number;
+        'reg-addr': number;
+        'dev-addr': number;
         val: number | null | 'err';
     };
 } | null>(null);
@@ -1291,10 +1519,6 @@ const activeLabel = ref<{
 const mouseupX = ref<number>(0);
 
 const newReg = ref<{ dev: number; type: 'hr' | 'ir' | 'coil' | 'di' } | null>(null);
-
-const props = defineProps<{
-    w: { w: Widget; state: number[] };
-}>();
 
 const curMbDevLabels = computed<string[]>(() => {
     return mbDevsLabels.value[props.w.w.d][props.w.w.bus || 0];
@@ -1316,8 +1540,8 @@ const fullState = ref<
             | 'm-coil'
             | 'di'
             | 'none';
-        reg_addr: number;
-        dev_addr: number;
+        'reg-addr': number;
+        'dev-addr': number;
         val: number | null | 'err';
         label: string;
     }[]
@@ -1336,8 +1560,8 @@ const curState = computed<
               | 'w-coil'
               | 'm-coil'
               | 'di';
-          reg_addr: number;
-          dev_addr: number;
+          'reg-addr': number;
+          'dev-addr': number;
           val: number | null | 'err';
           label: string;
       }[]
@@ -1355,21 +1579,21 @@ const curState = computed<
             | 'w-coil'
             | 'm-coil'
             | 'di';
-        reg_addr: number;
-        dev_addr: number;
+        'reg-addr': number;
+        'dev-addr': number;
         val: number | null | 'err';
         label: string;
     }[];
 });
 
 const errArr = computed<number[]>(() => {
-    return curState.value.filter((el) => el.val === 'err').map((el) => el.dev_addr);
+    return curState.value.filter((el) => el.val === 'err').map((el) => el['dev-addr']);
 });
 
 const initArr = computed<number[]>(() => {
     return curState.value
         .filter((el) => el.val === null && !el.type.includes('w'))
-        .map((el) => el.dev_addr);
+        .map((el) => el['dev-addr']);
 });
 
 const diArr = computed<
@@ -1377,8 +1601,8 @@ const diArr = computed<
           dev: number;
           vals: {
               type: 'di';
-              reg_addr: number;
-              dev_addr: number;
+              'reg-addr': number;
+              'dev-addr': number;
               val: number | null | 'err';
               label: string;
           }[];
@@ -1386,27 +1610,27 @@ const diArr = computed<
     | []
 >(() => {
     const arr = curState.value.filter(
-        (el) => el.type === 'di' && curChoosenDevs.value.includes(el.dev_addr),
+        (el) => el.type === 'di' && curChoosenDevs.value.includes(el['dev-addr']),
     ) as {
         type: 'di';
-        reg_addr: number;
-        dev_addr: number;
+        'reg-addr': number;
+        'dev-addr': number;
         val: number;
         label: string;
     }[];
     const res: {
         dev: number;
-        vals: { type: 'di'; reg_addr: number; dev_addr: number; val: number; label: string }[];
+        vals: { type: 'di'; 'reg-addr': number; 'dev-addr': number; val: number; label: string }[];
     }[] = [];
     arr.forEach((el) => {
-        const index = res.findIndex((elem) => elem.dev === el.dev_addr);
+        const index = res.findIndex((elem) => elem.dev === el['dev-addr']);
         if (index !== -1) {
             res[index].vals.push(el);
         } else {
-            res.push({ dev: el.dev_addr, vals: [el] });
+            res.push({ dev: el['dev-addr'], vals: [el] });
         }
     });
-    const curDevAddr = Array.from(new Set(arr.map((el) => el.dev_addr)));
+    const curDevAddr = Array.from(new Set(arr.map((el) => el['dev-addr'])));
     curChoosenDevs.value.forEach((el) => {
         if (!curDevAddr.includes(el)) {
             res.push({ dev: el, vals: [] });
@@ -1420,8 +1644,8 @@ const coilArr = computed<
           dev: number;
           vals: {
               type: 'coil' | 'wm-coil' | 'w-coil' | 'm-coil';
-              reg_addr: number;
-              dev_addr: number;
+              'reg-addr': number;
+              'dev-addr': number;
               val: number | null | 'err';
               label: string;
           }[];
@@ -1434,11 +1658,11 @@ const coilArr = computed<
                 el.type === 'wm-coil' ||
                 el.type === 'w-coil' ||
                 el.type === 'm-coil') &&
-            curChoosenDevs.value.includes(el.dev_addr),
+            curChoosenDevs.value.includes(el['dev-addr']),
     ) as {
         type: 'coil' | 'wm-coil' | 'w-coil' | 'm-coil';
-        reg_addr: number;
-        dev_addr: number;
+        'reg-addr': number;
+        'dev-addr': number;
         val: number;
         label: string;
     }[];
@@ -1446,21 +1670,21 @@ const coilArr = computed<
         dev: number;
         vals: {
             type: 'coil' | 'wm-coil' | 'w-coil' | 'm-coil';
-            reg_addr: number;
-            dev_addr: number;
+            'reg-addr': number;
+            'dev-addr': number;
             val: number;
             label: string;
         }[];
     }[] = [];
     arr.forEach((el) => {
-        const index = res.findIndex((elem) => elem.dev === el.dev_addr);
+        const index = res.findIndex((elem) => elem.dev === el['dev-addr']);
         if (index !== -1) {
             res[index].vals.push(el);
         } else {
-            res.push({ dev: el.dev_addr, vals: [el] });
+            res.push({ dev: el['dev-addr'], vals: [el] });
         }
     });
-    const curDevAddr = Array.from(new Set(arr.map((el) => el.dev_addr)));
+    const curDevAddr = Array.from(new Set(arr.map((el) => el['dev-addr'])));
     curChoosenDevs.value.forEach((el) => {
         if (!curDevAddr.includes(el)) {
             res.push({ dev: el, vals: [] });
@@ -1474,8 +1698,8 @@ const irArr = computed<
           dev: number;
           vals: {
               type: 'ir';
-              reg_addr: number;
-              dev_addr: number;
+              'reg-addr': number;
+              'dev-addr': number;
               val: number | null | 'err';
               label: string;
           }[];
@@ -1483,27 +1707,27 @@ const irArr = computed<
     | []
 >(() => {
     const arr = curState.value.filter(
-        (el) => el.type === 'ir' && curChoosenDevs.value.includes(el.dev_addr),
+        (el) => el.type === 'ir' && curChoosenDevs.value.includes(el['dev-addr']),
     ) as {
         type: 'ir';
-        reg_addr: number;
-        dev_addr: number;
+        'reg-addr': number;
+        'dev-addr': number;
         val: number;
         label: string;
     }[];
     const res: {
         dev: number;
-        vals: { type: 'ir'; reg_addr: number; dev_addr: number; val: number; label: string }[];
+        vals: { type: 'ir'; 'reg-addr': number; 'dev-addr': number; val: number; label: string }[];
     }[] = [];
     arr.forEach((el) => {
-        const index = res.findIndex((elem) => elem.dev === el.dev_addr);
+        const index = res.findIndex((elem) => elem.dev === el['dev-addr']);
         if (index !== -1) {
             res[index].vals.push(el);
         } else {
-            res.push({ dev: el.dev_addr, vals: [el] });
+            res.push({ dev: el['dev-addr'], vals: [el] });
         }
     });
-    const curDevAddr = Array.from(new Set(arr.map((el) => el.dev_addr)));
+    const curDevAddr = Array.from(new Set(arr.map((el) => el['dev-addr'])));
     curChoosenDevs.value.forEach((el) => {
         if (!curDevAddr.includes(el)) {
             res.push({ dev: el, vals: [] });
@@ -1517,8 +1741,8 @@ const hrArr = computed<
           dev: number;
           vals: {
               type: 'hr' | 'wm-hr' | 'w-hr' | 'm-hr';
-              reg_addr: number;
-              dev_addr: number;
+              'reg-addr': number;
+              'dev-addr': number;
               val: number | null | 'err';
               label: string;
           }[];
@@ -1528,11 +1752,11 @@ const hrArr = computed<
     const arr = curState.value.filter(
         (el) =>
             (el.type === 'hr' || el.type === 'wm-hr' || el.type === 'w-hr' || el.type === 'm-hr') &&
-            curChoosenDevs.value.includes(el.dev_addr),
+            curChoosenDevs.value.includes(el['dev-addr']),
     ) as {
         type: 'hr' | 'wm-hr' | 'w-hr' | 'm-hr';
-        reg_addr: number;
-        dev_addr: number;
+        'reg-addr': number;
+        'dev-addr': number;
         val: number;
         label: string;
     }[];
@@ -1540,21 +1764,21 @@ const hrArr = computed<
         dev: number;
         vals: {
             type: 'hr' | 'wm-hr' | 'w-hr' | 'm-hr';
-            reg_addr: number;
-            dev_addr: number;
+            'reg-addr': number;
+            'dev-addr': number;
             val: number;
             label: string;
         }[];
     }[] = [];
     arr.forEach((el) => {
-        const index = res.findIndex((elem) => elem.dev === el.dev_addr);
+        const index = res.findIndex((elem) => elem.dev === el['dev-addr']);
         if (index !== -1) {
             res[index].vals.push(el);
         } else {
-            res.push({ dev: el.dev_addr, vals: [el] });
+            res.push({ dev: el['dev-addr'], vals: [el] });
         }
     });
-    const curDevAddr = Array.from(new Set(arr.map((el) => el.dev_addr)));
+    const curDevAddr = Array.from(new Set(arr.map((el) => el['dev-addr'])));
     curChoosenDevs.value.forEach((el) => {
         if (!curDevAddr.includes(el)) {
             res.push({ dev: el, vals: [] });
@@ -1564,7 +1788,11 @@ const hrArr = computed<
 });
 
 const curDevs = computed<number[]>(() => {
-    return mbDevs.value[props.w.w.d][props.w.w.bus || 0];
+    let res: number[] = [];
+    if (mbDevs.value.length && mbDevs.value[props.w.w.d]) {
+        res = mbDevs.value[props.w.w.d][props.w.w.bus || 0];
+    }
+    return res;
 });
 
 async function getMbInfo() {
@@ -1575,37 +1803,57 @@ async function getMbInfo() {
         });
         const data = (await r.data) as {
             type: ['hr' | 'di' | 'coil' | 'wm-coil' | 'w-coil' | 'm-coil' | 'ir'];
-            dev_addr: number[];
-            reg_addr: number[];
+            'dev-addr': number[];
+            'reg-addr': number[];
         };
-        const arr = [];
+        const arr: {
+            type:
+                | 'hr'
+                | 'wm-hr'
+                | 'w-hr'
+                | 'm-hr'
+                | 'ir'
+                | 'coil'
+                | 'wm-coil'
+                | 'w-coil'
+                | 'm-coil'
+                | 'di'
+                | 'none';
+            'reg-addr': number;
+            'dev-addr': number;
+            val: number | null | 'err';
+            label: string;
+        }[] = [];
         const curLabels =
             labels.value[props.w.w.d]?.find((el) => el.interf === props.w.w.i)?.val[
                 props.w.w.bus || 0
             ] || [];
-        for (let i = 0; i < state.value.length; i += 1) {
-            if (mbDevs.value[props.w.w.d][props.w.w.bus || 0].includes(data.dev_addr[i])) {
+        for (let i = 0; i < state.value.length; i++) {
+            if (
+                mbDevs.value.length &&
+                mbDevs.value[props.w.w.d][props.w.w.bus || 0].includes(data['dev-addr'][i])
+            ) {
                 arr.push({
                     type: data.type[i],
-                    reg_addr: data.reg_addr[i] as number,
-                    dev_addr: data.dev_addr[i] as number,
+                    'reg-addr': data['reg-addr'][i] as number,
+                    'dev-addr': data['dev-addr'][i] as number,
                     val: state.value[i],
                     label: curLabels[i] || '\u2013',
                 });
             }
         }
         fullState.value = [...arr];
+        if (getMbInfoTimer !== undefined) {
+            getMbInfoTimer = setTimeout(getMbInfo, 3000);
+        }
     } catch (error) {
         if (isAborted.value) {
             return;
         }
-        return new Promise((resolve) =>
-            setTimeout(() => {
-                getMbInfo();
-            }, 5),
-        );
+        if (getMbInfoTimer !== undefined) {
+            getMbInfoTimer = setTimeout(getMbInfo, 20);
+        }
     }
-    getMbInfoTimer = setTimeout(getMbInfo, 3000);
 }
 
 function handleArrowClick(direction: 'toStart' | 'toEnd') {
@@ -1698,8 +1946,8 @@ function handleDblClick(
             | 'w-coil'
             | 'm-coil'
             | 'di';
-        reg_addr: number;
-        dev_addr: number;
+        'reg-addr': number;
+        'dev-addr': number;
         val: number | null | 'err';
         label: string;
     },
@@ -1721,8 +1969,8 @@ function saveData(e: KeyboardEvent | MouseEvent) {
             setLabel(
                 activeLabel.value.state as {
                     type?: 'hr' | 'ir' | 'coil' | 'di';
-                    reg_addr: number;
-                    dev_addr: number;
+                    'reg-addr': number;
+                    'dev-addr': number;
                     val: number;
                     label: string;
                 },
@@ -1742,8 +1990,8 @@ function saveData(e: KeyboardEvent | MouseEvent) {
         setLabel(
             activeLabel.value.state as {
                 type?: 'hr' | 'ir' | 'coil' | 'di';
-                reg_addr: number;
-                dev_addr: number;
+                'reg-addr': number;
+                'dev-addr': number;
                 val: number;
                 label: string;
             },
@@ -1762,8 +2010,8 @@ function saveData(e: KeyboardEvent | MouseEvent) {
 async function setLabel(
     s: {
         type?: 'hr' | 'ir' | 'coil' | 'di';
-        reg_addr: number;
-        dev_addr: number;
+        'reg-addr': number;
+        'dev-addr': number;
         val: number;
         label: string;
     },
@@ -1774,20 +2022,10 @@ async function setLabel(
     const index = fullState.value.findIndex((el) => JSON.stringify(el) === JSON.stringify(s));
     if (index === -1) return;
     newLabels[index] = label;
-    for (let i = 0; i < Math.ceil(newLabels.length / labelsFileLength); i += 1) {
-        if (
-            JSON.stringify(vals.slice(i * labelsFileLength, (i + 1) * labelsFileLength)) !==
-            JSON.stringify(newLabels.slice(i * labelsFileLength, (i + 1) * labelsFileLength))
-        ) {
-            saveLabel(
-                newLabels.slice(i * labelsFileLength, (i + 1) * labelsFileLength) as string[],
-                i,
-            );
-        }
-    }
+    saveLabel(newLabels);
 }
 
-async function saveLabel(labels: string[], part: number) {
+async function saveLabel(labels: string[]) {
     const isSavingError = await saveToFile(
         {
             type: 'labels',
@@ -1806,14 +2044,13 @@ async function saveLabel(labels: string[], part: number) {
                 | 'tim-var',
         },
         { labels: labels },
-        part,
     );
     if (isSavingError) {
         if (isAborted.value) {
             return;
         }
         setTimeout(() => {
-            saveLabel(labels, part);
+            saveLabel(labels);
         }, 5);
     } else {
         indexStore.changeLabel(
@@ -1830,7 +2067,6 @@ async function saveLabel(labels: string[], part: number) {
                 | 'pwm-out'
                 | 'tim-var',
             labels,
-            part,
             props.w.w.bus,
         );
     }
@@ -1849,8 +2085,8 @@ async function setData(
             | 'wm-coil'
             | 'w-coil'
             | 'm-coil';
-        reg_addr: number;
-        dev_addr: number;
+        'reg-addr': number;
+        'dev-addr': number;
         val: number | null | 'err';
     },
     val: number,
@@ -1874,8 +2110,8 @@ async function setData(
         if (r.data.status === 'ok') {
             const devStates = [...devicesState.value][props.w.w.d];
             const prevStateIndex = devStates.findIndex((el) => el.type === props.w.w.i);
-            if (prevStateIndex !== -1 && devStates[prevStateIndex].value[newIndex] !== undefined)
-                devStates[prevStateIndex].value[newIndex] = val;
+            if (prevStateIndex !== -1 && devStates[prevStateIndex].state[newIndex] !== undefined)
+                devStates[prevStateIndex].state[newIndex] = val;
             indexStore.setDevicesState(props.w.w.d, [...devStates]);
         }
     } catch (error) {
@@ -1924,8 +2160,8 @@ function handleBinOutMouseEnter(
     i: number,
     el: {
         type: 'hr' | 'ir' | 'coil' | 'wm-coil' | 'w-coil' | 'm-coil' | 'di';
-        reg_addr: number;
-        dev_addr: number;
+        'reg-addr': number;
+        'dev-addr': number;
         val: number | null | 'err';
     },
 ) {
@@ -1937,8 +2173,8 @@ function handleBinOutMouseEnter(
                 | 'ir'
                 | 'coil'
                 | 'di',
-            reg_addr: el.reg_addr,
-            dev_addr: el.dev_addr,
+            'reg-addr': el['reg-addr'],
+            'dev-addr': el['dev-addr'],
             val: el.val,
         },
     };
@@ -1950,8 +2186,8 @@ function handleBinOutMouseLeave() {
 
 async function handleCoilClick(el: {
     type: 'hr' | 'ir' | 'coil' | 'wm-coil' | 'w-coil' | 'm-coil' | 'di';
-    reg_addr: number;
-    dev_addr: number;
+    'reg-addr': number;
+    'dev-addr': number;
     val: number | null | 'err';
 }) {
     if (
@@ -1981,8 +2217,8 @@ async function handleCoilClick(el: {
         if (r.data.status === 'ok') {
             const devStates = [...devicesState.value][props.w.w.d];
             const prevStateIndex = devStates.findIndex((el) => el.type === props.w.w.i);
-            if (prevStateIndex !== -1 && devStates[prevStateIndex].value[newIndex] !== undefined)
-                devStates[prevStateIndex].value[newIndex] = el.val ? 0 : 1;
+            if (prevStateIndex !== -1 && devStates[prevStateIndex].state[newIndex] !== undefined)
+                devStates[prevStateIndex].state[newIndex] = el.val ? 0 : 1;
             indexStore.setDevicesState(props.w.w.d, [...devStates]);
         }
     } catch (error) {
@@ -1997,15 +2233,15 @@ async function handleCoilClick(el: {
 
 function deleteItem(el: {
     type: 'hr' | 'wm-hr' | 'w-hr' | 'm-hr' | 'ir' | 'coil' | 'wm-coil' | 'w-coil' | 'm-coil' | 'di';
-    reg_addr: number;
-    dev_addr: number;
+    'reg-addr': number;
+    'dev-addr': number;
     val: number | null | 'err';
 }) {
     showPopUp.value = true;
     popUpEl.value = {
         type: el.type,
-        reg_addr: el.reg_addr,
-        dev_addr: el.dev_addr,
+        'reg-addr': el['reg-addr'],
+        'dev-addr': el['dev-addr'],
         val: el.val,
     };
     popUpCommand.value = 'delete';
@@ -2075,11 +2311,59 @@ function handleMouseEnter(e: MouseEvent) {
             : 'bottom';
 }
 
+async function handleSaveClick() {
+    if (isInvalidData.value !== null) return;
+    try {
+        const r = await api.post('set_ent_init', {
+            type: props.w.w.i,
+            device: props.w.w.d,
+            index: 0,
+            state: itemsStatuses.value,
+        });
+        if (r.data.status === 'ok') {
+            emit('init');
+        } else {
+            console.log(r.data.status);
+            throw new Error();
+        }
+    } catch (error) {
+        if (isAborted.value) {
+            return;
+        }
+        setTimeout(() => {
+            handleSaveClick();
+        }, 5);
+    }
+}
+
+async function getEntInit() {
+    try {
+        const quant = devicesState.value[props.w.w.d].find((el) => el.type === props.w.w.i)?.state
+            .length;
+        if (!quant) return;
+        const r = await api.post('get_ent_init', {
+            type: props.w.w.i,
+            device: props.w.w.d,
+            index: 0,
+            quantity: quant,
+        });
+        const res = await r.data.state;
+        itemsStatuses.value = res;
+    } catch (error) {
+        if (isAborted.value) {
+            return;
+        }
+        setTimeout(() => {
+            getEntInit();
+        }, 20);
+    }
+}
+
 watch(
     () => devicesState.value,
     () => {
         const newState = devicesState.value[props.w.w.d].find((obj) => obj.type === props.w.w.i)
-            ?.value as number[];
+            ?.state as number[];
         state.value = newState ? newState : [...props.w.state];
     },
 );
@@ -2088,6 +2372,13 @@ watch(
     () => curDevs.value,
     () => {
         curChoosenDevs.value = [...curChoosenDevs.value].filter((el) => curDevs.value.includes(el));
+    },
+);
+
+watch(
+    () => props.isInit,
+    () => {
+        if (props.isInit) getEntInit();
     },
 );
 
@@ -2105,7 +2396,7 @@ onMounted(() => {
 });
 
 onBeforeUnmount(() => {
-    clearTimeout(getMbInfoTimer);
+    clearTimeout(getMbInfoTimer as number | undefined);
     getMbInfoTimer = undefined;
 });
 

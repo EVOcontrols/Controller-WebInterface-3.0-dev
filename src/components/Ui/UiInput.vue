@@ -132,7 +132,8 @@ function valueChangedHandler() {
             return;
         }
         if (['root-name', 'user-name'].includes(props.name)) {
-            setStatus(/^[a-zA-Z0-9]{5,31}$/.test(v) ? 'valid' : 'invalid');
+            //TODO
+            setStatus(/^[a-zA-Z0-9]{4,31}$/.test(v) ? 'valid' : 'invalid');
             lastInitValue = v as V;
             emit('valueChanged', v as V);
             return;

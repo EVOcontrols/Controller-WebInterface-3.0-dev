@@ -9,13 +9,13 @@
             :mouseleaveTimer="mouseleaveTimer"
             @hover="setActiveIO"
             @leave="resetActiveIO"
-            @scan="$emit('scan', true, props.w.w.d, props.w.w.i)"
+            @scan="$emit('scan', true, props.w.w.d, props.w.w.i, props.w.w.bus)"
         />
         <WidgetFooter
             :isInfoVisible="false"
             :w="props.w.w"
             :activeIO="activeIO"
-            @enter="$emit('enter', props.w.w.d, props.w.w.i)"
+            @enter="$emit('enter', props.w.w.d, props.w.w.i, props.w.w.bus)"
         />
         <div
             v-if="devStatus === 'init'"

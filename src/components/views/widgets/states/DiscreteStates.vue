@@ -1,7 +1,7 @@
 <template>
     <div
         class="flex-1 relative overflow-hidden"
-        :class="props.isBig ? 'pl-[18px] pr-[8px]  w-[422px]' : 'px-3  w-full'"
+        :class="props.isBig ? 'pl-[18px] pr-[8px]  w-[424px]' : 'px-3  w-full'"
     >
         <div class="flex items-center overflow-x-auto no-scrollbar flex-none pt-2">
             <div
@@ -67,7 +67,7 @@ watch(
     () => devicesState.value,
     () => {
         const newState = devicesState.value[props.w.w.d].find((obj) => obj.type === props.w.w.i)
-            ?.value as number[];
+            ?.state as number[];
         state.value = newState ? newState : [...props.w.state];
     },
 );

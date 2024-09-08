@@ -39,8 +39,8 @@ const activeIO = ref<{
             | 'w-coil'
             | 'm-coil'
             | 'di';
-        reg_addr: number;
-        dev_addr: number;
+        'reg-addr': number;
+        'dev-addr': number;
         val: number | null | 'err';
     } | null;
 } | null>(null);
@@ -60,8 +60,8 @@ const lastActiveIO = ref<{
             | 'w-coil'
             | 'm-coil'
             | 'di';
-        reg_addr: number;
-        dev_addr: number;
+        'reg-addr': number;
+        'dev-addr': number;
         val: number | null | 'err';
     } | null;
 } | null>(null);
@@ -89,8 +89,8 @@ function setActiveIO(
             | 'w-coil'
             | 'm-coil'
             | 'di';
-        reg_addr: number;
-        dev_addr: number;
+        'reg-addr': number;
+        'dev-addr': number;
         val: number | null | 'err';
     } | null,
 ) {

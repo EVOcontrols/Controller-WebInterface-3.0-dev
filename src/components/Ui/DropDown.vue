@@ -22,7 +22,7 @@
                 ></span>
                 <Transition name="fade-150">
                     <div
-                        class="absolute left-0 min-w-full shadow-[0_0_0.25rem_0_#08253d]"
+                        class="absolute left-0 min-w-full shadow-[0_0_0.25rem_0_#08253d] rounded-[6px] z-[1]"
                         :class="topPositionClass"
                         v-if="isOpen"
                         ref="bodyEl"

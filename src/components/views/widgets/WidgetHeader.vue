@@ -26,7 +26,7 @@
 <script lang="ts" setup>
 import { useI18n } from 'vue-i18n';
 import SettingsIcon from '@/assets/SettingsIcon.vue';
-import type { Widget } from '@/stores';
+import type { Widget, Interf } from '@/stores';
 
 const props = defineProps<{
     w: Widget;
@@ -39,7 +39,7 @@ const { interfaces, notConnected } = storeToRefs(indexStore);
 const { locale } = useI18n();
 
 const title = computed<string>(() => {
-    const interf = interfaces.value.find((i) => i.value === props.w.i);
+    const interf = interfaces.value.find((i: Interf) => i.value === props.w.i);
     return locale.value === 'en' ? (interf?.label.en as string) : (interf?.label.ru as string);
 });
 

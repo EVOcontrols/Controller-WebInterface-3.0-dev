@@ -52,7 +52,7 @@
 </template>
 
 <script lang="ts" setup>
-import type { Widget } from '@/stores';
+import type { InterfVal, Widget } from '@/stores';
 
 const indexStore = useIndexStore();
 
@@ -116,8 +116,8 @@ function handleMouseLeave() {
 watch(
     () => devicesState.value,
     () => {
-        const newState = devicesState.value[props.w.w.d].find((obj) => obj.type === props.w.w.i)
-            ?.value as [number | null][];
+        const newState = devicesState.value[props.w.w.d].find((obj: InterfVal) => obj.type === props.w.w.i)
+            ?.state as [number | null][];
         curState.value = newState ? newState : [...props.w.state];
     },
 );

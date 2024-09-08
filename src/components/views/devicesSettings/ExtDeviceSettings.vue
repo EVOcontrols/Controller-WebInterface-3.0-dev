@@ -24,7 +24,7 @@
                     {{ t('slaveAddr') }}
                 </div>
                 <UiInput
-                    :init-value="devSettings['mb-slave'].addr"
+                    :init-value="devSettings.slave.addr"
                     :name="'slave_addr'"
                     initType="number"
                     class="table-cell w-16 text-center !px-2"
@@ -38,9 +38,7 @@
                             ? fieldsInvalidStatuses.add('mb-slave')
                             : fieldsInvalidStatuses.delete('mb-slave')
                     "
-                    @value-changed="
-                        $event === undefined ? '' : (devSettings['mb-slave'].addr = $event)
-                    "
+                    @value-changed="$event === undefined ? '' : (devSettings.slave.addr = $event)"
                 />
             </div>
             <CollapseTransition :duration="300">
@@ -50,8 +48,8 @@
                             {{ t('speed') }}
                         </div>
                         <InputRange
-                            :value="devSettings['mb-slave'].rate"
-                            @change="devSettings['mb-slave'].rate = $event"
+                            :value="devSettings.slave.rate"
+                            @change="devSettings.slave.rate = $event"
                         />
                     </div>
                     <div class="flex flex-row items-center mt-[2.5rem]">
@@ -62,9 +60,9 @@
                             :buttons="
                                 modbusParities.map((v) => ({ text: t(`parities.${v}`), value: v }))
                             "
-                            :value="devSettings['mb-slave'].parity"
+                            :value="devSettings.slave.parity"
                             additional-classes="px-4"
-                            @change="devSettings['mb-slave'].parity = $event"
+                            @change="devSettings.slave.parity = $event"
                         />
                     </div>
                     <div class="flex flex-row items-center mt-[2.75rem]">
@@ -75,9 +73,9 @@
                             :buttons="
                                 ([1, 2] as const).map((v) => ({ text: v.toString(), value: v }))
                             "
-                            :value="devSettings['mb-slave'].stop"
+                            :value="devSettings.slave.stop"
                             additional-classes="px-4"
-                            @change="devSettings['mb-slave'].stop = $event"
+                            @change="devSettings.slave.stop = $event"
                         />
                     </div>
                 </div>
@@ -102,13 +100,13 @@
                                     .filter((el) => el !== 'ext-devs')
                                     .map((v) => ({ text: t(`portModes.${v}`), value: v }))
                             "
-                            :value="devSettings['mb-master'][0].mode"
+                            :value="devSettings['rs-485'][0].mode"
                             additional-classes="px-4"
                             @change="
                                 ($event) => {
                                     if ($event !== 'ext-devs' && devSettings) {
-                                        devSettings['mb-master'][0].mode = $event;
-                                        if (devSettings['mb-master'][0].mode === 'off') {
+                                        devSettings['rs-485'][0].mode = $event;
+                                        if (devSettings['rs-485'][0].mode === 'off') {
                                             if (!isAdvancedSettingsExpanded) {
                                                 rsAdvancedParams.forEach((el) => {
                                                     fieldsInvalidStatuses.delete(
@@ -123,19 +121,19 @@
                         />
                     </div>
                     <div
-                        v-if="devSettings['mb-master'][0].mode === 'variables'"
+                        v-if="devSettings['rs-485'][0].mode === 'variables'"
                         class="flex flex-row mt-[2.8rem]"
                     >
                         <div class="text-[#6d9cc5] text-sm leading-[1.143] mr-[0.875rem]">
                             {{ t('speed') }}
                         </div>
                         <InputRange
-                            :value="devSettings['mb-master'][0].rate"
-                            @change="devSettings['mb-master'][0].rate = $event"
+                            :value="devSettings['rs-485'][0].rate"
+                            @change="devSettings['rs-485'][0].rate = $event"
                         />
                     </div>
                     <div
-                        v-if="devSettings['mb-master'][0].mode === 'variables'"
+                        v-if="devSettings['rs-485'][0].mode === 'variables'"
                         class="flex flex-row items-center mt-[2.5rem]"
                     >
                         <div class="text-[#6d9cc5] text-sm leading-[1.143] mr-[0.875rem]">
@@ -145,13 +143,13 @@
                             :buttons="
                                 modbusParities.map((v) => ({ text: t(`parities.${v}`), value: v }))
                             "
-                            :value="devSettings['mb-master'][0].parity"
+                            :value="devSettings['rs-485'][0].parity"
                             additional-classes="px-4"
-                            @change="devSettings['mb-master'][0].parity = $event"
+                            @change="devSettings['rs-485'][0].parity = $event"
                         />
                     </div>
                     <div
-                        v-if="devSettings['mb-master'][0].mode === 'variables'"
+                        v-if="devSettings['rs-485'][0].mode === 'variables'"
                         class="flex flex-row items-center mt-[2.75rem]"
                     >
                         <div class="text-[#6d9cc5] text-sm leading-[1.143] mr-[0.875rem]">
@@ -161,13 +159,13 @@
                             :buttons="
                                 ([1, 2] as const).map((v) => ({ text: v.toString(), value: v }))
                             "
-                            :value="devSettings['mb-master'][0].stop"
+                            :value="devSettings['rs-485'][0].stop"
                             additional-classes="px-4"
-                            @change="devSettings['mb-master'][0].stop = $event"
+                            @change="devSettings['rs-485'][0].stop = $event"
                         />
                     </div>
                     <div
-                        v-if="devSettings['mb-master'][0].mode === 'variables'"
+                        v-if="devSettings['rs-485'][0].mode === 'variables'"
                         class="flex flex-row items-center mt-[2.75rem]"
                     >
                         <div class="text-[#6d9cc5] text-sm leading-[1.143] mr-5 whitespace-pre">
@@ -186,7 +184,7 @@
                         v-if="
                             devSettings &&
                             deviceState === 'on' &&
-                            devSettings['mb-master'][0].mode === 'variables'
+                            devSettings['rs-485'][0].mode === 'variables'
                         "
                         :is-expanded="!!isAdvancedSettingsExpanded"
                         :is-error="
@@ -199,7 +197,7 @@
                     <CollapseTransition :duration="300">
                         <div
                             v-show="isAdvancedSettingsExpanded"
-                            v-if="devSettings['mb-master'][0].mode === 'variables'"
+                            v-if="devSettings['rs-485'][0].mode === 'variables'"
                         >
                             <div class="table w-max mt-5">
                                 <div
@@ -214,8 +212,8 @@
                                     </div>
                                     <UiInput
                                         :init-value="
-                                            isKeyOf(devSettings['mb-master'][0], p.param)
-                                                ? devSettings['mb-master'][0][p.param]
+                                            isKeyOf(devSettings['rs-485'][0], p.param)
+                                                ? devSettings['rs-485'][0][p.param]
                                                 : undefined
                                         "
                                         :name="p.param"
@@ -231,8 +229,7 @@
                                         @status-changed="
                                             (event: InputFieldStatus) => {
                                                 if (
-                                                    devSettings?.['mb-master'][0].mode ===
-                                                    'variables'
+                                                    devSettings?.['rs-485'][0].mode === 'variables'
                                                 ) {
                                                     if (event !== 'valid') {
                                                         fieldsInvalidStatuses.add(
@@ -250,10 +247,10 @@
                                             (e?: number) => {
                                                 if (
                                                     !devSettings ||
-                                                    devSettings['mb-master'][0].mode !== 'variables'
+                                                    devSettings['rs-485'][0].mode !== 'variables'
                                                 )
                                                     return;
-                                                devSettings['mb-master'][0][p.param] = e || 0;
+                                                devSettings['rs-485'][0][p.param] = e || 0;
                                             }
                                         "
                                     />
@@ -293,7 +290,14 @@
                     </div>
                 </div>
                 <AdvancedSettingsButton
-                    v-if="devSettings && deviceState === 'on'"
+                    v-if="
+                        devSettings &&
+                        deviceState === 'on' &&
+                        devSettings['1-wire'].filter((el) => el.mode !== 'off').length &&
+                        devSettings['1-wire']
+                            .filter((el) => el.mode !== 'off')
+                            .filter((elem) => Object.entries(elem).length > 1).length
+                    "
                     :is-expanded="isAdvancedSettingsExpanded1Wire"
                     :is-error="
                         !!new Set([...fieldsInvalidStatuses].filter((s) => s.startsWith('1-wire')))
@@ -302,53 +306,68 @@
                     @click="isAdvancedSettingsExpanded1Wire = !isAdvancedSettingsExpanded1Wire"
                 />
                 <CollapseTransition :duration="300">
-                    <div v-show="isAdvancedSettingsExpanded1Wire">
+                    <div
+                        v-show="
+                            isAdvancedSettingsExpanded1Wire &&
+                            devSettings['1-wire'].filter((el) => el.mode !== 'off').length &&
+                            devSettings['1-wire']
+                                .filter((el) => el.mode !== 'off')
+                                .filter((elem) => Object.entries(elem).length > 1).length
+                        "
+                    >
                         <div class="table w-max mt-5 border-collapse">
                             <div
                                 v-for="(w, i) in devSettings['1-wire']"
                                 :key="i"
-                                class="table-row-group [&:last-child>div:last-child]:!h-10"
                             >
                                 <div
-                                    v-for="(p, y) in oneWiresParams[i]"
-                                    :key="p.param"
-                                    class="table-row h-[3.43rem] align-top"
+                                    v-if="w.mode !== 'off' && Object.entries(w).length > 1"
+                                    class="table-row [&:last-child]:!h-10"
                                 >
                                     <div
                                         class="text-[#6d9cc5] text-sm leading-[1.143] table-cell pr-9"
                                     >
-                                        {{ y ? '' : `${t('bus')} ${i + 1}` }}
+                                        {{ `${t('bus')} ${i + 1}` }}
                                     </div>
+                                    {{ Object.entries(w).filter((el) => el[0] !== 'mode') }}
                                     <div
-                                        class="text-[#6d9cc5] text-sm leading-[1.143] table-cell pr-2.5"
+                                        v-for="(p, y) in Object.entries(w).filter(
+                                            (el) => el[0] !== 'mode',
+                                        )"
+                                        :key="y"
+                                        class="table-row h-[3.43rem] align-top"
                                     >
-                                        {{ p.label }}
+                                        <div
+                                            class="text-[#6d9cc5] text-sm leading-[1.143] table-cell pr-2.5 !w-[7rem]"
+                                        >
+                                            {{ p[0] }}
+                                        </div>
+                                        <UiInput
+                                            :init-value="p[1] as number | null | undefined"
+                                            :name="p[0]"
+                                            initType="number"
+                                            class="table-cell w-16 text-center !px-2"
+                                            :min-max="[0, 65535]"
+                                            :status="
+                                                fieldsInvalidStatuses.has(`1-wire-${i}-${p[0]}`)
+                                                    ? 'invalid'
+                                                    : 'valid'
+                                            "
+                                            :input-type="['int']"
+                                            @status-changed="
+                                                $event !== 'valid'
+                                                    ? fieldsInvalidStatuses.add(
+                                                          `1-wire-${i}-${p[0]}`,
+                                                      )
+                                                    : fieldsInvalidStatuses.delete(
+                                                          `1-wire-${i}-${p[0]}`,
+                                                      )
+                                            "
+                                            @value-changed="
+                                                $event === undefined ? '' : (w[p[0]] = $event)
+                                            "
+                                        />
                                     </div>
-                                    <UiInput
-                                        :init-value="w[p.param]"
-                                        :name="p.param"
-                                        initType="number"
-                                        class="table-cell w-16 text-center !px-2"
-                                        :min-max="[p.min, p.max]"
-                                        :status="
-                                            fieldsInvalidStatuses.has(`1-wire-${i}-${p.param}`)
-                                                ? 'invalid'
-                                                : 'valid'
-                                        "
-                                        :input-type="['int']"
-                                        @status-changed="
-                                            $event !== 'valid'
-                                                ? fieldsInvalidStatuses.add(
-                                                      `1-wire-${i}-${p.param}`,
-                                                  )
-                                                : fieldsInvalidStatuses.delete(
-                                                      `1-wire-${i}-${p.param}`,
-                                                  )
-                                        "
-                                        @value-changed="
-                                            $event === undefined ? '' : (w[p.param] = $event)
-                                        "
-                                    />
                                 </div>
                             </div>
                         </div>
@@ -425,11 +444,11 @@ const isEmpty = await _.isEmpty();
 const isEqual = await _.isEqual();
 
 const rsAdvancedParams = [
-    { param: 'rd-tmo', min: 0, max: 65535 },
-    { param: 'wr-tmo', min: 0, max: 65535 },
-    { param: 'rd-dly', min: 0, max: 65535 },
-    { param: 'wr-dly', min: 0, max: 65535 },
-    { param: 'cm-dly', min: 0, max: 65535 },
+    { param: 'read-tmo', min: 0, max: 65535 },
+    { param: 'write-tmo', min: 0, max: 65535 },
+    { param: 'read-delay', min: 0, max: 65535 },
+    { param: 'write-delay', min: 0, max: 65535 },
+    { param: 'cycle-delay', min: 0, max: 65535 },
 ] as const;
 
 const oneWiresParams = computed<
@@ -504,7 +523,7 @@ async function setDevState() {
     try {
         const list = (await (await api.get('get_ext_devs')).data).list;
         list[props.deviceIndex - 1] = {
-            addr: devSettings.value?.['mb-slave'].addr || props.deviceAddr,
+            addr: devSettings.value?.slave.addr || props.deviceAddr,
             type: 'NG3-EDIO',
             state: curDevState.value,
         };
@@ -544,12 +563,12 @@ async function save(count: number = 0) {
     const init = devSettingsInit.value;
     const settingsToSave: PartialDeep<ExtDeviceSettings, { recurseIntoArrays: true }> = {};
     if (current && init) {
-        (['mb-slave'] as const).forEach((k) => {
+        (['slave'] as const).forEach((k) => {
             if (isKeyOfBoth(current, init, k) && !isEqual(current[k], init[k])) {
                 settingsToSave[k] = current[k] as any;
             }
         });
-        (['mb-master'] as const).forEach((k) => {
+        (['rs-485'] as const).forEach((k) => {
             if (isKeyOfBoth(current, init, k) && !isEqual(current[k], init[k])) {
                 settingsToSave[k] = [current[k][0]] as any;
             }
@@ -605,14 +624,14 @@ async function save(count: number = 0) {
                         }
                     }
                 }
-                if (settingsToSave['mb-master']) {
-                    for (let i = 0; i < settingsToSave['mb-master'].length; i++) {
+                if (settingsToSave['rs-485']) {
+                    for (let i = 0; i < settingsToSave['rs-485'].length; i++) {
                         if (
-                            JSON.stringify(current['mb-master'][i]) !==
-                            JSON.stringify(init['mb-master'][i])
+                            JSON.stringify(current['rs-485'][i]) !==
+                            JSON.stringify(init['rs-485'][i])
                         ) {
                             indexStore.removeMbInterf(props.deviceIndex);
-                            if (current['mb-master'][i].mode === 'variables') {
+                            if (current['rs-485'][i].mode === 'variables') {
                                 // const curDevices = devices.value;
                                 indexStore.setDevicesToInitState();
                                 indexStore.setDevicesStateToInitState();
@@ -641,8 +660,8 @@ async function save(count: number = 0) {
     if (
         curDevState.value !== props.deviceState ||
         (init &&
-            settingsToSave['mb-slave']?.addr !== undefined &&
-            settingsToSave['mb-slave'].addr !== init['mb-slave'].addr)
+            settingsToSave.slave?.addr !== undefined &&
+            settingsToSave.slave.addr !== init.slave.addr)
     ) {
         await setDevState();
     }

@@ -37,7 +37,6 @@
                 :move="handleMoveItem"
                 @end="handleDragEndItem"
                 :options="{ animation: 500 }"
-                ref="scrollEl"
             >
                 <template #item="{ element, index }">
                     <div
@@ -57,7 +56,7 @@
         <div
             class="w-[50%] border-l border-[#1D4162] flex overflow-y-auto scrollbar-4 flex-1"
             :style="{ height: 'calc(100vh - 410px)' }"
-            id="scrollWrapper"
+            ref="scrollWrapper"
             @scroll="handleScroll"
         >
             <draggable
@@ -69,7 +68,7 @@
                 :move="handleMoveItem"
                 @end="handleDragEndItem"
                 :options="{ animation: 500 }"
-                id="scrollEl"
+                ref="scrollEl"
             >
                 <template #item="{ element, index }">
                     <div
@@ -201,6 +200,12 @@ const futureItem = ref<{
     val: number | null | (number | null)[];
     label: string | undefined;
 } | null>(null);
+
+const scrollEl = ref<HTMLElement | undefined>();
+
+const scrollWrapper = ref<HTMLElement | undefined>();
+
+const isNotMainScrolling = ref(false);
 
 const placeholder = computed(() => t('placecholder'));
 
@@ -340,36 +345,41 @@ function removeId(index: number) {
     loading.value = true;
 }
 function handleScroll() {
-    const el = document.getElementById('scrollWrapper');
+    const el = scrollWrapper.value;
     if (!el) return;
+    isNotMainScrolling.value = false;
     scrollTop.value = el.scrollTop;
 }
 function handleDblClick(s: number | null, index: number) {
     if (s === null) return;
+    isNotMainScrolling.value = true;
     activeLabel.value = { i: index, state: s, label: props.labels[index] };
     setActiveLabelTop();
     window.addEventListener('click', saveData);
     window.addEventListener('keypress', saveData);
 }
 function setActiveLabelTop() {
-    const wrapper = document.getElementById('scrollWrapper');
-    const el = document.getElementById('scrollEl');
+    const wrapper = scrollWrapper.value;
+    const el = scrollEl.value;
     if (!activeLabel.value || !wrapper || !el) return;
     const top = activeLabel.value.i * 30 - scrollTop.value + 10;
     if (top < 0) {
         activeLabelTop.value = 0;
     } else if (Math.round(top) > wrapper.offsetHeight - 68) {
-        setTimeout(() => {
-            if (!activeLabel.value) return;
-            isScrolling.value = true;
-            wrapper.scrollTo({
-                top: activeLabel.value.i * 30 + 78 - wrapper.offsetHeight,
-                behavior: 'smooth',
-            });
-        }, 0);
-        setTimeout(() => {
-            isScrolling.value = false;
-        }, 300);
+        if (isNotMainScrolling.value) {
+            setTimeout(() => {
+                if (!activeLabel.value) return;
+                isScrolling.value = true;
+                wrapper.scrollTo({
+                    top: activeLabel.value.i * 30 + 78 - wrapper.offsetHeight,
+                    behavior: 'smooth',
+                });
+            }, 0);
+            setTimeout(() => {
+                isScrolling.value = false;
+                isNotMainScrolling.value = false;
+            }, 300);
+        }
         activeLabelTop.value = wrapper.offsetHeight - 68;
     } else {
         activeLabelTop.value = top;

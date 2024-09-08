@@ -1,7 +1,7 @@
 <template>
     <div
         class="flex-1 relative overflow-hidden"
-        :class="props.isBig ? 'pl-[18px] pr-[8px]  w-[422px]' : 'px-3  w-full'"
+        :class="props.isBig ? 'pl-[18px] pr-[8px]  w-[424px]' : 'px-3  w-full'"
     >
         <div class="flex items-center overflow-x-auto no-scrollbar flex-none pt-2">
             <div
@@ -81,8 +81,8 @@ async function handleClick(index: number, s: number) {
         if (r.data.status === 'ok') {
             const devStates = [...devicesState.value][props.w.w.d];
             const prevStateIndex = devStates.findIndex((el) => el.type === props.w.w.i);
-            if (prevStateIndex !== -1 && devStates[prevStateIndex].value[index] !== undefined)
-                devStates[prevStateIndex].value[index] = s ? 0 : 1;
+            if (prevStateIndex !== -1 && devStates[prevStateIndex].state[index] !== undefined)
+                devStates[prevStateIndex].state[index] = s ? 0 : 1;
             indexStore.setDevicesState(props.w.w.d, [...devStates]);
         }
     } catch (error) {
@@ -99,7 +99,7 @@ watch(
     () => devicesState.value,
     () => {
         const newState = devicesState.value[props.w.w.d].find((obj) => obj.type === props.w.w.i)
-            ?.value as number[];
+            ?.state as number[];
         state.value = newState ? newState : [...props.w.state];
     },
 );

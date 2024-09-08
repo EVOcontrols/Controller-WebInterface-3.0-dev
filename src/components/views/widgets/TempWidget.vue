@@ -9,13 +9,13 @@
             :mouseleaveTimer="mouseleaveTimer"
             @hover="setActiveIO"
             @leave="resetActiveIO"
-            @scan="$emit('scan', true, props.w.w.d, props.w.w.i)"
+            @scan="$emit('scan', true, props.w.w.d, props.w.w.i, props.w.w.bus)"
         />
         <WidgetFooter
             :isInfoVisible="false"
             :w="props.w.w"
             :activeIO="activeIO"
-            @enter="$emit('enter', props.w.w.d, props.w.w.i)"
+            @enter="$emit('enter', props.w.w.d, props.w.w.i, props.w.w.bus)"
         />
         <div
             v-if="devStatus === 'init'"
@@ -26,7 +26,7 @@
 </template>
 
 <script lang="ts" setup>
-import type { Widget } from '@/stores';
+import type { Widget, Device } from '@/stores';
 import WidgetHeader from '@/components/views/widgets/WidgetHeader.vue';
 import WidgetFooter from '@/components/views/widgets/WidgetFooter.vue';
 import TempStates from '@/components/views/widgets/states/TempStates.vue';
@@ -48,7 +48,7 @@ const props = defineProps<{
 }>();
 
 const devStatus = computed<'on' | 'off' | 'no-conn' | 'init' | 'error' | undefined>(() => {
-    return devices.value.find((el) => el.addr === props.w.w.d)?.state;
+    return devices.value.find((el: Device) => el.addr === props.w.w.d)?.state;
 });
 
 function setActiveIO(index: number, s: number | null) {

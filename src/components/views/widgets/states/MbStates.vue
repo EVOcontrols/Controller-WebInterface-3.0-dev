@@ -123,7 +123,9 @@
                         <div class="w-full flex items-center justify-between">
                             <span>RO</span>
                             <span class="uppercase">{{
-                                numberingSystem === 'dec' ? s.reg_addr : s.reg_addr.toString(16)
+                                numberingSystem === 'dec'
+                                    ? s['reg-addr']
+                                    : s['reg-addr'].toString(16)
                             }}</span>
                         </div>
                     </div>
@@ -166,7 +168,9 @@
                             </div>
                             <div class="h-[12px] uppercase">
                                 {{
-                                    numberingSystem === 'dec' ? s.reg_addr : s.reg_addr.toString(16)
+                                    numberingSystem === 'dec'
+                                        ? s['reg-addr']
+                                        : s['reg-addr'].toString(16)
                                 }}
                             </div>
                         </div>
@@ -196,7 +200,9 @@
                             </div>
                             <div class="h-[12px] uppercase">
                                 {{
-                                    numberingSystem === 'dec' ? s.reg_addr : s.reg_addr.toString(16)
+                                    numberingSystem === 'dec'
+                                        ? s['reg-addr']
+                                        : s['reg-addr'].toString(16)
                                 }}
                             </div>
                         </div>
@@ -249,7 +255,9 @@
                             </div>
                             <div class="h-[12px] uppercase">
                                 {{
-                                    numberingSystem === 'dec' ? s.reg_addr : s.reg_addr.toString(16)
+                                    numberingSystem === 'dec'
+                                        ? s['reg-addr']
+                                        : s['reg-addr'].toString(16)
                                 }}
                             </div>
                         </div>
@@ -318,8 +326,8 @@ const props = defineProps<{
                 | 'w-coil'
                 | 'm-coil'
                 | 'di';
-            reg_addr: number;
-            dev_addr: number;
+            'reg-addr': number;
+            'dev-addr': number;
             val: number | null | 'err';
         } | null;
     } | null;
@@ -337,8 +345,8 @@ const props = defineProps<{
                 | 'w-coil'
                 | 'm-coil'
                 | 'di';
-            reg_addr: number;
-            dev_addr: number;
+            'reg-addr': number;
+            'dev-addr': number;
             val: number | null | 'err';
         } | null;
     } | null;
@@ -362,8 +370,8 @@ const fullState = ref<
             | 'm-coil'
             | 'di'
             | 'none';
-        reg_addr: number;
-        dev_addr: number;
+        'reg-addr': number;
+        'dev-addr': number;
         val: number | null | 'err';
     }[]
 >([]);
@@ -381,8 +389,8 @@ const curState = computed<
               | 'w-coil'
               | 'm-coil'
               | 'di';
-          reg_addr: number;
-          dev_addr: number;
+          'reg-addr': number;
+          'dev-addr': number;
           val: number | null | 'err';
       }[]
     | []
@@ -399,8 +407,8 @@ const curState = computed<
             | 'w-coil'
             | 'm-coil'
             | 'di';
-        reg_addr: number;
-        dev_addr: number;
+        'reg-addr': number;
+        'dev-addr': number;
         val: number | null | 'err';
     }[];
 });
@@ -422,8 +430,8 @@ const emit = defineEmits<{
                 | 'w-coil'
                 | 'm-coil'
                 | 'di';
-            reg_addr: number;
-            dev_addr: number;
+            'reg-addr': number;
+            'dev-addr': number;
             val: number | null | 'err';
         },
     ): void;
@@ -444,15 +452,15 @@ function handleMouseEnter(
             | 'w-coil'
             | 'm-coil'
             | 'di';
-        reg_addr: number;
-        dev_addr: number;
+        'reg-addr': number;
+        'dev-addr': number;
         val: number | null | 'err';
     },
 ) {
     if (!props.isBig) {
         let newIndex = index;
         for (let i = 0; i <= newIndex; i += 1) {
-            if (fullState.value[i].type !== 'none') newIndex += 1;
+            if (fullState.value[i].type === 'none') newIndex += 1;
         }
         emit('hover', index, newIndex, s);
         leftArrowZ.value = 5;
@@ -512,8 +520,8 @@ async function handleClick(
             | 'w-coil'
             | 'm-coil'
             | 'di';
-        reg_addr: number;
-        dev_addr: number;
+        'reg-addr': number;
+        'dev-addr': number;
         val: number | null | 'err';
     },
 ) {
@@ -538,8 +546,8 @@ async function handleClick(
         if (r.data.status === 'ok') {
             const devStates = [...devicesState.value][props.w.w.d];
             const prevStateIndex = devStates.findIndex((el) => el.type === props.w.w.i);
-            if (prevStateIndex !== -1 && devStates[prevStateIndex].value[newIndex] !== undefined)
-                devStates[prevStateIndex].value[newIndex] = s ? 0 : 1;
+            if (prevStateIndex !== -1 && devStates[prevStateIndex].state[newIndex] !== undefined)
+                devStates[prevStateIndex].state[newIndex] = s ? 0 : 1;
             indexStore.setDevicesState(props.w.w.d, [...devStates]);
         }
     } catch (error) {
@@ -556,13 +564,14 @@ watch(
     () => devicesState.value,
     () => {
         const newState = devicesState.value[props.w.w.d].find((obj) => obj.type === props.w.w.i)
-            ?.value as number[];
+            ?.state as number[];
         state.value = newState ? newState : [...props.w.state];
     },
 );
 
 async function getMbInfo() {
-    if (window.location.pathname.includes('panel')) {
+    // if (window.location.pathname.includes('panel')) {
+    if (window.location.hash.includes('panel')) {
         try {
             const r = await api.post('get_mb_info', {
                 device: props.w.w.d,
@@ -582,16 +591,16 @@ async function getMbInfo() {
                     | 'ir'
                     | 'none',
                 ];
-                dev_addr: number[];
-                reg_addr: number[];
+                'dev-addr': number[];
+                'reg-addr': number[];
             };
             const arr = [];
             for (let i = 0; i < state.value.length; i += 1) {
-                if (mbDevs.value[props.w.w.d][props.w.w.bus || 0].includes(data.dev_addr[i])) {
+                if (mbDevs.value[props.w.w.d][props.w.w.bus || 0].includes(data['dev-addr'][i])) {
                     arr.push({
                         type: data.type[i],
-                        reg_addr: data.reg_addr[i] as number,
-                        dev_addr: data.dev_addr[i] as number,
+                        'reg-addr': data['reg-addr'][i] as number,
+                        'dev-addr': data['dev-addr'][i] as number,
                         val: state.value[i],
                     });
                 }

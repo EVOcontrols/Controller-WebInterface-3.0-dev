@@ -1,6 +1,6 @@
 import { useIndexStore } from '@/stores';
 import type { Lang } from '@/typings/common';
-import { createRouter, createWebHistory } from 'vue-router';
+import { createRouter, createWebHashHistory } from 'vue-router';
 
 declare module 'vue-router' {
     interface RouteMeta {
@@ -9,7 +9,7 @@ declare module 'vue-router' {
 }
 
 const router = createRouter({
-    history: createWebHistory(import.meta.env.BASE_URL),
+    history: createWebHashHistory(import.meta.env.BASE_URL),
     routes: [
         {
             path: '/login',
@@ -43,9 +43,14 @@ const router = createRouter({
                     ],
                 },
                 {
-                    path: 'functions',
-                    name: 'functions',
-                    component: () => import('@/views/functions/FunctionsWrapper.vue'),
+                    path: 'presetAlgoritms',
+                    name: 'presetAlgoritms',
+                    component: () => import('@/views/presetAlgoritms/PresetAlgoritmsWrapper.vue'),
+                },
+                {
+                    path: 'customAlgoritms',
+                    name: 'customAlgoritms',
+                    component: () => import('@/views/customAlgoritms/CustomAlgoritmsWrapper.vue'),
                 },
                 {
                     path: 'settings',

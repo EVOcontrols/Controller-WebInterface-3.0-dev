@@ -77,7 +77,9 @@
                     >
                         <div class="table w-max mt-5">
                             <div
-                                v-for="p in rsAdvancedParams[props.settings.mode]"
+                                v-for="p in rsAdvancedParams[
+                                    props.settings.mode as 'variables' | 'ext-devs'
+                                ]"
                                 :key="`${props.settings.mode}${p.param}`"
                                 class="table-row h-[3.43rem] align-top last:h-10"
                             >
@@ -87,10 +89,14 @@
                                 <UiInput
                                     :init-value="
                                         isKeyOf(
-                                            props.settings.advanced[props.settings.mode],
+                                            props.settings.advanced[
+                                                props.settings.mode as 'variables' | 'ext-devs'
+                                            ],
                                             p.param,
                                         )
-                                            ? props.settings.advanced[props.settings.mode][p.param]
+                                            ? props.settings.advanced[
+                                                  props.settings.mode as 'variables' | 'ext-devs'
+                                              ][p.param]
                                             : undefined
                                     "
                                     :name="p.param"
@@ -166,11 +172,7 @@ const emit = defineEmits<{
     (e: 'changeParity', parity: T['parity']): void;
     (e: 'changeStop', stop: T['stop']): void;
     (e: 'changeNumberingSystem', numberingSystem: NGCSettings['numberingSystem']): void;
-    (
-        e: 'changeAdvancedParam',
-        param: keyof T['advanced'][Exclude<T['mode'], 'off'>],
-        value?: number,
-    ): void;
+    (e: 'changeAdvancedParam', param: 'cycle-pause', value?: number): void;
 }>();
 
 const isAdvancedSettingsExpanded = ref(false);

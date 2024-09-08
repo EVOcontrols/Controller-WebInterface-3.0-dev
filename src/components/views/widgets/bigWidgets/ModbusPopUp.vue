@@ -67,7 +67,7 @@
                     <div
                         class="min-w-[50px] h-[25px] px-2 flex items-center justify-center bg-[#1B4569] rounded text-[#8DC5F6]"
                     >
-                        {{ props.el.dev_addr }}
+                        {{ props.el['dev-addr'] }}
                     </div>
                     Название устройства до 32 символов
                 </div>
@@ -90,7 +90,7 @@
                         ]"
                     >
                         <div class="uppercase">{{ props.el.type }}</div>
-                        <div>{{ props.el.reg_addr }}</div>
+                        <div>{{ props.el['reg-addr'] }}</div>
                     </div>
                     Польз. название регистра до 32 символов
                 </div>
@@ -548,8 +548,8 @@ const props = defineProps<{
             | 'w-coil'
             | 'm-coil'
             | 'di';
-        reg_addr: number;
-        dev_addr: number;
+        'reg-addr': number;
+        'dev-addr': number;
         val: number | null | 'err';
     } | null;
     newReg?: {
@@ -570,8 +570,8 @@ const props = defineProps<{
             | 'm-coil'
             | 'di'
             | 'none';
-        reg_addr: number;
-        dev_addr: number;
+        'reg-addr': number;
+        'dev-addr': number;
         val: number | null | 'err';
         label?: string;
     }[];
@@ -584,7 +584,11 @@ const choosenType = ref<'hr' | 'ir' | 'coil' | 'di' | null>(
 );
 
 const curMbDevLabels = computed<string[]>(() => {
-    return mbDevsLabels.value[props.w.w.d][props.w.w.bus || 0];
+    let res: string[] = [];
+    if (mbDevsLabels.value.length) {
+        res = mbDevsLabels.value[props.w.w.d][props.w.w.bus || 0];
+    }
+    return res;
 });
 
 const emit = defineEmits<{
@@ -604,10 +608,12 @@ const placeholder = computed<string>(() => {
 });
 
 const curDevices = computed<{ val: number; label: string }[] | []>(() => {
-    const curVals = mbDevs.value[props.w.w.d][props.w.w.bus || 0];
     const res = [];
-    for (let i = 0; i < curVals.length; i += 1) {
-        res.push({ val: curVals[i], label: curMbDevLabels.value[curVals[i] - 1] || '' });
+    if (mbDevs.value.length) {
+        const curVals = mbDevs.value[props.w.w.d][props.w.w.bus || 0];
+        for (let i = 0; i < curVals.length; i += 1) {
+            res.push({ val: curVals[i], label: curMbDevLabels.value[curVals[i] - 1] || '' });
+        }
     }
     return res;
 });
@@ -640,8 +646,8 @@ async function deleteItem() {
             if (
                 JSON.stringify({
                     type: props.state[i].type,
-                    reg_addr: props.state[i].reg_addr,
-                    dev_addr: props.state[i].dev_addr,
+                    'reg-addr': props.state[i]['reg-addr'],
+                    'dev-addr': props.state[i]['dev-addr'],
                     val: props.state[i].val,
                 }) === JSON.stringify(props.el)
             ) {
@@ -660,14 +666,14 @@ async function deleteItem() {
             bus: props.w.w.bus || 0,
             index: newIndex,
             type: ['none'],
-            dev_addr: [props.el.dev_addr],
-            reg_addr: [props.el.reg_addr],
+            'dev-addr': [props.el['dev-addr']],
+            'reg-addr': [props.el['reg-addr']],
         });
         if (r.data.status === 'ok') {
             const devStates = [...devicesState.value][props.w.w.d];
             const prevStateIndex = devStates.findIndex((el) => el.type === props.w.w.i);
-            if (prevStateIndex !== -1 && devStates[prevStateIndex].value[newIndex] !== undefined)
-                devStates[prevStateIndex].value[newIndex] = null;
+            if (prevStateIndex !== -1 && devStates[prevStateIndex].state[newIndex] !== undefined)
+                devStates[prevStateIndex].state[newIndex] = null;
             indexStore.setDevicesState(props.w.w.d, [...devStates]);
             emit('close');
         }
@@ -786,21 +792,7 @@ async function createReg() {
         );
         const newLabels = props.state.map((el) => el.label || '');
         newLabels[index] = activeLabelInputVal.value;
-        for (let i = 0; i < Math.ceil(newLabels.length / labelsFileLength); i += 1) {
-            if (
-                JSON.stringify(
-                    props.state
-                        .map((el) => el.label || '')
-                        .slice(i * labelsFileLength, (i + 1) * labelsFileLength),
-                ) !==
-                JSON.stringify(newLabels.slice(i * labelsFileLength, (i + 1) * labelsFileLength))
-            ) {
-                saveRegLabel(
-                    newLabels.slice(i * labelsFileLength, (i + 1) * labelsFileLength) as string[],
-                    i,
-                );
-            }
-        }
+        saveRegLabel(newLabels);
     }
     setTimeout(() => {
         isLoading.value = false;
@@ -808,7 +800,7 @@ async function createReg() {
     }, 750);
 }
 
-async function saveRegLabel(labels: string[], part: number) {
+async function saveRegLabel(labels: string[]) {
     const isSavingError = await saveToFile(
         {
             type: 'labels',
@@ -817,26 +809,27 @@ async function saveRegLabel(labels: string[], part: number) {
             interf: 'mb-var',
         },
         { labels: labels },
-        part,
     );
     if (isSavingError) {
         if (isAborted.value) {
             return;
         }
         setTimeout(() => {
-            saveRegLabel(labels, part);
+            saveRegLabel(labels);
         }, 5);
     } else {
-        indexStore.changeLabel(props.w.w.d, 'mb-var', labels, part, props.w.w.bus);
+        indexStore.changeLabel(props.w.w.d, 'mb-var', labels, props.w.w.bus);
     }
 }
 
 async function createDev() {
     if (invalidDevName.value || invalidDevAddr.value || !devAddrInputVal.value) return;
     isLoading.value = true;
-    const devs = [...mbDevs.value[props.w.w.d][props.w.w.bus || 0], devAddrInputVal.value].sort(
-        (a, b) => a - b,
-    );
+    let prev: number[] = [];
+    if (mbDevs.value.length) {
+        prev = mbDevs.value[props.w.w.d][props.w.w.bus || 0];
+    }
+    const devs = [...prev, devAddrInputVal.value].sort((a, b) => a - b);
     await setDevs(devs);
     await setLabel(devAddrInputVal.value, activeLabelInputVal.value);
     setTimeout(() => {
@@ -978,21 +971,10 @@ async function setLabel(index: number, label: string | undefined) {
     }
     const newLabels = [...curMbDevLabels.value];
     newLabels[index - 1] = label;
-    for (let i = 0; i < Math.ceil(newLabels.length / labelsFileLength); i += 1) {
-        if (
-            JSON.stringify(
-                curMbDevLabels.value.slice(i * labelsFileLength, (i + 1) * labelsFileLength),
-            ) !== JSON.stringify(newLabels.slice(i * labelsFileLength, (i + 1) * labelsFileLength))
-        ) {
-            saveLabel(
-                newLabels.slice(i * labelsFileLength, (i + 1) * labelsFileLength) as string[],
-                i,
-            );
-        }
-    }
+    saveLabel(newLabels);
 }
 
-async function saveLabel(labels: string[], part: number) {
+async function saveLabel(labels: string[]) {
     const isSavingError = await saveToFile(
         {
             type: 'labels',
@@ -1002,17 +984,16 @@ async function saveLabel(labels: string[], part: number) {
             interf: 'mb-var',
         },
         { labels: labels },
-        part,
     );
     if (isSavingError) {
         if (isAborted.value) {
             return;
         }
         setTimeout(() => {
-            saveLabel(labels, part);
+            saveLabel(labels);
         }, 5);
     } else {
-        indexStore.setMbDevsLabels(props.w.w.d, props.w.w.bus || 0, part, labels);
+        indexStore.setMbDevsLabels(props.w.w.d, props.w.w.bus || 0, labels);
     }
 }
 
@@ -1027,8 +1008,8 @@ async function handleDeleteDevBtnClick() {
         (el) => el !== deletedDev.value?.val,
     );
     for await (const el of props.state) {
-        if (el.dev_addr === deletedDev.value?.val) {
-            await setData(el.dev_addr, el.reg_addr, 'none');
+        if (el['dev-addr'] === deletedDev.value?.val) {
+            await setData(el['dev-addr'], el['reg-addr'], 'none');
         }
     }
     await setDevs(devs);
@@ -1061,7 +1042,8 @@ async function setData(
             propIndex !== undefined
                 ? propIndex
                 : props.state.findIndex(
-                      (el) => el.dev_addr === dev && el.reg_addr === reg && el.type !== 'none',
+                      (el) =>
+                          el['dev-addr'] === dev && el['reg-addr'] === reg && el.type !== 'none',
                   );
         if (index !== -1) {
             const r = await api.post('set_mb_info', {
@@ -1069,8 +1051,8 @@ async function setData(
                 bus: props.w.w.bus || 0,
                 index: index,
                 type: [type],
-                dev_addr: [dev],
-                reg_addr: [reg],
+                'dev-addr': [dev],
+                'reg-addr': [reg],
             });
             return r.data;
         }

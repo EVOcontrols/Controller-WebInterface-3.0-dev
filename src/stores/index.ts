@@ -58,7 +58,7 @@ export interface InterfVal {
     type: string;
     device: number;
     index: number;
-    value: number[] | null[] | [number | null][];
+    state: number[] | null[] | [number | null][];
     bus?: number;
 }
 
@@ -74,6 +74,10 @@ export const useIndexStore = defineStore('indexStore', () => {
           ]
         | []
     >([]);
+
+    // const ip = ref<string>(window.location.host || '192.168.0.30');
+    // const ip = ref<string>('192.168.1.99');
+    const ip = ref<string>('10.8.0.1:49163');
 
     const mbDevs = ref<number[][][]>([]);
 
@@ -103,6 +107,9 @@ export const useIndexStore = defineStore('indexStore', () => {
     const valuesRange = ref<{ interf: string; values: { min: number; max: number } }[]>([
         { interf: 'pwm-out', values: { min: 0, max: 100 } },
         { interf: 'int-var', values: { min: -32768, max: 32767 } },
+        { interf: 'tim-varms', values: { min: 0, max: 15000 } },
+        { interf: 'tim-vars', values: { min: 0, max: 15000 } },
+        { interf: 'tim-varmin', values: { min: 0, max: 250 } },
     ]);
 
     const sortedChosenInterfaces = ref<string[]>([]);
@@ -125,7 +132,9 @@ export const useIndexStore = defineStore('indexStore', () => {
         mergeDefaults: (val: any) => (val === 'user' || val === 'admin' ? val : 'user'),
     });
 
-    const isAuth = ref(!!authToken.value && !!userRole.value);
+    //TODO
+    const isAuth = ref(true);
+    // const isAuth = ref(!!authToken.value && !!userRole.value);
 
     const lang = useStorage<Lang>(
         'lang',
@@ -154,7 +163,7 @@ export const useIndexStore = defineStore('indexStore', () => {
 
     const isInterfaceStarted = ref(false);
 
-    const ngcModbusMode = ref<ControllerSettings['modbus'][number]['mode']>('off');
+    const ngcModbusMode = ref<ControllerSettings['rs-485'][number]['mode']>('off');
 
     const extDevsList = ref<ExtDevsList>();
 
@@ -245,7 +254,7 @@ export const useIndexStore = defineStore('indexStore', () => {
         isInterfaceStarted.value = value;
     }
 
-    function setNGCModbusMode(mode: ControllerSettings['modbus'][number]['mode']) {
+    function setNGCModbusMode(mode: ControllerSettings['rs-485'][number]['mode']) {
         ngcModbusMode.value = mode;
     }
 
@@ -261,8 +270,9 @@ export const useIndexStore = defineStore('indexStore', () => {
 
     function setDevices(device: Device) {
         const newArr = [...devices.value];
+        const prevEl = newArr[newArr.length - 1];
         for (let i = newArr.length; i < device.addr; i++) {
-            newArr.push(devices.value[0]);
+            newArr.push(prevEl);
         }
         newArr.push(device);
         devices.value = newArr;
@@ -424,13 +434,20 @@ export const useIndexStore = defineStore('indexStore', () => {
             }
         } else {
             interfVal.forEach((i) => {
-                const index = devicesState.value[device].findIndex((obj) => obj.type === i.type);
+                let index = -1;
+                if (i.bus !== undefined) {
+                    index = devicesState.value[device].findIndex((obj) => {
+                        return obj.type === i.type && obj.bus === i.bus;
+                    });
+                } else {
+                    index = devicesState.value[device].findIndex((obj) => obj.type === i.type);
+                }
                 if (index === -1) {
                     devicesState.value[device].push(i);
                 } else {
                     const prevDeviceState = [...devicesState.value];
-                    prevDeviceState[device][index] = i;
-                    devicesState.value = [...prevDeviceState];
+                    // prevDeviceState[device][index] = i;
+                    // devicesState.value = [...prevDeviceState];
                 }
             });
         }
@@ -486,7 +503,7 @@ export const useIndexStore = defineStore('indexStore', () => {
     function setOWIds(d: number, bus: number, ids: string[]) {
         if (!OWIds.value[d]) {
             const arr = [...OWIds.value];
-            for (let i = OWIds.value.length; i < d; i += 1) {
+            for (let i = OWIds.value.length - 1; i < d; i += 1) {
                 arr.push([]);
             }
             const busArr = [];
@@ -570,7 +587,6 @@ export const useIndexStore = defineStore('indexStore', () => {
             | 'int-var'
             | 'tim-var',
         labelsArr: string[] | null,
-        part: number,
         bus?: number,
     ) {
         const newArr = [...labels.value];
@@ -591,11 +607,6 @@ export const useIndexStore = defineStore('indexStore', () => {
                 }
             }
             const labelsVal = [];
-            if (part) {
-                for (let i = 0; i < part; i++) {
-                    labelsVal.push(...arr);
-                }
-            }
             labelsVal.push(...(labelsArr?.length ? labelsArr : arr));
             val.push(labelsVal);
             const obj = { interf: interf as string, val: val as [[] | string[]] };
@@ -614,16 +625,6 @@ export const useIndexStore = defineStore('indexStore', () => {
                     }
                 }
                 const labelsVal = bus ? val[bus] : val[0];
-                if (labelsVal.length / labelsFileLength < part) {
-                    for (let i = labelsVal.length / labelsFileLength; i < part; i++) {
-                        labelsVal.push(...arr);
-                    }
-                    labelsVal.push(...(labelsArr?.length ? labelsArr : arr));
-                } else {
-                    for (let i = 0; i < labelsFileLength; i++) {
-                        labelsVal[part * labelsFileLength + i] = labelsArr ? labelsArr[i] : arr[i];
-                    }
-                }
                 val[bus || 0] = labelsVal;
                 interfObj.val = val as [string[] | []];
             } else {
@@ -634,11 +635,6 @@ export const useIndexStore = defineStore('indexStore', () => {
                     }
                 }
                 const labelsVal = [];
-                if (part) {
-                    for (let i = 0; i < part; i++) {
-                        labelsVal.push(...arr);
-                    }
-                }
                 labelsVal.push(...(labelsArr ? labelsArr : arr));
                 val.push(labelsVal);
                 const obj = { interf: interf as string, val: val as [[] | string[]] };
@@ -668,21 +664,16 @@ export const useIndexStore = defineStore('indexStore', () => {
             | 'int-var'
             | 'tim-var',
         labelsArr: string[],
-        part: number,
         bus?: number,
     ) {
         const newArr = [...labels.value];
         const interfObj = newArr[d]?.find((el) => el.interf === interf);
         if (!interfObj) {
-            setMbDevsLabels(d, bus || 0, part, labelsArr);
+            setMbDevsLabels(d, bus || 0, labelsArr);
             return;
         }
         const val = [...interfObj.val];
-        const labelsVal = bus ? val[bus] : val[0];
-        for (let i = 0; i < labelsFileLength; i++) {
-            labelsVal[part * labelsFileLength + i] = labelsArr[i];
-        }
-        val[bus || 0] = labelsVal;
+        val[bus || 0] = labelsArr;
         interfObj.val = val as [string[] | []];
         labels.value = [...newArr] as [
             | {
@@ -710,13 +701,14 @@ export const useIndexStore = defineStore('indexStore', () => {
                 prevDevs.push(val);
             } else {
                 const val = [];
-                if (prevDevs[d].length < bus) {
+                if (prevDevs[d] && prevDevs[d].length < bus) {
                     for (let i = prevDevs[d].length; i < bus; i++) {
                         val.push([]);
                     }
                     val.push(devs);
                     prevDevs[d] = val;
                 } else {
+                    if (!prevDevs[d]) prevDevs[d] = [];
                     prevDevs[d][bus] = devs;
                 }
             }
@@ -750,7 +742,7 @@ export const useIndexStore = defineStore('indexStore', () => {
         mbDevs.value = [];
     }
 
-    function setMbDevsLabels(d: number, bus: number, part: number, labelsArr: string[]) {
+    function setMbDevsLabels(d: number, bus: number = 0, labelsArr: string[]) {
         const newArr = [...mbDevsLabels.value];
         if (!newArr.length || !newArr[d]) {
             if (d) {
@@ -765,13 +757,6 @@ export const useIndexStore = defineStore('indexStore', () => {
                 }
             }
             const labelsVal = [];
-            if (part) {
-                for (let i = 0; i < part; i++) {
-                    for (let j = 0; j < labelsFileLength; j++) {
-                        labelsVal.push('');
-                    }
-                }
-            }
             labelsVal.push(...labelsArr);
             val.push(labelsVal);
             newArr.push(val);
@@ -783,18 +768,6 @@ export const useIndexStore = defineStore('indexStore', () => {
                 }
             }
             const labelsVal = bus ? val[bus] : val[0];
-            if (labelsVal && labelsVal.length / labelsFileLength < part) {
-                for (let i = labelsVal.length / labelsFileLength; i < part; i++) {
-                    for (let j = 0; j < labelsFileLength; j++) {
-                        labelsVal.push('');
-                    }
-                }
-                labelsVal.push(...labelsArr);
-            } else {
-                for (let i = 0; i < labelsFileLength; i++) {
-                    if (labelsVal) labelsVal[part * labelsFileLength + i] = labelsArr[i];
-                }
-            }
             val[bus || 0] = labelsVal;
             newArr[d] = val;
         }
@@ -822,6 +795,7 @@ export const useIndexStore = defineStore('indexStore', () => {
     }
 
     return {
+        ip,
         api,
         labels,
         mbDevs,

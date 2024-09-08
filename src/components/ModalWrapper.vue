@@ -4,7 +4,7 @@
         appear
     >
         <div
-            class="fixed top-0 bottom-0 left-0 right-0 z-[39] bg-[#001d34b2] flex items-center justify-center"
+            class="fixed top-0 bottom-0 left-0 right-0 z-[39] bg-[#001d34b2] flex items-center justify-center modal"
             v-if="isShown"
         >
             <slot name="custom">

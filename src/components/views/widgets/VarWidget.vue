@@ -25,7 +25,7 @@
 </template>
 
 <script lang="ts" setup>
-import type { Widget } from '@/stores';
+import type { Widget, Device } from '@/stores';
 import WidgetHeader from '@/components/views/widgets/WidgetHeader.vue';
 import WidgetFooter from '@/components/views/widgets/WidgetFooter.vue';
 import VarStates from '@/components/views/widgets/states/VarStates.vue';
@@ -47,7 +47,7 @@ const props = defineProps<{
 }>();
 
 const devStatus = computed<'on' | 'off' | 'no-conn' | 'init' | 'error' | undefined>(() => {
-    return devices.value.find((el) => el.addr === props.w.w.d)?.state;
+    return devices.value.find((el: Device) => el.addr === props.w.w.d)?.state;
 });
 
 function setActiveIO(index: number, s: number | null) {

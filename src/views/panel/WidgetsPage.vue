@@ -65,6 +65,7 @@ import VarWidget from '@/components/views/widgets/VarWidget.vue';
 import TempWidget from '@/components/views/widgets/TempWidget.vue';
 import OwWidget from '@/components/views/widgets/OwWidget.vue';
 import MbWidget from '@/components/views/widgets/MbWidget.vue';
+import type { InterfVal } from '@/stores';
 
 const indexStore = useIndexStore();
 
@@ -78,7 +79,7 @@ const {
     isMbInit,
 } = storeToRefs(indexStore);
 
-const bigWidget = ref<{ d: number; i: string } | null>(null);
+const bigWidget = ref<{ d: number; i: string; bus?: number } | null>(null);
 
 const scrollEl = ref<HTMLElement | undefined>();
 
@@ -102,16 +103,18 @@ const widgets = computed<{
 }>(() => {
     const small: { w: Widget; state: number[] }[] = [];
     let big: { w: Widget; state: number[] } | null = null;
-    sortedChosenDevices.value.forEach((d) => {
-        sortedChosenInterfaces.value.forEach((i) => {
-            const index = devicesState.value[d]?.findIndex((interf) => interf.type === i);
+    sortedChosenDevices.value.forEach((d: number) => {
+        sortedChosenInterfaces.value.forEach((i: string) => {
+            const index = devicesState.value[d]?.findIndex(
+                (interf: InterfVal) => interf.type === i,
+            );
             if (
                 devicesState.value[d] &&
                 index !== -1 &&
                 devices.value[d].state !== 'no-conn' &&
                 devices.value[d].state !== 'error'
             ) {
-                let state = (devicesState.value[d][index]?.value as number[]) || [];
+                let state = (devicesState.value[d][index]?.state as number[]) || [];
                 const widget: Widget = {
                     d: d,
                     i: i,
@@ -123,17 +126,43 @@ const widgets = computed<{
                 } else if (['bin-in', 'bin-out'].includes(i)) {
                     widget.component = DiscreteWidget;
                 } else if (['1w-sens'].includes(i)) {
-                    widget.component = TempWidget;
-                    widget.bus = devicesState.value[d][index].bus;
+                    const arr = devicesState.value[d];
+                    arr.filter((obj) => obj.type === '1w-sens').forEach((obj) => {
+                        widget.component = TempWidget;
+                        widget.bus = obj.bus;
+                        if (
+                            bigWidget.value &&
+                            bigWidget.value.d === d &&
+                            bigWidget.value.i === i &&
+                            bigWidget.value.bus === obj.bus
+                        ) {
+                            big = { w: { ...widget }, state: obj.state as number[] };
+                        } else {
+                            small.push({ w: { ...widget }, state: obj.state as number[] });
+                        }
+                    });
                 } else if (['int-var', 'bin-var', 'tim-var'].includes(i)) {
                     widget.component = VarWidget;
                 } else if (i === '1w-rom') {
-                    widget.component = OwWidget;
-                    widget.bus = devicesState.value[d][index].bus;
+                    const arr = devicesState.value[d];
+                    arr.filter((obj) => obj.type === '1w-rom').forEach((obj) => {
+                        widget.component = OwWidget;
+                        widget.bus = obj.bus;
+                        if (
+                            bigWidget.value &&
+                            bigWidget.value.d === d &&
+                            bigWidget.value.i === i &&
+                            bigWidget.value.bus === obj.bus
+                        ) {
+                            big = { w: { ...widget }, state: obj.state as number[] };
+                        } else {
+                            small.push({ w: { ...widget }, state: obj.state as number[] });
+                        }
+                    });
                 } else if (i === 'mb-var') {
                     widget.component = MbWidget;
                 }
-                if (widget.component !== '') {
+                if (widget.component !== '' && !i.includes('1w-')) {
                     if (bigWidget.value && bigWidget.value.d === d && bigWidget.value.i === i) {
                         big = { w: widget, state: state };
                     } else {
@@ -173,13 +202,13 @@ const gridClasses = computed<{ all: string; big: string; small: string }>(() => 
     };
 });
 
-function setBigWidget(d: number, i: string) {
+function setBigWidget(d: number, i: string, bus?: number) {
     if (!d && !i) {
         bigWidget.value = null;
         isMb.value = false;
     } else {
         if (d === undefined || i === undefined) return;
-        bigWidget.value = { d: d, i: i };
+        bigWidget.value = { d: d, i: i, bus: bus };
         isCalibration.value = false;
         isPriorWOpen.value = false;
     }
@@ -231,11 +260,11 @@ function handleCalibrClick(res: boolean) {
     indexStore.changeIsPriorWOpen(res);
 }
 
-function handleScanClick(res: boolean, d?: number, i?: string) {
+function handleScanClick(res: boolean, d?: number, i?: string, bus?: number) {
     isPriorWOpen.value = res;
     indexStore.changeIsPriorWOpen(isPriorWOpen.value);
     if (d !== undefined && i !== undefined) {
-        bigWidget.value = { d: d, i: i };
+        bigWidget.value = { d: d, i: i, bus: bus };
     }
 }
 
@@ -270,8 +299,10 @@ watch(
             }),
         );
         if (chosenDevices.value.length > prevChosenDevices.length) {
-            let prevDev = chosenDevices.value.filter((x) => !prevChosenDevices.includes(x))[0];
-            chosenInterfaces.value.forEach((interf) => {
+            let prevDev = chosenDevices.value.filter(
+                (x: number) => !prevChosenDevices.includes(x),
+            )[0];
+            chosenInterfaces.value.forEach((interf: string) => {
                 const index = newItems.findIndex(
                     (item) => item.w.i === interf && item.w.d === prevDev,
                 );
@@ -308,9 +339,9 @@ watch(
         );
         if (chosenInterfaces.value.length > prevChosenInterfaces.length) {
             let prevInterf = chosenInterfaces.value.filter(
-                (x) => !prevChosenInterfaces.includes(x),
+                (x: string) => !prevChosenInterfaces.includes(x),
             )[0];
-            chosenDevices.value.forEach((d) => {
+            chosenDevices.value.forEach((d: number) => {
                 const index = newItems.findIndex(
                     (item) => item.w.d === d && item.w.i === prevInterf,
                 );

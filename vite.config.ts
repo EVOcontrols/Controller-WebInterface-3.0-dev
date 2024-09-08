@@ -6,7 +6,7 @@ import vue from '@vitejs/plugin-vue';
 
 // https://vitejs.dev/config/
 export default defineConfig({
-    base: './',
+    base: '',
     plugins: [
         vue(),
         AutoImport({
@@ -30,7 +30,7 @@ export default defineConfig({
     server: {
         host: true,
         proxy: {
-            '^/(api|misc/)': {
+            '^/(api|user/)': {
                 target: 'http://192.168.0.30',
                 configure: (proxy) => {
                     proxy.on('proxyReq', (proxyReq) => {

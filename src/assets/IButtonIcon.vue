@@ -26,6 +26,11 @@
 <script setup lang="ts"></script>
 
 <style lang="postcss" scoped>
+svg path,
+svg rect {
+    transition: all 0.3s;
+}
+
 svg.active path,
 svg.active rect {
     fill: #00d6af;

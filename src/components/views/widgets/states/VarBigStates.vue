@@ -1,5 +1,5 @@
 <template>
-    <div class="relative flex overflow-y-hidden rounded-l-lg w-[422px]">
+    <div class="relative flex overflow-y-hidden rounded-l-lg w-[424px]">
         <div
             class="absolute w-full h-[18px] rotate-180"
             :style="{
@@ -39,7 +39,13 @@
                             s === null
                                 ? '\u2013'
                                 : props.w.w.i !== 'bin-var'
-                                ? s
+                                ? props.w.w.i === 'tim-var'
+                                    ? s <= 15000
+                                        ? `${s} ${t('ms')}`
+                                        : s > 150000 && s % 60000 === 0
+                                        ? `${s / 60000} ${t('min')}`
+                                        : `${s / 1000} ${t('s')}`
+                                    : s
                                 : s
                                 ? t('true')
                                 : t('false')
@@ -65,7 +71,7 @@
 </template>
 
 <script lang="ts" setup>
-import type { Widget } from '@/stores';
+import type { InterfVal, Widget } from '@/stores';
 
 const indexStore = useIndexStore();
 
@@ -124,9 +130,17 @@ async function handleClick(index: number, s: number | null) {
         });
         if (r.data.status === 'ok') {
             const devStates = [...devicesState.value][props.w.w.d];
-            const prevStateIndex = devStates.findIndex((el) => el.type === props.w.w.i);
-            if (prevStateIndex !== -1 && devStates[prevStateIndex].value[index] !== undefined)
-                devStates[prevStateIndex].value[index] = s ? 0 : 1;
+            const prevStateIndex = devStates.findIndex(
+                (el: {
+                    type: string;
+                    device: number;
+                    index: number;
+                    state: number[] | [number | null][] | null[];
+                    bus?: number | undefined;
+                }) => el.type === props.w.w.i,
+            );
+            if (prevStateIndex !== -1 && devStates[prevStateIndex].state[index] !== undefined)
+                devStates[prevStateIndex].state[index] = s ? 0 : 1;
             indexStore.setDevicesState(props.w.w.d, [...devStates]);
         }
     } catch (error) {
@@ -142,8 +156,9 @@ async function handleClick(index: number, s: number | null) {
 watch(
     () => devicesState.value,
     () => {
-        const newState = devicesState.value[props.w.w.d].find((obj) => obj.type === props.w.w.i)
-            ?.value as number[];
+        const newState = devicesState.value[props.w.w.d].find(
+            (obj: InterfVal) => obj.type === props.w.w.i,
+        )?.state as number[];
         state.value = newState ? newState : [...props.w.state];
     },
 );
@@ -153,10 +168,16 @@ const { t } = useI18n({
         ru: {
             true: 'ИСТИНА',
             false: 'ЛОЖЬ',
+            ms: 'мс',
+            s: 'с',
+            min: 'мин',
         },
         en: {
             true: 'TRUE',
             false: 'FALSE',
+            ms: 'ms',
+            s: 's',
+            min: 'min',
         },
     },
 });

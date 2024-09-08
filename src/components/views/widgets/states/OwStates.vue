@@ -224,7 +224,7 @@ watch(
     () => devicesState.value,
     () => {
         const newState = devicesState.value[props.w.w.d].find((obj) => obj.type === props.w.w.i)
-            ?.value as [number | null];
+            ?.state as [number | null];
         curState.value = newState ? newState : [...props.w.state];
     },
 );

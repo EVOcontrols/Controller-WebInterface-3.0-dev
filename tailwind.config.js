@@ -2,49 +2,52 @@
 const plugin = require('tailwindcss/plugin');
 
 export default {
-  content: ['./index.html', './src/**/*.{vue,css,postcss}', './src/assets/img/**/*.svg'],
-  theme: {
-    extend: {
-      fontFamily: {
-        gilroy: ['Gilroy'],
-        roboto: ['Roboto'],
-      },
-      transitionDuration: {
-        DEFAULT: '300ms',
-      },
-      transitionTimingFunction: {
-        DEFAULT: 'ease',
-      },
-    },
-  },
-  plugins: [
-    plugin(({ addVariant, matchUtilities }) => {
-      addVariant('selected', '&.selected');
-      addVariant('error', '&.error');
-      addVariant('on', '&.on');
-      addVariant('off', '&.off');
-      addVariant('thumb', ['&::-webkit-slider-thumb', '&::-moz-range-thumb']);
-      matchUtilities(
-        {
-          scrollbar: (value) => {
-            return {
-              'scrollbar-width': 'thin',
-              'scrollbar-color': '#316694 transparent',
-              '&::-webkit-scrollbar': {
-                width: `${value}px`,
-                background: 'transparent',
-              },
-              '&::-webkit-scrollbar-thumb': {
-                'background-color': '#316694',
-                display: 'inline-block',
-                'border-top-left-radius': ' 0.375rem',
-                'border-bottom-left-radius': '0.375rem',
-              },
-            };
-          },
+    content: ['./index.html', './src/**/*.{vue,css,postcss}', './src/assets/img/**/*.svg'],
+    theme: {
+        extend: {
+            fontFamily: {
+                gilroy: ['Gilroy'],
+                roboto: ['Roboto'],
+            },
+            transitionDuration: {
+                DEFAULT: '300ms',
+            },
+            transitionTimingFunction: {
+                DEFAULT: 'ease',
+            },
         },
-        { values: { 2: '2', 3: '3', 4: '4' } },
-      );
-    }),
-  ],
+    },
+    plugins: [
+        plugin(({ addVariant, matchUtilities }) => {
+            addVariant('selected', '&.selected');
+            addVariant('error', '&.error');
+            addVariant('on', '&.on');
+            addVariant('off', '&.off');
+            addVariant('thumb', ['&::-webkit-slider-thumb', '&::-moz-range-thumb']);
+            matchUtilities(
+                {
+                    scrollbar: (value) => {
+                        return {
+                            'scrollbar-width': 'thin',
+                            'scrollbar-color': '#316694 transparent',
+                            '&::-webkit-scrollbar': {
+                                width: `${value}px`,
+                                background: 'transparent',
+                            },
+                            '&::-webkit-scrollbar-thumb': {
+                                'background-color': '#316694',
+                                display: 'inline-block',
+                                'border-top-left-radius': ' 0.375rem',
+                                'border-bottom-left-radius': '0.375rem',
+                            },
+                            '&::-webkit-scrollbar-button': {
+                                display: 'none !important',
+                            },
+                        };
+                    },
+                },
+                { values: { 2: '2', 3: '3', 4: '4' } },
+            );
+        }),
+    ],
 };

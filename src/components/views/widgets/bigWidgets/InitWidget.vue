@@ -276,16 +276,16 @@ const curLabels = computed<[string | undefined]>(() => {
 
 async function getEntInit() {
     try {
-        const quant = devicesState.value[props.w.w.d].find((el) => el.type === props.w.w.i)?.value
+        const quant = devicesState.value[props.w.w.d].find((el) => el.type === props.w.w.i)?.state
             .length;
         if (!quant) return;
         const r = await api.post('get_ent_init', {
             type: props.w.w.i,
             device: props.w.w.d,
             index: 0,
-            quant: quant,
+            quantity: quant,
         });
-        const res = await r.data.value;
+        const res = await r.data.state;
         itemsStatuses.value = res;
     } catch (error) {
         if (isAborted.value) {
@@ -309,7 +309,7 @@ async function handleSaveClick() {
             type: props.w.w.i,
             device: props.w.w.d,
             index: 0,
-            value: itemsStatuses.value,
+            state: itemsStatuses.value,
         });
         if (r.data.status === 'ok') {
             emit('init');
