@@ -77,7 +77,7 @@ import IButtonIcon from '@/assets/IButtonIcon.vue';
 
 const props = defineProps<{
     isLoading: boolean;
-    algoritms: number[];
+    algoritms: { val: 0 | 1 | null; label: string }[];
     type?: 1 | 2;
 }>();
 

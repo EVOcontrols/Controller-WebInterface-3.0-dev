@@ -165,7 +165,7 @@
                     >
                         <span class="w-[22px] text-end group-hover:underline">{{ index + 1 }}</span>
                         <span class="flex-1 group-hover:underline group-hover:text-[#ADEBFF]">
-                            {{ curLabels[index] ? curLabels[index] : '\u2013' }}
+                            {{ curLabels && curLabels[index] ? curLabels[index] : '\u2013' }}
                         </span>
                         <span
                             v-if="
@@ -238,7 +238,13 @@
                             >{{ index + 1 }}</span
                         >
                         <span class="flex-1 group-hover:underline group-hover:text-[#ADEBFF]">
-                            {{ s !== null ? curLabels[index] : '' }}
+                            {{
+                                s !== null
+                                    ? curLabels && curLabels.length
+                                        ? curLabels[index]
+                                        : ''
+                                    : ''
+                            }}
                         </span>
                         <span
                             v-if="s !== null"
@@ -274,7 +280,13 @@
                             >{{ index + 1 }}</span
                         >
                         <span class="flex-1 group-hover:underline group-hover:text-[#ADEBFF]">
-                            {{ s !== null ? curLabels[index] : '' }}
+                            {{
+                                s !== null
+                                    ? curLabels && curLabels.length
+                                        ? curLabels[index]
+                                        : ''
+                                    : ''
+                            }}
                         </span>
                     </div>
                 </div>
@@ -305,7 +317,8 @@ const curLabels = computed<[string | undefined]>(() => {
             return val.val[bus] as [string | undefined];
         }
     }
-    return [undefined];
+    const arr: [string | undefined] = [''];
+    return arr;
 });
 
 const activeLabel = ref<{

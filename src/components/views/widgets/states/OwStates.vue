@@ -223,8 +223,9 @@ onMounted(() => {
 watch(
     () => devicesState.value,
     () => {
-        const newState = devicesState.value[props.w.w.d].find((obj) => obj.type === props.w.w.i)
-            ?.state as [number | null];
+        const newState = devicesState.value[props.w.w.d].find(
+            (obj) => obj.type === props.w.w.i && obj.bus === props.w.w.bus,
+        )?.state as [number | null];
         curState.value = newState ? newState : [...props.w.state];
     },
 );

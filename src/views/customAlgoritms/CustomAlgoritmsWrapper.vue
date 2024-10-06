@@ -1,5 +1,5 @@
 <template>
-    <div class="relative mt-[1.625rem] mx-10">
+    <div class="relative mt-[1.625rem] mx-10 flex flex-col">
         <div class="flex items-center flex-none">
             <div
                 v-for="device in [...new Set(devices)] as Device[]"
@@ -64,18 +64,20 @@
                 <div>{{ t('firmWare') }} {{ shownStatus.version }}</div>
             </div>
         </div>
-        <div class="flex mt-6 gap-3">
+        <div class="flex mt-6 gap-3 flex-1">
             <FunctionsBlock
                 :items="algoritms1"
                 :selectedAlgoritms="selectedAlgoritmsLeft"
                 :isAllChecked="isAllCheckedLeft"
+                :curAction="curActionLeft"
+                :device="curDev"
                 @deleteAlgoritm="
-                    (indexes: number[]) => {
+                    (indexes: Algoritm[]) => {
                         setAlgoritmsForDelete(indexes, 1);
                     }
                 "
                 @selectAlgoritm="
-                    (value: boolean, index: number) => {
+                    (value: boolean, index: Algoritm) => {
                         selectAlgoritm(value, index, 'l');
                     }
                 "
@@ -84,24 +86,36 @@
                         selectAllAlgoritms(res, 'l');
                     }
                 "
+                @setCurAction="
+                    (res: Action) => {
+                        setCurAction(res, 'l');
+                    }
+                "
             />
             <FunctionsBlock
                 :items="algoritms2"
                 :selectedAlgoritms="selectedAlgoritmsRight"
                 :isAllChecked="isAllCheckedRight"
+                :curAction="curActionRight"
+                :device="curDev"
                 @deleteAlgoritm="
-                    (indexes: number[]) => {
+                    (indexes: Algoritm[]) => {
                         setAlgoritmsForDelete(indexes, 1);
                     }
                 "
                 @selectAlgoritm="
-                    (value: boolean, index: number) => {
+                    (value: boolean, index: Algoritm) => {
                         selectAlgoritm(value, index, 'r');
                     }
                 "
                 @selectAllAlgoritms="
                     (res: boolean) => {
                         selectAllAlgoritms(res, 'r');
+                    }
+                "
+                @setCurAction="
+                    (res: Action) => {
+                        setCurAction(res, 'r');
                     }
                 "
             />
@@ -133,10 +147,27 @@ import type { Device } from '@/stores';
 import FunctionsBlock from '@/components/views/customAlgoritms/FunctionsBlock.vue';
 import DeleteAlgoritmPopUp from '@/components/views/customAlgoritms/DeleteAlgoritmPopUp.vue';
 import ControlBlock from '@/components/views/customAlgoritms/ControlBlock.vue';
+import type { LabelsType } from '@/typings/files';
+import axios from 'axios';
+
+const { readFile } = useReadWriteFiles();
 
 const indexStore = useIndexStore();
+const funcStore = useFuncsStore();
+
+const api = indexStore.getApi().api as axios.AxiosInstance;
+const isAborted = indexStore.getApi().isAborted;
 
 const { devices } = storeToRefs(indexStore);
+const { funcLabels } = storeToRefs(funcStore);
+
+type Action =
+    | { label: 'triggers'; val: 'udf-trig' }
+    | { label: 'conditions'; val: 'udf-cond' }
+    | { label: 'actions'; val: 'udf-act' }
+    | { label: 'transformations'; val: 'udf-trans' };
+
+type Algoritm = { val: 0 | 1 | null; label: string };
 
 const curDev = ref<Device>(devices.value[0]);
 let showStatusTimer: ReturnType<typeof setTimeout> | undefined;
@@ -147,21 +178,21 @@ const statusFormLeft = ref(0);
 const isMouseOnStatusForm = ref(false);
 const isMouseOnDevice = ref(false);
 const showStatusInfo = ref(false);
-const algoritms1 = ref<number[]>([
-    0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25,
-    26, 27, 28, 29, 30, 31,
-]);
-const algoritms2 = ref<number[]>([
-    0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25,
-    26, 27, 28, 29, 30, 31,
-]);
-const algoritmsForDeletion = ref<number[]>([]);
+const algoritms1 = ref<Algoritm[]>([]);
+const algoritms2 = ref<Algoritm[]>([]);
+const algoritmsForDeletion = ref<Algoritm[]>([]);
 const algoritmsForDeletionType = ref<1 | 2>();
 const isAlgoritmsDeleting = ref(false);
-const selectedAlgoritmsLeft = ref<number[]>([]);
-const selectedAlgoritmsRight = ref<number[]>([]);
+const selectedAlgoritmsLeft = ref<Algoritm[]>([]);
+const selectedAlgoritmsRight = ref<Algoritm[]>([]);
 const isAllCheckedLeft = ref(false);
 const isAllCheckedRight = ref(false);
+const curActionLeft = ref<Action>({ label: 'triggers', val: 'udf-trig' });
+const curActionRight = ref<Action>({ label: 'triggers', val: 'udf-trig' });
+const maxAct = ref(0);
+const maxCond = ref(0);
+const maxTrans = ref(0);
+const maxTrig = ref(0);
 
 function handleMouseLeave(device: Device) {
     if (!device.addr) return;
@@ -222,7 +253,7 @@ function handleLeave() {
     );
 }
 
-function setAlgoritmsForDelete(indexes: number[], type: 1 | 2) {
+function setAlgoritmsForDelete(indexes: Algoritm[], type: 1 | 2) {
     let prevArr = [...algoritmsForDeletion.value];
     prevArr.push(...indexes);
     algoritmsForDeletion.value = [...prevArr];
@@ -239,7 +270,7 @@ function deleteAlgoritms() {
     }, 5000);
 }
 
-function selectAlgoritm(value: boolean, index: number, direction: 'l' | 'r') {
+function selectAlgoritm(value: boolean, index: Algoritm, direction: 'l' | 'r') {
     let prevArr = direction === 'l' ? selectedAlgoritmsLeft.value : selectedAlgoritmsRight.value;
     if (value) {
         prevArr.push(index);
@@ -268,7 +299,129 @@ function selectAllAlgoritms(res: boolean, direction: 'l' | 'r') {
 function setSelectedAlgoritmsCount() {
     selectedAlgoritmsLeft.value = [];
     selectedAlgoritmsRight.value = [];
+    isAllCheckedLeft.value = false;
+    isAllCheckedRight.value = false;
 }
+
+function setCurAction(res: Action, direction: 'l' | 'r') {
+    if (direction === 'l') {
+        curActionLeft.value = res;
+    } else {
+        curActionRight.value = res;
+    }
+}
+
+async function getLabels(type: 'udf-act' | 'udf-cond' | 'udf-trans' | 'udf-trig', dir: 'l' | 'r') {
+    const addr = curDev.value ? curDev.value.addr : 0;
+    const reqLabels = await readFile({
+        type: 'labels',
+        interf: type,
+        device: addr,
+    });
+    if (reqLabels === 'error') {
+        return new Promise((resolve) =>
+            setTimeout(() => {
+                getLabels(type, dir);
+            }, 5),
+        );
+    } else if (reqLabels === 'notFound') {
+        funcStore.setLabels(addr, type, []);
+        getData([], dir);
+    } else {
+        const { labels } = reqLabels as LabelsType;
+        funcStore.setLabels(addr, type, labels);
+        getData(labels, dir);
+    }
+}
+
+async function getData(labels: string[], dir: 'l' | 'r') {
+    const curAct = dir === 'l' ? curActionLeft.value.val : curActionRight.value.val;
+    const quant =
+        curAct === 'udf-act'
+            ? maxAct.value
+            : curAct === 'udf-cond'
+            ? maxCond.value
+            : curAct === 'udf-trans'
+            ? maxTrans.value
+            : maxTrig.value;
+    if (quant) {
+        try {
+            const r = await api.post('get_ent_state', {
+                entities: [
+                    {
+                        type: curAct,
+                        device: curDev.value ? curDev.value.addr : 0,
+                        index: 0,
+                        quantity: quant,
+                    },
+                ],
+            });
+            const state = r.data.entities[0].state;
+            const res: Algoritm[] = [];
+            for (let i = 0; i < state.length; i++) {
+                res.push({ val: state[i], label: labels[i] || '' });
+            }
+            if (dir === 'l') {
+                algoritms1.value = [...res];
+            } else {
+                algoritms2.value = [...res];
+            }
+        } catch (error) {
+            if (isAborted.value) {
+                return;
+            }
+            setTimeout(() => {
+                getData(labels, dir);
+            }, 20);
+        }
+    } else {
+        setTimeout(() => {
+            getData(labels, dir);
+        }, 20);
+    }
+}
+
+async function getMaxs() {
+    try {
+        const r = await api.post<{
+            'udf-act': number;
+            'udf-cond': number;
+            'udf-trans': number;
+            'udf-trig': number;
+        }>('get_dev_capab', {
+            device: curDev.value ? curDev.value.addr : 0,
+        });
+        const res = r.data;
+        maxAct.value = res['udf-act'];
+        maxCond.value = res['udf-cond'];
+        maxTrans.value = res['udf-trans'];
+        maxTrig.value = res['udf-trig'];
+    } catch (error) {
+        if (isAborted.value) {
+            return [0, 0, 0, 0];
+        }
+        setTimeout(() => {
+            getMaxs();
+        }, 5);
+    }
+}
+
+onBeforeMount(async () => {
+    await getMaxs();
+    const addr = curDev.value || devices.value[0] ? (curDev.value || devices.value[0]).addr : 0;
+    let curLabelsLeft = funcLabels.value[addr]?.find((el) => el.name === curActionLeft.value.val);
+    let curLabelsRight = funcLabels.value[addr]?.find((el) => el.name === curActionRight.value.val);
+    if (!curLabelsLeft) {
+        getLabels(curActionLeft.value.val, 'l');
+    } else {
+        getData(curLabelsLeft.val, 'l');
+    }
+    if (!curLabelsRight) {
+        getLabels(curActionRight.value.val, 'r');
+    } else {
+        getData(curLabelsRight.val, 'r');
+    }
+});
 
 onBeforeUnmount(() => {
     clearTimeout(showStatusTimer);
@@ -277,6 +430,51 @@ onBeforeUnmount(() => {
 
 watch(devices, () => {
     if (!curDev.value) curDev.value = devices.value[0];
+});
+
+watch(curDev, async () => {
+    maxAct.value = 0;
+    maxCond.value = 0;
+    maxTrans.value = 0;
+    maxTrig.value = 0;
+    algoritms1.value = [];
+    algoritms2.value = [];
+    await getMaxs();
+    const addr = curDev.value || devices.value[0] ? (curDev.value || devices.value[0]).addr : 0;
+    let curLabelsLeft = funcLabels.value[addr]?.find((el) => el.name === curActionLeft.value.val);
+    let curLabelsRight = funcLabels.value[addr]?.find((el) => el.name === curActionRight.value.val);
+    if (!curLabelsLeft) {
+        getLabels(curActionLeft.value.val, 'l');
+    } else {
+        getData(curLabelsLeft.val, 'l');
+    }
+    if (!curLabelsRight) {
+        getLabels(curActionRight.value.val, 'r');
+    } else {
+        getData(curLabelsRight.val, 'r');
+    }
+});
+
+watch(curActionLeft, () => {
+    algoritms1.value = [];
+    const addr = curDev.value || devices.value[0] ? (curDev.value || devices.value[0]).addr : 0;
+    let curLabelsLeft = funcLabels.value[addr]?.find((el) => el.name === curActionLeft.value.val);
+    if (!curLabelsLeft) {
+        getLabels(curActionLeft.value.val, 'l');
+    } else {
+        getData(curLabelsLeft.val, 'l');
+    }
+});
+
+watch(curActionRight, () => {
+    algoritms2.value = [];
+    const addr = curDev.value || devices.value[0] ? (curDev.value || devices.value[0]).addr : 0;
+    let curLabelsRight = funcLabels.value[addr]?.find((el) => el.name === curActionRight.value.val);
+    if (!curLabelsRight) {
+        getLabels(curActionRight.value.val, 'r');
+    } else {
+        getData(curLabelsRight.val, 'r');
+    }
 });
 
 const { t } = useI18n({

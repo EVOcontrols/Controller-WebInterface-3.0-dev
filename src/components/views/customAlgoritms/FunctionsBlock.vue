@@ -24,7 +24,7 @@
                         @click="onClick"
                     >
                         <div class="font-roboto text-[#8dc5f6] text-sm pl-[7px]">
-                            {{ t(`actions.${curAction}`) }}
+                            {{ t(`actions.${curAction.label}`) }}
                         </div>
                     </button>
                 </template>
@@ -36,17 +36,19 @@
                         <div class="p-[6px]">
                             <div
                                 v-for="action in actions"
-                                :key="action"
+                                :key="action.val"
                                 class="flex flex-row h-[2.188rem] hover:bg-[#134d7d] shrink-0 items-center pl-2 pr-3 rounded hover:pl-3 transition-[background-color,padding] select-none cursor-pointer on:bg-[#134d7d] items-center gap-2"
-                                :class="{ on: action === curAction }"
+                                :class="{
+                                    on: JSON.stringify(action) === JSON.stringify(curAction),
+                                }"
                                 @click="
                                     () => {
-                                        curAction = action;
+                                        emit('setCurAction', action);
                                         onSelect();
                                     }
                                 "
                             >
-                                {{ t(`actions.${action}`) }}
+                                {{ t(`actions.${action.label}`) }}
                             </div>
                         </div>
                     </div>
@@ -86,17 +88,20 @@
             >
         </div>
         <AlgoritmsWrapper
-            :items="pages[curPage]"
+            :items="pages[curPage] || []"
             :checkedArr="props.selectedAlgoritms"
             :page="curPage"
+            :device="props.device"
+            :curAction="props.curAction"
             @selectAlgoritm="
-                (value: boolean, index: number) => {
+                (value: boolean, index: Algoritm) => {
                     emit('selectAlgoritm', value, index);
                 }
             "
             @deleteAlgoritm="deleteAlgoritm"
         />
         <div
+            v-if="pages.length"
             class="absolute bottom-0 left-[50%] translate-x-[-50%] w-[5.625rem] h-[2.875rem] rounded-t-[8px] bg-[#113351] shadow-[0_0_7px_0_#07243D] flex items-center justify-center gap-1 py-[10px]"
         >
             <ArrowIcon
@@ -152,37 +157,58 @@ import DropDown from '@/components/Ui/DropDown.vue';
 import PrimaryButton from '@/components/Ui/PrimaryButton.vue';
 import AlgoritmsWrapper from '@/components/views/customAlgoritms/AlgoritmsWrapper.vue';
 import ArrowIcon from '@/assets/ArrowIcon.vue';
+import type { Device } from '@/stores';
 
 const funcsStore = useFuncsStore();
 
 const { funcsNumberPerPage } = storeToRefs(funcsStore);
 
 const props = defineProps<{
-    items: number[];
-    selectedAlgoritms: number[];
+    items: Algoritm[];
+    selectedAlgoritms: Algoritm[];
     isAllChecked: boolean;
+    curAction:
+        | { label: 'triggers'; val: 'udf-trig' }
+        | { label: 'conditions'; val: 'udf-cond' }
+        | { label: 'actions'; val: 'udf-act' }
+        | { label: 'transformations'; val: 'udf-trans' };
+    device?: Device;
 }>();
 
 const emit = defineEmits<{
-    (e: 'deleteAlgoritm', indexes: number[]): void;
-    (e: 'selectAlgoritm', value: boolean, index: number): void;
+    (e: 'deleteAlgoritm', indexes: Algoritm[]): void;
+    (e: 'selectAlgoritm', value: boolean, index: Algoritm): void;
     (e: 'selectAllAlgoritms', value: boolean): void;
     (e: 'setIsAllChecked', value: boolean): void;
+    (
+        e: 'setCurAction',
+        value:
+            | { label: 'triggers'; val: 'udf-trig' }
+            | { label: 'conditions'; val: 'udf-cond' }
+            | { label: 'actions'; val: 'udf-act' }
+            | { label: 'transformations'; val: 'udf-trans' },
+    ): void;
 }>();
+
+type Algoritm = { val: 0 | 1 | null; label: string };
 
 const curPage = ref(0);
 const headerInput = ref('');
 const pageError = ref(false);
-const actions: ('triggers' | 'conditions' | 'actions' | 'transformations')[] = [
-    'triggers',
-    'conditions',
-    'actions',
-    'transformations',
+const actions: (
+    | { label: 'triggers'; val: 'udf-trig' }
+    | { label: 'conditions'; val: 'udf-cond' }
+    | { label: 'actions'; val: 'udf-act' }
+    | { label: 'transformations'; val: 'udf-trans' }
+)[] = [
+    { label: 'triggers', val: 'udf-trig' },
+    { label: 'conditions', val: 'udf-cond' },
+    { label: 'actions', val: 'udf-act' },
+    { label: 'transformations', val: 'udf-trans' },
 ];
-const curAction = ref<'triggers' | 'conditions' | 'actions' | 'transformations'>('triggers');
 
-const pages = computed<number[][]>(() => {
-    const arr: number[][] = [];
+const pages = computed<Algoritm[][]>(() => {
+    const arr: Algoritm[][] = [];
     for (let i = 0; i < props.items.length; i += funcsNumberPerPage.value) {
         let end;
         if (i + funcsNumberPerPage.value < props.items.length) {
@@ -195,7 +221,7 @@ const pages = computed<number[][]>(() => {
     return arr;
 });
 
-function deleteAlgoritm(indexes: number[]) {
+function deleteAlgoritm(indexes: Algoritm[]) {
     emit('deleteAlgoritm', indexes);
 }
 

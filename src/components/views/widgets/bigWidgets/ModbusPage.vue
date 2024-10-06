@@ -1521,7 +1521,12 @@ const mouseupX = ref<number>(0);
 const newReg = ref<{ dev: number; type: 'hr' | 'ir' | 'coil' | 'di' } | null>(null);
 
 const curMbDevLabels = computed<string[]>(() => {
-    return mbDevsLabels.value[props.w.w.d][props.w.w.bus || 0];
+    if (mbDevsLabels.value && mbDevsLabels.value[props.w.w.d]) {
+        return mbDevsLabels.value[props.w.w.d][props.w.w.bus || 0];
+    } else {
+        const arr: string[] = [];
+        return arr;
+    }
 });
 
 const state = ref<(number | null | 'err')[]>([...props.w.state]);

@@ -561,12 +561,17 @@ async function setDevicesStates() {
                             val: number;
                             bus: number;
                         }[];
-                        if (interfArr[i.bus].val) {
+                        if (
+                            (interfArr[i.bus] && interfArr[i.bus].val) ||
+                            (interfArr[0] && interfArr[0].val)
+                        ) {
                             reqArr.push({
                                 type: i.interf,
                                 device: devices.value[index].addr,
                                 index: 0,
-                                quantity: interfArr[i.bus].val,
+                                quantity: interfArr[i.bus]
+                                    ? interfArr[i.bus].val
+                                    : interfArr[0].val,
                                 bus: i.bus,
                             });
                         }
@@ -620,7 +625,7 @@ async function setDevicesStates() {
     // getDevicesStatesTimer = setTimeout(setDevicesStates, 3000);
     getDevicesStatesTimer = setTimeout(
         setDevicesStates,
-        isPriorWOpen.value ? timeout.value * 3 : timeout.value,
+        isPriorWOpen.value ? timeout.value * 5 : timeout.value,
     );
 }
 
@@ -645,7 +650,7 @@ async function getOWIds(
         }
         setTimeout(() => {
             getOWIds(d, obj);
-        }, 20);
+        }, 5);
     }
 }
 
@@ -737,9 +742,28 @@ async function getDevices(
     version?: string,
 ) {
     try {
-        const r0 = await api.post('get_dev_capab', {
+        const r0: {
+            data: {
+                '1w-gpio': number;
+                '1w-rom': number;
+                '1w-sens': number;
+                'adc-in': number;
+                'bin-in': number;
+                'bin-out': number;
+                'bin-var': number;
+                'int-var': number;
+                'mb-var': number;
+                'pwm-out': number;
+                'tim-var': number;
+                'udf-act': number;
+                'udf-cond': number;
+                'udf-trans': number;
+                'udf-trig': number;
+            };
+        } = await api.post('get_dev_capab', {
             device: index,
         });
+        indexStore.setDevCapabs(index, r0.data);
         const newArr = [...devicesArr.value];
         for (let i = newArr.length; i < index; i++) {
             newArr.push(devicesArr.value[0]);

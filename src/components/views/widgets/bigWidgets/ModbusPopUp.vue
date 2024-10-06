@@ -938,7 +938,10 @@ function handlenewRegInput(e: InputEvent) {
         }
     } else {
         const val = parseInt(target.value, 16);
-        if (isNaN(val)) return;
+        console.log(3);
+        if (isNaN(val)) {
+            newRegInputVal.value = String(0);
+        }
         if (val < 0) {
             newRegInputVal.value = String(0);
         } else if (val > 65535) {

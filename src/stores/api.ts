@@ -1,3 +1,4 @@
+
 import type { AxiosRequestConfig } from 'axios';
 
 type Method = 'get' | 'post';

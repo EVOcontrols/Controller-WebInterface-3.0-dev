@@ -109,7 +109,9 @@
                         class="list-group-item group w-full flex items-center transition-colors duration-500 rounded select-none gap-2 min-h-[30px] px-[18px]"
                         :class="[
                             { label: element.val !== null },
-                            { 'hover:bg-[#0C2F4D]': element.val !== null },
+                            {
+                                'hover:bg-[#0C2F4D]': element.val !== null,
+                            },
                         ]"
                         @dblclick="handleDblClick(element.val, index)"
                     >
@@ -130,8 +132,11 @@
         </div>
         <div
             class="absolute w-full h-full flex items-center justify-center transition-all duration-500"
-            :class="loading ? 'opacity-100' : 'opacity-0'"
-            :style="[{ background: 'rgba(9, 39, 64, 0.75)' }, { 'z-index': loading ? '2' : -1 }]"
+            :class="props.isLoading ? 'opacity-100' : 'opacity-0'"
+            :style="[
+                { background: 'rgba(9, 39, 64, 0.75)' },
+                { 'z-index': props.isLoading ? '2' : -1 },
+            ]"
         >
             <span class="loader"></span>
         </div>
@@ -179,8 +184,6 @@ const valsList = ref<
 >([]);
 let idsTimer: ReturnType<typeof setTimeout> | undefined;
 let valsTimer: ReturnType<typeof setTimeout> | undefined;
-let loadTimer: ReturnType<typeof setTimeout> | undefined;
-const loading = ref(false);
 const activeLabel = ref<{ i: number; state: number; label: string | undefined } | null>(null);
 const activeLabelTop = ref(10);
 const scrollTop = ref(0);
@@ -208,10 +211,6 @@ const scrollWrapper = ref<HTMLElement | undefined>();
 const isNotMainScrolling = ref(false);
 
 const placeholder = computed(() => t('placecholder'));
-
-function delay(ms: number) {
-    return new Promise((resolve) => setTimeout(resolve, ms));
-}
 
 function handleDragEndItem() {
     if (originalList.value === futureList.value) {
@@ -250,8 +249,6 @@ function handleDragEndItem() {
             valsList.value.map((el) => el.id),
             valsList.value.map((el) => el.label) as string[],
         );
-        awaitLoading();
-        loading.value = true;
     }
 }
 function handleMoveItem(event: DragEvent) {
@@ -290,23 +287,15 @@ function setVals() {
     valsList.value = [...newArr];
     valsTimer = setTimeout(setVals, 1000);
 }
-async function awaitLoading() {
-    if (props.isLoading) {
-        clearTimeout(loadTimer);
-        loadTimer = undefined;
-        setIds();
-        setVals();
-        await delay(2000);
-        loading.value = false;
-    } else {
-        loadTimer = setTimeout(awaitLoading, 200);
-    }
-}
 function addId(id: string, index: number) {
     const place =
         props.w.w.i === '1w-sens'
             ? valsList.value.findIndex(
-                  (el) => el.val && typeof el.val !== 'number' && el.val[0] === null,
+                  (el) =>
+                      el.val &&
+                      typeof el.val !== 'number' &&
+                      el.val[0] === null &&
+                      el.id === '0000000000000000',
               )
             : valsList.value.findIndex((el) => el.val === null);
     const values = [...valsList.value];
@@ -324,13 +313,11 @@ function addId(id: string, index: number) {
         valsList.value.map((el) => el.id),
         valsList.value.map((el) => el.label) as string[],
     );
-    awaitLoading();
-    loading.value = true;
 }
 function removeId(index: number) {
     const values = [...valsList.value];
     values[index].id = '0000000000000000';
-    values[index].val = [null, null];
+    values[index].val = props.w.w.i === '1w-sens' ? [null, null] : null;
     valsList.value = [...values];
     clearTimeout(idsTimer);
     clearTimeout(valsTimer);
@@ -341,8 +328,6 @@ function removeId(index: number) {
         valsList.value.map((el) => el.id),
         valsList.value.map((el) => el.label) as string[],
     );
-    awaitLoading();
-    loading.value = true;
 }
 function handleScroll() {
     const el = scrollWrapper.value;
@@ -420,12 +405,15 @@ onMounted(() => {
 onBeforeUnmount(() => {
     clearTimeout(idsTimer);
     clearTimeout(valsTimer);
-    clearTimeout(loadTimer);
-    loadTimer = undefined;
     idsTimer = undefined;
     valsTimer = undefined;
     window.removeEventListener('click', saveData);
     window.removeEventListener('keypress', saveData);
+});
+
+watch(props.OWIds, () => {
+    setIds();
+    setVals();
 });
 
 const { t } = useI18n({

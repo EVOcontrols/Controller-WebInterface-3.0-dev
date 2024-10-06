@@ -197,6 +197,26 @@ export const useIndexStore = defineStore('indexStore', () => {
 
     const isAddingDev = ref(false);
 
+    const devCapabs = ref<
+        ({
+            '1w-gpio': number;
+            '1w-rom': number;
+            '1w-sens': number;
+            'adc-in': number;
+            'bin-in': number;
+            'bin-out': number;
+            'bin-var': number;
+            'int-var': number;
+            'mb-var': number;
+            'pwm-out': number;
+            'tim-var': number;
+            'udf-act': number;
+            'udf-cond': number;
+            'udf-trans': number;
+            'udf-trig': number;
+        } | null)[]
+    >([]);
+
     function setNeedToReqData(res: boolean) {
         needToReqData.value = res;
     }
@@ -446,8 +466,8 @@ export const useIndexStore = defineStore('indexStore', () => {
                     devicesState.value[device].push(i);
                 } else {
                     const prevDeviceState = [...devicesState.value];
-                    // prevDeviceState[device][index] = i;
-                    // devicesState.value = [...prevDeviceState];
+                    prevDeviceState[device][index] = i;
+                    devicesState.value = [...prevDeviceState];
                 }
             });
         }
@@ -503,7 +523,7 @@ export const useIndexStore = defineStore('indexStore', () => {
     function setOWIds(d: number, bus: number, ids: string[]) {
         if (!OWIds.value[d]) {
             const arr = [...OWIds.value];
-            for (let i = OWIds.value.length - 1; i < d; i += 1) {
+            for (let i = OWIds.value.length; i < d; i += 1) {
                 arr.push([]);
             }
             const busArr = [];
@@ -514,8 +534,8 @@ export const useIndexStore = defineStore('indexStore', () => {
             arr.push(busArr);
             OWIds.value = [...arr];
         } else {
-            if (OWIds.value[d].length - 1 < bus) {
-                const busArr = [];
+            if (!OWIds.value[d][bus]) {
+                const busArr = OWIds.value[d];
                 for (let i = OWIds.value[d].length; i < bus; i += 1) {
                     busArr.push([]);
                 }
@@ -762,13 +782,7 @@ export const useIndexStore = defineStore('indexStore', () => {
             newArr.push(val);
         } else {
             const val = [...newArr[d]];
-            if (bus && val.length < bus) {
-                for (let i = val.length; i < bus; i++) {
-                    val.push([]);
-                }
-            }
-            const labelsVal = bus ? val[bus] : val[0];
-            val[bus || 0] = labelsVal;
+            val[bus || 0] = [...labelsArr];
             newArr[d] = val;
         }
         mbDevsLabels.value = [...newArr];
@@ -792,6 +806,40 @@ export const useIndexStore = defineStore('indexStore', () => {
 
     function setIsAddingDev(res: boolean) {
         isAddingDev.value = res;
+    }
+
+    function setDevCapabs(
+        d: number,
+        capabs: {
+            '1w-gpio': number;
+            '1w-rom': number;
+            '1w-sens': number;
+            'adc-in': number;
+            'bin-in': number;
+            'bin-out': number;
+            'bin-var': number;
+            'int-var': number;
+            'mb-var': number;
+            'pwm-out': number;
+            'tim-var': number;
+            'udf-act': number;
+            'udf-cond': number;
+            'udf-trans': number;
+            'udf-trig': number;
+        },
+    ) {
+        const newArr = [...devCapabs.value];
+        if (!newArr.length || !newArr[d]) {
+            if (d) {
+                for (let i = newArr.length; i < d; i++) {
+                    newArr.push(null);
+                }
+            }
+            newArr.push({ ...capabs });
+        } else {
+            newArr[d] = { ...capabs };
+        }
+        devCapabs.value = [...newArr];
     }
 
     return {
@@ -838,6 +886,7 @@ export const useIndexStore = defineStore('indexStore', () => {
         isRebootRequired,
         needToRequestMainData,
         isAddingDev,
+        devCapabs,
         setNeedToReqData,
         getApi,
         setDevices,
@@ -885,5 +934,6 @@ export const useIndexStore = defineStore('indexStore', () => {
         removeOWInterf,
         removeMbInterf,
         setIsAddingDev,
+        setDevCapabs,
     };
 });

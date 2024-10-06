@@ -73,7 +73,7 @@
                             v-for="(tab, j) in props.tabs[item.index].vals"
                             class="cursor-pointer h-8 rounded-[6px] flex items-center justify-center px-3 mt-[0.875rem] select-none nowrap transition-all duration-500"
                             :class="
-                                props.tabs[item.index].val === tab.val
+                                props.tabs[item.index].val == tab.val
                                     ? 'bg-[#148EF8] text-[#ADEBFF]'
                                     : 'bg-[#143959] text-[#8DC5F6]'
                             "
@@ -378,11 +378,26 @@ const props = defineProps<{
     }[];
     dropDowns: {
         type: 'bin' | 'obj' | '1w-sens' | 'var' | 'act' | 'cond';
-        items: {
-            i: number;
-            name: string;
-            val?: number;
-        }[];
+        realType:
+            | '1w-rom'
+            | '1w-sens'
+            | '1w-gpio'
+            | 'bin-in'
+            | 'adc-in'
+            | 'bin-out'
+            | 'pwm-out'
+            | 'mb-co'
+            | 'mb-ir'
+            | 'mb-hr'
+            | 'mb-di'
+            | 'bin-var'
+            | 'int-var'
+            | 'tim-var'
+            | 'udf-act'
+            | 'udf-cond'
+            | 'udf-trans'
+            | 'udf-trig';
+        items: { val: number[] | null[] | [number | null][]; name: string; i: number }[];
     }[];
 }>();
 

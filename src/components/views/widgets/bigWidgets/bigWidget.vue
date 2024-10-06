@@ -18,7 +18,7 @@
             :w="props.w"
             :tempUnit="tempUnit"
             :isLoading="isLoading"
-            :labels="curLabels"
+            :labels="curLabels || []"
             @toggleScan="handleToggle"
             @saveLabel="saveLabel"
         />
@@ -159,14 +159,8 @@ async function getIndexes(labelsArr?: string[]) {
                 bus: props.w.w.bus,
                 type: props.w.w.i,
             });
-            const curIds = OWIds.value[props.w.w.d][props.w.w.bus || 0];
             const ids = (await r.data.ids) as string[];
-            const newIds: string[] = [];
-            for (const id of ids) {
-                if (!newIds.includes(id) && !curIds.includes(id)) {
-                    newIds.push(id);
-                }
-            }
+            const newIds: string[] = Array.from(new Set([...idsArr.value, ...ids]));
             if (JSON.stringify(idsArr.value.sort()) !== JSON.stringify(newIds.sort())) {
                 idsArr.value = [...newIds];
             }
@@ -203,7 +197,15 @@ async function getOWIds(labelsArr: string[]) {
         if (props.w.w.bus !== undefined) {
             indexStore.setOWIds(props.w.w.d, props.w.w.bus, ids);
         }
-        getIndexes(labelsArr);
+        const newLabels: string[] = [];
+        labelsArr.forEach((el, i) => {
+            if (!el) {
+                newLabels.push(ids[i]);
+            } else {
+                newLabels.push(labelsArr[i]);
+            }
+        });
+        getIndexes(newLabels);
     } catch (error) {
         if (isAborted.value) {
             return;
@@ -227,7 +229,9 @@ async function setOW(arr: string[], labelsArr: string[]) {
             ids: newArr,
             type: props.w.w.i,
         });
-        if (r.status === 200) getOWIds(labelsArr);
+        if (r.status === 200) {
+            getOWIds(labelsArr);
+        }
     } catch (error) {
         if (isAborted.value) {
             return;

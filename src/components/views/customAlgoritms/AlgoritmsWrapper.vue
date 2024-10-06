@@ -2,32 +2,40 @@
     <div class="overflow-y-hidden flex-1">
         <div
             v-dragscroll.y
-            class="overflow-y-auto w-full flex-1 scrollbar-4 relative"
-            :style="{ 'max-height': 'calc(100vh - 296px)' }"
+            class="w-full flex-1 scrollbar-4 relative"
+            :class="{ 'overflow-y-auto': props.items.length }"
+            :style="[{ 'max-height': 'calc(100vh - 296px)' }, { height: 'calc(100vh - 296px)' }]"
             ref="scrollWrapper"
             @scroll="handleScroll"
         >
             <div
+                v-if="props.items.length"
                 class="bg-[#092740] rounded-[6px] overflow-hidden"
+                :style="{ 'min-height': 'calc(100% - 32px)' }"
                 ref="scrollEl"
             >
                 <Algoritm
                     v-for="(item, i) in props.items"
                     :key="i"
-                    :checked="props.checkedArr.includes(i + props.page * funcsNumberPerPage)"
+                    :item="item"
+                    :checked="
+                        props.checkedArr.includes(props.items[i + props.page * funcsNumberPerPage])
+                    "
                     :index="i + props.page * funcsNumberPerPage"
                     :isActive="
                         !!(activeLabel && activeLabel.i === i + props.page * funcsNumberPerPage)
                     "
                     :isOpen="openedAlgoritms.includes(i)"
+                    :device="props.device"
+                    :curAction="props.curAction"
                     @selectAlgoritm="
                         (value: boolean) => {
-                            selectAlgoritm(value, i + props.page * funcsNumberPerPage);
+                            selectAlgoritm(value, props.items[i + props.page * funcsNumberPerPage]);
                         }
                     "
                     @deleteAlgoritm="
                         () => {
-                            deleteAlgoritm([i + props.page * funcsNumberPerPage]);
+                            deleteAlgoritm([props.items[i + props.page * funcsNumberPerPage]]);
                         }
                     "
                     @dblclick.stop="
@@ -37,6 +45,15 @@
                     "
                     @oneClick="handleClick(i)"
                 />
+            </div>
+            <div
+                v-else
+                class="bg-[#092740] rounded-[6px] h-full flex items-center justify-center"
+            >
+                <span
+                    v-html="spinner"
+                    class="self-center mb-4 [&>svg]:w-[5rem] [&>svg>path]:fill-[#148ef8]"
+                ></span>
             </div>
             <div class="w-full !h-8 bg-[#10375A]"></div>
         </div>
@@ -68,20 +85,28 @@
 
 <script lang="ts" setup>
 import Algoritm from '@/components/views/customAlgoritms/Algoritm.vue';
+import spinner from '@/assets/img/spinner-inside-button.svg?raw';
+import type { Device } from '@/stores';
 
 const funcsStore = useFuncsStore();
 
 const { funcsNumberPerPage } = storeToRefs(funcsStore);
 
 const props = defineProps<{
-    items: number[];
-    checkedArr: number[];
+    items: Algoritm[];
+    checkedArr: Algoritm[];
     page: number;
+    device?: Device;
+    curAction:
+        | { label: 'triggers'; val: 'udf-trig' }
+        | { label: 'conditions'; val: 'udf-cond' }
+        | { label: 'actions'; val: 'udf-act' }
+        | { label: 'transformations'; val: 'udf-trans' };
 }>();
 
 const emit = defineEmits<{
-    (e: 'selectAlgoritm', value: boolean, index: number): void;
-    (e: 'deleteAlgoritm', indexes: number[]): void;
+    (e: 'selectAlgoritm', value: boolean, index: Algoritm): void;
+    (e: 'deleteAlgoritm', indexes: Algoritm[]): void;
 }>();
 
 const scrollWrapper = ref<HTMLElement | undefined>();
@@ -94,11 +119,13 @@ const isNotMainScrolling = ref(false);
 const openedAlgoritms = ref<number[]>([]);
 const clickTimeout = ref<number | null>(null);
 
-function selectAlgoritm(value: boolean, index: number) {
+type Algoritm = { val: 0 | 1 | null; label: string };
+
+function selectAlgoritm(value: boolean, index: Algoritm) {
     emit('selectAlgoritm', value, index);
 }
 
-function deleteAlgoritm(indexes: number[]) {
+function deleteAlgoritm(indexes: Algoritm[]) {
     emit('deleteAlgoritm', indexes);
 }
 
@@ -228,6 +255,12 @@ watch(
     () => scrollTop.value,
     () => {
         if (!isScrolling.value) setActiveLabelTop();
+    },
+);
+watch(
+    () => props.items,
+    () => {
+        openedAlgoritms.value = [];
     },
 );
 

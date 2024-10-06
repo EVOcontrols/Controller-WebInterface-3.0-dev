@@ -2,7 +2,7 @@ import type { UserRole, Lang, NumberingSystem } from './common';
 
 export type LabelsFileType = {
     type: 'labels';
-    subType?: 'mbVars' | 'mbDevices';
+    subType?: 'mbVars' | 'mbDevices' | 'udf' | 'euf';
     device: number;
     bus?: number;
     interf:
@@ -15,7 +15,12 @@ export type LabelsFileType = {
         | 'mb-var'
         | 'bin-var'
         | 'int-var'
-        | 'tim-var';
+        | 'tim-var'
+        | 'udf-act'
+        | 'udf-cond'
+        | 'udf-trig'
+        | 'udf-trans'
+        | 'euf';
 };
 
 export type MbFileType = {

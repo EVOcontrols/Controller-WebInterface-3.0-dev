@@ -7,20 +7,20 @@ export function useReadWriteFiles() {
 
     async function saveToFile<T extends FileType>(params: T, content: FileContent<T>) {
         let hasErrors = false;
-        let name = params.subType ? `${params.type}.${params.subType}` : `${params.type}`;
+        let name = `${params.type}`;
         if (params.type === 'labels') {
             if (params.subType === 'mbDevices' || params.subType === 'mbVars') {
-                name += `.d${params.device}.b${params.bus}`;
+                name += `.${params.device}.${params.subType}.${params.bus}`;
             } else {
                 name +=
                     params.bus !== undefined
-                        ? `.d${params.device}.i${params.interf}.b${params.bus}`
-                        : `.d${params.device}.i${params.interf}`;
+                        ? `.${params.device}.${params.interf}.${params.bus}`
+                        : `.${params.device}.${params.interf}`;
             }
         } else if (params.type === 'settings' && params.subType === 'common') {
-            name += `.${params.user}`;
+            name += `.${params.subType}.${params.user}`;
         } else if (params.type === 'mb') {
-            name += `.d${params.device}.b${params.bus}`;
+            name += `.${params.device}.${params.bus}`;
         }
         try {
             const r = await api.post(`/user/${name}.json`, JSON.stringify(content));
@@ -34,21 +34,21 @@ export function useReadWriteFiles() {
     async function readFile<T extends FileType>(
         params: T,
     ): Promise<FileContent<T> | 'error' | 'notFound'> {
-        let name = params.subType ? `${params.type}.${params.subType}` : `${params.type}`;
+        let name = `${params.type}`;
         const isLabels = params.type === 'labels';
         if (isLabels) {
             if (params.subType === 'mbDevices' || params.subType === 'mbVars') {
-                name += `.d${params.device}.b${params.bus}`;
+                name += `.${params.device}.${params.subType}.${params.bus}`;
             } else {
                 name +=
                     params.bus !== undefined
-                        ? `.d${params.device}.i${params.interf}.b${params.bus}`
-                        : `.d${params.device}.i${params.interf}`;
+                        ? `.${params.device}.${params.interf}.${params.bus}`
+                        : `.${params.device}.${params.interf}`;
             }
         } else if (params.type === 'settings' && params.subType === 'common') {
-            name += `.${params.user}`;
+            name += `.${params.subType}.${params.user}`;
         } else if (params.type === 'mb') {
-            name += `.d${params.device}.b${params.bus}`;
+            name += `.${params.device}.${params.bus}`;
         }
         try {
             const r = await api.get(`/user/${name}.json`);

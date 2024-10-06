@@ -35,8 +35,22 @@
                 <transition-group name="appear">
                     <component
                         :is="w.w.component"
-                        v-for="w in widgets.small"
-                        :key="`${w.w.d}.${w.w.i}`"
+                        v-for="w in widgets.small.sort((a, b) => {
+                            if (a.w.bus !== undefined && b.w.bus !== undefined) {
+                                if (a.w.d === b.w.d) {
+                                    if (a.w.bus > b.w.bus) {
+                                        return 1;
+                                    } else {
+                                        return -1;
+                                    }
+                                } else {
+                                    return 1;
+                                }
+                            } else {
+                                return 1;
+                            }
+                        })"
+                        :key="`${w.w.d}.${w.w.i}.${w.w.bus || 0}`"
                         :w="w"
                         class="rounded-xl bg-[#092740] w-full flex overflow-hidden flex-col h-[12.625rem]"
                         @enter="setBigWidget"
@@ -203,16 +217,14 @@ const gridClasses = computed<{ all: string; big: string; small: string }>(() => 
 });
 
 function setBigWidget(d: number, i: string, bus?: number) {
-    if (!d && !i) {
+    if (d === undefined || i === undefined) {
         bigWidget.value = null;
         isMb.value = false;
     } else {
-        if (d === undefined || i === undefined) return;
         bigWidget.value = { d: d, i: i, bus: bus };
         isCalibration.value = false;
         isPriorWOpen.value = false;
     }
-    indexStore.changeIsPriorWOpen(!!bigWidget.value);
 }
 
 function setInitStatus(w?: Widget) {
@@ -232,7 +244,6 @@ function setMbStatus(w?: Widget) {
     if (w) {
         bigWidget.value = { d: w.d, i: w.i };
         isMb.value = true;
-        indexStore.changeIsPriorWOpen(true);
     }
 }
 
@@ -257,12 +268,10 @@ function changeVisibleWidgets() {
 
 function handleCalibrClick(res: boolean) {
     isCalibration.value = res;
-    indexStore.changeIsPriorWOpen(res);
 }
 
 function handleScanClick(res: boolean, d?: number, i?: string, bus?: number) {
     isPriorWOpen.value = res;
-    indexStore.changeIsPriorWOpen(isPriorWOpen.value);
     if (d !== undefined && i !== undefined) {
         bigWidget.value = { d: d, i: i, bus: bus };
     }
@@ -271,7 +280,6 @@ function handleScanClick(res: boolean, d?: number, i?: string, bus?: number) {
 function handleBackClick() {
     handleCalibrClick(false);
     handleScanClick(false);
-    indexStore.changeIsPriorWOpen();
 }
 
 onMounted(() => {
@@ -363,6 +371,17 @@ watch(
             widgets.value.big ? [...newItems, widgets.value.big] : newItems,
         );
         prevChosenInterfaces = [...chosenInterfaces.value];
+    },
+);
+
+watch(
+    () => widgets.value.big,
+    () => {
+        if (widgets.value.big) {
+            indexStore.changeIsPriorWOpen(true);
+        } else {
+            indexStore.changeIsPriorWOpen();
+        }
     },
 );
 
