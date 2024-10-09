@@ -159,6 +159,25 @@
                                 <div
                                     class="w-full h-full px-[10px] flex items-center transition-colors duration-300 hover:bg-[#163E61]"
                                     :class="shownDropDown.vals.includes(i) ? 'bg-[#163E61]' : ''"
+                                    @click="() => {
+                                        if (shownDropDown.type === 'act' || shownDropDown.type === 'cond') {
+                                            const canSelect = shownDropDown.vals.length === 0 ||
+                                                shownDropDown.vals.includes(item.i - 1) ||
+                                                shownDropDown.vals.includes(item.i + 1);
+
+                                            if (canSelect) {
+                                                if (shownDropDown.vals.includes(item.i)) {
+                                                    shownDropDown.vals = shownDropDown.vals.filter(num => num !== item.i);
+                                                } else {
+                                                    shownDropDown.vals = [...shownDropDown.vals, item.i];
+                                                }
+                                            } else {
+                                                shownDropDown.vals = [item.i];
+                                            }
+                                        } else {
+                                            shownDropDown.vals = [item.i]
+                                        }
+                                    }"
                                 >
                                     <div class="w-5 mr-4">
                                         {{ i + 1 }}
