@@ -295,7 +295,7 @@ const props = defineProps<{
 
 const indexStore = useIndexStore();
 
-const { devices, labels, tempUnit, devCapabs } = storeToRefs(indexStore);
+const { devices, labels, tempUnit, devCapabs, valuesConstRange } = storeToRefs(indexStore);
 const { funcLabels } = storeToRefs(funcStore);
 
 const api = indexStore.getApi().api as axios.AxiosInstance;
@@ -1200,6 +1200,7 @@ function handleBtnClick(configItemIndex: number, btnsItemIndex: number, val: str
         config.value = prevConfig;
     }
     checkConfigToSave();
+    checkValue(configItemIndex, btnsItemIndex, val);
 }
 
 function handleTabClick(configItemIndex: number, tabsItemIndex: number, val: string | number) {
@@ -1261,7 +1262,27 @@ function handleInput(configItemIndex: number, inputItemIndex: number, val: numbe
         prevConfig[configItemIndex].inputs[inputItemIndex].val = val;
         config.value = prevConfig;
     }
+    checkValue(configItemIndex, inputItemIndex, val)
     checkConfigToSave();
+}
+
+function checkValue(configItemIndex: number, inputItemIndex: number, val: string | number) {
+    if (!config.value) return;
+    const prevConfig = [...config.value];
+    const prevConfigItem = prevConfig[configItemIndex];
+    if (!prevConfigItem) return;
+    const { btns } = prevConfigItem;
+    const [firstBtn, secondBtn] = btns
+    const values = firstBtn.val === 'const'
+            ? valuesConstRange.value.find((obj) => obj.interf === firstBtn.val + secondBtn.val)?.values
+            : valuesConstRange.value.find((obj) => obj.interf === firstBtn.val)?.values;
+    const { min, max } = values
+    const index = typeof val === 'number' ? inputItemIndex : 0;
+    if (prevConfigItem.inputs[index]) {
+        prevConfigItem.inputs[index].min = min;
+        prevConfigItem.inputs[index].max = max;
+        config.value = prevConfig;
+    }
 }
 
 function handleDropDownClick(configItemIndex: number, itemIndex: number) {
