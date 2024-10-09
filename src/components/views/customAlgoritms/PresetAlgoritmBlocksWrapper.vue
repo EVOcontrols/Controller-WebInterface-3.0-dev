@@ -1820,6 +1820,24 @@ function set() {
         }
         curBody.value = obj as Body;
     }
+
+    interfaces1.value = [];
+    interfaces2.value = [];
+    interfaces3.value = [];
+    ent1.value = [];
+    ent2.value = [];
+    ent3.value = [];
+    time1.value = [];
+    time2.value = [];
+    time3.value = [];
+    multiSelect.value = [];
+    ent1Labels.value = [];
+    ent2Labels.value = [];
+    ent3Labels.value = [];
+    ent1OWConfig.value = [];
+    ent2OWConfig.value = [];
+    ent3OWConfig.value = [];
+    getConfig();
 }
 
 function checkConfigToSave() {
