@@ -70,7 +70,18 @@
             ></span>
             <PrimaryButton
                 class="w-[3.25rem] h-[2.5rem] flex items-center justify-center relative group"
-                @click=""
+                :is-disabled="
+                    !!props.needToAddAlgoritm ||
+                    props.items.filter((el) => el.val !== null).length === props.items.length
+                "
+                @click="
+                    () => {
+                        emit(
+                            'addAlgoritm',
+                            props.items.findIndex((el) => el.val === null),
+                        );
+                    }
+                "
             >
                 <span
                     v-html="add"
@@ -99,6 +110,12 @@
                 }
             "
             @deleteAlgoritm="deleteAlgoritm"
+            @addAlgoritm="
+                (index: number) => {
+                    emit('addAlgoritm', index);
+                }
+            "
+            @creatingFinish="(index: number) => emit('creatingFinish', index)"
         />
         <div
             v-if="pages.length"
@@ -173,13 +190,16 @@ const props = defineProps<{
         | { label: 'actions'; val: 'udf-act' }
         | { label: 'transformations'; val: 'udf-trans' };
     device?: Device;
+    needToAddAlgoritm: Boolean;
 }>();
 
 const emit = defineEmits<{
     (e: 'deleteAlgoritm', indexes: Algoritm[], index: number): void;
+    (e: 'addAlgoritm', index: number): void;
     (e: 'selectAlgoritm', value: boolean, index: Algoritm): void;
     (e: 'selectAllAlgoritms', value: boolean): void;
     (e: 'setIsAllChecked', value: boolean): void;
+    (e: 'creatingFinish', index: number): void;
     (
         e: 'setCurAction',
         value:
@@ -190,7 +210,7 @@ const emit = defineEmits<{
     ): void;
 }>();
 
-type Algoritm = { val: 0 | 1 | null; label: string };
+type Algoritm = { val: 0 | 1 | null; label: string; isCreating?: boolean };
 
 const curPage = ref(0);
 const headerInput = ref('');

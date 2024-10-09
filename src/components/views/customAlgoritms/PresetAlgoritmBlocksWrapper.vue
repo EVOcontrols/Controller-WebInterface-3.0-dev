@@ -159,25 +159,38 @@
                                 <div
                                     class="w-full h-full px-[10px] flex items-center transition-colors duration-300 hover:bg-[#163E61]"
                                     :class="shownDropDown.vals.includes(i) ? 'bg-[#163E61]' : ''"
-                                    @click="() => {
-                                        if (shownDropDown.type === 'act' || shownDropDown.type === 'cond') {
-                                            const canSelect = shownDropDown.vals.length === 0 ||
-                                                shownDropDown.vals.includes(item.i - 1) ||
-                                                shownDropDown.vals.includes(item.i + 1);
+                                    @click="
+                                        () => {
+                                            if (
+                                                (shownDropDown && shownDropDown.type === 'act') ||
+                                                (shownDropDown && shownDropDown.type === 'cond')
+                                            ) {
+                                                const canSelect =
+                                                    shownDropDown &&
+                                                    (shownDropDown.vals.length === 0 ||
+                                                        shownDropDown.vals.includes(item.i - 1) ||
+                                                        shownDropDown.vals.includes(item.i + 1));
 
-                                            if (canSelect) {
-                                                if (shownDropDown.vals.includes(item.i)) {
-                                                    shownDropDown.vals = shownDropDown.vals.filter(num => num !== item.i);
+                                                if (canSelect) {
+                                                    if (shownDropDown.vals.includes(item.i)) {
+                                                        shownDropDown.vals =
+                                                            shownDropDown.vals.filter(
+                                                                (num) => num !== item.i,
+                                                            );
+                                                    } else {
+                                                        shownDropDown.vals = [
+                                                            ...shownDropDown.vals,
+                                                            item.i,
+                                                        ];
+                                                    }
                                                 } else {
-                                                    shownDropDown.vals = [...shownDropDown.vals, item.i];
+                                                    shownDropDown.vals = [item.i];
                                                 }
-                                            } else {
+                                            } else if (shownDropDown) {
                                                 shownDropDown.vals = [item.i];
                                             }
-                                        } else {
-                                            shownDropDown.vals = [item.i]
                                         }
-                                    }"
+                                    "
                                 >
                                     <div class="w-5 mr-4">
                                         {{ i + 1 }}
@@ -291,6 +304,11 @@ const props = defineProps<{
         | { label: 'transformations'; val: 'udf-trans' };
     device?: Device;
     index: number;
+    isCreating: boolean;
+}>();
+
+const emit = defineEmits<{
+    (e: 'creatingFinish'): void;
 }>();
 
 const indexStore = useIndexStore();
@@ -1174,6 +1192,7 @@ async function save() {
         const r = await api.post('set_udf_cfg', body);
         isSaving.value = false;
         initConfig.value = JSON.stringify(config.value);
+        emit('creatingFinish');
     } catch (error) {
         if (isAborted.value) {
             return;
@@ -1505,6 +1524,7 @@ function set() {
             obj = Object.assign(obj, curObj);
         }
         curBody.value = obj as Body;
+        setConfig();
     } else if (props.type.val === 'udf-cond') {
         let ent = {
             type: config.value.find((el) => el.curKey === 2)?.tabs[0].val,
@@ -1591,6 +1611,7 @@ function set() {
             });
         }
         curBody.value = obj as Body;
+        setConfig();
     } else if (props.type.val === 'udf-trans') {
         let left = {
             type: config.value.find((el) => el.curKey === 2)?.tabs[0].val,
@@ -1661,6 +1682,7 @@ function set() {
             unsigned: false,
         };
         curBody.value = obj as Body;
+        setConfig();
     } else {
         let ent = {
             type: config.value.find((el) => el.curKey === 2)?.tabs[0].val,
@@ -1819,6 +1841,7 @@ function set() {
             });
         }
         curBody.value = obj as Body;
+        setConfig();
     }
 }
 
@@ -1826,7 +1849,8 @@ function checkConfigToSave() {
     if (inputErrors.size) {
         isSaveBtnDisabled.value = true;
     } else {
-        isSaveBtnDisabled.value = initConfig.value === JSON.stringify(config.value);
+        isSaveBtnDisabled.value =
+            props.isCreating || initConfig.value === JSON.stringify(config.value);
     }
 }
 
@@ -3505,35 +3529,144 @@ function setConfig() {
 
 async function getConfig(i: number = 0) {
     if (!config.value.length) isLoading.value = true;
-    try {
-        const r = await api.post('get_udf_cfg', {
-            type: props.type.val,
-            device: props.device ? props.device.addr : 0,
-            index: props.index,
-        });
-        if (!curBody.value) {
-            curBody.value = r.data.trigger || r.data.condition || r.data.action || r.data.transform;
-        }
+    if (props.isCreating) {
+        curBody.value = (
+            props.type.val === 'udf-act'
+                ? {
+                      type: 'invert',
+                      entity: {
+                          type: 'pwm-out',
+                          device: 1,
+                          index: 1,
+                      },
+                      delay: {
+                          type: 'tim-const',
+                          value: 5000,
+                      },
+                      'cond-idx': 1,
+                      'cond-qty': 1,
+                      'start-on-cond': true,
+                      'cond-logic': 'or',
+                      'init-state': 0,
+                      value: {
+                          type: 'int-const',
+                          value: 0,
+                      },
+                      time: {
+                          type: 'tim-const',
+                          value: 5000,
+                      },
+                      'stop-val': {
+                          type: 'pwm-out',
+                          device: 1,
+                          index: 2,
+                      },
+                      'stop-on-trig': true,
+                      'stop-on-cond': true,
+                  }
+                : props.type.val === 'udf-cond'
+                ? {
+                      operation: 'less',
+                      entity: {
+                          type: '1w-sens',
+                          bus: 1,
+                          index: 0,
+                          device: 1,
+                          io: 0,
+                      },
+                      value: {
+                          type: 'bin-out',
+                          device: 0,
+                          index: 0,
+                      },
+                      time: {
+                          type: 'tim-const',
+                          value: 3000,
+                      },
+                      'init-state': 1,
+                  }
+                : props.type.val === 'udf-trans'
+                ? {
+                      operation: '+',
+                      result: {
+                          type: 'pwm-out',
+                          device: 1,
+                          index: 1,
+                      },
+                      left: {
+                          type: 'adc-in',
+                          device: 0,
+                          index: 1,
+                      },
+                      right: {
+                          type: 'bin-out',
+                          device: 0,
+                          index: 1,
+                      },
+                      'init-state': 0,
+                  }
+                : {
+                      type: 'hold',
+                      entity: {
+                          type: 'adc-in',
+                          device: 0,
+                          index: 1,
+                      },
+                      'act-idx': 0,
+                      'act-qty': 1,
+                      'init-state': 0,
+                      value: {
+                          type: 'pwm-out',
+                          device: 0,
+                          index: 1,
+                      },
+                      'min-time': {
+                          type: 'tim-const',
+                          value: 2000,
+                      },
+                      'max-time': {
+                          type: 'tim-var',
+                          device: 0,
+                          index: 0,
+                      },
+                  }
+        ) as Body;
+        setConfig();
+        checkConfigToSave();
         initBody = curBody.value;
-        if (i < 5) {
-            setConfig();
-        } else {
-            if (!initConfig.value) {
-                initConfig.value = JSON.stringify(config.value);
-                checkConfigToSave();
+        isLoading.value = false;
+    } else {
+        try {
+            const r = await api.post('get_udf_cfg', {
+                type: props.type.val,
+                device: props.device ? props.device.addr : 0,
+                index: props.index,
+            });
+            if (!curBody.value) {
+                curBody.value =
+                    r.data.trigger || r.data.condition || r.data.action || r.data.transform;
             }
+            initBody = curBody.value;
+            if (i < 5) {
+                setConfig();
+            } else {
+                if (!initConfig.value) {
+                    initConfig.value = JSON.stringify(config.value);
+                    checkConfigToSave();
+                }
+            }
+            configTimer = setTimeout(() => {
+                getConfig(i + 1);
+                isLoading.value = false;
+            }, 3000);
+        } catch (error) {
+            if (isAborted.value) {
+                return;
+            }
+            setTimeout(() => {
+                getConfig(i);
+            }, 5);
         }
-        configTimer = setTimeout(() => {
-            getConfig(i + 1);
-            isLoading.value = false;
-        }, 3000);
-    } catch (error) {
-        if (isAborted.value) {
-            return;
-        }
-        setTimeout(() => {
-            getConfig(i);
-        }, 5);
     }
 }
 

@@ -71,11 +71,7 @@
             <OutlinedButton
                 v-else
                 class="group w-[36px] !min-w-[36px]"
-                @click="
-                    () => {
-                        // if (!props.isLoading) $emit('close');
-                    }
-                "
+                @click="emit('addAlgoritm')"
                 ><span
                     class="[&>svg]:w-4 [&>svg]:h-4 [&>svg>path]:transition-colors [&>svg>path]:duration-500 [&>svg>path]:fill-[#148EF8] group-active:[&>svg>path]:fill-[#ADEBFF]"
                     v-html="add"
@@ -84,10 +80,12 @@
         </div>
         <CollapseTransition :duration="300">
             <PresetAlgoritmBlocksWrapper
-                v-if="props.isOpen"
+                v-if="props.isOpen || props.item.isCreating"
                 :type="props.curAction"
                 :device="props.device"
                 :index="index"
+                :isCreating="!!props.item.isCreating"
+                @creatingFinish="emit('creatingFinish')"
             />
         </CollapseTransition>
     </div>
@@ -111,7 +109,7 @@ const isAborted = indexStore.getApi().isAborted;
 
 const props = defineProps<{
     checked: boolean;
-    item: { val: 0 | 1 | null; label: string };
+    item: { val: 0 | 1 | null; label: string; isCreating?: boolean };
     index: number;
     isActive: boolean;
     isOpen: boolean;
@@ -127,9 +125,12 @@ const emit = defineEmits<{
     (e: 'selectAlgoritm', value: boolean): void;
     (e: 'deleteAlgoritm'): void;
     (e: 'oneClick'): void;
+    (e: 'addAlgoritm'): void;
+    (e: 'creatingFinish'): void;
 }>();
 
 async function handleClick() {
+    if (props.item.isCreating) return;
     try {
         const r = await api.post('set_ent_value', {
             type: props.curAction.val,

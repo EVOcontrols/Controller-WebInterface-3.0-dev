@@ -47,6 +47,8 @@
                         }
                     "
                     @oneClick="handleClick(i)"
+                    @addAlgoritm="emit('addAlgoritm', i)"
+                    @creatingFinish="emit('creatingFinish', i)"
                 />
             </div>
             <div
@@ -110,6 +112,8 @@ const props = defineProps<{
 const emit = defineEmits<{
     (e: 'selectAlgoritm', value: boolean, index: Algoritm): void;
     (e: 'deleteAlgoritm', indexes: Algoritm[], index: number): void;
+    (e: 'addAlgoritm', index: number): void;
+    (e: 'creatingFinish', index: number): void;
 }>();
 
 const scrollWrapper = ref<HTMLElement | undefined>();
@@ -122,7 +126,7 @@ const isNotMainScrolling = ref(false);
 const openedAlgoritms = ref<number[]>([]);
 const clickTimeout = ref<number | null>(null);
 
-type Algoritm = { val: 0 | 1 | null; label: string };
+type Algoritm = { val: 0 | 1 | null; label: string; isCreating?: boolean };
 
 function selectAlgoritm(value: boolean, index: Algoritm) {
     emit('selectAlgoritm', value, index);

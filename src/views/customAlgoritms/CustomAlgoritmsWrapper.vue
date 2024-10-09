@@ -66,11 +66,12 @@
         </div>
         <div class="flex mt-6 gap-3 flex-1">
             <FunctionsBlock
-                :items="algoritms1"
+                :items="createAlgoritm1 ? algoritms1Copy : algoritms1"
                 :selectedAlgoritms="selectedAlgoritmsLeft"
                 :isAllChecked="isAllCheckedLeft"
                 :curAction="curActionLeft"
                 :device="curDev"
+                :need-to-add-algoritm="createAlgoritm1"
                 @deleteAlgoritm="
                     (indexes: Algoritm[], index: number) => {
                         setAlgoritmsForDelete(indexes, 1, curActionLeft.val, index);
@@ -91,13 +92,28 @@
                         setCurAction(res, 'l');
                     }
                 "
+                @addAlgoritm="
+                    (index: number) => {
+                        algoritms1[index] = { val: 0, label: '', isCreating: true };
+                        algoritms1Copy = algoritms1;
+                        createAlgoritm1 = true;
+                    }
+                "
+                @creatingFinish="
+                    (index: number) => {
+                        algoritms1[index].isCreating = undefined;
+                        algoritms1Copy = [];
+                        createAlgoritm1 = false;
+                    }
+                "
             />
             <FunctionsBlock
-                :items="algoritms2"
+                :items="createAlgoritm2 ? algoritms2Copy : algoritms2"
                 :selectedAlgoritms="selectedAlgoritmsRight"
                 :isAllChecked="isAllCheckedRight"
                 :curAction="curActionRight"
                 :device="curDev"
+                :need-to-add-algoritm="createAlgoritm2"
                 @deleteAlgoritm="
                     (indexes: Algoritm[], index: number) => {
                         setAlgoritmsForDelete(indexes, 1, curActionRight.val, index);
@@ -116,6 +132,20 @@
                 @setCurAction="
                     (res: Action) => {
                         setCurAction(res, 'r');
+                    }
+                "
+                @addAlgoritm="
+                    (index: number) => {
+                        algoritms2[index] = { val: 0, label: '', isCreating: true };
+                        algoritms2Copy = algoritms2;
+                        createAlgoritm2 = true;
+                    }
+                "
+                @creatingFinish="
+                    (index: number) => {
+                        algoritms2[index].isCreating = undefined;
+                        algoritms2Copy = [];
+                        createAlgoritm2 = false;
                     }
                 "
             />
@@ -171,7 +201,7 @@ type Action =
     | { label: 'actions'; val: 'udf-act' }
     | { label: 'transformations'; val: 'udf-trans' };
 
-type Algoritm = { val: 0 | 1 | null; label: string };
+type Algoritm = { val: 0 | 1 | null; label: string; isCreating?: boolean };
 
 const curDev = ref<Device>(devices.value[0]);
 let showStatusTimer: ReturnType<typeof setTimeout> | undefined;
@@ -184,6 +214,10 @@ const isMouseOnDevice = ref(false);
 const showStatusInfo = ref(false);
 const algoritms1 = ref<Algoritm[]>([]);
 const algoritms2 = ref<Algoritm[]>([]);
+const algoritms1Copy = ref<Algoritm[]>([]);
+const algoritms2Copy = ref<Algoritm[]>([]);
+const createAlgoritm1 = ref(false);
+const createAlgoritm2 = ref(false);
 const algoritmsForDeletion = ref<
     { algoritm: Algoritm; type: 'udf-act' | 'udf-cond' | 'udf-trig' | 'udf-trans'; index: number }[]
 >([]);
