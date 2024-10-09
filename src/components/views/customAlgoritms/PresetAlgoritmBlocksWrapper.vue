@@ -313,7 +313,7 @@ const emit = defineEmits<{
 
 const indexStore = useIndexStore();
 
-const { devices, labels, tempUnit, devCapabs } = storeToRefs(indexStore);
+const { devices, labels, tempUnit, devCapabs, valuesConstRange } = storeToRefs(indexStore);
 const { funcLabels } = storeToRefs(funcStore);
 
 const api = indexStore.getApi().api as axios.AxiosInstance;
@@ -1843,6 +1843,24 @@ function set() {
         curBody.value = obj as Body;
         setConfig();
     }
+
+    interfaces1.value = [];
+    interfaces2.value = [];
+    interfaces3.value = [];
+    ent1.value = [];
+    ent2.value = [];
+    ent3.value = [];
+    time1.value = [];
+    time2.value = [];
+    time3.value = [];
+    multiSelect.value = [];
+    ent1Labels.value = [];
+    ent2Labels.value = [];
+    ent3Labels.value = [];
+    ent1OWConfig.value = [];
+    ent2OWConfig.value = [];
+    ent3OWConfig.value = [];
+    getConfig();
 }
 
 function checkConfigToSave() {
@@ -1862,6 +1880,7 @@ function handleBtnClick(configItemIndex: number, btnsItemIndex: number, val: str
         config.value = prevConfig;
     }
     checkConfigToSave();
+    checkValue(configItemIndex, btnsItemIndex, val);
     set();
 }
 
@@ -1927,8 +1946,28 @@ function handleInput(configItemIndex: number, inputItemIndex: number, val: numbe
         prevConfig[configItemIndex].inputs[inputItemIndex].val = val;
         config.value = prevConfig;
     }
+    checkValue(configItemIndex, inputItemIndex, val)
     checkConfigToSave();
     set();
+}
+
+function checkValue(configItemIndex: number, inputItemIndex: number, val: string | number) {
+    if (!config.value) return;
+    const prevConfig = [...config.value];
+    const prevConfigItem = prevConfig[configItemIndex];
+    if (!prevConfigItem) return;
+    const { btns } = prevConfigItem;
+    const [firstBtn, secondBtn] = btns
+    const values = firstBtn.val === 'const'
+            ? valuesConstRange.value.find((obj) => obj.interf === firstBtn.val + secondBtn.val)?.values
+            : valuesConstRange.value.find((obj) => obj.interf === firstBtn.val)?.values;
+    const { min, max } = values
+    const index = typeof val === 'number' ? inputItemIndex : 0;
+    if (prevConfigItem.inputs[index]) {
+        prevConfigItem.inputs[index].min = min;
+        prevConfigItem.inputs[index].max = max;
+        config.value = prevConfig;
+    }
 }
 
 function handleDropDownClick(configItemIndex: number, itemIndex: number) {
