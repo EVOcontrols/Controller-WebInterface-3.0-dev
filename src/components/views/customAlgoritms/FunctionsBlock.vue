@@ -176,7 +176,7 @@ const props = defineProps<{
 }>();
 
 const emit = defineEmits<{
-    (e: 'deleteAlgoritm', indexes: Algoritm[]): void;
+    (e: 'deleteAlgoritm', indexes: Algoritm[], index: number): void;
     (e: 'selectAlgoritm', value: boolean, index: Algoritm): void;
     (e: 'selectAllAlgoritms', value: boolean): void;
     (e: 'setIsAllChecked', value: boolean): void;
@@ -221,8 +221,8 @@ const pages = computed<Algoritm[][]>(() => {
     return arr;
 });
 
-function deleteAlgoritm(indexes: Algoritm[]) {
-    emit('deleteAlgoritm', indexes);
+function deleteAlgoritm(indexes: Algoritm[], index: number) {
+    emit('deleteAlgoritm', indexes, index);
 }
 
 const { t } = useI18n({

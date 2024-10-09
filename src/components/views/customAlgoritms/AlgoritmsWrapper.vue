@@ -35,7 +35,10 @@
                     "
                     @deleteAlgoritm="
                         () => {
-                            deleteAlgoritm([props.items[i + props.page * funcsNumberPerPage]]);
+                            deleteAlgoritm(
+                                [props.items[i + props.page * funcsNumberPerPage]],
+                                i + props.page * funcsNumberPerPage,
+                            );
                         }
                     "
                     @dblclick.stop="
@@ -106,7 +109,7 @@ const props = defineProps<{
 
 const emit = defineEmits<{
     (e: 'selectAlgoritm', value: boolean, index: Algoritm): void;
-    (e: 'deleteAlgoritm', indexes: Algoritm[]): void;
+    (e: 'deleteAlgoritm', indexes: Algoritm[], index: number): void;
 }>();
 
 const scrollWrapper = ref<HTMLElement | undefined>();
@@ -125,8 +128,8 @@ function selectAlgoritm(value: boolean, index: Algoritm) {
     emit('selectAlgoritm', value, index);
 }
 
-function deleteAlgoritm(indexes: Algoritm[]) {
-    emit('deleteAlgoritm', indexes);
+function deleteAlgoritm(indexes: Algoritm[], index: number) {
+    emit('deleteAlgoritm', indexes, index);
 }
 
 function handleDblClick(index: number, e: Event) {
@@ -259,8 +262,8 @@ watch(
 );
 watch(
     () => props.items,
-    () => {
-        openedAlgoritms.value = [];
+    (newValue, oldValue) => {
+        if (JSON.stringify(newValue) !== JSON.stringify(oldValue)) openedAlgoritms.value = [];
     },
 );
 

@@ -72,8 +72,8 @@
                 :curAction="curActionLeft"
                 :device="curDev"
                 @deleteAlgoritm="
-                    (indexes: Algoritm[]) => {
-                        setAlgoritmsForDelete(indexes, 1);
+                    (indexes: Algoritm[], index: number) => {
+                        setAlgoritmsForDelete(indexes, 1, curActionLeft.val, index);
                     }
                 "
                 @selectAlgoritm="
@@ -99,8 +99,8 @@
                 :curAction="curActionRight"
                 :device="curDev"
                 @deleteAlgoritm="
-                    (indexes: Algoritm[]) => {
-                        setAlgoritmsForDelete(indexes, 1);
+                    (indexes: Algoritm[], index: number) => {
+                        setAlgoritmsForDelete(indexes, 1, curActionRight.val, index);
                     }
                 "
                 @selectAlgoritm="
@@ -122,7 +122,7 @@
         </div>
         <DeleteAlgoritmPopUp
             v-if="algoritmsForDeletion.length"
-            :algoritms="algoritmsForDeletion"
+            :algoritms="algoritmsForDeletion.map((el) => el.algoritm)"
             :isLoading="isAlgoritmsDeleting"
             :type="algoritmsForDeletionType"
             @close="algoritmsForDeletion = []"
@@ -135,7 +135,11 @@
             @close="setSelectedAlgoritmsCount"
             @deleteAlgoritms="
                 () => {
-                    setAlgoritmsForDelete([...selectedAlgoritmsLeft, ...selectedAlgoritmsRight], 2);
+                    setAlgoritmsForDelete(
+                        [...selectedAlgoritmsLeft, ...selectedAlgoritmsRight],
+                        2,
+                        'udf-act',
+                    );
                 }
             "
         />
@@ -180,7 +184,9 @@ const isMouseOnDevice = ref(false);
 const showStatusInfo = ref(false);
 const algoritms1 = ref<Algoritm[]>([]);
 const algoritms2 = ref<Algoritm[]>([]);
-const algoritmsForDeletion = ref<Algoritm[]>([]);
+const algoritmsForDeletion = ref<
+    { algoritm: Algoritm; type: 'udf-act' | 'udf-cond' | 'udf-trig' | 'udf-trans'; index: number }[]
+>([]);
 const algoritmsForDeletionType = ref<1 | 2>();
 const isAlgoritmsDeleting = ref(false);
 const selectedAlgoritmsLeft = ref<Algoritm[]>([]);
@@ -253,21 +259,83 @@ function handleLeave() {
     );
 }
 
-function setAlgoritmsForDelete(indexes: Algoritm[], type: 1 | 2) {
+function setAlgoritmsForDelete(
+    indexes: Algoritm[],
+    type: 1 | 2,
+    act: 'udf-act' | 'udf-cond' | 'udf-trig' | 'udf-trans',
+    index: number,
+) {
     let prevArr = [...algoritmsForDeletion.value];
-    prevArr.push(...indexes);
+    prevArr.push(
+        ...indexes.map((el) => {
+            return { algoritm: el, type: act, index: index };
+        }),
+    );
     algoritmsForDeletion.value = [...prevArr];
     algoritmsForDeletionType.value = type;
 }
 
-function deleteAlgoritms() {
-    //TODO
+async function deleteAlgoritms() {
     isAlgoritmsDeleting.value = true;
-    setTimeout(() => {
+    let body = {};
+    if (algoritmsForDeletion.value[0].type === 'udf-act') {
+        body = {
+            type: 'udf-act',
+            device: curDev.value.addr,
+            index: algoritmsForDeletion.value[0].index,
+            action: {
+                type: 'none',
+            },
+        };
+    } else if (algoritmsForDeletion.value[0].type === 'udf-cond') {
+        body = {
+            type: 'udf-cond',
+            device: curDev.value.addr,
+            index: algoritmsForDeletion.value[0].index,
+            condition: {
+                type: 'none',
+            },
+        };
+    } else if (algoritmsForDeletion.value[0].type === 'udf-trig') {
+        body = {
+            type: 'udf-trig',
+            device: curDev.value.addr,
+            index: algoritmsForDeletion.value[0].index,
+            trigger: {
+                type: 'none',
+            },
+        };
+    } else if (algoritmsForDeletion.value[0].type === 'udf-trans') {
+        body = {
+            type: 'udf-trans',
+            device: curDev.value.addr,
+            index: algoritmsForDeletion.value[0].index,
+            transform: {
+                type: 'none',
+            },
+        };
+    }
+    try {
+        const r = await api.post('set_udf_cfg', body);
+        if (algoritmsForDeletion.value[0].type == curActionLeft.value.val) {
+            const prev = [...algoritms1.value];
+            prev[algoritmsForDeletion.value[0].index] = { val: null, label: '' };
+            algoritms1.value = [...prev];
+        } else {
+            const prev = [...algoritms2.value];
+            prev[algoritmsForDeletion.value[0].index] = { val: null, label: '' };
+            algoritms2.value = [...prev];
+        }
         algoritmsForDeletion.value = [];
-        // selectedAlgoritms.value = [];
         isAlgoritmsDeleting.value = false;
-    }, 5000);
+    } catch (error) {
+        if (isAborted.value) {
+            return;
+        }
+        setTimeout(() => {
+            deleteAlgoritms();
+        }, 5);
+    }
 }
 
 function selectAlgoritm(value: boolean, index: Algoritm, direction: 'l' | 'r') {
@@ -366,6 +434,9 @@ async function getData(labels: string[], dir: 'l' | 'r') {
             } else {
                 algoritms2.value = [...res];
             }
+            setTimeout(() => {
+                getData(labels, dir);
+            }, 5000);
         } catch (error) {
             if (isAborted.value) {
                 return;

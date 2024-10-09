@@ -29,7 +29,7 @@
                 v-if="props.item.val !== null"
                 class="rounded-[50%] cursor-pointer w-[1.75rem] h-[1.75rem] flex items-center justify-center mr-2"
                 :class="true ? 'bg-[#0E5853]' : 'bg-[#1B4A74]'"
-                @click.stop=""
+                @click="handleClick"
             >
                 <IButtonIcon
                     :class="
@@ -103,6 +103,12 @@ import OutlinedButton from '@/components/Ui/OutlinedButton.vue';
 import PresetAlgoritmBlocksWrapper from '@/components/views/customAlgoritms/PresetAlgoritmBlocksWrapper.vue';
 import type { Device } from '@/stores';
 
+const indexStore = useIndexStore();
+
+const api = indexStore.getApi().api;
+
+const isAborted = indexStore.getApi().isAborted;
+
 const props = defineProps<{
     checked: boolean;
     item: { val: 0 | 1 | null; label: string };
@@ -122,4 +128,22 @@ const emit = defineEmits<{
     (e: 'deleteAlgoritm'): void;
     (e: 'oneClick'): void;
 }>();
+
+async function handleClick() {
+    try {
+        const r = await api.post('set_ent_value', {
+            type: props.curAction.val,
+            device: props.device ? props.device.addr : 0,
+            index: props.index,
+            value: props.item.val ? 0 : 1,
+        });
+    } catch (error) {
+        if (isAborted.value) {
+            return;
+        }
+        setTimeout(() => {
+            handleClick();
+        }, 5);
+    }
+}
 </script>

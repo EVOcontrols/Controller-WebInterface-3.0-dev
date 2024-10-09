@@ -47,7 +47,10 @@
                     :key="j"
                     @click="
                         () => {
-                            if (btn.val !== props.btns[item.index].val) {
+                            if (
+                                btn.val !== props.btns[item.index].val &&
+                                !props.btns[item.index].disabled
+                            ) {
                                 $emit('handleBtnClick', item.index, btn.val);
                             }
                         }
@@ -254,7 +257,9 @@
                         )
                     "
                     @value-changed="
-                        $event === undefined ? '' : emit('handleInput', item.index, $event)
+                        $event === undefined
+                            ? emit('handleInput', item.index, 0)
+                            : emit('handleInput', item.index, $event)
                     "
                 />
             </div>
@@ -345,6 +350,7 @@ const props = defineProps<{
         vals: { label: string | number; val: string | number; class?: string }[];
         val: string | number;
         inline?: boolean;
+        disabled?: boolean;
     }[];
     tabs: {
         vals: { label: string; val: string | number }[];
@@ -397,7 +403,8 @@ const props = defineProps<{
             | 'udf-cond'
             | 'udf-trans'
             | 'udf-trig';
-        items: { val: number[] | null[] | [number | null][]; name: string; i: number }[];
+        items: { val: number | null | (number | null)[]; name: string; i: number }[];
+        vals: number[];
     }[];
 }>();
 

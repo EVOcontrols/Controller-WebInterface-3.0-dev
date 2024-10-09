@@ -26,18 +26,18 @@
             >
                 <div
                     class="rounded-[50%] cursor-pointer w-[1.75rem] h-[1.75rem] flex items-center justify-center"
-                    :class="true ? 'bg-[#0E5853]' : 'bg-[#1B4A74]'"
+                    :class="props.algoritms[0].val ? 'bg-[#0E5853]' : 'bg-[#1B4A74]'"
                 >
                     <IButtonIcon
                         :class="
-                            true
+                            props.algoritms[0].val
                                 ? '[&>path]:fill-[#00D6AF] [&>rect]:fill-[#00D6AF]'
                                 : '[&>path]:fill-[#5891C2] [&>rect]:fill-[#5891C2]'
                         "
                     />
                 </div>
                 <div class="text-sm font-semibold leading-[120%] text-[#ADEBFF] select-none">
-                    Название функции
+                    {{ props.algoritms[0].label || '&#8212' }}
                 </div>
             </div>
             <div class="flex justify-end items-center gap-2">
@@ -102,8 +102,8 @@ const { t } = useI18n({
             cancel: 'Отмена',
             delete: 'Удалить',
             text: {
-                1: 'Вы действительно хотите удалить функцию?',
-                2: 'Вы действительно хотите выбранные функции?',
+                1: 'Вы действительно хотите удалить алгоритм?',
+                2: 'Вы действительно хотите удалить выбранные алгоритмы?',
             },
         },
     },

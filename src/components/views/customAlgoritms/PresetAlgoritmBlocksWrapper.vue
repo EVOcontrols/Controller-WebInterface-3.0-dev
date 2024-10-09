@@ -150,62 +150,72 @@
                             class="overflow-y-auto w-full scrollbar-4 relative h-[23.5rem]"
                         >
                             <div
-                                class="h-9 w-full px-[10px] hover:bg-[#163E61] flex items-center transition-colors duration-300"
+                                class="h-9 w-full"
                                 v-for="(item, i) in shownDropDown.items.filter((el) =>
                                     el.name.includes(headerInput),
                                 )"
                                 :key="i"
                             >
-                                <div class="w-5 mr-4">
-                                    {{ i + 1 }}
-                                </div>
-                                <IButtonIcon
-                                    v-if="shownDropDown.type === 'bin'"
-                                    class="mr-4"
-                                    :class="
-                                        item.val
-                                            ? '[&>path]:fill-[#00D6AF] [&>rect]:fill-[#00D6AF]'
-                                            : '[&>path]:fill-[#5891C2] [&>rect]:fill-[#5891C2]'
-                                    "
-                                />
-                                <div class="flex-1 text-sm text-[#8DC5F6]">
-                                    {{ item.name || '&#8212' }}
-                                </div>
                                 <div
-                                    v-if="shownDropDown.type !== 'bin'"
-                                    class="text-sm"
-                                    :class="
-                                        shownDropDown.realType === '1w-sens'
-                                            ? (item.val[0] as number) > 0
-                                                ? 'text-[#EB8246]'
-                                                : 'text-[#35A1FF]'
-                                            : 'text-[#8DC5F6]'
-                                    "
+                                    class="w-full h-full px-[10px] flex items-center transition-colors duration-300 hover:bg-[#163E61]"
+                                    :class="shownDropDown.vals.includes(i) ? 'bg-[#163E61]' : ''"
                                 >
-                                    {{
-                                        shownDropDown.realType === '1w-sens' &&
-                                        Array.isArray(item.val) &&
-                                        item.val[0] !== null
-                                            ? tempUnit === '°C'
-                                                ? `${
-                                                      Math.round((item.val[0] as number) / 10) / 10
-                                                  }°C`
-                                                : `${
-                                                      (Math.round((item.val[0] as number) / 10) /
-                                                          10) *
-                                                          1.8 +
-                                                      32
-                                                  }°F`
-                                            : shownDropDown.realType === 'pwm-out' &&
-                                              typeof item.val === 'number'
-                                            ? `${item.val / 100}%`
-                                            : shownDropDown.realType === 'adc-in' &&
-                                              typeof item.val === 'number'
-                                            ? `${item.val}%`
-                                            : Array.isArray(item.val)
-                                            ? ''
-                                            : item.val
-                                    }}
+                                    <div class="w-5 mr-4">
+                                        {{ i + 1 }}
+                                    </div>
+                                    <IButtonIcon
+                                        v-if="shownDropDown.type === 'bin'"
+                                        class="mr-4"
+                                        :class="
+                                            item.val
+                                                ? '[&>path]:fill-[#00D6AF] [&>rect]:fill-[#00D6AF]'
+                                                : '[&>path]:fill-[#5891C2] [&>rect]:fill-[#5891C2]'
+                                        "
+                                    />
+                                    <div class="flex-1 text-sm text-[#8DC5F6]">
+                                        {{ item.name || '&#8212' }}
+                                    </div>
+                                    <div
+                                        v-if="shownDropDown.type !== 'bin'"
+                                        class="text-sm"
+                                        :class="
+                                            shownDropDown.realType === '1w-sens'
+                                                ? Array.isArray(item.val) &&
+                                                  item.val[0] !== null &&
+                                                  (item.val[0] as number) > 0
+                                                    ? 'text-[#EB8246]'
+                                                    : 'text-[#35A1FF]'
+                                                : 'text-[#8DC5F6]'
+                                        "
+                                    >
+                                        {{
+                                            shownDropDown.realType === '1w-sens' &&
+                                            Array.isArray(item.val) &&
+                                            item.val[0] !== null
+                                                ? tempUnit === '°C'
+                                                    ? `${
+                                                          Math.round((item.val[0] as number) / 10) /
+                                                          10
+                                                      }°C`
+                                                    : `${
+                                                          (Math.round(
+                                                              (item.val[0] as number) / 10,
+                                                          ) /
+                                                              10) *
+                                                              1.8 +
+                                                          32
+                                                      }°F`
+                                                : shownDropDown.realType === 'pwm-out' &&
+                                                  typeof item.val === 'number'
+                                                ? `${item.val / 100}%`
+                                                : shownDropDown.realType === 'adc-in' &&
+                                                  typeof item.val === 'number'
+                                                ? `${item.val}%`
+                                                : Array.isArray(item.val)
+                                                ? ''
+                                                : item.val
+                                        }}
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -245,10 +255,12 @@ import info from '@/assets/img/info.svg?raw';
 import type { Device } from '@/stores';
 import axios from 'axios';
 import spinner from '@/assets/img/spinner-inside-button.svg?raw';
-import type { Body, Ent } from '@/typings/funcs';
+import type { Body, Ent, Time } from '@/typings/funcs';
 import type { ControllerSettings } from '@/typings/settings';
 const { readFile } = useReadWriteFiles();
 import type { LabelsType } from '@/typings/files';
+
+let configTimer: ReturnType<typeof setTimeout> | undefined;
 
 const funcStore = useFuncsStore();
 
@@ -304,10 +316,11 @@ const shownDropDown = ref<{
         | 'udf-trans'
         | 'udf-trig';
     items: {
-        val: number[] | null[] | [number | null][];
+        val: number | null | (number | null)[];
         name: string;
         i: number;
     }[];
+    vals: number[];
     configItemIndex: number;
     itemIndex: number;
 }>();
@@ -349,7 +362,43 @@ const order = [
 const curOWConfig = ref<{ mode: 'off' | 'sens' | 'rom' | 'gpio' }[]>([]);
 const curMbConfig = ref<{ mode: 'off' | 'variables' }[]>([]);
 
-const interfaces = ref<
+const interfaces1 = ref<
+    (
+        | '1w-rom'
+        | '1w-sens'
+        | '1w-gpio'
+        | 'bin-in'
+        | 'adc-in'
+        | 'bin-out'
+        | 'pwm-out'
+        | 'mb-co'
+        | 'mb-ir'
+        | 'mb-hr'
+        | 'mb-di'
+        | 'bin-var'
+        | 'int-var'
+        | 'tim-var'
+    )[]
+>([]);
+const interfaces2 = ref<
+    (
+        | '1w-rom'
+        | '1w-sens'
+        | '1w-gpio'
+        | 'bin-in'
+        | 'adc-in'
+        | 'bin-out'
+        | 'pwm-out'
+        | 'mb-co'
+        | 'mb-ir'
+        | 'mb-hr'
+        | 'mb-di'
+        | 'bin-var'
+        | 'int-var'
+        | 'tim-var'
+    )[]
+>([]);
+const interfaces3 = ref<
     (
         | '1w-rom'
         | '1w-sens'
@@ -369,6 +418,7 @@ const interfaces = ref<
 >([]);
 
 type Config = {
+    curKey: number;
     queue: {
         name: 'title' | 'btns' | 'tabs' | 'dropDown' | 'radioBtns' | 'input' | 'checkBox';
         index: number;
@@ -380,6 +430,7 @@ type Config = {
         vals: { label: string | number; val: string | number; class?: string }[];
         val: string | number;
         inline?: boolean;
+        disabled?: boolean;
     }[];
     tabs: {
         vals: { label: string; val: string | number }[];
@@ -433,7 +484,8 @@ type Config = {
             | 'udf-cond'
             | 'udf-trans'
             | 'udf-trig';
-        items: { val: number[] | null[] | [number | null][]; name: string; i: number }[];
+        items: { val: number | null | (number | null)[]; name: string; i: number }[];
+        vals: number[];
     }[];
 };
 
@@ -443,9 +495,13 @@ let initBody = null;
 
 const curBody = ref<Body>();
 
-const ent1 = ref<{ val: number[] | null[] | [number | null][]; name: string; i: number }[]>([]);
-const ent2 = ref<{ val: number[] | null[] | [number | null][]; name: string; i: number }[]>([]);
-const ent3 = ref<{ val: number[] | null[] | [number | null][]; name: string; i: number }[]>([]);
+const ent1 = ref<{ val: number | null | (number | null)[]; name: string; i: number }[]>([]);
+const ent2 = ref<{ val: number | null | (number | null)[]; name: string; i: number }[]>([]);
+const ent3 = ref<{ val: number | null | (number | null)[]; name: string; i: number }[]>([]);
+const time1 = ref<{ val: number | null | (number | null)[]; name: string; i: number }[]>([]);
+const time2 = ref<{ val: number | null | (number | null)[]; name: string; i: number }[]>([]);
+const time3 = ref<{ val: number | null | (number | null)[]; name: string; i: number }[]>([]);
+const multiSelect = ref<{ val: number | null | (number | null)[]; name: string; i: number }[]>([]);
 const ent1Labels = ref<string[]>([]);
 const ent2Labels = ref<string[]>([]);
 const ent3Labels = ref<string[]>([]);
@@ -453,9 +509,660 @@ const ent1OWConfig = ref<{ mode: 'off' | 'sens' | 'rom' | 'gpio' }[]>([]);
 const ent2OWConfig = ref<{ mode: 'off' | 'sens' | 'rom' | 'gpio' }[]>([]);
 const ent3OWConfig = ref<{ mode: 'off' | 'sens' | 'rom' | 'gpio' }[]>([]);
 
-function save() {
-    // TODO
-    // isSaving
+async function save() {
+    isSaving.value = true;
+    let body = {
+        type: props.type.val,
+        device: props.device ? props.device.addr : 0,
+        index: props.index,
+    };
+    if (props.type.val === 'udf-act') {
+        let ent = {
+            type: config.value.find((el) => el.curKey === 2)?.tabs[0].val,
+            device: config.value.find((el) => el.curKey === 3)?.tabs[0].val,
+            index: config.value.find((el) => el.curKey === 4)?.dropDowns[0].vals[0],
+        };
+        if (
+            config.value.find((el) => el.curKey === 2)?.tabs[0].val === 'mb-var' ||
+            config.value.find((el) => el.curKey === 2)?.tabs[0].val === '1w-rom' ||
+            config.value.find((el) => el.curKey === 2)?.tabs[0].val === '1w-sens' ||
+            config.value.find((el) => el.curKey === 2)?.tabs[0].val === '1w-gpio'
+        ) {
+            ent = Object.assign(
+                ent,
+                config.value.find((el) => el.curKey === 2)?.tabs[0].val === '1w-sens'
+                    ? { bus: config.value.find((el) => el.curKey === 5)?.tabs[0].val, io: 0 }
+                    : {
+                          bus: config.value.find((el) => el.curKey === 5)?.tabs[0].val,
+                      },
+            );
+        }
+        let obj = {
+            type: config.value.find((el) => el.curKey === 6)?.radioBtns[0].val,
+            entity: ent,
+            delay:
+                config.value.find((el) => el.curKey === 29)?.btns[0].val === 'tim-var'
+                    ? {
+                          type: 'tim-var',
+                          index: config.value.find((el) => el.curKey === 29)?.dropDowns[0].vals[0],
+                      }
+                    : {
+                          type: 'tim-const',
+                          value: config.value.find((el) => el.curKey === 29)?.inputs[0].val,
+                      },
+            'cond-idx': config.value.find((el) => el.curKey === 30)?.dropDowns[0].vals[0],
+            'cond-qty': config.value.find((el) => el.curKey === 30)?.dropDowns[0].vals.length,
+            'start-on-cond': config.value
+                .find((el) => el.curKey === 31)
+                ?.checkBoxes[0][1].valsArr.includes('conditionsOccur'),
+            'cond-logic': config.value.find((el) => el.curKey === 30)?.btns[0].val,
+            'init-state': config.value.find((el) => el.curKey === 1)?.btns[0].val === 'on' ? 1 : 0,
+        };
+        if (
+            config.value.find((el) => el.curKey === 6)?.radioBtns[0].val === 'set' ||
+            config.value.find((el) => el.curKey === 6)?.radioBtns[0].val === 'invert'
+        ) {
+            let ent = {};
+            if (config.value.find((el) => el.curKey === 8)?.btns[0].val === 'obj') {
+                ent = {
+                    type: config.value.find((el) => el.curKey === 11)?.tabs[0].val,
+                    device: config.value.find((el) => el.curKey === 12)?.tabs[0].val,
+                    index: config.value.find((el) => el.curKey === 13)?.dropDowns[0].vals[0],
+                };
+                if (
+                    config.value.find((el) => el.curKey === 11)?.tabs[0].val === 'mb-var' ||
+                    config.value.find((el) => el.curKey === 11)?.tabs[0].val === '1w-rom' ||
+                    config.value.find((el) => el.curKey === 11)?.tabs[0].val === '1w-sens' ||
+                    config.value.find((el) => el.curKey === 11)?.tabs[0].val === '1w-gpio'
+                ) {
+                    ent = Object.assign(
+                        ent,
+                        config.value.find((el) => el.curKey === 11)?.tabs[0].val === '1w-sens'
+                            ? {
+                                  bus: config.value.find((el) => el.curKey === 14)?.tabs[0].val,
+                                  io: 0,
+                              }
+                            : {
+                                  bus: config.value.find((el) => el.curKey === 14)?.tabs[0].val,
+                              },
+                    );
+                }
+            } else {
+                ent = {
+                    type: 'int-const',
+                    value: config.value.find((el) => el.curKey === 10)?.inputs[0].val,
+                };
+            }
+            let stopVal = {};
+            if (config.value.find((el) => el.curKey === 15)?.btns[0].val === 'obj') {
+                stopVal = {
+                    type: config.value.find((el) => el.curKey === 17)?.tabs[0].val,
+                    device: config.value.find((el) => el.curKey === 18)?.tabs[0].val,
+                    index: config.value.find((el) => el.curKey === 19)?.dropDowns[0].vals[0],
+                };
+                if (
+                    config.value.find((el) => el.curKey === 17)?.tabs[0].val === 'mb-var' ||
+                    config.value.find((el) => el.curKey === 17)?.tabs[0].val === '1w-rom' ||
+                    config.value.find((el) => el.curKey === 17)?.tabs[0].val === '1w-sens' ||
+                    config.value.find((el) => el.curKey === 17)?.tabs[0].val === '1w-gpio'
+                ) {
+                    stopVal = Object.assign(
+                        stopVal,
+                        config.value.find((el) => el.curKey === 17)?.tabs[0].val === '1w-sens'
+                            ? {
+                                  bus: config.value.find((el) => el.curKey === 20)?.tabs[0].val,
+                                  io: 0,
+                              }
+                            : {
+                                  bus: config.value.find((el) => el.curKey === 20)?.tabs[0].val,
+                              },
+                    );
+                }
+            } else if (config.value.find((el) => el.curKey === 15)?.btns[0].val === 'const') {
+                stopVal = {
+                    type: 'int-const',
+                    value: config.value.find((el) => el.curKey === 16)?.inputs[0].val,
+                };
+            } else {
+                stopVal = {
+                    type: 'prev-val',
+                };
+            }
+            const curObj = {
+                value: ent,
+                time:
+                    config.value.find((el) => el.curKey === 28)?.btns[0].val === 'tim-var'
+                        ? {
+                              type: 'tim-var',
+                              index: config.value.find((el) => el.curKey === 28)?.dropDowns[0]
+                                  .vals[0],
+                          }
+                        : {
+                              type: 'tim-const',
+                              value: config.value.find((el) => el.curKey === 28)?.inputs[0].val,
+                          },
+                'stop-val': stopVal,
+                'stop-on-trig': config.value
+                    .find((el) => el.curKey === 31)
+                    ?.checkBoxes[0][2].valsArr.includes('triggerNoMatches'),
+                'stop-on-cond': config.value
+                    .find((el) => el.curKey === 31)
+                    ?.checkBoxes[0][2].valsArr.includes('conditionNoMatches'),
+            };
+            obj = Object.assign(obj, curObj);
+        } else if (config.value.find((el) => el.curKey === 6)?.radioBtns[0].val === 'modify') {
+            let ent = {};
+            if (config.value.find((el) => el.curKey === 8)?.btns[0].val === 'obj') {
+                ent = {
+                    type: config.value.find((el) => el.curKey === 11)?.tabs[0].val,
+                    device: config.value.find((el) => el.curKey === 12)?.tabs[0].val,
+                    index: config.value.find((el) => el.curKey === 13)?.dropDowns[0].vals[0],
+                };
+                if (
+                    config.value.find((el) => el.curKey === 11)?.tabs[0].val === 'mb-var' ||
+                    config.value.find((el) => el.curKey === 11)?.tabs[0].val === '1w-rom' ||
+                    config.value.find((el) => el.curKey === 11)?.tabs[0].val === '1w-sens' ||
+                    config.value.find((el) => el.curKey === 11)?.tabs[0].val === '1w-gpio'
+                ) {
+                    ent = Object.assign(
+                        ent,
+                        config.value.find((el) => el.curKey === 11)?.tabs[0].val === '1w-sens'
+                            ? {
+                                  bus: config.value.find((el) => el.curKey === 14)?.tabs[0].val,
+                                  io: 0,
+                              }
+                            : {
+                                  bus: config.value.find((el) => el.curKey === 14)?.tabs[0].val,
+                              },
+                    );
+                }
+            } else {
+                ent = {
+                    type: 'int-const',
+                    value:
+                        config.value.find((el) => el.curKey === 7)?.radioBtns[0].val ===
+                            'bin-equal' ||
+                        config.value.find((el) => el.curKey === 7)?.radioBtns[0].val ===
+                            'bin-not-equal'
+                            ? config.value.find((el) => el.curKey === 9)?.btns[0].val
+                            : config.value.find((el) => el.curKey === 10)?.inputs[0].val,
+                };
+            }
+            let stopVal = {};
+            if (config.value.find((el) => el.curKey === 15)?.btns[0].val === 'obj') {
+                stopVal = {
+                    type: config.value.find((el) => el.curKey === 17)?.tabs[0].val,
+                    device: config.value.find((el) => el.curKey === 18)?.tabs[0].val,
+                    index: config.value.find((el) => el.curKey === 19)?.dropDowns[0].vals[0],
+                };
+                if (
+                    config.value.find((el) => el.curKey === 17)?.tabs[0].val === 'mb-var' ||
+                    config.value.find((el) => el.curKey === 17)?.tabs[0].val === '1w-rom' ||
+                    config.value.find((el) => el.curKey === 17)?.tabs[0].val === '1w-sens' ||
+                    config.value.find((el) => el.curKey === 17)?.tabs[0].val === '1w-gpio'
+                ) {
+                    stopVal = Object.assign(
+                        stopVal,
+                        config.value.find((el) => el.curKey === 17)?.tabs[0].val === '1w-sens'
+                            ? {
+                                  bus: config.value.find((el) => el.curKey === 20)?.tabs[0].val,
+                                  io: 0,
+                              }
+                            : {
+                                  bus: config.value.find((el) => el.curKey === 20)?.tabs[0].val,
+                              },
+                    );
+                }
+            } else if (config.value.find((el) => el.curKey === 15)?.btns[0].val === 'const') {
+                stopVal = {
+                    type: 'int-const',
+                    value: config.value.find((el) => el.curKey === 16)?.inputs[0].val,
+                };
+            } else {
+                stopVal = {
+                    type: 'prev-val',
+                };
+            }
+            const curObj = {
+                value: ent,
+                time:
+                    config.value.find((el) => el.curKey === 28)?.btns[0].val === 'tim-var'
+                        ? {
+                              type: 'tim-var',
+                              index: config.value.find((el) => el.curKey === 28)?.dropDowns[0]
+                                  .vals[0],
+                          }
+                        : {
+                              type: 'tim-const',
+                              value: config.value.find((el) => el.curKey === 28)?.inputs[0].val,
+                          },
+                'stop-val': stopVal,
+                operation: config.value.find((el) => el.curKey === 7)?.radioBtns[0].val,
+                unsigned: false,
+                'stop-on-trig': config.value
+                    .find((el) => el.curKey === 31)
+                    ?.checkBoxes[0][2].valsArr.includes('triggerNoMatches'),
+                'stop-on-cond': config.value.find((el) => el.curKey === 31),
+            };
+            obj = Object.assign(obj, curObj);
+        } else if (config.value.find((el) => el.curKey === 6)?.radioBtns[0].val === 'change') {
+            let ent = {};
+            if (config.value.find((el) => el.curKey === 8)?.btns[0].val === 'obj') {
+                ent = {
+                    type: config.value.find((el) => el.curKey === 11)?.tabs[0].val,
+                    device: config.value.find((el) => el.curKey === 12)?.tabs[0].val,
+                    index: config.value.find((el) => el.curKey === 13)?.dropDowns[0].vals[0],
+                };
+                if (
+                    config.value.find((el) => el.curKey === 11)?.tabs[0].val === 'mb-var' ||
+                    config.value.find((el) => el.curKey === 11)?.tabs[0].val === '1w-rom' ||
+                    config.value.find((el) => el.curKey === 11)?.tabs[0].val === '1w-sens' ||
+                    config.value.find((el) => el.curKey === 11)?.tabs[0].val === '1w-gpio'
+                ) {
+                    ent = Object.assign(
+                        ent,
+                        config.value.find((el) => el.curKey === 11)?.tabs[0].val === '1w-sens'
+                            ? {
+                                  bus: config.value.find((el) => el.curKey === 14)?.tabs[0].val,
+                                  io: 0,
+                              }
+                            : {
+                                  bus: config.value.find((el) => el.curKey === 14)?.tabs[0].val,
+                              },
+                    );
+                }
+            } else {
+                ent = {
+                    type: 'int-const',
+                    value:
+                        config.value.find((el) => el.curKey === 7)?.radioBtns[0].val ===
+                            'bin-equal' ||
+                        config.value.find((el) => el.curKey === 7)?.radioBtns[0].val ===
+                            'bin-not-equal'
+                            ? config.value.find((el) => el.curKey === 9)?.btns[0].val
+                            : config.value.find((el) => el.curKey === 10)?.inputs[0].val,
+                };
+            }
+            const curObj = {
+                value: ent,
+                time:
+                    config.value.find((el) => el.curKey === 28)?.btns[0].val === 'tim-var'
+                        ? {
+                              type: 'tim-var',
+                              index: config.value.find((el) => el.curKey === 28)?.dropDowns[0]
+                                  .vals[0],
+                          }
+                        : {
+                              type: 'tim-const',
+                              value: config.value.find((el) => el.curKey === 28)?.inputs[0].val,
+                          },
+                'stop-on-trig': config.value
+                    .find((el) => el.curKey === 31)
+                    ?.checkBoxes[0][2].valsArr.includes('triggerNoMatches'),
+                'stop-on-cond': config.value.find((el) => el.curKey === 31),
+            };
+            obj = Object.assign(obj, curObj);
+        } else if (config.value.find((el) => el.curKey === 6)?.radioBtns[0].val === 'cycle') {
+            const curObj = {
+                time:
+                    config.value.find((el) => el.curKey === 28)?.btns[0].val === 'tim-var'
+                        ? {
+                              type: 'tim-var',
+                              index: config.value.find((el) => el.curKey === 28)?.dropDowns[0]
+                                  .vals[0],
+                          }
+                        : {
+                              type: 'tim-const',
+                              value: config.value.find((el) => el.curKey === 28)?.inputs[0].val,
+                          },
+                pause:
+                    config.value.find((el) => el.curKey === 28)?.btns[0].val === 'tim-var'
+                        ? {
+                              type: 'tim-var',
+                              index: config.value.find((el) => el.curKey === 28)?.dropDowns[0]
+                                  .vals[0],
+                          }
+                        : {
+                              type: 'tim-const',
+                              value: config.value.find((el) => el.curKey === 28)?.inputs[0].val,
+                          },
+                direction: config.value.find((el) => el.curKey === 32)?.btns[1].val,
+                infinite: config.value.find((el) => el.curKey === 32)?.btns[0].val === 'yes',
+                'stop-on-trig': config.value
+                    .find((el) => el.curKey === 31)
+                    ?.checkBoxes[0][2].valsArr.includes('triggerNoMatches'),
+                'stop-on-cond': config.value.find((el) => el.curKey === 31),
+            };
+            obj = Object.assign(obj, curObj);
+        }
+        body = Object.assign(body, { action: obj });
+    } else if (props.type.val === 'udf-cond') {
+        let ent = {
+            type: config.value.find((el) => el.curKey === 2)?.tabs[0].val,
+            device: config.value.find((el) => el.curKey === 3)?.tabs[0].val,
+            index: config.value.find((el) => el.curKey === 4)?.dropDowns[0].vals[0],
+        };
+        if (
+            config.value.find((el) => el.curKey === 2)?.tabs[0].val === 'mb-var' ||
+            config.value.find((el) => el.curKey === 2)?.tabs[0].val === '1w-rom' ||
+            config.value.find((el) => el.curKey === 2)?.tabs[0].val === '1w-sens' ||
+            config.value.find((el) => el.curKey === 2)?.tabs[0].val === '1w-gpio'
+        ) {
+            ent = Object.assign(
+                ent,
+                config.value.find((el) => el.curKey === 2)?.tabs[0].val === '1w-sens'
+                    ? { bus: config.value.find((el) => el.curKey === 5)?.tabs[0].val, io: 0 }
+                    : {
+                          bus: config.value.find((el) => el.curKey === 5)?.tabs[0].val,
+                      },
+            );
+        }
+        let val = {};
+        if (config.value.find((el) => el.curKey === 8)?.btns[0].val === 'obj') {
+            val = {
+                type: config.value.find((el) => el.curKey === 11)?.tabs[0].val,
+                device: config.value.find((el) => el.curKey === 12)?.tabs[0].val,
+                index: config.value.find((el) => el.curKey === 13)?.dropDowns[0].vals[0],
+            };
+            if (
+                config.value.find((el) => el.curKey === 11)?.tabs[0].val === 'mb-var' ||
+                config.value.find((el) => el.curKey === 11)?.tabs[0].val === '1w-rom' ||
+                config.value.find((el) => el.curKey === 11)?.tabs[0].val === '1w-sens' ||
+                config.value.find((el) => el.curKey === 11)?.tabs[0].val === '1w-gpio'
+            ) {
+                val = Object.assign(
+                    val,
+                    config.value.find((el) => el.curKey === 11)?.tabs[0].val === '1w-sens'
+                        ? {
+                              bus: config.value.find((el) => el.curKey === 14)?.tabs[0].val,
+                              io: 0,
+                          }
+                        : {
+                              bus: config.value.find((el) => el.curKey === 14)?.tabs[0].val,
+                          },
+                );
+            }
+        } else {
+            val = {
+                type: 'int-const',
+                value:
+                    config.value.find((el) => el.curKey === 7)?.radioBtns[0].val === 'bin-equal' ||
+                    config.value.find((el) => el.curKey === 7)?.radioBtns[0].val === 'bin-not-equal'
+                        ? config.value.find((el) => el.curKey === 9)?.btns[0].val
+                        : config.value.find((el) => el.curKey === 10)?.inputs[0].val,
+            };
+        }
+        let obj = {
+            operation: config.value.find((el) => el.curKey === 7)?.radioBtns[0].val,
+            'init-state': config.value.find((el) => el.curKey === 1)?.btns[0].val === 'on' ? 1 : 0,
+            entity: ent,
+            value: val,
+            time:
+                config.value.find((el) => el.curKey === 28)?.btns[0].val === 'tim-var'
+                    ? {
+                          type: 'tim-var',
+                          index: config.value.find((el) => el.curKey === 28)?.dropDowns[0].vals[0],
+                      }
+                    : {
+                          type: 'tim-const',
+                          value: config.value.find((el) => el.curKey === 28)?.inputs[0].val,
+                      },
+        };
+        const operation = config.value.find((el) => el.curKey === 7)?.radioBtns[0].val;
+        if (
+            operation === 'less' ||
+            operation === 'less-eq' ||
+            operation === 'more' ||
+            operation === 'more-eq' ||
+            operation === 'equal' ||
+            operation === 'not-equal'
+        ) {
+            obj = Object.assign(obj, {
+                unsigned: false,
+            });
+        }
+        body = Object.assign(body, { condition: obj });
+    } else if (props.type.val === 'udf-trans') {
+        let left = {
+            type: config.value.find((el) => el.curKey === 2)?.tabs[0].val,
+            device: config.value.find((el) => el.curKey === 3)?.tabs[0].val,
+            index: config.value.find((el) => el.curKey === 4)?.dropDowns[0].vals[0],
+        };
+        if (
+            config.value.find((el) => el.curKey === 2)?.tabs[0].val === 'mb-var' ||
+            config.value.find((el) => el.curKey === 2)?.tabs[0].val === '1w-rom' ||
+            config.value.find((el) => el.curKey === 2)?.tabs[0].val === '1w-sens' ||
+            config.value.find((el) => el.curKey === 2)?.tabs[0].val === '1w-gpio'
+        ) {
+            left = Object.assign(
+                left,
+                config.value.find((el) => el.curKey === 2)?.tabs[0].val === '1w-sens'
+                    ? { bus: config.value.find((el) => el.curKey === 5)?.tabs[0].val, io: 0 }
+                    : {
+                          bus: config.value.find((el) => el.curKey === 5)?.tabs[0].val,
+                      },
+            );
+        }
+        let right = {
+            type: config.value.find((el) => el.curKey === 6)?.tabs[0].val,
+            device: config.value.find((el) => el.curKey === 7)?.tabs[0].val,
+            index: config.value.find((el) => el.curKey === 8)?.dropDowns[0].vals[0],
+        };
+        if (
+            config.value.find((el) => el.curKey === 6)?.tabs[0].val === 'mb-var' ||
+            config.value.find((el) => el.curKey === 6)?.tabs[0].val === '1w-rom' ||
+            config.value.find((el) => el.curKey === 6)?.tabs[0].val === '1w-sens' ||
+            config.value.find((el) => el.curKey === 6)?.tabs[0].val === '1w-gpio'
+        ) {
+            right = Object.assign(
+                right,
+                config.value.find((el) => el.curKey === 6)?.tabs[0].val === '1w-sens'
+                    ? { bus: config.value.find((el) => el.curKey === 9)?.tabs[0].val, io: 0 }
+                    : {
+                          bus: config.value.find((el) => el.curKey === 9)?.tabs[0].val,
+                      },
+            );
+        }
+        let result = {
+            type: config.value.find((el) => el.curKey === 10)?.tabs[0].val,
+            device: config.value.find((el) => el.curKey === 11)?.tabs[0].val,
+            index: config.value.find((el) => el.curKey === 12)?.dropDowns[0].vals[0],
+        };
+        if (
+            config.value.find((el) => el.curKey === 10)?.tabs[0].val === 'mb-var' ||
+            config.value.find((el) => el.curKey === 10)?.tabs[0].val === '1w-rom' ||
+            config.value.find((el) => el.curKey === 10)?.tabs[0].val === '1w-sens' ||
+            config.value.find((el) => el.curKey === 10)?.tabs[0].val === '1w-gpio'
+        ) {
+            result = Object.assign(
+                result,
+                config.value.find((el) => el.curKey === 10)?.tabs[0].val === '1w-sens'
+                    ? { bus: config.value.find((el) => el.curKey === 13)?.tabs[0].val, io: 0 }
+                    : {
+                          bus: config.value.find((el) => el.curKey === 13)?.tabs[0].val,
+                      },
+            );
+        }
+        let obj = {
+            'init-state': config.value.find((el) => el.curKey === 1)?.btns[0].val === 'on' ? 1 : 0,
+            operation: config.value.find((el) => el.curKey === 7)?.radioBtns[0].val,
+            left: left,
+            right: right,
+            result: result,
+            unsigned: false,
+        };
+        body = Object.assign(body, { transform: obj });
+    } else {
+        let ent = {
+            type: config.value.find((el) => el.curKey === 2)?.tabs[0].val,
+            device: config.value.find((el) => el.curKey === 3)?.tabs[0].val,
+            index: config.value.find((el) => el.curKey === 4)?.dropDowns[0].vals[0],
+        };
+        if (
+            config.value.find((el) => el.curKey === 2)?.tabs[0].val === 'mb-var' ||
+            config.value.find((el) => el.curKey === 2)?.tabs[0].val === '1w-rom' ||
+            config.value.find((el) => el.curKey === 2)?.tabs[0].val === '1w-sens' ||
+            config.value.find((el) => el.curKey === 2)?.tabs[0].val === '1w-gpio'
+        ) {
+            ent = Object.assign(
+                ent,
+                config.value.find((el) => el.curKey === 2)?.tabs[0].val === '1w-sens'
+                    ? { bus: config.value.find((el) => el.curKey === 5)?.tabs[0].val, io: 0 }
+                    : {
+                          bus: config.value.find((el) => el.curKey === 5)?.tabs[0].val,
+                      },
+            );
+        }
+        let obj = {
+            type: config.value.find((el) => el.curKey === 6)?.radioBtns[0].val,
+            entity: ent,
+            'act-idx': config.value.find((el) => el.curKey === 30)?.dropDowns[0].vals[0],
+            'act-qty': config.value.find((el) => el.curKey === 30)?.dropDowns[0].vals.length,
+            'init-state': config.value.find((el) => el.curKey === 1)?.btns[0].val === 'on' ? 1 : 0,
+        };
+        if (config.value.find((el) => el.curKey === 6)?.radioBtns[0].val === 'hold') {
+            let ent = {};
+            if (config.value.find((el) => el.curKey === 8)?.btns[0].val === 'obj') {
+                ent = {
+                    type: config.value.find((el) => el.curKey === 11)?.tabs[0].val,
+                    device: config.value.find((el) => el.curKey === 12)?.tabs[0].val,
+                    index: config.value.find((el) => el.curKey === 13)?.dropDowns[0].vals[0],
+                };
+                if (
+                    config.value.find((el) => el.curKey === 11)?.tabs[0].val === 'mb-var' ||
+                    config.value.find((el) => el.curKey === 11)?.tabs[0].val === '1w-rom' ||
+                    config.value.find((el) => el.curKey === 11)?.tabs[0].val === '1w-sens' ||
+                    config.value.find((el) => el.curKey === 11)?.tabs[0].val === '1w-gpio'
+                ) {
+                    ent = Object.assign(
+                        ent,
+                        config.value.find((el) => el.curKey === 11)?.tabs[0].val === '1w-sens'
+                            ? {
+                                  bus: config.value.find((el) => el.curKey === 14)?.tabs[0].val,
+                                  io: 0,
+                              }
+                            : {
+                                  bus: config.value.find((el) => el.curKey === 14)?.tabs[0].val,
+                              },
+                    );
+                }
+            } else {
+                ent = {
+                    type: 'int-const',
+                    value: config.value.find((el) => el.curKey === 10)?.inputs[0].val,
+                };
+            }
+            const curObj = {
+                value: ent,
+                unsigned: false,
+                'min-time':
+                    config.value.find((el) => el.curKey === 33)?.btns[0].val === 'tim-var'
+                        ? {
+                              type: 'tim-var',
+                              index: config.value.find((el) => el.curKey === 33)?.dropDowns[0]
+                                  .vals[0],
+                          }
+                        : {
+                              type: 'tim-const',
+                              value: config.value.find((el) => el.curKey === 33)?.inputs[0].val,
+                          },
+                'max-time':
+                    config.value.find((el) => el.curKey === 34)?.btns[0].val === 'tim-var'
+                        ? {
+                              type: 'tim-var',
+                              index: config.value.find((el) => el.curKey === 34)?.dropDowns[0]
+                                  .vals[0],
+                          }
+                        : {
+                              type: 'tim-const',
+                              value: config.value.find((el) => el.curKey === 34)?.inputs[0].val,
+                          },
+            };
+            obj = Object.assign(obj, curObj);
+        } else if (config.value.find((el) => el.curKey === 6)?.radioBtns[0].val === 'compare') {
+            let ent = {};
+            if (config.value.find((el) => el.curKey === 8)?.btns[0].val === 'obj') {
+                ent = {
+                    type: config.value.find((el) => el.curKey === 11)?.tabs[0].val,
+                    device: config.value.find((el) => el.curKey === 12)?.tabs[0].val,
+                    index: config.value.find((el) => el.curKey === 13)?.dropDowns[0].vals[0],
+                };
+                if (
+                    config.value.find((el) => el.curKey === 11)?.tabs[0].val === 'mb-var' ||
+                    config.value.find((el) => el.curKey === 11)?.tabs[0].val === '1w-rom' ||
+                    config.value.find((el) => el.curKey === 11)?.tabs[0].val === '1w-sens' ||
+                    config.value.find((el) => el.curKey === 11)?.tabs[0].val === '1w-gpio'
+                ) {
+                    ent = Object.assign(
+                        ent,
+                        config.value.find((el) => el.curKey === 11)?.tabs[0].val === '1w-sens'
+                            ? {
+                                  bus: config.value.find((el) => el.curKey === 14)?.tabs[0].val,
+                                  io: 0,
+                              }
+                            : {
+                                  bus: config.value.find((el) => el.curKey === 14)?.tabs[0].val,
+                              },
+                    );
+                }
+            } else {
+                ent = {
+                    type: 'int-const',
+                    value:
+                        config.value.find((el) => el.curKey === 7)?.radioBtns[0].val ===
+                            'bin-equal' ||
+                        config.value.find((el) => el.curKey === 7)?.radioBtns[0].val ===
+                            'bin-not-equal'
+                            ? config.value.find((el) => el.curKey === 9)?.btns[0].val
+                            : config.value.find((el) => el.curKey === 10)?.inputs[0].val,
+                };
+            }
+            const curObj = {
+                unsigned: false,
+                operation: config.value.find((el) => el.curKey === 7)?.radioBtns[0].val,
+                histeresis: 0,
+                time:
+                    config.value.find((el) => el.curKey === 28)?.btns[0].val === 'tim-var'
+                        ? {
+                              type: 'tim-var',
+                              index: config.value.find((el) => el.curKey === 28)?.dropDowns[0]
+                                  .vals[0],
+                          }
+                        : {
+                              type: 'tim-const',
+                              value: config.value.find((el) => el.curKey === 28)?.inputs[0].val,
+                          },
+            };
+            obj = Object.assign(obj, curObj);
+        } else {
+            obj = Object.assign(obj, {
+                time:
+                    config.value.find((el) => el.curKey === 28)?.btns[0].val === 'tim-var'
+                        ? {
+                              type: 'tim-var',
+                              index: config.value.find((el) => el.curKey === 28)?.dropDowns[0]
+                                  .vals[0],
+                          }
+                        : {
+                              type: 'tim-const',
+                              value: config.value.find((el) => el.curKey === 28)?.inputs[0].val,
+                          },
+            });
+        }
+        body = Object.assign(body, { trigger: obj });
+    }
+    try {
+        const r = await api.post('set_udf_cfg', body);
+        isSaving.value = false;
+        initConfig.value = JSON.stringify(config.value);
+    } catch (error) {
+        if (isAborted.value) {
+            return;
+        }
+        setTimeout(() => {
+            save();
+        }, 5);
+    }
 }
 
 function checkConfigToSave() {
@@ -546,6 +1253,7 @@ function handleDropDownClick(configItemIndex: number, itemIndex: number) {
         type: item.type,
         realType: item.realType,
         items: item.items,
+        vals: item.vals,
         configItemIndex: configItemIndex,
         itemIndex: itemIndex,
     };
@@ -566,38 +1274,99 @@ function setInputError(configItemIndex: number, inputItemIndex: number, res: boo
     checkConfigToSave();
 }
 
-async function getOW() {
-    curOWConfig.value.forEach((item, index) => {
-        if (item.mode !== 'off' && !interfaces.value.includes(`1w-${item.mode}`)) {
-            interfaces.value.push(`1w-${item.mode}`);
-        }
-    });
+async function getOW(ent: 1 | 2 | 3, device: number) {
+    if (device) {
+        curOWConfig.value.forEach((item, index) => {
+            if (
+                item.mode !== 'off' &&
+                !(
+                    ent === 1
+                        ? interfaces1.value
+                        : ent === 2
+                        ? interfaces2.value
+                        : interfaces3.value
+                ).includes(`1w-${item.mode}`)
+            ) {
+                (ent === 1
+                    ? interfaces1.value
+                    : ent === 2
+                    ? interfaces2.value
+                    : interfaces3.value
+                ).push(`1w-${item.mode}`);
+            }
+        });
+    } else {
+        (ent === 1
+            ? ent1OWConfig.value
+            : ent === 2
+            ? ent2OWConfig.value
+            : ent3OWConfig.value
+        ).forEach((item, index) => {
+            if (
+                item.mode !== 'off' &&
+                !(
+                    ent === 1
+                        ? interfaces1.value
+                        : ent === 2
+                        ? interfaces2.value
+                        : interfaces3.value
+                ).includes(`1w-${item.mode}`)
+            ) {
+                (ent === 1
+                    ? interfaces1.value
+                    : ent === 2
+                    ? interfaces2.value
+                    : interfaces3.value
+                ).push(`1w-${item.mode}`);
+            }
+        });
+    }
 }
 
-async function getMb() {
+async function getMb(ent: 1 | 2 | 3, device: number) {
     try {
         const r = await api.post('get_mb_info', {
-            device: props.device ? props.device.addr : 0,
+            device: device,
             bus: 0,
         });
         if (r.data.type.includes('coil')) {
-            interfaces.value.push('mb-co');
+            (ent === 1
+                ? interfaces1.value
+                : ent === 2
+                ? interfaces2.value
+                : interfaces3.value
+            ).push('mb-co');
         }
         if (r.data.type.includes('ir')) {
-            interfaces.value.push('mb-ir');
+            (ent === 1
+                ? interfaces1.value
+                : ent === 2
+                ? interfaces2.value
+                : interfaces3.value
+            ).push('mb-ir');
         }
         if (r.data.type.includes('hr')) {
-            interfaces.value.push('mb-hr');
+            (ent === 1
+                ? interfaces1.value
+                : ent === 2
+                ? interfaces2.value
+                : interfaces3.value
+            ).push('mb-hr');
         }
         if (r.data.type.includes('ir')) {
-            interfaces.value.push('mb-ir');
+            (ent === 1
+                ? interfaces1.value
+                : ent === 2
+                ? interfaces2.value
+                : interfaces3.value
+            ).push('mb-ir');
         }
     } catch (error) {
         if (isAborted.value) {
             return;
         }
         setTimeout(() => {
-            getMb();
+            getMb(ent, device);
         }, 5);
     }
 }
@@ -626,6 +1395,7 @@ async function getDevConfig() {
 }
 
 async function getEntConfig(ent: 1 | 2 | 3, device: number) {
+    if (!device) return;
     try {
         const r = await api.post('get_ext_cfg', {
             device: device,
@@ -648,7 +1418,7 @@ async function getEntConfig(ent: 1 | 2 | 3, device: number) {
     }
 }
 
-async function getInterfaces() {
+async function getInterfaces(ent: 1 | 2 | 3, device: number) {
     try {
         const r0: {
             data: {
@@ -669,12 +1439,42 @@ async function getInterfaces() {
                 'udf-trig': number;
             };
         } = await api.post('get_dev_capab', {
-            device: props.device ? props.device.addr : 0,
+            device: device,
         });
-        curDevCapab.value = r0.data;
+        if (!curDevCapab.value && device !== props.device?.addr) {
+            const r1: {
+                data: {
+                    '1w-gpio': number;
+                    '1w-rom': number;
+                    '1w-sens': number;
+                    'adc-in': number;
+                    'bin-in': number;
+                    'bin-out': number;
+                    'bin-var': number;
+                    'int-var': number;
+                    'mb-var': number;
+                    'pwm-out': number;
+                    'tim-var': number;
+                    'udf-act': number;
+                    'udf-cond': number;
+                    'udf-trans': number;
+                    'udf-trig': number;
+                };
+            } = await api.post('get_dev_capab', {
+                device: 0,
+            });
+            curDevCapab.value = r1.data;
+        } else {
+            curDevCapab.value = r0.data;
+        }
         for (let obj of Object.entries(r0.data)) {
             if (obj[1] && order.includes(obj[0]) && !obj[0].includes('1w') && obj[0] !== 'mb-var') {
-                interfaces.value.push(
+                (ent === 1
+                    ? interfaces1.value
+                    : ent === 2
+                    ? interfaces2.value
+                    : interfaces3.value
+                ).push(
                     obj[0] as
                         | '1w-rom'
                         | '1w-sens'
@@ -692,9 +1492,9 @@ async function getInterfaces() {
                         | 'tim-var',
                 );
             } else if (obj[0].includes('1w')) {
-                getOW();
+                getOW(ent, device);
             } else if (obj[0] === 'mb-var') {
-                getMb();
+                getMb(ent, device);
             }
         }
     } catch (error) {
@@ -702,7 +1502,7 @@ async function getInterfaces() {
             return;
         }
         setTimeout(() => {
-            getInterfaces();
+            getInterfaces(ent, device);
         }, 5);
     }
 }
@@ -731,6 +1531,8 @@ async function getData(
     quant: number,
     device?: number,
     bus?: number,
+    isTime?: boolean,
+    isMult?: boolean,
 ) {
     try {
         if (curDevCapab.value) {
@@ -771,8 +1573,7 @@ async function getData(
                       };
 
             const r = await api.post('get_ent_state', body);
-            const arr: { val: number[] | null[] | [number | null][]; name: string; i: number }[] =
-                [];
+            const arr: { val: number | null | (number | null)[]; name: string; i: number }[] = [];
             let curLabels: string[] = [];
             if (
                 type === 'udf-act' ||
@@ -789,16 +1590,44 @@ async function getData(
                 curLabels = (Array.isArray(labelsVar) ? labelsVar : []) as string[];
             }
             r.data.entities[0].state.forEach(
-                (el: number[] | null[] | [number | null][], index: number) => {
+                (el: number | null | (number | null)[], index: number) => {
                     arr.push({ val: el, name: curLabels[index] || '', i: index });
                 },
             );
-            if (num === 1) {
-                ent1.value = [...arr];
-            } else if (num === 2) {
-                ent2.value = [...arr];
+            if (isTime) {
+                if (num === 1) {
+                    time1.value = [...arr] as {
+                        val: number | null | (number | null)[];
+                        name: string;
+                        i: number;
+                    }[];
+                } else if (num === 2) {
+                    time2.value = [...arr] as {
+                        val: number | null | (number | null)[];
+                        name: string;
+                        i: number;
+                    }[];
+                } else {
+                    time3.value = [...arr] as {
+                        val: number | null | (number | null)[];
+                        name: string;
+                        i: number;
+                    }[];
+                }
+            } else if (isMult) {
+                multiSelect.value = [...arr] as {
+                    val: number | null | (number | null)[];
+                    name: string;
+                    i: number;
+                }[];
             } else {
-                ent3.value = [...arr];
+                if (num === 1) {
+                    ent1.value = [...arr];
+                } else if (num === 2) {
+                    ent2.value = [...arr];
+                } else {
+                    ent3.value = [...arr];
+                }
             }
         }
     } catch (error) {
@@ -806,7 +1635,7 @@ async function getData(
             return;
         }
         setTimeout(() => {
-            getData(num, type, quant, device, bus);
+            getData(num, type, quant, device, bus, isTime, isMult);
         }, 20);
     }
 }
@@ -847,14 +1676,38 @@ async function getLabels(num: 1 | 2 | 3, type: 'udf-act' | 'udf-cond' | 'udf-tra
 }
 
 function parseEntity(ent: Ent) {
-    const entNum = ent1 ? (ent2 ? 3 : 2) : 1;
-    if (!props.device) return;
+    const entNum = ent1.value.length ? (ent2.value.length ? 3 : 2) : 1;
+    if (!props.device || !curDevCapab.value) {
+        setTimeout(() => {
+            parseEntity(ent);
+        }, 200);
+    }
+    if (
+        !(entNum === 1
+            ? interfaces1.value.length
+            : entNum === 2
+            ? interfaces2.value.length
+            : interfaces3.value.length) &&
+        ent.device !== undefined
+    ) {
+        getInterfaces(entNum, ent.device);
+    }
     if (
         ent.type !== 'none' &&
         ent.type !== 'error' &&
         ent.type !== 'int-const' &&
         curDevCapab.value
     ) {
+        if (
+            !(entNum === 1
+                ? ent1OWConfig.value.length
+                : entNum === 2
+                ? ent2OWConfig.value.length
+                : ent3OWConfig.value.length) &&
+            ent.device !== undefined
+        ) {
+            getEntConfig(entNum, ent.device);
+        }
         let quant =
             curDevCapab.value[
                 ['mb-co', 'mb-ir', 'mb-hr', 'mb-di'].includes(ent.type)
@@ -878,19 +1731,10 @@ function parseEntity(ent: Ent) {
             ];
         if (
             ent.device !== undefined &&
-            (props.device.addr ||
-                (!props.device.addr &&
+            ((props.device && props.device.addr) ||
+                ((!props.device || !props.device.addr) &&
                     (props.type.val === 'udf-act' || props.type.val === 'udf-cond')))
         ) {
-            if (
-                !(entNum === 1
-                    ? ent1OWConfig.value.length
-                    : entNum === 2
-                    ? ent2OWConfig.value.length
-                    : ent3OWConfig.value.length)
-            ) {
-                getEntConfig(entNum, ent.device);
-            }
             const capabs = devCapabs.value[ent.device];
             let cur = quant;
             if (capabs) {
@@ -901,12 +1745,29 @@ function parseEntity(ent: Ent) {
                         ent.type === 'mb-hr' ||
                         ent.type === 'mb-di'
                             ? 'mb-var'
-                            : ent.type
+                            : (ent.type as
+                                  | '1w-gpio'
+                                  | '1w-rom'
+                                  | '1w-sens'
+                                  | 'adc-in'
+                                  | 'bin-in'
+                                  | 'bin-out'
+                                  | 'bin-var'
+                                  | 'int-var'
+                                  | 'mb-var'
+                                  | 'pwm-out'
+                                  | 'tim-var'
+                                  | 'udf-act'
+                                  | 'udf-cond'
+                                  | 'udf-trans'
+                                  | 'udf-trig')
                     ];
             }
             quant = cur;
         }
-        getData(entNum, ent.type, quant, ent.device, ent.bus);
+        if (ent.type !== 'prev-val') {
+            getData(entNum, ent.type, quant, ent.device, ent.bus);
+        }
     }
     if (
         (ent.type === 'udf-act' ||
@@ -924,6 +1785,7 @@ function parseEntity(ent: Ent) {
         )
     ) {
         res.push({
+            curKey: 2,
             queue: [
                 { name: 'title', index: 0 },
                 { name: 'tabs', index: 0 },
@@ -940,7 +1802,15 @@ function parseEntity(ent: Ent) {
             btns: [],
             tabs: [
                 {
-                    vals: interfaces.value
+                    vals: Array.from(
+                        new Set(
+                            entNum === 1
+                                ? interfaces1.value
+                                : entNum === 2
+                                ? interfaces2.value
+                                : interfaces3.value,
+                        ),
+                    )
                         .map((el) => {
                             return { val: el, label: t(`tabs.${el}`) };
                         })
@@ -972,6 +1842,7 @@ function parseEntity(ent: Ent) {
                       return { val: el.addr, label: el.addr ? `IO ${el.addr}` : 'NGC' };
                   });
         res.push({
+            curKey: 3,
             queue: [
                 { name: 'title', index: 0 },
                 { name: 'tabs', index: 0 },
@@ -1003,8 +1874,62 @@ function parseEntity(ent: Ent) {
             dropDowns: [],
         });
     }
-    if (ent.type !== 'none' && ent.type !== 'error' && ent.type !== 'int-const')
+    if (ent.bus !== undefined && ent.device !== undefined) {
+        const buses: {
+            val: string;
+            label: string;
+        }[] = [];
+        (!props.device || props.device.addr === 0
+            ? entNum === 1
+                ? ent1OWConfig.value
+                : entNum === 2
+                ? ent2OWConfig.value
+                : ent3OWConfig.value
+            : curOWConfig.value
+        ).forEach((el, index) => {
+            buses.push({ val: `${el.mode}${index}`, label: `${t('tabs.bus')}${index + 1}` });
+        });
         res.push({
+            curKey: 5,
+            queue: [
+                { name: 'title', index: 0 },
+                { name: 'tabs', index: 0 },
+            ],
+            titles: [
+                props.type.val === 'udf-act'
+                    ? t('titles.actBus')
+                    : props.type.val === 'udf-cond'
+                    ? t('titles.condBus')
+                    : props.type.val === 'udf-trans'
+                    ? t('titles.transBus')
+                    : t('titles.trigBus'),
+            ],
+            btns: [],
+            tabs: [
+                {
+                    vals: buses
+                        .filter((el) => el.val.slice(0, el.val.length - 1) === ent.type.slice(3))
+                        .map((el) => {
+                            return { val: el.val.slice(el.val.length - 1), label: el.label };
+                        }),
+                    val: ent.bus,
+                },
+            ],
+            radioBtns: [],
+            checkBoxes: [],
+            inputs: [],
+            dropDowns: [],
+        });
+    }
+
+    if (
+        ent.type !== 'none' &&
+        ent.type !== 'error' &&
+        ent.type !== 'int-const' &&
+        ent.type !== 'prev-val'
+    )
+        res.push({
+            curKey: 4,
             queue: [
                 { name: 'title', index: 0 },
                 { name: 'dropDown', index: 0 },
@@ -1037,62 +1962,205 @@ function parseEntity(ent: Ent) {
                             : ent.type === 'udf-cond'
                             ? 'cond'
                             : 'var',
-                    realType: ent.type,
+                    realType: ent.type as
+                        | 'mb-co'
+                        | 'mb-ir'
+                        | 'mb-hr'
+                        | 'mb-di'
+                        | 'bin-in'
+                        | 'bin-out'
+                        | 'adc-in'
+                        | 'pwm-out'
+                        | 'int-var'
+                        | 'bin-var'
+                        | 'tim-var'
+                        | 'udf-trig'
+                        | 'udf-cond'
+                        | 'udf-act'
+                        | 'udf-trans'
+                        | '1w-rom'
+                        | '1w-sens'
+                        | '1w-gpio',
                     items:
                         entNum === 1
                             ? ent1.value
                             : entNum === 2
                             ? [...ent2.value]
                             : [...ent3.value],
+                    vals: ent.index !== undefined ? [ent.index] : [],
                 },
             ],
         });
-    if (ent.bus !== undefined && ent.device !== undefined) {
-        const buses: {
-            val: string;
-            label: string;
-        }[] = [];
-        (props.device.addr === 0
-            ? entNum === 1
-                ? ent1OWConfig.value
-                : entNum === 2
-                ? ent2OWConfig.value
-                : ent3OWConfig.value
-            : curOWConfig.value
-        ).forEach((el, index) => {
-            buses.push({ val: `${el.mode}${index}`, label: `${t('tabs.bus')}${index + 1}` });
-        });
+    return res;
+}
+
+function parseTime(time: Time, title: string) {
+    const timeNum = time1.value.length ? (time2.value.length ? 3 : 2) : 1;
+    if (!props.device || !curDevCapab.value) return;
+    if (time.type === 'tim-var')
+        getData(
+            timeNum,
+            'tim-var',
+            curDevCapab.value['tim-var'],
+            props.device.addr,
+            undefined,
+            true,
+        );
+    const res: Config[] = [];
+    if (time.type === 'tim-const') {
         res.push({
+            curKey: 28,
             queue: [
                 { name: 'title', index: 0 },
-                { name: 'tabs', index: 0 },
+                { name: 'btns', index: 0 },
+                { name: 'input', index: 0 },
+                { name: 'btns', index: 1 },
             ],
-            titles: [t('titles.triggerBus')],
-            btns: [],
-            tabs: [
+            titles: [title],
+            btns: [
                 {
-                    vals: buses
-                        .filter((el) => el.val.slice(0, el.val.length - 1) === ent.type.slice(3))
-                        .map((el) => {
-                            return { val: el.val.slice(el.val.length - 1), label: el.label };
-                        }),
-                    val: ent.bus,
+                    vals: [
+                        { label: t('btns.const'), val: 'const' },
+                        { label: t('btns.timVar'), val: 'tim-var' },
+                    ],
+                    val: 'const',
+                },
+                {
+                    vals: [
+                        { label: t('btns.ms'), val: 'ms', class: 'w-[66px] !px-2 !h-8' },
+                        { label: t('btns.s'), val: 's', class: 'w-[66px] !px-2 !h-8' },
+                        { label: t('btns.min'), val: 'min', class: 'w-[66px] !px-2 !h-8' },
+                    ],
+                    val: 'ms',
+                    inline: true,
                 },
             ],
+            tabs: [],
+            radioBtns: [],
+            checkBoxes: [],
+            inputs: [{ val: time.value || 0, min: 0, isError: false, inline: true }],
+            dropDowns: [],
+        });
+    } else {
+        res.push({
+            curKey: 28,
+            queue: [
+                { name: 'title', index: 0 },
+                { name: 'btns', index: 0 },
+                { name: 'title', index: 1 },
+                { name: 'dropDown', index: 0 },
+            ],
+            titles: [title, t('titles.object')],
+            btns: [
+                {
+                    vals: [
+                        { label: t('btns.const'), val: 'const' },
+                        { label: t('btns.timVar'), val: 'tim-var' },
+                    ],
+                    val: 'tim-var',
+                },
+            ],
+            tabs: [],
             radioBtns: [],
             checkBoxes: [],
             inputs: [],
-            dropDowns: [],
+            dropDowns: [
+                {
+                    type: 'var',
+                    realType: 'tim-var',
+                    items:
+                        timeNum === 1
+                            ? time1.value
+                            : timeNum === 2
+                            ? [...time2.value]
+                            : [...time3.value],
+                    vals: [],
+                },
+            ],
         });
     }
     return res;
 }
 
+function parseMultiSelect(
+    type: 'udf-act' | 'udf-cond',
+    idx: number,
+    quant: number,
+    logic?: 'and' | 'or',
+) {
+    if (!props.device || !curDevCapab.value) return;
+    if (!funcLabels.value[props.device ? props.device.addr : 0].find((el) => el.name === type)) {
+        getLabels(1, type);
+    }
+    getData(1, type, curDevCapab.value[type], props.device.addr, undefined, false, true);
+    const res: Config[] = [];
+    res.push(
+        type === 'udf-act'
+            ? {
+                  curKey: 30,
+                  queue: [
+                      { name: 'title', index: 0 },
+                      { name: 'dropDown', index: 0 },
+                  ],
+                  titles: [t('titles.selectActions')],
+                  btns: [],
+                  tabs: [],
+                  radioBtns: [],
+                  checkBoxes: [],
+                  inputs: [],
+                  dropDowns: [
+                      {
+                          type: 'act',
+                          realType: 'tim-var',
+                          items: [...multiSelect.value],
+                          vals: quant
+                              ? [...multiSelect.value]
+                                    .map((el) => el.val as number)
+                                    .slice(idx, idx + quant)
+                              : [],
+                      },
+                  ],
+              }
+            : {
+                  curKey: 30,
+                  queue: [
+                      { name: 'title', index: 0 },
+                      { name: 'btns', index: 0 },
+                      { name: 'dropDown', index: 0 },
+                  ],
+                  titles: [t('titles.selectActions')],
+                  btns: [
+                      {
+                          vals: [
+                              { label: t('btns.anyCond'), val: 'or' },
+                              { label: t('btns.allCond'), val: 'all' },
+                          ],
+                          val: logic === 'or' ? 'or' : 'all',
+                      },
+                  ],
+                  tabs: [],
+                  radioBtns: [],
+                  checkBoxes: [],
+                  inputs: [],
+                  dropDowns: [
+                      {
+                          type: 'cond',
+                          realType: 'tim-var',
+                          items: [...multiSelect.value],
+                          vals: [],
+                      },
+                  ],
+              },
+    );
+    return res;
+}
+
 function setConfig() {
     const res: Config[] = [];
-    for (let key in curBody.value) {
-        if (key === 'init-state') {
+    if (curBody.value) {
+        if (curBody.value['init-state'] !== undefined) {
             res.push({
+                curKey: 1,
                 queue: [
                     { name: 'title', index: 0 },
                     { name: 'btns', index: 0 },
@@ -1105,7 +2173,7 @@ function setConfig() {
                             { label: t('btns.on'), val: 'on' },
                             { label: t('btns.off'), val: 'off' },
                         ],
-                        val: curBody.value[key] ? 'on' : 'off',
+                        val: curBody.value['init-state'] ? 'on' : 'off',
                     },
                 ],
                 tabs: [],
@@ -1114,481 +2182,662 @@ function setConfig() {
                 inputs: [],
                 dropDowns: [],
             });
-        } else if (key === 'entity' && curBody.value.entity) {
+        }
+        if (
+            curBody.value['entity'] &&
+            curBody.value.entity &&
+            curBody.value.entity.type !== 'prev-val'
+        ) {
             const val = parseEntity(curBody.value.entity);
-            if (val) res.push(...val.reverse());
+            if (val) res.push(...val);
+        }
+        if (
+            props.type.val === 'udf-trans' &&
+            curBody.value['left'] &&
+            curBody.value.left &&
+            curBody.value.left.type !== 'prev-val'
+        ) {
+            const val = parseEntity(curBody.value.left);
+            if (val) res.push(...val);
+        }
+        if (
+            props.type.val === 'udf-trans' &&
+            curBody.value['right'] &&
+            curBody.value.right &&
+            curBody.value.right.type !== 'prev-val'
+        ) {
+            const val = parseEntity(curBody.value.right)?.map((el) =>
+                Object.assign(el, { curKey: el.curKey + 4 }),
+            );
+            if (val) res.push(...val);
+        }
+        if (
+            props.type.val === 'udf-trans' &&
+            curBody.value['result'] &&
+            curBody.value.result &&
+            curBody.value.result.type !== 'prev-val'
+        ) {
+            const val = parseEntity(curBody.value.result)?.map((el) =>
+                Object.assign(el, { curKey: el.curKey + 8 }),
+            );
+            if (val) res.push(...val);
+        }
+        if (props.type.val === 'udf-trig' && curBody.value['type']) {
+            res.push({
+                curKey: 6,
+                queue: [
+                    { name: 'title', index: 0 },
+                    { name: 'radioBtns', index: 0 },
+                ],
+                titles: [t('titles.triggerType')],
+                btns: [],
+                tabs: [],
+                radioBtns: [
+                    {
+                        vals: [
+                            { label: t('radioBtns.compare'), val: 'compare' },
+                            { label: t('radioBtns.hold'), val: 'hold' },
+                            { label: t('radioBtns.any'), val: 'any' },
+                        ],
+                        val: curBody.value['type'],
+                        groupName: 'comparison',
+                    },
+                ],
+                checkBoxes: [],
+                inputs: [],
+                dropDowns: [],
+            });
+        }
+        if (
+            (props.type.val === 'udf-trig' &&
+                curBody.value['type'] === 'compare' &&
+                curBody.value['operation']) ||
+            (props.type.val === 'udf-cond' && curBody.value['operation'])
+        ) {
+            res.push({
+                curKey: 7,
+                queue: [
+                    { name: 'title', index: 0 },
+                    { name: 'radioBtns', index: 0 },
+                ],
+                titles: [t('titles.comparisonOperation')],
+                btns: [],
+                tabs: [],
+                radioBtns: [
+                    {
+                        vals: [
+                            { label: t('radioBtns.less'), val: 'less' },
+                            { label: t('radioBtns.equal'), val: 'equal' },
+                            { label: t('radioBtns.lessEqual'), val: 'less-eq' },
+                            { label: t('radioBtns.notEqual'), val: 'not-equal' },
+                            { label: t('radioBtns.more'), val: 'more' },
+                            { label: t('radioBtns.binaryEqual'), val: 'bin-equal' },
+                            { label: t('radioBtns.moreEqual'), val: 'more-eq' },
+                            { label: t('radioBtns.error'), val: 'error' },
+                            { label: t('radioBtns.binaryNotEqual'), val: 'bin-not-equal' },
+                            { label: t('radioBtns.nonError'), val: 'non-error' },
+                        ],
+                        val: curBody.value['operation'],
+                        groupName: 'less',
+                        wrap: true,
+                    },
+                ],
+                checkBoxes: [],
+                inputs: [],
+                dropDowns: [],
+            });
+        }
+        if (props.type.val === 'udf-trans' && curBody.value['operation']) {
+            res.push({
+                curKey: 7,
+                queue: [
+                    { name: 'title', index: 0 },
+                    { name: 'radioBtns', index: 0 },
+                ],
+                titles: [t('titles.comparisonOperation')],
+                btns: [],
+                tabs: [],
+                radioBtns: [
+                    {
+                        vals: [
+                            { label: '+', val: '+' },
+                            { label: '/=', val: '/=' },
+                            { label: '-', val: '-' },
+                            { label: '&=', val: '&=' },
+                            { label: '*', val: '*' },
+                            { label: '|=', val: '|=' },
+                            { label: '/', val: '/' },
+                            { label: '~', val: '~' },
+                            { label: '%', val: '%' },
+                            { label: '!', val: '!' },
+                            { label: '<<', val: '<<' },
+                            { label: 'min', val: 'min' },
+                            { label: '>>', val: '>>' },
+                            { label: 'max', val: 'max' },
+                            { label: '=', val: '=' },
+                            { label: '%=', val: '%=' },
+                            { label: '+=', val: '+=' },
+                            { label: '&&', val: '&&' },
+                            { label: '-=', val: '-=' },
+                            { label: '<<=', val: '<<=' },
+                            { label: '=-', val: '=-' },
+                            { label: '||', val: '||' },
+                            { label: '*=', val: '*=' },
+                            { label: '>>=', val: '>>=' },
+                        ],
+                        val: curBody.value['operation'],
+                        groupName: 'less',
+                        wrap: true,
+                    },
+                ],
+                checkBoxes: [],
+                inputs: [],
+                dropDowns: [],
+            });
+        }
+        if (
+            props.type.val === 'udf-act' &&
+            curBody.value['type'] === 'modify' &&
+            curBody.value['operation']
+        ) {
+            res.push({
+                curKey: 7,
+                queue: [
+                    { name: 'title', index: 0 },
+                    { name: 'radioBtns', index: 0 },
+                ],
+                titles: [t('titles.comparisonOperation')],
+                btns: [],
+                tabs: [],
+                radioBtns: [
+                    {
+                        vals: [
+                            { label: '=', val: '=' },
+                            { label: '&=', val: '&=' },
+                            { label: '+=', val: '+=' },
+                            { label: '|=', val: '|=' },
+                            { label: '-=', val: '-=' },
+                            { label: '~', val: '~' },
+                            { label: '=-', val: '=-' },
+                            { label: '!', val: '!' },
+                            { label: '*=', val: '*=' },
+                            { label: 'min', val: 'min' },
+                            { label: '/=', val: '/=' },
+                            { label: 'max', val: 'max' },
+                            { label: '%=', val: '%=' },
+                            { label: '&&', val: '&&' },
+                            { label: '<<=', val: '<<=' },
+                            { label: '||', val: '||' },
+                            { label: '>>=', val: '>>=' },
+                        ],
+                        val: curBody.value['operation'],
+                        groupName: 'less',
+                        wrap: true,
+                    },
+                ],
+                checkBoxes: [],
+                inputs: [],
+                dropDowns: [],
+            });
+        }
+        if (props.type.val === 'udf-act' && curBody.value['type'] !== undefined) {
+            res.push({
+                curKey: 6,
+                queue: [
+                    { name: 'title', index: 0 },
+                    { name: 'radioBtns', index: 0 },
+                ],
+                titles: [t('titles.actionType')],
+                btns: [],
+                tabs: [],
+                radioBtns: [
+                    {
+                        vals:
+                            props.device && props.device.addr
+                                ? [
+                                      { label: t('radioBtns.set'), val: 'set' },
+                                      { label: t('radioBtns.invert'), val: 'invert' },
+                                      { label: 'modify', val: 'modify' },
+                                      { label: 'change', val: 'change' },
+                                      { label: t('radioBtns.cyclicChange'), val: 'cycle' },
+                                      { label: t('radioBtns.stop'), val: 'stop' },
+                                  ]
+                                : [
+                                      { label: t('radioBtns.set'), val: 'set' },
+                                      { label: t('radioBtns.invert'), val: 'invert' },
+                                      { label: 'modify', val: 'modify' },
+                                      { label: 'change', val: 'change' },
+                                      { label: t('radioBtns.cyclicChange'), val: 'cycle' },
+                                      { label: t('radioBtns.stop'), val: 'stop' },
+                                      { label: 'save', val: 'save' },
+                                  ],
+                        val: curBody.value['type'],
+                        groupName: 'set',
+                    },
+                ],
+                checkBoxes: [],
+                inputs: [],
+                dropDowns: [],
+            });
+        }
+        if (curBody.value['value']) {
+            res.push({
+                curKey: 8,
+                queue: [
+                    { name: 'title', index: 0 },
+                    { name: 'btns', index: 0 },
+                ],
+                titles: [t('titles.comparisonVal')],
+                btns: [
+                    {
+                        vals: [
+                            { label: t('btns.const'), val: 'const', class: 'w-[109px]' },
+                            { label: t('btns.obj'), val: 'obj', class: 'w-[109px]' },
+                        ],
+                        val: curBody.value['value'].type === 'int-const' ? 'const' : 'obj',
+                        disabled: true,
+                    },
+                ],
+                tabs: [],
+                radioBtns: [],
+                checkBoxes: [],
+                inputs: [],
+                dropDowns: [],
+            });
+        }
+        if (curBody.value['value'] && curBody.value['value']['type'] === 'int-const') {
+            res.push(
+                curBody.value['operation'] === 'bin-equal' ||
+                    curBody.value['operation'] === 'bin-not-equal'
+                    ? {
+                          curKey: 9,
+                          queue: [
+                              { name: 'title', index: 0 },
+                              { name: 'btns', index: 0 },
+                          ],
+                          titles: [t('titles.select')],
+                          btns: [
+                              {
+                                  vals: [
+                                      { label: 0, val: 0, class: 'w-[80px]' },
+                                      { label: 1, val: 1, class: 'w-[80px]' },
+                                  ],
+                                  val: curBody.value['value'].value || 0,
+                              },
+                          ],
+                          tabs: [],
+                          radioBtns: [],
+                          checkBoxes: [],
+                          inputs: [],
+                          dropDowns: [],
+                      }
+                    : {
+                          curKey: 10,
+                          queue: [
+                              { name: 'title', index: 0 },
+                              { name: 'input', index: 0 },
+                          ],
+                          titles: [t('titles.enter')],
+                          btns: [],
+                          tabs: [],
+                          radioBtns: [],
+                          checkBoxes: [],
+                          inputs: [
+                              {
+                                  subtitle: t('titles.value'),
+                                  val: curBody.value['value'].value || 0,
+                                  min: -32768,
+                                  max: 32767,
+                                  isError: false,
+                              },
+                          ],
+                          dropDowns: [],
+                      },
+            );
+        }
+        if (curBody.value['value'] && curBody.value['value']['type'] !== 'int-const') {
+            if (curBody.value['value'] && curBody.value.entity) {
+                const val = parseEntity(curBody.value.value)?.map((el) =>
+                    Object.assign(el, { curKey: el.curKey + 9 }),
+                );
+                if (val) res.push(...val);
+            }
+        }
+        if (props.type.val === 'udf-act' && curBody.value['stop-val']) {
+            res.push({
+                curKey: 15,
+                queue: [
+                    { name: 'title', index: 0 },
+                    { name: 'btns', index: 0 },
+                ],
+                titles: [t('titles.stopValue')],
+                btns: [
+                    {
+                        vals: [
+                            { label: t('btns.prev'), val: 'prev', class: 'w-[109px]' },
+                            { label: t('btns.const'), val: 'const', class: 'w-[109px]' },
+                            { label: t('btns.obj'), val: 'obj' },
+                        ],
+                        val:
+                            curBody.value['stop-val'].type === 'int-const'
+                                ? 'const'
+                                : curBody.value['stop-val'].type === 'prev-val'
+                                ? 'prev'
+                                : 'obj',
+                    },
+                ],
+                tabs: [],
+                radioBtns: [],
+                checkBoxes: [],
+                inputs: [],
+                dropDowns: [],
+            });
+        }
+        if (
+            props.type.val === 'udf-act' &&
+            curBody.value['stop-val'] &&
+            curBody.value['stop-val']['type'] === 'int-const'
+        ) {
+            res.push({
+                curKey: 16,
+                queue: [
+                    { name: 'title', index: 0 },
+                    { name: 'input', index: 0 },
+                ],
+                titles: [t('titles.enter')],
+                btns: [],
+                tabs: [],
+                radioBtns: [],
+                checkBoxes: [],
+                inputs: [
+                    {
+                        subtitle: t('titles.value'),
+                        val: curBody.value['stop-val'].value || 0,
+                        min: -32768,
+                        max: 32767,
+                        isError: false,
+                    },
+                ],
+                dropDowns: [],
+            });
+        }
+        if (
+            props.type.val === 'udf-act' &&
+            curBody.value['stop-val'] &&
+            curBody.value['stop-val']['type'] !== 'int-const' &&
+            curBody.value['stop-val']['type'] !== 'prev-val'
+        ) {
+            if (curBody.value['stop-val'] && curBody.value.entity) {
+                const val = parseEntity(curBody.value['stop-val'])?.map((el) =>
+                    Object.assign(el, { curKey: el.curKey + 15 }),
+                );
+                if (val) res.push(...val);
+            }
+        }
+        if (props.type.val === 'udf-act' && curBody.value['value']) {
+            res.push({
+                curKey: 21,
+                queue: [
+                    { name: 'title', index: 0 },
+                    { name: 'btns', index: 0 },
+                ],
+                titles: [t('titles.endValue')],
+                btns: [
+                    {
+                        vals: [
+                            { label: t('btns.prev'), val: 'prev', class: 'w-[109px]' },
+                            { label: t('btns.const'), val: 'const', class: 'w-[109px]' },
+                            { label: t('btns.obj'), val: 'obj' },
+                        ],
+                        val:
+                            curBody.value['value'].type === 'int-const'
+                                ? 'const'
+                                : curBody.value['value'].type === 'prev-val'
+                                ? 'prev'
+                                : 'obj',
+                    },
+                ],
+                tabs: [],
+                radioBtns: [],
+                checkBoxes: [],
+                inputs: [],
+                dropDowns: [],
+            });
+        }
+        if (
+            props.type.val === 'udf-act' &&
+            curBody.value['value'] &&
+            curBody.value['value']['type'] === 'int-const'
+        ) {
+            res.push(
+                curBody.value['operation'] === 'bin-equal' ||
+                    curBody.value['operation'] === 'bin-not-equal'
+                    ? {
+                          curKey: 22,
+                          queue: [
+                              { name: 'title', index: 0 },
+                              { name: 'btns', index: 0 },
+                          ],
+                          titles: [t('titles.select')],
+                          btns: [
+                              {
+                                  vals: [
+                                      { label: 0, val: 0, class: 'w-[80px]' },
+                                      { label: 1, val: 1, class: 'w-[80px]' },
+                                  ],
+                                  val: curBody.value['value'].value || 0,
+                              },
+                          ],
+                          tabs: [],
+                          radioBtns: [],
+                          checkBoxes: [],
+                          inputs: [],
+                          dropDowns: [],
+                      }
+                    : {
+                          curKey: 22,
+                          queue: [
+                              { name: 'title', index: 0 },
+                              { name: 'input', index: 0 },
+                          ],
+                          titles: [t('titles.enter')],
+                          btns: [],
+                          tabs: [],
+                          radioBtns: [],
+                          checkBoxes: [],
+                          inputs: [
+                              {
+                                  subtitle: t('titles.value'),
+                                  val: curBody.value['value'].value || 0,
+                                  min: -32768,
+                                  max: 32767,
+                                  isError: false,
+                              },
+                          ],
+                          dropDowns: [],
+                      },
+            );
+        }
+        if (
+            props.type.val === 'udf-act' &&
+            curBody.value['value'] &&
+            curBody.value['value']['type'] !== 'int-const' &&
+            curBody.value['value']['type'] !== 'prev-val'
+        ) {
+            if (curBody.value['value'] && curBody.value.entity) {
+                const val = parseEntity(curBody.value.value)?.map((el) =>
+                    Object.assign(el, { curKey: el.curKey + 21 }),
+                );
+                if (val) res.push(...val);
+            }
+        }
+        if (props.type.val === 'udf-trig' && curBody.value['hysteresis'] !== undefined) {
+            res.push({
+                curKey: 27,
+                queue: [
+                    { name: 'title', index: 0 },
+                    { name: 'input', index: 0 },
+                ],
+                titles: [t('titles.hysteresis')],
+                btns: [],
+                tabs: [],
+                radioBtns: [],
+                checkBoxes: [],
+                inputs: [
+                    { val: curBody.value['hysteresis'], min: -32768, max: 32767, isError: false },
+                ],
+                dropDowns: [],
+            });
+        }
+        if (curBody.value['time']) {
+            const val = parseTime(curBody.value['time'], t('titles.during'));
+            if (val) res.push(...val);
+        }
+        if (curBody.value['delay']) {
+            const val = parseTime(curBody.value['delay'], t('titles.delay'))?.map((el) =>
+                Object.assign(el, { curKey: 29 }),
+            );
+            if (val) res.push(...val);
+        }
+        if (curBody.value['time'] && curBody.value.type === 'cycle') {
+            //TODO
+            const val = parseTime(curBody.value['time'], t('titles.pause'))?.map((el) =>
+                Object.assign(el, { curKey: 29 }),
+            );
+            if (val) res.push(...val);
+        }
+        if (
+            props.type.val === 'udf-trig' &&
+            curBody.value['act-idx'] !== undefined &&
+            curBody.value['act-qty'] !== undefined
+        ) {
+            const val = parseMultiSelect(
+                'udf-act',
+                curBody.value['act-idx'],
+                curBody.value['act-qty'],
+            );
+            if (val) res.push(...val);
+        }
+        if (
+            props.type.val === 'udf-act' &&
+            curBody.value['cond-idx'] !== undefined &&
+            curBody.value['cond-qty'] !== undefined
+        ) {
+            const val = parseMultiSelect(
+                'udf-cond',
+                curBody.value['cond-idx'],
+                curBody.value['cond-qty'],
+                curBody.value['cond-logic'],
+            );
+            if (val) res.push(...val);
+        }
+        if (
+            props.type.val === 'udf-act' &&
+            curBody.value['start-on-cond'] !== undefined &&
+            curBody.value['stop-on-trig'] !== undefined &&
+            curBody.value['stop-on-cond'] !== undefined
+        ) {
+            const valArr1 = curBody.value['start-on-cond'] ? ['conditionsOccur'] : [];
+            const valArr2 =
+                curBody.value['stop-on-trig'] && curBody.value['stop-on-cond']
+                    ? ['triggerNoMatches', 'conditionNoMatches']
+                    : !curBody.value['stop-on-trig'] && !curBody.value['stop-on-cond']
+                    ? []
+                    : curBody.value['stop-on-trig']
+                    ? ['triggerNoMatches']
+                    : ['conditionNoMatches'];
+            res.push({
+                curKey: 31,
+                queue: [{ name: 'checkBox', index: 0 }],
+                titles: [],
+                btns: [],
+                tabs: [],
+                radioBtns: [],
+                checkBoxes: [
+                    {
+                        1: {
+                            title: t('titles.startMode'),
+                            vals: [
+                                { label: t('checkBoxes.conditionsOccur'), val: 'conditionsOccur' },
+                            ],
+                            valsArr: valArr1,
+                        },
+                        2: {
+                            title: t('titles.stop'),
+                            vals: [
+                                {
+                                    label: t('checkBoxes.triggerNoMatches'),
+                                    val: 'triggerNoMatches',
+                                },
+                                {
+                                    label: t('checkBoxes.conditionNoMatches'),
+                                    val: 'conditionNoMatches',
+                                },
+                            ],
+                            valsArr: valArr2,
+                        },
+                    },
+                ],
+                inputs: [],
+                dropDowns: [],
+            });
+        }
+        if (
+            props.type.val === 'udf-act' &&
+            curBody.value.type === 'cycle' &&
+            curBody.value['infinite'] !== undefined &&
+            curBody.value['direction'] !== undefined
+        ) {
+            res.push({
+                curKey: 32,
+                queue: [
+                    { name: 'title', index: 0 },
+                    { name: 'btns', index: 0 },
+                    { name: 'btns', index: 1 },
+                ],
+                titles: [t('titles.cyclicMode')],
+                btns: [
+                    {
+                        subtitle: t('titles.infinite'),
+                        vals: [
+                            { label: t('btns.yes'), val: 'yes', class: 'w-[80px]' },
+                            { label: t('btns.no'), val: 'no', class: 'w-[80px]' },
+                        ],
+                        val: curBody.value['infinite'] ? 'yes' : 'no',
+                    },
+                    {
+                        subtitle: t('titles.initDir'),
+                        vals: [
+                            { label: t('btns.toMin'), val: 'to-min' },
+                            { label: t('btns.toMax'), val: 'to-max' },
+                        ],
+                        val: curBody.value.direction as string,
+                    },
+                ],
+                tabs: [],
+                radioBtns: [],
+                checkBoxes: [],
+                inputs: [],
+                dropDowns: [],
+            });
+        }
+        if (curBody.value['min-time']) {
+            const val = parseTime(curBody.value['min-time'], t('titles.minTime'))?.map((el) =>
+                Object.assign(el, { curKey: el.curKey + 5 }),
+            );
+            if (val) res.push(...val);
+        }
+        if (curBody.value['max-time']) {
+            const val = parseTime(curBody.value['max-time'], t('titles.maxTime'))?.map((el) =>
+                Object.assign(el, { curKey: el.curKey + 6 }),
+            );
+            if (val) res.push(...val);
         }
     }
-    config.value = res.reverse();
+    config.value = res.sort();
 }
 
-async function setConfig0(body: Body) {
-    //         {
-    //             queue: [
-    //                 { name: 'title', index: 0 },
-    //                 { name: 'radioBtns', index: 0 },
-    //             ],
-    //             titles: [t('titles.triggerType')],
-    //             btns: [],
-    //             tabs: [],
-    //             radioBtns: [
-    //                 {
-    //                     vals: [
-    //                         { label: t('radioBtns.comparison'), val: 'comparison' },
-    //                         { label: t('radioBtns.retention'), val: 'retention' },
-    //                         { label: t('radioBtns.anyChange'), val: 'any' },
-    //                     ],
-    //                     val: 'comparison',
-    //                     groupName: 'comparison',
-    //                 },
-    //             ],
-    //             checkBoxes: [],
-    //             inputs: [],
-    //             dropDowns: [],
-    //         },
-    //         {
-    //             queue: [
-    //                 { name: 'title', index: 0 },
-    //                 { name: 'radioBtns', index: 0 },
-    //             ],
-    //             titles: [t('titles.comparisonOperation')],
-    //             btns: [],
-    //             tabs: [],
-    //             radioBtns: [
-    //                 {
-    //                     vals: [
-    //                         { label: t('radioBtns.less'), val: 'less' },
-    //                         { label: t('radioBtns.equal'), val: 'equal' },
-    //                         { label: t('radioBtns.lessEqual'), val: 'lessEqual' },
-    //                         { label: t('radioBtns.notEqual'), val: 'notEqual' },
-    //                         { label: t('radioBtns.more'), val: 'more' },
-    //                         { label: t('radioBtns.binaryEqual'), val: 'binaryEqual' },
-    //                         { label: t('radioBtns.moreEqual'), val: 'moreEqual' },
-    //                         { label: t('radioBtns.binaryNotEqual'), val: 'binaryNotEqual' },
-    //                     ],
-    //                     val: 'less',
-    //                     groupName: 'less',
-    //                     wrap: true,
-    //                 },
-    //             ],
-    //             checkBoxes: [],
-    //             inputs: [],
-    //             dropDowns: [],
-    //         },
-    //         {
-    //             queue: [
-    //                 { name: 'title', index: 0 },
-    //                 { name: 'btns', index: 0 },
-    //             ],
-    //             titles: [t('titles.comparisonVal')],
-    //             btns: [
-    //                 {
-    //                     vals: [
-    //                         { label: t('btns.const'), val: 'const', class: 'w-[109px]' },
-    //                         { label: t('btns.obj'), val: 'obj', class: 'w-[109px]' },
-    //                     ],
-    //                     val: 'const',
-    //                 },
-    //             ],
-    //             tabs: [],
-    //             radioBtns: [],
-    //             checkBoxes: [],
-    //             inputs: [],
-    //             dropDowns: [],
-    //         },
-    //         {
-    //             queue: [
-    //                 { name: 'title', index: 0 },
-    //                 { name: 'input', index: 0 },
-    //             ],
-    //             titles: [t('titles.enter')],
-    //             btns: [],
-    //             tabs: [],
-    //             radioBtns: [],
-    //             checkBoxes: [],
-    //             inputs: [
-    //                 {
-    //                     subtitle: t('titles.value'),
-    //                     val: 0,
-    //                     min: -32768,
-    //                     max: 32767,
-    //                     isError: false,
-    //                 },
-    //             ],
-    //             dropDowns: [],
-    //         },
-    //         {
-    //             queue: [
-    //                 { name: 'title', index: 0 },
-    //                 { name: 'btns', index: 0 },
-    //             ],
-    //             titles: [t('titles.select')],
-    //             btns: [
-    //                 {
-    //                     vals: [
-    //                         { label: 0, val: 0, class: 'w-[80px]' },
-    //                         { label: 1, val: 1, class: 'w-[80px]' },
-    //                     ],
-    //                     val: 1,
-    //                 },
-    //             ],
-    //             tabs: [],
-    //             radioBtns: [],
-    //             checkBoxes: [],
-    //             inputs: [],
-    //             dropDowns: [],
-    //         },
-    //         {
-    //             queue: [
-    //                 { name: 'title', index: 0 },
-    //                 { name: 'tabs', index: 0 },
-    //             ],
-    //             titles: [t('titles.comparisonObjInterf')],
-    //             btns: [],
-    //             tabs: [{ vals: interfVals, val: interfVals[0].val }],
-    //             radioBtns: [],
-    //             checkBoxes: [],
-    //             inputs: [],
-    //             dropDowns: [],
-    //         },
-    //         {
-    //             queue: [
-    //                 { name: 'title', index: 0 },
-    //                 { name: 'tabs', index: 0 },
-    //             ],
-    //             titles: [t('titles.comparisonDevStatus')],
-    //             btns: [],
-    //             tabs: [{ vals: devVals, val: 'NGC' }],
-    //             radioBtns: [],
-    //             checkBoxes: [],
-    //             inputs: [],
-    //             dropDowns: [],
-    //         },
-    //         {
-    //             queue: [
-    //                 { name: 'title', index: 0 },
-    //                 { name: 'tabs', index: 0 },
-    //             ],
-    //             titles: [t('titles.comparisonObjBus')],
-    //             btns: [],
-    //             tabs: [{ vals: buses, val: 1 }],
-    //             radioBtns: [],
-    //             checkBoxes: [],
-    //             inputs: [],
-    //             dropDowns: [],
-    //         },
-    //         {
-    //             queue: [
-    //                 { name: 'title', index: 0 },
-    //                 { name: 'dropDown', index: 0 },
-    //             ],
-    //             titles: [t('titles.compareObj')],
-    //             btns: [],
-    //             tabs: [],
-    //             radioBtns: [],
-    //             checkBoxes: [],
-    //             inputs: [],
-    //             dropDowns: [],
-    //         },
-    //         {
-    //             queue: [
-    //                 { name: 'title', index: 0 },
-    //                 { name: 'input', index: 0 },
-    //             ],
-    //             titles: [t('titles.hysteresis')],
-    //             btns: [],
-    //             tabs: [],
-    //             radioBtns: [],
-    //             checkBoxes: [],
-    //             inputs: [{ val: 0, min: -32768, max: 32767, isError: false }],
-    //             dropDowns: [],
-    //         },
-    //         {
-    //             queue: [
-    //                 { name: 'title', index: 0 },
-    //                 { name: 'btns', index: 0 },
-    //                 { name: 'input', index: 0 },
-    //                 { name: 'btns', index: 1 },
-    //             ],
-    //             titles: [t('titles.during')],
-    //             btns: [
-    //                 {
-    //                     vals: [
-    //                         { label: t('btns.const'), val: 'const' },
-    //                         { label: t('btns.timVar'), val: 'tim-var' },
-    //                     ],
-    //                     val: 'const',
-    //                 },
-    //                 {
-    //                     vals: [
-    //                         { label: t('btns.ms'), val: 'ms', class: 'w-[66px] !px-2 !h-8' },
-    //                         { label: t('btns.s'), val: 's', class: 'w-[66px] !px-2 !h-8' },
-    //                         { label: t('btns.min'), val: 'min', class: 'w-[66px] !px-2 !h-8' },
-    //                     ],
-    //                     val: 'ms',
-    //                     inline: true,
-    //                 },
-    //             ],
-    //             tabs: [],
-    //             radioBtns: [],
-    //             checkBoxes: [],
-    //             inputs: [{ val: 0, min: 0, isError: false, inline: true }],
-    //             dropDowns: [],
-    //         },
-    //         {
-    //             queue: [
-    //                 { name: 'title', index: 0 },
-    //                 { name: 'btns', index: 0 },
-    //                 { name: 'title', index: 1 },
-    //                 { name: 'tabs', index: 0 },
-    //                 { name: 'title', index: 2 },
-    //                 { name: 'dropDown', index: 0 },
-    //             ],
-    //             titles: [t('titles.during'), t('titles.device'), t('titles.object')],
-    //             btns: [
-    //                 {
-    //                     vals: [
-    //                         { label: t('btns.const'), val: 'const' },
-    //                         { label: t('btns.timVar'), val: 'tim-var' },
-    //                     ],
-    //                     val: 'const',
-    //                 },
-    //             ],
-    //             tabs: [{ vals: devVals, val: 'NGC' }],
-    //             radioBtns: [],
-    //             checkBoxes: [],
-    //             inputs: [],
-    //             dropDowns: [],
-    //         },
-    //         {
-    //             queue: [
-    //                 { name: 'title', index: 0 },
-    //                 { name: 'btns', index: 0 },
-    //                 { name: 'title', index: 1 },
-    //                 { name: 'dropDown', index: 0 },
-    //             ],
-    //             titles: [t('titles.during'), t('titles.object')],
-    //             btns: [
-    //                 {
-    //                     vals: [
-    //                         { label: t('btns.const'), val: 'const' },
-    //                         { label: t('btns.timVar'), val: 'tim-var' },
-    //                     ],
-    //                     val: 'tim-var',
-    //                 },
-    //             ],
-    //             tabs: [],
-    //             radioBtns: [],
-    //             checkBoxes: [],
-    //             inputs: [],
-    //             dropDowns: [],
-    //         },
-    //         {
-    //             queue: [
-    //                 { name: 'title', index: 0 },
-    //                 { name: 'dropDown', index: 0 },
-    //             ],
-    //             titles: [t('titles.selectActions')],
-    //             btns: [],
-    //             tabs: [],
-    //             radioBtns: [],
-    //             checkBoxes: [],
-    //             inputs: [],
-    //             dropDowns: [],
-    //         },
-    //         {
-    //             queue: [
-    //                 { name: 'title', index: 0 },
-    //                 { name: 'radioBtns', index: 0 },
-    //             ],
-    //             titles: [t('titles.actionType')],
-    //             btns: [],
-    //             tabs: [],
-    //             radioBtns: [
-    //                 {
-    //                     vals: [
-    //                         { label: t('radioBtns.install'), val: 'install' },
-    //                         { label: t('radioBtns.invert'), val: 'invert' },
-    //                         { label: t('radioBtns.increase'), val: 'increase' },
-    //                         { label: t('radioBtns.smoothChange'), val: 'smoothChange' },
-    //                         { label: t('radioBtns.cyclicChange'), val: 'cyclicChange' },
-    //                         { label: t('radioBtns.stop'), val: 'stop' },
-    //                     ],
-    //                     val: 'install',
-    //                     groupName: 'install',
-    //                 },
-    //             ],
-    //             checkBoxes: [],
-    //             inputs: [],
-    //             dropDowns: [],
-    //         },
-    //         {
-    //             queue: [
-    //                 { name: 'title', index: 0 },
-    //                 { name: 'btns', index: 0 },
-    //             ],
-    //             titles: [t('titles.value')],
-    //             btns: [
-    //                 {
-    //                     vals: [
-    //                         { label: t('btns.const'), val: 'const', class: 'w-[109px]' },
-    //                         { label: t('btns.obj'), val: 'obj', class: 'w-[109px]' },
-    //                     ],
-    //                     val: 'const',
-    //                 },
-    //             ],
-    //             tabs: [],
-    //             radioBtns: [],
-    //             checkBoxes: [],
-    //             inputs: [],
-    //             dropDowns: [],
-    //         },
-    //         {
-    //             queue: [
-    //                 { name: 'title', index: 0 },
-    //                 { name: 'btns', index: 0 },
-    //             ],
-    //             titles: [t('titles.endValue')],
-    //             btns: [
-    //                 {
-    //                     vals: [
-    //                         { label: t('btns.prev'), val: 'prev', class: 'w-[109px]' },
-    //                         { label: t('btns.const'), val: 'const', class: 'w-[109px]' },
-    //                         { label: t('btns.obj'), val: 'obj' },
-    //                     ],
-    //                     val: 'const',
-    //                 },
-    //             ],
-    //             tabs: [],
-    //             radioBtns: [],
-    //             checkBoxes: [],
-    //             inputs: [],
-    //             dropDowns: [],
-    //         },
-    //         {
-    //             queue: [
-    //                 { name: 'title', index: 0 },
-    //                 { name: 'btns', index: 0 },
-    //                 { name: 'dropDown', index: 0 },
-    //             ],
-    //             titles: [t('titles.selectConditions')],
-    //             btns: [
-    //                 {
-    //                     vals: [
-    //                         { label: t('btns.anyCond'), val: 'any' },
-    //                         { label: t('btns.allCond'), val: 'all' },
-    //                     ],
-    //                     val: 'all',
-    //                 },
-    //             ],
-    //             tabs: [],
-    //             radioBtns: [],
-    //             checkBoxes: [],
-    //             inputs: [],
-    //             dropDowns: [],
-    //         },
-    //         {
-    //             queue: [{ name: 'checkBox', index: 0 }],
-    //             titles: [],
-    //             btns: [],
-    //             tabs: [],
-    //             radioBtns: [],
-    //             checkBoxes: [
-    //                 {
-    //                     1: {
-    //                         title: t('titles.startMode'),
-    //                         vals: [
-    //                             { label: t('checkBoxes.conditionsOccur'), val: 'conditionsOccur' },
-    //                         ],
-    //                         valsArr: ['conditionsOccur'].sort(),
-    //                     },
-    //                     2: {
-    //                         title: t('titles.stop'),
-    //                         vals: [
-    //                             {
-    //                                 label: t('checkBoxes.triggerNoMatches'),
-    //                                 val: 'triggerNoMatches',
-    //                             },
-    //                             {
-    //                                 label: t('checkBoxes.conditionNoMatches'),
-    //                                 val: 'conditionNoMatches',
-    //                             },
-    //                         ],
-    //                         valsArr: ['triggerNoMatches'].sort(),
-    //                     },
-    //                 },
-    //             ],
-    //             inputs: [],
-    //             dropDowns: [],
-    //         },
-    //         {
-    //             queue: [
-    //                 { name: 'title', index: 0 },
-    //                 { name: 'btns', index: 0 },
-    //                 { name: 'btns', index: 1 },
-    //             ],
-    //             titles: [t('titles.cyclicMode')],
-    //             btns: [
-    //                 {
-    //                     subtitle: t('titles.endless'),
-    //                     vals: [
-    //                         { label: t('btns.yes'), val: 'yes', class: 'w-[80px]' },
-    //                         { label: t('btns.no'), val: 'no', class: 'w-[80px]' },
-    //                     ],
-    //                     val: 'no',
-    //                 },
-    //                 {
-    //                     subtitle: t('titles.initDir'),
-    //                     vals: [
-    //                         { label: t('btns.toMin'), val: 'toMin' },
-    //                         { label: t('btns.toMax'), val: 'toMax' },
-    //                     ],
-    //                     val: 'toMax',
-    //                 },
-    //             ],
-    //             tabs: [],
-    //             radioBtns: [],
-    //             checkBoxes: [],
-    //             inputs: [],
-    //             dropDowns: [],
-    //         },
-    //         {
-    //             queue: [
-    //                 { name: 'title', index: 0 },
-    //                 { name: 'radioBtns', index: 0 },
-    //             ],
-    //             titles: [t('titles.operation')],
-    //             btns: [],
-    //             tabs: [],
-    //             radioBtns: [
-    //                 {
-    //                     vals: [
-    //                         { label: t('radioBtns.add'), val: 'add' },
-    //                         { label: t('radioBtns.subtract'), val: 'subtract' },
-    //                         { label: t('radioBtns.multiply'), val: 'multiply' },
-    //                         { label: t('radioBtns.divide'), val: 'divide' },
-    //                         { label: t('radioBtns.divideRemainder'), val: 'divideRemainder' },
-    //                         { label: t('radioBtns.takeMax'), val: 'takeMax' },
-    //                         { label: t('radioBtns.takeMin'), val: 'takeMin' },
-    //                         { label: t('radioBtns.shiftLeft'), val: 'shiftLeft' },
-    //                         { label: t('radioBtns.shiftRight'), val: 'shiftRight' },
-    //                     ],
-    //                     val: 'add',
-    //                     groupName: 'add',
-    //                 },
-    //             ],
-    //             checkBoxes: [],
-    //             inputs: [],
-    //             dropDowns: [],
-    //         },
-    //     ];
-    //     initConfig.value = JSON.stringify(config.value);
-    // } else {
-    //     setTimeout(setConfig, 200);
-    // }
-}
-
-async function getConfig() {
+async function getConfig(i: number = 0) {
     if (!config.value.length) isLoading.value = true;
     try {
         const r = await api.post('get_udf_cfg', {
@@ -1596,28 +2845,40 @@ async function getConfig() {
             device: props.device ? props.device.addr : 0,
             index: props.index,
         });
-        if (!curBody.value)
+        if (!curBody.value) {
             curBody.value = r.data.trigger || r.data.condition || r.data.action || r.data.transform;
+        }
         initBody = curBody.value;
-        setConfig();
-        setTimeout(() => {
-            getConfig();
+        if (i < 5) {
+            setConfig();
+        } else {
+            if (!initConfig.value) {
+                initConfig.value = JSON.stringify(config.value);
+                checkConfigToSave();
+            }
+        }
+        configTimer = setTimeout(() => {
+            getConfig(i + 1);
             isLoading.value = false;
-        }, 5000);
+        }, 3000);
     } catch (error) {
         if (isAborted.value) {
             return;
         }
         setTimeout(() => {
-            getConfig();
+            getConfig(i);
         }, 5);
     }
 }
 
 onMounted(() => {
     getDevConfig();
-    getInterfaces();
     getConfig();
+});
+
+onBeforeUnmount(() => {
+    clearTimeout(configTimer);
+    configTimer = undefined;
 });
 
 const { t } = useI18n({
@@ -1628,7 +2889,7 @@ const { t } = useI18n({
                 trigInterf: 'Trigger Interface',
                 actInterf: 'Action Interface',
                 condInterf: 'Condition Interface',
-                transrInterf: 'Transform Interface',
+                transInterf: 'Transform Interface',
                 actDev: 'Action device',
                 condDev: 'Condition device',
                 transDev: 'Transform device',
@@ -1637,7 +2898,10 @@ const { t } = useI18n({
                 condObj: 'Condition object',
                 transObj: 'Transform object',
                 trigObj: 'Trigger object',
-                triggerBus: 'Trigger digital bus number:',
+                actBus: 'Action digital bus number',
+                condBus: 'Condition digital bus number',
+                transBus: 'Transform digital bus number',
+                trigBus: 'Trigger digital bus number',
                 triggerType: 'Trigger type',
                 comparisonOperation: 'Comparison operation',
                 comparisonVal: 'Comparison value',
@@ -1649,19 +2913,24 @@ const { t } = useI18n({
                 compareObj: 'Object to compare',
                 hysteresis: 'Hysteresis',
                 during: 'During',
+                minTime: 'Min time',
+                maxTime: 'Max time',
                 device: 'Device',
                 object: 'Object',
                 selectActions: 'Select actions',
                 actionType: 'Action type',
                 value: 'Value',
                 endValue: 'End value',
+                stopValue: 'Stop value',
                 selectConditions: 'Select conditions',
                 startMode: 'Startup mode',
                 stop: 'Stop',
                 cyclicMode: 'Cyclic operation mode',
                 operation: 'Operation',
-                endless: 'Endless',
+                infinite: 'Infinite',
                 initDir: 'Initial direction',
+                delay: 'Delay',
+                pause: 'Pause',
             },
             btns: {
                 on: 'ON',
@@ -1697,18 +2966,20 @@ const { t } = useI18n({
                 bus: 'Bus ',
             },
             radioBtns: {
-                comparison: 'Comparison',
-                retention: 'Retention',
-                anyChange: 'Any change',
+                compare: 'Comparison',
+                hold: 'Holding',
+                any: 'Any change',
                 less: 'Less',
                 lessEqual: 'Less or equal',
                 more: 'More',
                 moreEqual: 'More or equal',
+                error: 'Error',
                 equal: 'Equal',
                 notEqual: 'Not equal',
                 binaryEqual: 'Binary equals',
                 binaryNotEqual: 'Binary is not equal',
-                install: 'Install',
+                nonError: 'Not error',
+                set: 'Set',
                 invert: 'Invert',
                 increase: 'Increase',
                 smoothChange: 'Change smoothly',
@@ -1748,7 +3019,7 @@ const { t } = useI18n({
                 trigInterf: 'Интерфейс триггера',
                 actInterf: 'Интерфейс действия',
                 condInterf: 'Интерфейс условия',
-                transrInterf: 'Интерфейс преобразования',
+                transInterf: 'Интерфейс преобразования',
                 actDev: 'Устройство действия',
                 condDev: 'Устройство условия',
                 transDev: 'Устройство преобразования',
@@ -1757,7 +3028,10 @@ const { t } = useI18n({
                 condObj: 'Объект условия',
                 transObj: 'Объект преобразования',
                 trigObj: 'Объект триггера',
-                triggerBus: 'Номер цифровой шины триггера',
+                actBus: 'Номер цифровой шины действия',
+                condBus: 'Номер цифровой шины условия',
+                transBus: 'Номер цифровой шины преобразования',
+                trigBus: 'Номер цифровой шины триггера',
                 triggerType: 'Тип триггера',
                 comparisonOperation: 'Операция сравнения',
                 comparisonVal: 'Значение для сравнения',
@@ -1769,19 +3043,24 @@ const { t } = useI18n({
                 compareObj: 'Объект для сравнения',
                 hysteresis: 'Гистерезис',
                 during: 'В течение',
+                minTime: 'Минимальное время',
+                maxTime: 'Максимальное время',
                 device: 'Устройство',
                 object: 'Объект',
                 selectActions: 'Выберите действия',
                 actionType: 'Тип действия',
                 value: 'Значение',
                 endValue: 'Значение по окончанию действия',
+                stopValue: 'Значение для остановки',
                 selectConditions: 'Выберите условия',
                 startMode: 'Режим запуска',
                 stop: 'Остановка',
                 cyclicMode: 'Режим работы циклического изменения',
                 operation: 'Операция',
-                endless: 'Бесконечный',
+                infinite: 'Бесконечный',
                 initDir: 'Начальное направление',
+                delay: 'Задержка',
+                pause: 'Пауза',
             },
             btns: {
                 on: 'ВКЛЮЧЕНО',
@@ -1817,18 +3096,20 @@ const { t } = useI18n({
                 bus: 'Шина ',
             },
             radioBtns: {
-                comparison: 'Сравнение',
-                retention: 'Удержание',
-                anyChange: 'Любое изменение',
+                compare: 'Сравнение',
+                hold: 'Удержание',
+                any: 'Любое изменение',
                 less: 'Меньше',
                 lessEqual: 'Меньше или равно',
                 more: 'Больше',
                 moreEqual: 'Больше или равно',
+                error: 'Ошибка',
                 equal: 'Равно',
                 notEqual: 'Не равно',
                 binaryEqual: 'Бинарное равно',
                 binaryNotEqual: 'Бинарное не равно',
-                install: 'Установить',
+                nonError: 'Не ошибка',
+                set: 'Установить',
                 invert: 'Инвертировать',
                 increase: 'Увеличить',
                 smoothChange: 'Плавно изменить',

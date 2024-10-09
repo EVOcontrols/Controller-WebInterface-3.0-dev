@@ -4,6 +4,7 @@ export type Ent = {
     type:
         | 'none'
         | 'error'
+        | 'prev-val'
         | 'int-const'
         | 'bin-in'
         | 'bin-out'
@@ -32,7 +33,8 @@ export type Ent = {
 
 export type Time = {
     type: 'tim-const' | 'tim-var';
-    index: number;
+    index?: number;
+    value?: number;
 };
 
 export type Body = {
@@ -52,7 +54,7 @@ export type Body = {
     'act-idx'?: number;
     'act-qty'?: number;
     'init-state'?: 0 | 1;
-    value?: Ent;
+    value?: Ent | { type: 'int-const'; value: number };
     unsigned?: boolean;
     'min-time'?: Time;
     'max-time'?: Time;
