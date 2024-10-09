@@ -135,11 +135,11 @@
             @close="setSelectedAlgoritmsCount"
             @deleteAlgoritms="
                 () => {
-                    setAlgoritmsForDelete(
-                        [...selectedAlgoritmsLeft, ...selectedAlgoritmsRight],
-                        2,
-                        'udf-act',
-                    );
+                    // setAlgoritmsForDelete(
+                    //     [...selectedAlgoritmsLeft, ...selectedAlgoritmsRight],
+                    //     2,
+                    //     'udf-act',
+                    // );
                 }
             "
         />

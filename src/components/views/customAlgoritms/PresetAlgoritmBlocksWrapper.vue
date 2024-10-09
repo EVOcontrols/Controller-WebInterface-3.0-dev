@@ -1184,6 +1184,644 @@ async function save() {
     }
 }
 
+function set() {
+    if (props.type.val === 'udf-act') {
+        let ent = {
+            type: config.value.find((el) => el.curKey === 2)?.tabs[0].val,
+            device: config.value.find((el) => el.curKey === 3)?.tabs[0].val,
+            index: config.value.find((el) => el.curKey === 4)?.dropDowns[0].vals[0],
+        };
+        if (
+            config.value.find((el) => el.curKey === 2)?.tabs[0].val === 'mb-var' ||
+            config.value.find((el) => el.curKey === 2)?.tabs[0].val === '1w-rom' ||
+            config.value.find((el) => el.curKey === 2)?.tabs[0].val === '1w-sens' ||
+            config.value.find((el) => el.curKey === 2)?.tabs[0].val === '1w-gpio'
+        ) {
+            ent = Object.assign(
+                ent,
+                config.value.find((el) => el.curKey === 2)?.tabs[0].val === '1w-sens'
+                    ? { bus: config.value.find((el) => el.curKey === 5)?.tabs[0].val, io: 0 }
+                    : {
+                          bus: config.value.find((el) => el.curKey === 5)?.tabs[0].val,
+                      },
+            );
+        }
+        let obj = {
+            type: config.value.find((el) => el.curKey === 6)?.radioBtns[0].val,
+            entity: ent,
+            delay:
+                config.value.find((el) => el.curKey === 29)?.btns[0].val === 'tim-var'
+                    ? {
+                          type: 'tim-var',
+                          index: config.value.find((el) => el.curKey === 29)?.dropDowns[0].vals[0],
+                      }
+                    : {
+                          type: 'tim-const',
+                          value: config.value.find((el) => el.curKey === 29)?.inputs[0].val,
+                      },
+            'cond-idx': config.value.find((el) => el.curKey === 30)?.dropDowns[0].vals[0],
+            'cond-qty': config.value.find((el) => el.curKey === 30)?.dropDowns[0].vals.length,
+            'start-on-cond': config.value
+                .find((el) => el.curKey === 31)
+                ?.checkBoxes[0][1].valsArr.includes('conditionsOccur'),
+            'cond-logic': config.value.find((el) => el.curKey === 30)?.btns[0].val,
+            'init-state': config.value.find((el) => el.curKey === 1)?.btns[0].val === 'on' ? 1 : 0,
+        };
+        if (
+            config.value.find((el) => el.curKey === 6)?.radioBtns[0].val === 'set' ||
+            config.value.find((el) => el.curKey === 6)?.radioBtns[0].val === 'invert'
+        ) {
+            let ent = {};
+            if (config.value.find((el) => el.curKey === 8)?.btns[0].val === 'obj') {
+                ent = {
+                    type: config.value.find((el) => el.curKey === 11)?.tabs[0].val,
+                    device: config.value.find((el) => el.curKey === 12)?.tabs[0].val,
+                    index: config.value.find((el) => el.curKey === 13)?.dropDowns[0].vals[0],
+                };
+                if (
+                    config.value.find((el) => el.curKey === 11)?.tabs[0].val === 'mb-var' ||
+                    config.value.find((el) => el.curKey === 11)?.tabs[0].val === '1w-rom' ||
+                    config.value.find((el) => el.curKey === 11)?.tabs[0].val === '1w-sens' ||
+                    config.value.find((el) => el.curKey === 11)?.tabs[0].val === '1w-gpio'
+                ) {
+                    ent = Object.assign(
+                        ent,
+                        config.value.find((el) => el.curKey === 11)?.tabs[0].val === '1w-sens'
+                            ? {
+                                  bus: config.value.find((el) => el.curKey === 14)?.tabs[0].val,
+                                  io: 0,
+                              }
+                            : {
+                                  bus: config.value.find((el) => el.curKey === 14)?.tabs[0].val,
+                              },
+                    );
+                }
+            } else {
+                ent = {
+                    type: 'int-const',
+                    value: config.value.find((el) => el.curKey === 10)?.inputs[0].val,
+                };
+            }
+            let stopVal = {};
+            if (config.value.find((el) => el.curKey === 15)?.btns[0].val === 'obj') {
+                stopVal = {
+                    type: config.value.find((el) => el.curKey === 17)?.tabs[0].val,
+                    device: config.value.find((el) => el.curKey === 18)?.tabs[0].val,
+                    index: config.value.find((el) => el.curKey === 19)?.dropDowns[0].vals[0],
+                };
+                if (
+                    config.value.find((el) => el.curKey === 17)?.tabs[0].val === 'mb-var' ||
+                    config.value.find((el) => el.curKey === 17)?.tabs[0].val === '1w-rom' ||
+                    config.value.find((el) => el.curKey === 17)?.tabs[0].val === '1w-sens' ||
+                    config.value.find((el) => el.curKey === 17)?.tabs[0].val === '1w-gpio'
+                ) {
+                    stopVal = Object.assign(
+                        stopVal,
+                        config.value.find((el) => el.curKey === 17)?.tabs[0].val === '1w-sens'
+                            ? {
+                                  bus: config.value.find((el) => el.curKey === 20)?.tabs[0].val,
+                                  io: 0,
+                              }
+                            : {
+                                  bus: config.value.find((el) => el.curKey === 20)?.tabs[0].val,
+                              },
+                    );
+                }
+            } else if (config.value.find((el) => el.curKey === 15)?.btns[0].val === 'const') {
+                stopVal = {
+                    type: 'int-const',
+                    value: config.value.find((el) => el.curKey === 16)?.inputs[0].val,
+                };
+            } else {
+                stopVal = {
+                    type: 'prev-val',
+                };
+            }
+            const curObj = {
+                value: ent,
+                time:
+                    config.value.find((el) => el.curKey === 28)?.btns[0].val === 'tim-var'
+                        ? {
+                              type: 'tim-var',
+                              index: config.value.find((el) => el.curKey === 28)?.dropDowns[0]
+                                  .vals[0],
+                          }
+                        : {
+                              type: 'tim-const',
+                              value: config.value.find((el) => el.curKey === 28)?.inputs[0].val,
+                          },
+                'stop-val': stopVal,
+                'stop-on-trig': config.value
+                    .find((el) => el.curKey === 31)
+                    ?.checkBoxes[0][2].valsArr.includes('triggerNoMatches'),
+                'stop-on-cond': config.value
+                    .find((el) => el.curKey === 31)
+                    ?.checkBoxes[0][2].valsArr.includes('conditionNoMatches'),
+            };
+            obj = Object.assign(obj, curObj);
+        } else if (config.value.find((el) => el.curKey === 6)?.radioBtns[0].val === 'modify') {
+            let ent = {};
+            if (config.value.find((el) => el.curKey === 8)?.btns[0].val === 'obj') {
+                ent = {
+                    type: config.value.find((el) => el.curKey === 11)?.tabs[0].val,
+                    device: config.value.find((el) => el.curKey === 12)?.tabs[0].val,
+                    index: config.value.find((el) => el.curKey === 13)?.dropDowns[0].vals[0],
+                };
+                if (
+                    config.value.find((el) => el.curKey === 11)?.tabs[0].val === 'mb-var' ||
+                    config.value.find((el) => el.curKey === 11)?.tabs[0].val === '1w-rom' ||
+                    config.value.find((el) => el.curKey === 11)?.tabs[0].val === '1w-sens' ||
+                    config.value.find((el) => el.curKey === 11)?.tabs[0].val === '1w-gpio'
+                ) {
+                    ent = Object.assign(
+                        ent,
+                        config.value.find((el) => el.curKey === 11)?.tabs[0].val === '1w-sens'
+                            ? {
+                                  bus: config.value.find((el) => el.curKey === 14)?.tabs[0].val,
+                                  io: 0,
+                              }
+                            : {
+                                  bus: config.value.find((el) => el.curKey === 14)?.tabs[0].val,
+                              },
+                    );
+                }
+            } else {
+                ent = {
+                    type: 'int-const',
+                    value:
+                        config.value.find((el) => el.curKey === 7)?.radioBtns[0].val ===
+                            'bin-equal' ||
+                        config.value.find((el) => el.curKey === 7)?.radioBtns[0].val ===
+                            'bin-not-equal'
+                            ? config.value.find((el) => el.curKey === 9)?.btns[0].val
+                            : config.value.find((el) => el.curKey === 10)?.inputs[0].val,
+                };
+            }
+            let stopVal = {};
+            if (config.value.find((el) => el.curKey === 15)?.btns[0].val === 'obj') {
+                stopVal = {
+                    type: config.value.find((el) => el.curKey === 17)?.tabs[0].val,
+                    device: config.value.find((el) => el.curKey === 18)?.tabs[0].val,
+                    index: config.value.find((el) => el.curKey === 19)?.dropDowns[0].vals[0],
+                };
+                if (
+                    config.value.find((el) => el.curKey === 17)?.tabs[0].val === 'mb-var' ||
+                    config.value.find((el) => el.curKey === 17)?.tabs[0].val === '1w-rom' ||
+                    config.value.find((el) => el.curKey === 17)?.tabs[0].val === '1w-sens' ||
+                    config.value.find((el) => el.curKey === 17)?.tabs[0].val === '1w-gpio'
+                ) {
+                    stopVal = Object.assign(
+                        stopVal,
+                        config.value.find((el) => el.curKey === 17)?.tabs[0].val === '1w-sens'
+                            ? {
+                                  bus: config.value.find((el) => el.curKey === 20)?.tabs[0].val,
+                                  io: 0,
+                              }
+                            : {
+                                  bus: config.value.find((el) => el.curKey === 20)?.tabs[0].val,
+                              },
+                    );
+                }
+            } else if (config.value.find((el) => el.curKey === 15)?.btns[0].val === 'const') {
+                stopVal = {
+                    type: 'int-const',
+                    value: config.value.find((el) => el.curKey === 16)?.inputs[0].val,
+                };
+            } else {
+                stopVal = {
+                    type: 'prev-val',
+                };
+            }
+            const curObj = {
+                value: ent,
+                time:
+                    config.value.find((el) => el.curKey === 28)?.btns[0].val === 'tim-var'
+                        ? {
+                              type: 'tim-var',
+                              index: config.value.find((el) => el.curKey === 28)?.dropDowns[0]
+                                  .vals[0],
+                          }
+                        : {
+                              type: 'tim-const',
+                              value: config.value.find((el) => el.curKey === 28)?.inputs[0].val,
+                          },
+                'stop-val': stopVal,
+                operation: config.value.find((el) => el.curKey === 7)?.radioBtns[0].val,
+                unsigned: false,
+                'stop-on-trig': config.value
+                    .find((el) => el.curKey === 31)
+                    ?.checkBoxes[0][2].valsArr.includes('triggerNoMatches'),
+                'stop-on-cond': config.value.find((el) => el.curKey === 31),
+            };
+            obj = Object.assign(obj, curObj);
+        } else if (config.value.find((el) => el.curKey === 6)?.radioBtns[0].val === 'change') {
+            let ent = {};
+            if (config.value.find((el) => el.curKey === 8)?.btns[0].val === 'obj') {
+                ent = {
+                    type: config.value.find((el) => el.curKey === 11)?.tabs[0].val,
+                    device: config.value.find((el) => el.curKey === 12)?.tabs[0].val,
+                    index: config.value.find((el) => el.curKey === 13)?.dropDowns[0].vals[0],
+                };
+                if (
+                    config.value.find((el) => el.curKey === 11)?.tabs[0].val === 'mb-var' ||
+                    config.value.find((el) => el.curKey === 11)?.tabs[0].val === '1w-rom' ||
+                    config.value.find((el) => el.curKey === 11)?.tabs[0].val === '1w-sens' ||
+                    config.value.find((el) => el.curKey === 11)?.tabs[0].val === '1w-gpio'
+                ) {
+                    ent = Object.assign(
+                        ent,
+                        config.value.find((el) => el.curKey === 11)?.tabs[0].val === '1w-sens'
+                            ? {
+                                  bus: config.value.find((el) => el.curKey === 14)?.tabs[0].val,
+                                  io: 0,
+                              }
+                            : {
+                                  bus: config.value.find((el) => el.curKey === 14)?.tabs[0].val,
+                              },
+                    );
+                }
+            } else {
+                ent = {
+                    type: 'int-const',
+                    value:
+                        config.value.find((el) => el.curKey === 7)?.radioBtns[0].val ===
+                            'bin-equal' ||
+                        config.value.find((el) => el.curKey === 7)?.radioBtns[0].val ===
+                            'bin-not-equal'
+                            ? config.value.find((el) => el.curKey === 9)?.btns[0].val
+                            : config.value.find((el) => el.curKey === 10)?.inputs[0].val,
+                };
+            }
+            const curObj = {
+                value: ent,
+                time:
+                    config.value.find((el) => el.curKey === 28)?.btns[0].val === 'tim-var'
+                        ? {
+                              type: 'tim-var',
+                              index: config.value.find((el) => el.curKey === 28)?.dropDowns[0]
+                                  .vals[0],
+                          }
+                        : {
+                              type: 'tim-const',
+                              value: config.value.find((el) => el.curKey === 28)?.inputs[0].val,
+                          },
+                'stop-on-trig': config.value
+                    .find((el) => el.curKey === 31)
+                    ?.checkBoxes[0][2].valsArr.includes('triggerNoMatches'),
+                'stop-on-cond': config.value.find((el) => el.curKey === 31),
+            };
+            obj = Object.assign(obj, curObj);
+        } else if (config.value.find((el) => el.curKey === 6)?.radioBtns[0].val === 'cycle') {
+            const curObj = {
+                time:
+                    config.value.find((el) => el.curKey === 28)?.btns[0].val === 'tim-var'
+                        ? {
+                              type: 'tim-var',
+                              index: config.value.find((el) => el.curKey === 28)?.dropDowns[0]
+                                  .vals[0],
+                          }
+                        : {
+                              type: 'tim-const',
+                              value: config.value.find((el) => el.curKey === 28)?.inputs[0].val,
+                          },
+                pause:
+                    config.value.find((el) => el.curKey === 28)?.btns[0].val === 'tim-var'
+                        ? {
+                              type: 'tim-var',
+                              index: config.value.find((el) => el.curKey === 28)?.dropDowns[0]
+                                  .vals[0],
+                          }
+                        : {
+                              type: 'tim-const',
+                              value: config.value.find((el) => el.curKey === 28)?.inputs[0].val,
+                          },
+                direction: config.value.find((el) => el.curKey === 32)?.btns[1].val,
+                infinite: config.value.find((el) => el.curKey === 32)?.btns[0].val === 'yes',
+                'stop-on-trig': config.value
+                    .find((el) => el.curKey === 31)
+                    ?.checkBoxes[0][2].valsArr.includes('triggerNoMatches'),
+                'stop-on-cond': config.value.find((el) => el.curKey === 31),
+            };
+            obj = Object.assign(obj, curObj);
+        }
+        curBody.value = obj as Body;
+    } else if (props.type.val === 'udf-cond') {
+        let ent = {
+            type: config.value.find((el) => el.curKey === 2)?.tabs[0].val,
+            device: config.value.find((el) => el.curKey === 3)?.tabs[0].val,
+            index: config.value.find((el) => el.curKey === 4)?.dropDowns[0].vals[0],
+        };
+        if (
+            config.value.find((el) => el.curKey === 2)?.tabs[0].val === 'mb-var' ||
+            config.value.find((el) => el.curKey === 2)?.tabs[0].val === '1w-rom' ||
+            config.value.find((el) => el.curKey === 2)?.tabs[0].val === '1w-sens' ||
+            config.value.find((el) => el.curKey === 2)?.tabs[0].val === '1w-gpio'
+        ) {
+            ent = Object.assign(
+                ent,
+                config.value.find((el) => el.curKey === 2)?.tabs[0].val === '1w-sens'
+                    ? { bus: config.value.find((el) => el.curKey === 5)?.tabs[0].val, io: 0 }
+                    : {
+                          bus: config.value.find((el) => el.curKey === 5)?.tabs[0].val,
+                      },
+            );
+        }
+        let val = {};
+        if (config.value.find((el) => el.curKey === 8)?.btns[0].val === 'obj') {
+            val = {
+                type: config.value.find((el) => el.curKey === 11)?.tabs[0].val,
+                device: config.value.find((el) => el.curKey === 12)?.tabs[0].val,
+                index: config.value.find((el) => el.curKey === 13)?.dropDowns[0].vals[0],
+            };
+            if (
+                config.value.find((el) => el.curKey === 11)?.tabs[0].val === 'mb-var' ||
+                config.value.find((el) => el.curKey === 11)?.tabs[0].val === '1w-rom' ||
+                config.value.find((el) => el.curKey === 11)?.tabs[0].val === '1w-sens' ||
+                config.value.find((el) => el.curKey === 11)?.tabs[0].val === '1w-gpio'
+            ) {
+                val = Object.assign(
+                    val,
+                    config.value.find((el) => el.curKey === 11)?.tabs[0].val === '1w-sens'
+                        ? {
+                              bus: config.value.find((el) => el.curKey === 14)?.tabs[0].val,
+                              io: 0,
+                          }
+                        : {
+                              bus: config.value.find((el) => el.curKey === 14)?.tabs[0].val,
+                          },
+                );
+            }
+        } else {
+            val = {
+                type: 'int-const',
+                value:
+                    config.value.find((el) => el.curKey === 7)?.radioBtns[0].val === 'bin-equal' ||
+                    config.value.find((el) => el.curKey === 7)?.radioBtns[0].val === 'bin-not-equal'
+                        ? config.value.find((el) => el.curKey === 9)?.btns[0].val
+                        : config.value.find((el) => el.curKey === 10)?.inputs[0].val,
+            };
+        }
+        let obj = {
+            operation: config.value.find((el) => el.curKey === 7)?.radioBtns[0].val,
+            'init-state': config.value.find((el) => el.curKey === 1)?.btns[0].val === 'on' ? 1 : 0,
+            entity: ent,
+            value: val,
+            time:
+                config.value.find((el) => el.curKey === 28)?.btns[0].val === 'tim-var'
+                    ? {
+                          type: 'tim-var',
+                          index: config.value.find((el) => el.curKey === 28)?.dropDowns[0].vals[0],
+                      }
+                    : {
+                          type: 'tim-const',
+                          value: config.value.find((el) => el.curKey === 28)?.inputs[0].val,
+                      },
+        };
+        const operation = config.value.find((el) => el.curKey === 7)?.radioBtns[0].val;
+        if (
+            operation === 'less' ||
+            operation === 'less-eq' ||
+            operation === 'more' ||
+            operation === 'more-eq' ||
+            operation === 'equal' ||
+            operation === 'not-equal'
+        ) {
+            obj = Object.assign(obj, {
+                unsigned: false,
+            });
+        }
+        curBody.value = obj as Body;
+    } else if (props.type.val === 'udf-trans') {
+        let left = {
+            type: config.value.find((el) => el.curKey === 2)?.tabs[0].val,
+            device: config.value.find((el) => el.curKey === 3)?.tabs[0].val,
+            index: config.value.find((el) => el.curKey === 4)?.dropDowns[0].vals[0],
+        };
+        if (
+            config.value.find((el) => el.curKey === 2)?.tabs[0].val === 'mb-var' ||
+            config.value.find((el) => el.curKey === 2)?.tabs[0].val === '1w-rom' ||
+            config.value.find((el) => el.curKey === 2)?.tabs[0].val === '1w-sens' ||
+            config.value.find((el) => el.curKey === 2)?.tabs[0].val === '1w-gpio'
+        ) {
+            left = Object.assign(
+                left,
+                config.value.find((el) => el.curKey === 2)?.tabs[0].val === '1w-sens'
+                    ? { bus: config.value.find((el) => el.curKey === 5)?.tabs[0].val, io: 0 }
+                    : {
+                          bus: config.value.find((el) => el.curKey === 5)?.tabs[0].val,
+                      },
+            );
+        }
+        let right = {
+            type: config.value.find((el) => el.curKey === 6)?.tabs[0].val,
+            device: config.value.find((el) => el.curKey === 7)?.tabs[0].val,
+            index: config.value.find((el) => el.curKey === 8)?.dropDowns[0].vals[0],
+        };
+        if (
+            config.value.find((el) => el.curKey === 6)?.tabs[0].val === 'mb-var' ||
+            config.value.find((el) => el.curKey === 6)?.tabs[0].val === '1w-rom' ||
+            config.value.find((el) => el.curKey === 6)?.tabs[0].val === '1w-sens' ||
+            config.value.find((el) => el.curKey === 6)?.tabs[0].val === '1w-gpio'
+        ) {
+            right = Object.assign(
+                right,
+                config.value.find((el) => el.curKey === 6)?.tabs[0].val === '1w-sens'
+                    ? { bus: config.value.find((el) => el.curKey === 9)?.tabs[0].val, io: 0 }
+                    : {
+                          bus: config.value.find((el) => el.curKey === 9)?.tabs[0].val,
+                      },
+            );
+        }
+        let result = {
+            type: config.value.find((el) => el.curKey === 10)?.tabs[0].val,
+            device: config.value.find((el) => el.curKey === 11)?.tabs[0].val,
+            index: config.value.find((el) => el.curKey === 12)?.dropDowns[0].vals[0],
+        };
+        if (
+            config.value.find((el) => el.curKey === 10)?.tabs[0].val === 'mb-var' ||
+            config.value.find((el) => el.curKey === 10)?.tabs[0].val === '1w-rom' ||
+            config.value.find((el) => el.curKey === 10)?.tabs[0].val === '1w-sens' ||
+            config.value.find((el) => el.curKey === 10)?.tabs[0].val === '1w-gpio'
+        ) {
+            result = Object.assign(
+                result,
+                config.value.find((el) => el.curKey === 10)?.tabs[0].val === '1w-sens'
+                    ? { bus: config.value.find((el) => el.curKey === 13)?.tabs[0].val, io: 0 }
+                    : {
+                          bus: config.value.find((el) => el.curKey === 13)?.tabs[0].val,
+                      },
+            );
+        }
+        let obj = {
+            'init-state': config.value.find((el) => el.curKey === 1)?.btns[0].val === 'on' ? 1 : 0,
+            operation: config.value.find((el) => el.curKey === 7)?.radioBtns[0].val,
+            left: left,
+            right: right,
+            result: result,
+            unsigned: false,
+        };
+        curBody.value = obj as Body;
+    } else {
+        let ent = {
+            type: config.value.find((el) => el.curKey === 2)?.tabs[0].val,
+            device: config.value.find((el) => el.curKey === 3)?.tabs[0].val,
+            index: config.value.find((el) => el.curKey === 4)?.dropDowns[0].vals[0],
+        };
+        if (
+            config.value.find((el) => el.curKey === 2)?.tabs[0].val === 'mb-var' ||
+            config.value.find((el) => el.curKey === 2)?.tabs[0].val === '1w-rom' ||
+            config.value.find((el) => el.curKey === 2)?.tabs[0].val === '1w-sens' ||
+            config.value.find((el) => el.curKey === 2)?.tabs[0].val === '1w-gpio'
+        ) {
+            ent = Object.assign(
+                ent,
+                config.value.find((el) => el.curKey === 2)?.tabs[0].val === '1w-sens'
+                    ? { bus: config.value.find((el) => el.curKey === 5)?.tabs[0].val, io: 0 }
+                    : {
+                          bus: config.value.find((el) => el.curKey === 5)?.tabs[0].val,
+                      },
+            );
+        }
+        let obj = {
+            type: config.value.find((el) => el.curKey === 6)?.radioBtns[0].val,
+            entity: ent,
+            'act-idx': config.value.find((el) => el.curKey === 30)?.dropDowns[0].vals[0],
+            'act-qty': config.value.find((el) => el.curKey === 30)?.dropDowns[0].vals.length,
+            'init-state': config.value.find((el) => el.curKey === 1)?.btns[0].val === 'on' ? 1 : 0,
+        };
+        if (config.value.find((el) => el.curKey === 6)?.radioBtns[0].val === 'hold') {
+            let ent = {};
+            if (config.value.find((el) => el.curKey === 8)?.btns[0].val === 'obj') {
+                ent = {
+                    type: config.value.find((el) => el.curKey === 11)?.tabs[0].val,
+                    device: config.value.find((el) => el.curKey === 12)?.tabs[0].val,
+                    index: config.value.find((el) => el.curKey === 13)?.dropDowns[0].vals[0],
+                };
+                if (
+                    config.value.find((el) => el.curKey === 11)?.tabs[0].val === 'mb-var' ||
+                    config.value.find((el) => el.curKey === 11)?.tabs[0].val === '1w-rom' ||
+                    config.value.find((el) => el.curKey === 11)?.tabs[0].val === '1w-sens' ||
+                    config.value.find((el) => el.curKey === 11)?.tabs[0].val === '1w-gpio'
+                ) {
+                    ent = Object.assign(
+                        ent,
+                        config.value.find((el) => el.curKey === 11)?.tabs[0].val === '1w-sens'
+                            ? {
+                                  bus: config.value.find((el) => el.curKey === 14)?.tabs[0].val,
+                                  io: 0,
+                              }
+                            : {
+                                  bus: config.value.find((el) => el.curKey === 14)?.tabs[0].val,
+                              },
+                    );
+                }
+            } else {
+                ent = {
+                    type: 'int-const',
+                    value: config.value.find((el) => el.curKey === 10)?.inputs[0].val,
+                };
+            }
+            const curObj = {
+                value: ent,
+                unsigned: false,
+                'min-time':
+                    config.value.find((el) => el.curKey === 33)?.btns[0].val === 'tim-var'
+                        ? {
+                              type: 'tim-var',
+                              index: config.value.find((el) => el.curKey === 33)?.dropDowns[0]
+                                  .vals[0],
+                          }
+                        : {
+                              type: 'tim-const',
+                              value: config.value.find((el) => el.curKey === 33)?.inputs[0].val,
+                          },
+                'max-time':
+                    config.value.find((el) => el.curKey === 34)?.btns[0].val === 'tim-var'
+                        ? {
+                              type: 'tim-var',
+                              index: config.value.find((el) => el.curKey === 34)?.dropDowns[0]
+                                  .vals[0],
+                          }
+                        : {
+                              type: 'tim-const',
+                              value: config.value.find((el) => el.curKey === 34)?.inputs[0].val,
+                          },
+            };
+            obj = Object.assign(obj, curObj);
+        } else if (config.value.find((el) => el.curKey === 6)?.radioBtns[0].val === 'compare') {
+            let ent = {};
+            if (config.value.find((el) => el.curKey === 8)?.btns[0].val === 'obj') {
+                ent = {
+                    type: config.value.find((el) => el.curKey === 11)?.tabs[0].val,
+                    device: config.value.find((el) => el.curKey === 12)?.tabs[0].val,
+                    index: config.value.find((el) => el.curKey === 13)?.dropDowns[0].vals[0],
+                };
+                if (
+                    config.value.find((el) => el.curKey === 11)?.tabs[0].val === 'mb-var' ||
+                    config.value.find((el) => el.curKey === 11)?.tabs[0].val === '1w-rom' ||
+                    config.value.find((el) => el.curKey === 11)?.tabs[0].val === '1w-sens' ||
+                    config.value.find((el) => el.curKey === 11)?.tabs[0].val === '1w-gpio'
+                ) {
+                    ent = Object.assign(
+                        ent,
+                        config.value.find((el) => el.curKey === 11)?.tabs[0].val === '1w-sens'
+                            ? {
+                                  bus: config.value.find((el) => el.curKey === 14)?.tabs[0].val,
+                                  io: 0,
+                              }
+                            : {
+                                  bus: config.value.find((el) => el.curKey === 14)?.tabs[0].val,
+                              },
+                    );
+                }
+            } else {
+                ent = {
+                    type: 'int-const',
+                    value:
+                        config.value.find((el) => el.curKey === 7)?.radioBtns[0].val ===
+                            'bin-equal' ||
+                        config.value.find((el) => el.curKey === 7)?.radioBtns[0].val ===
+                            'bin-not-equal'
+                            ? config.value.find((el) => el.curKey === 9)?.btns[0].val
+                            : config.value.find((el) => el.curKey === 10)?.inputs[0].val,
+                };
+            }
+            const curObj = {
+                unsigned: false,
+                operation: config.value.find((el) => el.curKey === 7)?.radioBtns[0].val,
+                histeresis: 0,
+                time:
+                    config.value.find((el) => el.curKey === 28)?.btns[0].val === 'tim-var'
+                        ? {
+                              type: 'tim-var',
+                              index: config.value.find((el) => el.curKey === 28)?.dropDowns[0]
+                                  .vals[0],
+                          }
+                        : {
+                              type: 'tim-const',
+                              value: config.value.find((el) => el.curKey === 28)?.inputs[0].val,
+                          },
+            };
+            obj = Object.assign(obj, curObj);
+        } else {
+            obj = Object.assign(obj, {
+                time:
+                    config.value.find((el) => el.curKey === 28)?.btns[0].val === 'tim-var'
+                        ? {
+                              type: 'tim-var',
+                              index: config.value.find((el) => el.curKey === 28)?.dropDowns[0]
+                                  .vals[0],
+                          }
+                        : {
+                              type: 'tim-const',
+                              value: config.value.find((el) => el.curKey === 28)?.inputs[0].val,
+                          },
+            });
+        }
+        curBody.value = obj as Body;
+    }
+}
+
 function checkConfigToSave() {
     if (inputErrors.size) {
         isSaveBtnDisabled.value = true;
@@ -1201,6 +1839,7 @@ function handleBtnClick(configItemIndex: number, btnsItemIndex: number, val: str
     }
     checkConfigToSave();
     checkValue(configItemIndex, btnsItemIndex, val);
+    set();
 }
 
 function handleTabClick(configItemIndex: number, tabsItemIndex: number, val: string | number) {
@@ -1216,6 +1855,7 @@ function handleTabClick(configItemIndex: number, tabsItemIndex: number, val: str
         config.value = prevConfig;
     }
     checkConfigToSave();
+    set();
 }
 
 function handleRadioBtnClick(configItemIndex: number, radioBtnsItemIndex: number, val: string) {
@@ -1226,6 +1866,7 @@ function handleRadioBtnClick(configItemIndex: number, radioBtnsItemIndex: number
         config.value = prevConfig;
     }
     checkConfigToSave();
+    set();
 }
 
 function handleCheckboxClick(
@@ -1253,6 +1894,7 @@ function handleCheckboxClick(
         config.value = prevConfig;
     }
     checkConfigToSave();
+    set();
 }
 
 function handleInput(configItemIndex: number, inputItemIndex: number, val: number) {
@@ -1264,6 +1906,7 @@ function handleInput(configItemIndex: number, inputItemIndex: number, val: numbe
     }
     checkValue(configItemIndex, inputItemIndex, val)
     checkConfigToSave();
+    set();
 }
 
 function checkValue(configItemIndex: number, inputItemIndex: number, val: string | number) {
@@ -1312,6 +1955,7 @@ function setInputError(configItemIndex: number, inputItemIndex: number, res: boo
         config.value = prevConfig;
     }
     checkConfigToSave();
+    set();
 }
 
 async function getOW(ent: 1 | 2 | 3, device: number) {
@@ -2875,6 +3519,9 @@ function setConfig() {
         }
     }
     config.value = res.sort();
+    setTimeout(() => {
+        setConfig();
+    }, 2000);
 }
 
 async function getConfig(i: number = 0) {
