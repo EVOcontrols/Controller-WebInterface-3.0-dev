@@ -93,9 +93,16 @@ import Algoritm from '@/components/views/customAlgoritms/Algoritm.vue';
 import spinner from '@/assets/img/spinner-inside-button.svg?raw';
 import type { Device } from '@/stores';
 
-const funcsStore = useFuncsStore();
+const { saveToFile } = useReadWriteFiles();
 
-const { funcsNumberPerPage } = storeToRefs(funcsStore);
+const funcsStore = useFuncsStore();
+const indexStore = useIndexStore();
+
+const api = indexStore.getApi().api;
+
+const isAborted = indexStore.getApi().isAborted;
+
+const { funcsNumberPerPage, funcLabels } = storeToRefs(funcsStore);
 
 const props = defineProps<{
     items: Algoritm[];
@@ -125,6 +132,8 @@ const isScrolling = ref(false);
 const isNotMainScrolling = ref(false);
 const openedAlgoritms = ref<number[]>([]);
 const clickTimeout = ref<number | null>(null);
+
+const curLabels = ref<string[]>([]);
 
 type Algoritm = { val: 0 | 1 | null; label: string; isCreating?: boolean };
 
@@ -164,7 +173,7 @@ function handleClick(i: number) {
 function setActiveLabel(index: number) {
     activeLabel.value = {
         i: index + props.page * funcsNumberPerPage.value,
-        label: 'Изменение',
+        label: curLabels.value[index],
     };
     isNotMainScrolling.value = true;
     setActiveLabelTop();
@@ -236,20 +245,36 @@ function saveData(e: KeyboardEvent | MouseEvent) {
 
 async function setLabel(index: number, label: string | undefined) {
     if (!label) return;
-    // const newLabels = [...curLabels.value];
-    // newLabels[index] = label;
-    // for (let i = 0; i < Math.ceil(newLabels.length / labelsFileLength); i += 1) {
-    //     if (
-    //         JSON.stringify(
-    //             curLabels.value.slice(i * labelsFileLength, (i + 1) * labelsFileLength),
-    //         ) !== JSON.stringify(newLabels.slice(i * labelsFileLength, (i + 1) * labelsFileLength))
-    //     ) {
-    //         saveLabel(
-    //             newLabels.slice(i * labelsFileLength, (i + 1) * labelsFileLength) as string[],
-    //             i,
-    //         );
-    //     }
-    // }
+    const currLabels =
+        funcLabels.value[props.device ? props.device.addr : 0].find(
+            (el) => el.name === props.curAction.val,
+        )?.val || [];
+
+    const newLabels = [...currLabels];
+    newLabels[index] = label;
+    curLabels.value = [...newLabels];
+    saveLabel(newLabels as string[]);
+}
+
+async function saveLabel(labels: string[]) {
+    const isSavingError = await saveToFile(
+        {
+            type: 'labels',
+            interf: props.curAction.val,
+            device: props.device ? props.device.addr : 0,
+        },
+        { labels: labels },
+    );
+    if (isSavingError) {
+        if (isAborted.value) {
+            return;
+        }
+        setTimeout(() => {
+            saveLabel(labels);
+        }, 5);
+    } else {
+        funcsStore.setLabels(props.device ? props.device.addr : 0, props.curAction.val, labels);
+    }
 }
 
 function handleLabelInput(e: InputEvent) {

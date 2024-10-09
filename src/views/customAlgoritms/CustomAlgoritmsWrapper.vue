@@ -537,6 +537,11 @@ watch(devices, () => {
     if (!curDev.value) curDev.value = devices.value[0];
 });
 
+watch(funcLabels, () => {
+    getLabels(curActionLeft.value.val, 'l');
+    getLabels(curActionRight.value.val, 'r');
+});
+
 watch(curDev, async () => {
     maxAct.value = 0;
     maxCond.value = 0;

@@ -546,6 +546,8 @@ const ent1OWConfig = ref<{ mode: 'off' | 'sens' | 'rom' | 'gpio' }[]>([]);
 const ent2OWConfig = ref<{ mode: 'off' | 'sens' | 'rom' | 'gpio' }[]>([]);
 const ent3OWConfig = ref<{ mode: 'off' | 'sens' | 'rom' | 'gpio' }[]>([]);
 
+const isUpdating = ref(false);
+
 async function save() {
     isSaving.value = true;
     let body = {
@@ -1192,6 +1194,7 @@ async function save() {
         const r = await api.post('set_udf_cfg', body);
         isSaving.value = false;
         initConfig.value = JSON.stringify(config.value);
+        isUpdating.value = false;
         emit('creatingFinish');
     } catch (error) {
         if (isAborted.value) {
@@ -1204,6 +1207,7 @@ async function save() {
 }
 
 function set() {
+    isUpdating.value = true;
     if (props.type.val === 'udf-act') {
         let ent = {
             type: config.value.find((el) => el.curKey === 2)?.tabs[0].val,
@@ -1843,24 +1847,22 @@ function set() {
         curBody.value = obj as Body;
         setConfig();
     }
-
-    interfaces1.value = [];
-    interfaces2.value = [];
-    interfaces3.value = [];
     ent1.value = [];
     ent2.value = [];
     ent3.value = [];
     time1.value = [];
     time2.value = [];
     time3.value = [];
-    multiSelect.value = [];
     ent1Labels.value = [];
     ent2Labels.value = [];
     ent3Labels.value = [];
     ent1OWConfig.value = [];
     ent2OWConfig.value = [];
     ent3OWConfig.value = [];
-    getConfig();
+    setConfig();
+    setTimeout(() => {
+        setConfig();
+    }, 3000);
 }
 
 function checkConfigToSave() {
@@ -1880,7 +1882,7 @@ function handleBtnClick(configItemIndex: number, btnsItemIndex: number, val: str
         config.value = prevConfig;
     }
     checkConfigToSave();
-    checkValue(configItemIndex, btnsItemIndex, val);
+    // checkValue(configItemIndex, btnsItemIndex, val);
     set();
 }
 
@@ -1946,7 +1948,7 @@ function handleInput(configItemIndex: number, inputItemIndex: number, val: numbe
         prevConfig[configItemIndex].inputs[inputItemIndex].val = val;
         config.value = prevConfig;
     }
-    checkValue(configItemIndex, inputItemIndex, val)
+    // checkValue(configItemIndex, inputItemIndex, val);
     checkConfigToSave();
     set();
 }
@@ -1957,11 +1959,15 @@ function checkValue(configItemIndex: number, inputItemIndex: number, val: string
     const prevConfigItem = prevConfig[configItemIndex];
     if (!prevConfigItem) return;
     const { btns } = prevConfigItem;
-    const [firstBtn, secondBtn] = btns
-    const values = firstBtn.val === 'const'
-            ? valuesConstRange.value.find((obj) => obj.interf === firstBtn.val + secondBtn.val)?.values
+    const [firstBtn, secondBtn] = btns;
+    const values =
+        firstBtn.val === 'const'
+            ? valuesConstRange.value.find(
+                  (obj) => obj.interf === (((firstBtn.val as string) + secondBtn.val) as string),
+              )?.values
             : valuesConstRange.value.find((obj) => obj.interf === firstBtn.val)?.values;
-    const { min, max } = values
+    const min = values ? values.min : 0;
+    const max = values ? values.max : 0;
     const index = typeof val === 'number' ? inputItemIndex : 0;
     if (prevConfigItem.inputs[index]) {
         prevConfigItem.inputs[index].min = min;
@@ -2409,11 +2415,12 @@ function parseEntity(ent: Ent) {
         }, 200);
     }
     if (
-        !(entNum === 1
+        (!(entNum === 1
             ? interfaces1.value.length
             : entNum === 2
             ? interfaces2.value.length
-            : interfaces3.value.length) &&
+            : interfaces3.value.length) ||
+            isUpdating.value) &&
         ent.device !== undefined
     ) {
         getInterfaces(entNum, ent.device);

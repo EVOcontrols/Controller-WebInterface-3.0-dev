@@ -62,7 +62,7 @@
                 class="table-cell w-[15rem] !pl-[40px] !pr-6 !h-[40px] flex-1"
                 :status="'valid'"
                 :input-type="['string']"
-                @value-changed="$event === undefined ? '' : (headerInput = $event)"
+                @value-changed="$event === undefined ? (headerInput = '') : (headerInput = $event)"
             />
             <span
                 v-html="search"
@@ -236,7 +236,7 @@ const pages = computed<Algoritm[][]>(() => {
         } else {
             end = props.items.length;
         }
-        arr.push(props.items.slice(i, end));
+        arr.push(props.items.filter((el) => el.label.includes(headerInput.value)).slice(i, end));
     }
     return arr;
 });
