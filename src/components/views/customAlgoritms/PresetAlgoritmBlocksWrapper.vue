@@ -83,6 +83,16 @@
             :confirm-text="t('popUp.btns.confirm')"
             :width-class="'w-[32.125rem]'"
             @close="shownDropDown = undefined"
+            @confirm="
+                () => {
+                    handleDropChange(
+                        shownDropDown ? shownDropDown.configItemIndex : 0,
+                        0,
+                        shownDropDown?.vals || [],
+                    );
+                    shownDropDown = undefined;
+                }
+            "
         >
             <template #title-icon>
                 <span
@@ -293,6 +303,7 @@ const { readFile } = useReadWriteFiles();
 import type { LabelsType } from '@/typings/files';
 
 let configTimer: ReturnType<typeof setTimeout> | undefined;
+let setConfigTimer: ReturnType<typeof setTimeout> | undefined;
 
 const funcStore = useFuncsStore();
 
@@ -1207,6 +1218,7 @@ async function save() {
 }
 
 function set() {
+    if (isLoading.value) return;
     isUpdating.value = true;
     if (props.type.val === 'udf-act') {
         let ent = {
@@ -1528,6 +1540,8 @@ function set() {
             obj = Object.assign(obj, curObj);
         }
         curBody.value = obj as Body;
+        clearTimeout(setConfigTimer);
+        setConfigTimer = undefined;
         setConfig();
     } else if (props.type.val === 'udf-cond') {
         let ent = {
@@ -1615,6 +1629,8 @@ function set() {
             });
         }
         curBody.value = obj as Body;
+        clearTimeout(setConfigTimer);
+        setConfigTimer = undefined;
         setConfig();
     } else if (props.type.val === 'udf-trans') {
         let left = {
@@ -1686,6 +1702,8 @@ function set() {
             unsigned: false,
         };
         curBody.value = obj as Body;
+        clearTimeout(setConfigTimer);
+        setConfigTimer = undefined;
         setConfig();
     } else {
         let ent = {
@@ -1845,6 +1863,8 @@ function set() {
             });
         }
         curBody.value = obj as Body;
+        clearTimeout(setConfigTimer);
+        setConfigTimer = undefined;
         setConfig();
     }
     ent1.value = [];
@@ -1859,10 +1879,6 @@ function set() {
     ent1OWConfig.value = [];
     ent2OWConfig.value = [];
     ent3OWConfig.value = [];
-    setConfig();
-    setTimeout(() => {
-        setConfig();
-    }, 3000);
 }
 
 function checkConfigToSave() {
@@ -1870,7 +1886,9 @@ function checkConfigToSave() {
         isSaveBtnDisabled.value = true;
     } else {
         isSaveBtnDisabled.value =
-            props.isCreating || initConfig.value === JSON.stringify(config.value);
+            props.isCreating ||
+            isUpdating.value ||
+            initConfig.value === JSON.stringify(config.value);
     }
 }
 
@@ -1909,6 +1927,18 @@ function handleRadioBtnClick(configItemIndex: number, radioBtnsItemIndex: number
         prevConfig[configItemIndex].radioBtns[radioBtnsItemIndex].val = val;
         config.value = prevConfig;
     }
+    checkConfigToSave();
+    set();
+}
+
+function handleDropChange(configItemIndex: number, dropItemIndex: number, vals: number[]) {
+    if (!config.value) return;
+    const prevConfig = [...config.value];
+    if (prevConfig[configItemIndex] && prevConfig[configItemIndex].dropDowns[dropItemIndex]) {
+        prevConfig[configItemIndex].dropDowns[dropItemIndex].vals = vals;
+        config.value = prevConfig;
+    }
+    console.log(config.value);
     checkConfigToSave();
     set();
 }
@@ -1988,6 +2018,7 @@ function handleDropDownClick(configItemIndex: number, itemIndex: number) {
         configItemIndex: configItemIndex,
         itemIndex: itemIndex,
     };
+    console.log(config.value);
 }
 
 function setInputError(configItemIndex: number, inputItemIndex: number, res: boolean) {
@@ -2008,7 +2039,7 @@ function setInputError(configItemIndex: number, inputItemIndex: number, res: boo
 
 async function getOW(ent: 1 | 2 | 3, device: number) {
     if (device) {
-        curOWConfig.value.forEach((item, index) => {
+        curOWConfig.value.forEach((item) => {
             if (
                 item.mode !== 'off' &&
                 !(
@@ -2033,7 +2064,7 @@ async function getOW(ent: 1 | 2 | 3, device: number) {
             : ent === 2
             ? ent2OWConfig.value
             : ent3OWConfig.value
-        ).forEach((item, index) => {
+        ).forEach((item) => {
             if (
                 item.mode !== 'off' &&
                 !(
@@ -2127,18 +2158,31 @@ async function getDevConfig() {
 }
 
 async function getEntConfig(ent: 1 | 2 | 3, device: number) {
-    if (!device) return;
     try {
-        const r = await api.post('get_ext_cfg', {
-            device: device,
-        });
-        const val = r.data['1-wire'] as { mode: 'off' | 'sens' | 'rom' | 'gpio' }[];
-        if (ent === 1) {
-            ent1OWConfig.value = val;
-        } else if (ent === 2) {
-            ent2OWConfig.value = val;
+        if (device) {
+            const r = await api.post('get_ext_cfg', {
+                device: device,
+            });
+            const val = r.data['1-wire'] as { mode: 'off' | 'sens' | 'rom' | 'gpio' }[];
+            if (ent === 1) {
+                ent1OWConfig.value = val;
+            } else if (ent === 2) {
+                ent2OWConfig.value = val;
+            } else {
+                ent3OWConfig.value = val;
+            }
         } else {
-            ent3OWConfig.value = val;
+            const r = await api.post('get_config', {
+                device: device,
+            });
+            const val = r.data['1-wire'] as { mode: 'off' | 'sens' | 'rom' | 'gpio' }[];
+            if (ent === 1) {
+                ent1OWConfig.value = val;
+            } else if (ent === 2) {
+                ent2OWConfig.value = val;
+            } else {
+                ent3OWConfig.value = val;
+            }
         }
     } catch (error) {
         if (isAborted.value) {
@@ -3568,7 +3612,7 @@ function setConfig() {
         }
     }
     config.value = res.sort();
-    setTimeout(() => {
+    setConfigTimer = setTimeout(() => {
         setConfig();
     }, 2000);
 }
@@ -3677,6 +3721,8 @@ async function getConfig(i: number = 0) {
                       },
                   }
         ) as Body;
+        clearTimeout(setConfigTimer);
+        setConfigTimer = undefined;
         setConfig();
         checkConfigToSave();
         initBody = curBody.value;
@@ -3693,18 +3739,22 @@ async function getConfig(i: number = 0) {
                     r.data.trigger || r.data.condition || r.data.action || r.data.transform;
             }
             initBody = curBody.value;
-            if (i < 5) {
+            if (i < 3) {
+                clearTimeout(setConfigTimer);
+                setConfigTimer = undefined;
                 setConfig();
             } else {
                 if (!initConfig.value) {
                     initConfig.value = JSON.stringify(config.value);
                     checkConfigToSave();
+                    setTimeout(() => {
+                        isLoading.value = false;
+                    }, 2000);
                 }
             }
             configTimer = setTimeout(() => {
                 getConfig(i + 1);
-                isLoading.value = false;
-            }, 3000);
+            }, 1500);
         } catch (error) {
             if (isAborted.value) {
                 return;
@@ -3724,6 +3774,8 @@ onMounted(() => {
 onBeforeUnmount(() => {
     clearTimeout(configTimer);
     configTimer = undefined;
+    clearTimeout(setConfigTimer);
+    setConfigTimer = undefined;
 });
 
 const { t } = useI18n({

@@ -205,6 +205,7 @@ type Algoritm = { val: 0 | 1 | null; label: string; isCreating?: boolean };
 
 const curDev = ref<Device>(devices.value[0]);
 let showStatusTimer: ReturnType<typeof setTimeout> | undefined;
+let getDataTimer: ReturnType<typeof setTimeout> | undefined;
 const shownStatus = ref<{ serial: string; state: string; addr: number; version: string } | null>(
     null,
 );
@@ -428,10 +429,14 @@ async function getLabels(type: 'udf-act' | 'udf-cond' | 'udf-trans' | 'udf-trig'
         );
     } else if (reqLabels === 'notFound') {
         funcStore.setLabels(addr, type, []);
+        clearTimeout(getDataTimer);
+        getDataTimer = undefined;
         getData([], dir);
     } else {
         const { labels } = reqLabels as LabelsType;
         funcStore.setLabels(addr, type, labels);
+        clearTimeout(getDataTimer);
+        getDataTimer = undefined;
         getData(labels, dir);
     }
 }
@@ -468,19 +473,19 @@ async function getData(labels: string[], dir: 'l' | 'r') {
             } else {
                 algoritms2.value = [...res];
             }
-            setTimeout(() => {
+            getDataTimer = setTimeout(() => {
                 getData(labels, dir);
             }, 5000);
         } catch (error) {
             if (isAborted.value) {
                 return;
             }
-            setTimeout(() => {
+            getDataTimer = setTimeout(() => {
                 getData(labels, dir);
             }, 20);
         }
     } else {
-        setTimeout(() => {
+        getDataTimer = setTimeout(() => {
             getData(labels, dir);
         }, 20);
     }
@@ -531,6 +536,8 @@ onBeforeMount(async () => {
 onBeforeUnmount(() => {
     clearTimeout(showStatusTimer);
     showStatusTimer = undefined;
+    clearTimeout(getDataTimer);
+    getDataTimer = undefined;
 });
 
 watch(devices, () => {
@@ -538,8 +545,15 @@ watch(devices, () => {
 });
 
 watch(funcLabels, () => {
-    getLabels(curActionLeft.value.val, 'l');
-    getLabels(curActionRight.value.val, 'r');
+    const addr = curDev.value || devices.value[0] ? (curDev.value || devices.value[0]).addr : 0;
+    let curLabelsLeft = funcLabels.value[addr].find((el) => el.name === curActionLeft.value.val)
+        ?.val as string[];
+    let curLabelsRight = funcLabels.value[addr].find((el) => el.name === curActionRight.value.val)
+        ?.val as string[];
+    clearTimeout(getDataTimer);
+    getDataTimer = undefined;
+    getData(curLabelsLeft || [], 'l');
+    getData(curLabelsRight || [], 'r');
 });
 
 watch(curDev, async () => {
