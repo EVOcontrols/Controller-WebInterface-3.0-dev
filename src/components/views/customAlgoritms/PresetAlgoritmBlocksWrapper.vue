@@ -1938,7 +1938,6 @@ function handleDropChange(configItemIndex: number, dropItemIndex: number, vals: 
         prevConfig[configItemIndex].dropDowns[dropItemIndex].vals = vals;
         config.value = prevConfig;
     }
-    console.log(config.value);
     checkConfigToSave();
     set();
 }
@@ -2018,7 +2017,6 @@ function handleDropDownClick(configItemIndex: number, itemIndex: number) {
         configItemIndex: configItemIndex,
         itemIndex: itemIndex,
     };
-    console.log(config.value);
 }
 
 function setInputError(configItemIndex: number, inputItemIndex: number, res: boolean) {
