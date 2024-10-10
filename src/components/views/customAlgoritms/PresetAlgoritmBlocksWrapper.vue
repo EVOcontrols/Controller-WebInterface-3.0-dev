@@ -600,8 +600,8 @@ async function save() {
                           type: 'tim-const',
                           value: config.value.find((el) => el.curKey === 29)?.inputs[0].val,
                       },
-            'cond-idx': config.value.find((el) => el.curKey === 30)?.dropDowns[0].vals[0],
-            'cond-qty': config.value.find((el) => el.curKey === 30)?.dropDowns[0].vals.length,
+            'cond-idx': config.value.find((el) => el.curKey === 30)?.dropDowns[0].vals[0] || 0,
+            'cond-qty': config.value.find((el) => el.curKey === 30)?.dropDowns[0].vals.length || 0,
             'start-on-cond': config.value
                 .find((el) => el.curKey === 31)
                 ?.checkBoxes[0][1].valsArr.includes('conditionsOccur'),
@@ -1066,8 +1066,8 @@ async function save() {
         let obj = {
             type: config.value.find((el) => el.curKey === 6)?.radioBtns[0].val,
             entity: ent,
-            'act-idx': config.value.find((el) => el.curKey === 30)?.dropDowns[0].vals[0],
-            'act-qty': config.value.find((el) => el.curKey === 30)?.dropDowns[0].vals.length,
+            'act-idx': config.value.find((el) => el.curKey === 30)?.dropDowns[0].vals[0] || 0,
+            'act-qty': config.value.find((el) => el.curKey === 30)?.dropDowns[0].vals.length || 0,
             'init-state': config.value.find((el) => el.curKey === 1)?.btns[0].val === 'on' ? 1 : 0,
         };
         if (config.value.find((el) => el.curKey === 6)?.radioBtns[0].val === 'hold') {
@@ -1885,10 +1885,11 @@ function checkConfigToSave() {
     if (inputErrors.size) {
         isSaveBtnDisabled.value = true;
     } else {
-        isSaveBtnDisabled.value =
-            props.isCreating ||
-            isUpdating.value ||
-            initConfig.value === JSON.stringify(config.value);
+        isSaveBtnDisabled.value = props.isCreating
+            ? false
+            : isUpdating.value
+            ? false
+            : initConfig.value === JSON.stringify(config.value);
     }
 }
 
@@ -3481,27 +3482,19 @@ function setConfig() {
             );
             if (val) res.push(...val);
         }
-        if (
-            props.type.val === 'udf-trig' &&
-            curBody.value['act-idx'] !== undefined &&
-            curBody.value['act-qty'] !== undefined
-        ) {
+        if (props.type.val === 'udf-trig') {
             const val = parseMultiSelect(
                 'udf-act',
-                curBody.value['act-idx'],
-                curBody.value['act-qty'],
+                curBody.value['act-idx'] || 0,
+                curBody.value['act-qty'] || 0,
             );
             if (val) res.push(...val);
         }
-        if (
-            props.type.val === 'udf-act' &&
-            curBody.value['cond-idx'] !== undefined &&
-            curBody.value['cond-qty'] !== undefined
-        ) {
+        if (props.type.val === 'udf-act') {
             const val = parseMultiSelect(
                 'udf-cond',
-                curBody.value['cond-idx'],
-                curBody.value['cond-qty'],
+                curBody.value['cond-idx'] || 0,
+                curBody.value['cond-qty'] || 0,
                 curBody.value['cond-logic'],
             );
             if (val) res.push(...val);
@@ -3663,9 +3656,8 @@ async function getConfig(i: number = 0) {
                           io: 0,
                       },
                       value: {
-                          type: 'bin-out',
-                          device: 0,
-                          index: 0,
+                          type: 'int-const',
+                          value: 0,
                       },
                       time: {
                           type: 'tim-const',
@@ -3704,9 +3696,8 @@ async function getConfig(i: number = 0) {
                       'act-qty': 1,
                       'init-state': 0,
                       value: {
-                          type: 'pwm-out',
-                          device: 0,
-                          index: 1,
+                          type: 'int-const',
+                          value: 0,
                       },
                       'min-time': {
                           type: 'tim-const',
