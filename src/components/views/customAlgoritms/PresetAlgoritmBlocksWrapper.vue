@@ -69,9 +69,14 @@
         </div>
         <div class="w-full h-[1px] bg-[#2C5982]"></div>
         <div class="h-[3.5rem] px-6 flex items-center justify-end">
+<!--            <SaveButton-->
+<!--                :isSaving="isSaving"-->
+<!--                :is-disabled="isSaveBtnDisabled"-->
+<!--                class="w-[7.563rem]"-->
+<!--                @click="save"-->
+<!--            />-->
             <SaveButton
                 :isSaving="isSaving"
-                :is-disabled="isSaveBtnDisabled"
                 class="w-[7.563rem]"
                 @click="save"
             />
@@ -1063,6 +1068,7 @@ async function save() {
                       },
             );
         }
+        // console.log('config.value1', JSON.parse(JSON.stringify(config.value)));
         let obj = {
             type: config.value.find((el) => el.curKey === 6)?.radioBtns[0].val,
             entity: ent,
@@ -1129,7 +1135,7 @@ async function save() {
                           },
             };
             obj = Object.assign(obj, curObj);
-        } else if (config.value.find((el) => el.curKey === 6)?.radioBtns[0].val === 'compare') {
+        } else if (config.value.find((el) => el.curKey === 6)?.radioBtns[0].val === 'compare' || config.value.find((el) => el.curKey === 6)?.radioBtns[0].val === 'hold') {
             let ent = {};
             if (config.value.find((el) => el.curKey === 8)?.btns[0].val === 'obj') {
                 ent = {
@@ -1168,6 +1174,7 @@ async function save() {
                 };
             }
             const curObj = {
+                value: ent,
                 unsigned: false,
                 operation: config.value.find((el) => el.curKey === 7)?.radioBtns[0].val,
                 histeresis: 0,
@@ -1729,8 +1736,8 @@ function set() {
         let obj = {
             type: config.value.find((el) => el.curKey === 6)?.radioBtns[0].val,
             entity: ent,
-            'act-idx': config.value.find((el) => el.curKey === 30)?.dropDowns[0].vals[0],
-            'act-qty': config.value.find((el) => el.curKey === 30)?.dropDowns[0].vals.length,
+            'act-idx': config.value.find((el) => el.curKey === 30)?.dropDowns[0].vals[0] || 0,
+            'act-qty': config.value.find((el) => el.curKey === 30)?.dropDowns[0].vals.length || 0,
             'init-state': config.value.find((el) => el.curKey === 1)?.btns[0].val === 'on' ? 1 : 0,
         };
         if (config.value.find((el) => el.curKey === 6)?.radioBtns[0].val === 'hold') {
@@ -1792,7 +1799,7 @@ function set() {
                           },
             };
             obj = Object.assign(obj, curObj);
-        } else if (config.value.find((el) => el.curKey === 6)?.radioBtns[0].val === 'compare') {
+        } else if (config.value.find((el) => el.curKey === 6)?.radioBtns[0].val === 'compare' || config.value.find((el) => el.curKey === 6)?.radioBtns[0].val === 'hold') {
             let ent = {};
             if (config.value.find((el) => el.curKey === 8)?.btns[0].val === 'obj') {
                 ent = {
@@ -1831,6 +1838,7 @@ function set() {
                 };
             }
             const curObj = {
+                value: ent,
                 unsigned: false,
                 operation: config.value.find((el) => el.curKey === 7)?.radioBtns[0].val,
                 histeresis: 0,
@@ -2892,10 +2900,10 @@ function parseMultiSelect(
                           vals: quant
                               ? [...multiSelect.value]
                                     .map((el, index) => {
-                                        const r = el.val as number
-                                        return r + index as number
+                                        const n = el.val as number
+                                        return n + (index - 1) as number
                                     })
-                                    .slice(idx, idx + quant)
+                                    .slice(idx, idx + (quant + 1))
                               : [],
                       },
                   ],
@@ -2912,9 +2920,9 @@ function parseMultiSelect(
                       {
                           vals: [
                               { label: t('btns.anyCond'), val: 'or' },
-                              { label: t('btns.allCond'), val: 'all' },
+                              { label: t('btns.allCond'), val: 'and' },
                           ],
-                          val: logic === 'or' ? 'or' : 'all',
+                          val: logic === 'or' ? 'or' : 'and',
                       },
                   ],
                   tabs: [],
@@ -3029,7 +3037,7 @@ function setConfig() {
         }
         if (
             (props.type.val === 'udf-trig' &&
-                curBody.value['type'] === 'compare' &&
+                (curBody.value['type'] === 'compare' || curBody.value['type'] === 'hold') &&
                 curBody.value['operation']) ||
             (props.type.val === 'udf-cond' && curBody.value['operation'])
         ) {
@@ -3224,7 +3232,7 @@ function setConfig() {
                 dropDowns: [],
             });
         }
-        if (curBody.value['value'] && curBody.value['value']['type'] === 'int-const') {
+        if (curBody.value['value'] && ((curBody.value['value']['type'] === 'int-const') || props.isCreating || isUpdating.value)) {
             res.push(
                 curBody.value['operation'] === 'bin-equal' ||
                     curBody.value['operation'] === 'bin-not-equal'
@@ -3386,7 +3394,7 @@ function setConfig() {
         if (
             props.type.val === 'udf-act' &&
             curBody.value['value'] &&
-            curBody.value['value']['type'] === 'int-const'
+            (curBody.value['value']['type'] === 'int-const' || props.isCreating || isUpdating.value)
         ) {
             res.push(
                 curBody.value['operation'] === 'bin-equal' ||
@@ -3689,29 +3697,21 @@ async function getConfig(i: number = 0) {
                       'init-state': 0,
                   }
                 : {
-                      type: 'hold',
-                      entity: {
-                          type: 'adc-in',
-                          device: 0,
-                          index: 1,
-                      },
-                      'act-idx': 0,
-                      'act-qty': 1,
-                      'init-state': 0,
-                      value: {
-                          type: 'int-const',
-                          value: 0,
-                      },
-                      'min-time': {
-                          type: 'tim-const',
-                          value: 2000,
-                      },
-                      'max-time': {
-                          type: 'tim-var',
-                          device: 0,
-                          index: 0,
-                      },
-                  }
+                    "act-idx": 0,
+                    "act-qty": 1,
+                    "type": "compare",
+                    "entity": {
+                        "type": "1w-rom",
+                        "device": 0,
+                        "bus": 0,
+                        "index": 0
+                    },
+                    "value": { "type": "int-const", "value": 1 },
+                    "time": { "type": "tim-const", "value": 0 },
+                    "operation": "bin-equal",
+                    "hysteresis": 0,
+                    "init-state": 1
+                }
         ) as Body;
         clearTimeout(setConfigTimer);
         setConfigTimer = undefined;

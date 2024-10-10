@@ -75,9 +75,11 @@ export const useIndexStore = defineStore('indexStore', () => {
         | []
     >([]);
 
-    // const ip = ref<string>(window.location.host || '192.168.0.30');
-    // const ip = ref<string>('192.168.1.99');
-    const ip = ref<string>('10.8.0.1:49163');
+    const ip = ref<string>(window.location.host || '192.168.0.30');
+    // const ip = ref<string>(window.location.host || '192.168.10.51');
+    // const ip = ref<string>('192.168.10.51');
+    // const ip = ref<string>('10.8.0.1:49163');
+    // const ip = ref<string>('65.21.176.66:49163');
 
     const mbDevs = ref<number[][][]>([]);
 
