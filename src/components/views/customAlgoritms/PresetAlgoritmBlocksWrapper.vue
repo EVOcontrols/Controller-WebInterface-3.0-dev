@@ -2891,7 +2891,10 @@ function parseMultiSelect(
                           items: [...multiSelect.value],
                           vals: quant
                               ? [...multiSelect.value]
-                                    .map((el, index) => el.val + index as number)
+                                    .map((el, index) => {
+                                        const r = el.val as number
+                                        return r + index as number
+                                    })
                                     .slice(idx, idx + quant)
                               : [],
                       },
