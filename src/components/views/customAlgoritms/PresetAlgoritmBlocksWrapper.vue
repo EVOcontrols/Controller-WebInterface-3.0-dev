@@ -191,12 +191,12 @@
                                                         shownDropDown.vals =
                                                             shownDropDown.vals.filter(
                                                                 (num) => num !== item.i,
-                                                            );
+                                                            ).sort();
                                                     } else {
                                                         shownDropDown.vals = [
                                                             ...shownDropDown.vals,
                                                             item.i,
-                                                        ];
+                                                        ].sort();
                                                     }
                                                 } else {
                                                     shownDropDown.vals = [item.i];
@@ -2878,6 +2878,8 @@ function parseMultiSelect(
     }
     getData(1, type, curDevCapab.value[type], props.device.addr, undefined, false, true);
     const res: Config[] = [];
+    //console.log([...multiSelect.value]);
+    //console.log([...multiSelect.value].slice(idx, idx + (quant)));
     res.push(
         type === 'udf-act'
             ? {
@@ -2896,14 +2898,11 @@ function parseMultiSelect(
                       {
                           type: 'act',
                           realType: 'tim-var',
-                          items: [...multiSelect.value],
+                          items: [...multiSelect.value].sort(el => el.i),
                           vals: quant
-                              ? [...multiSelect.value]
-                                    .map((el, index) => {
-                                        const n = el.val as number
-                                        return n + (index - 1) as number
-                                    })
-                                    .slice(idx, idx + (quant + 1))
+                              ? [...multiSelect.value].sort(el => el.i)
+                                    .map(el => el.i)
+                                    .slice(idx, idx + (quant))
                               : [],
                       },
                   ],
