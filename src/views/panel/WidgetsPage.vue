@@ -72,7 +72,7 @@
 <script lang="ts" setup>
 import { useI18n } from 'vue-i18n';
 import type { Widget } from '@/stores';
-import BigWidget from '@/components/views/widgets/bigWidgets/BigWidget.vue';
+import BigWidget from '@/components/views/widgets/bigWidgets/bigWidget.vue';
 import ShimWidget from '@/components/views/widgets/ShimWidget.vue';
 import DiscreteWidget from '@/components/views/widgets/DiscreteWidget.vue';
 import VarWidget from '@/components/views/widgets/VarWidget.vue';

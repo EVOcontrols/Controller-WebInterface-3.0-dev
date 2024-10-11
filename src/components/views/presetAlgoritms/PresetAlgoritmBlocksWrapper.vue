@@ -929,9 +929,9 @@ function setConfig() {
                     {
                         vals: [
                             { label: t('btns.anyCond'), val: 'any' },
-                            { label: t('btns.allCond'), val: 'all' },
+                            { label: t('btns.allCond'), val: 'and' },
                         ],
-                        val: 'all',
+                        val: 'and',
                     },
                 ],
                 tabs: [],
