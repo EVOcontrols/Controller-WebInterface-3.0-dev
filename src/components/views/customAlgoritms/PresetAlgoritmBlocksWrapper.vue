@@ -69,12 +69,12 @@
         </div>
         <div class="w-full h-[1px] bg-[#2C5982]"></div>
         <div class="h-[3.5rem] px-6 flex items-center justify-end">
-<!--            <SaveButton-->
-<!--                :isSaving="isSaving"-->
-<!--                :is-disabled="isSaveBtnDisabled"-->
-<!--                class="w-[7.563rem]"-->
-<!--                @click="save"-->
-<!--            />-->
+            <!--            <SaveButton-->
+            <!--                :isSaving="isSaving"-->
+            <!--                :is-disabled="isSaveBtnDisabled"-->
+            <!--                class="w-[7.563rem]"-->
+            <!--                @click="save"-->
+            <!--            />-->
             <SaveButton
                 :isSaving="isSaving"
                 class="w-[7.563rem]"
@@ -188,10 +188,9 @@
 
                                                 if (canSelect) {
                                                     if (shownDropDown.vals.includes(item.i)) {
-                                                        shownDropDown.vals =
-                                                            shownDropDown.vals.filter(
-                                                                (num) => num !== item.i,
-                                                            ).sort();
+                                                        shownDropDown.vals = shownDropDown.vals
+                                                            .filter((num) => num !== item.i)
+                                                            .sort();
                                                     } else {
                                                         shownDropDown.vals = [
                                                             ...shownDropDown.vals,
@@ -1135,7 +1134,10 @@ async function save() {
                           },
             };
             obj = Object.assign(obj, curObj);
-        } else if (config.value.find((el) => el.curKey === 6)?.radioBtns[0].val === 'compare' || config.value.find((el) => el.curKey === 6)?.radioBtns[0].val === 'hold') {
+        } else if (
+            config.value.find((el) => el.curKey === 6)?.radioBtns[0].val === 'compare' ||
+            config.value.find((el) => el.curKey === 6)?.radioBtns[0].val === 'hold'
+        ) {
             let ent = {};
             if (config.value.find((el) => el.curKey === 8)?.btns[0].val === 'obj') {
                 ent = {
@@ -1799,7 +1801,10 @@ function set() {
                           },
             };
             obj = Object.assign(obj, curObj);
-        } else if (config.value.find((el) => el.curKey === 6)?.radioBtns[0].val === 'compare' || config.value.find((el) => el.curKey === 6)?.radioBtns[0].val === 'hold') {
+        } else if (
+            config.value.find((el) => el.curKey === 6)?.radioBtns[0].val === 'compare' ||
+            config.value.find((el) => el.curKey === 6)?.radioBtns[0].val === 'hold'
+        ) {
             let ent = {};
             if (config.value.find((el) => el.curKey === 8)?.btns[0].val === 'obj') {
                 ent = {
@@ -2898,11 +2903,12 @@ function parseMultiSelect(
                       {
                           type: 'act',
                           realType: 'tim-var',
-                          items: [...multiSelect.value].sort(el => el.i),
+                          items: [...multiSelect.value].sort((el) => el.i),
                           vals: quant
-                              ? [...multiSelect.value].sort(el => el.i)
-                                    .map(el => el.i)
-                                    .slice(idx, idx + (quant))
+                              ? [...multiSelect.value]
+                                    .sort((el) => el.i)
+                                    .map((el) => el.i)
+                                    .slice(idx, idx + quant)
                               : [],
                       },
                   ],
@@ -3231,7 +3237,10 @@ function setConfig() {
                 dropDowns: [],
             });
         }
-        if (curBody.value['value'] && ((curBody.value['value']['type'] === 'int-const') || props.isCreating || isUpdating.value)) {
+        if (
+            curBody.value['value'] &&
+            (curBody.value['value']['type'] === 'int-const' || props.isCreating || isUpdating.value)
+        ) {
             res.push(
                 curBody.value['operation'] === 'bin-equal' ||
                     curBody.value['operation'] === 'bin-not-equal'
@@ -3696,21 +3705,21 @@ async function getConfig(i: number = 0) {
                       'init-state': 0,
                   }
                 : {
-                    "act-idx": 0,
-                    "act-qty": 1,
-                    "type": "compare",
-                    "entity": {
-                        "type": "1w-rom",
-                        "device": 0,
-                        "bus": 0,
-                        "index": 0
-                    },
-                    "value": { "type": "int-const", "value": 1 },
-                    "time": { "type": "tim-const", "value": 0 },
-                    "operation": "bin-equal",
-                    "hysteresis": 0,
-                    "init-state": 1
-                }
+                      'act-idx': 0,
+                      'act-qty': 1,
+                      type: 'compare',
+                      entity: {
+                          type: '1w-rom',
+                          device: 0,
+                          bus: 0,
+                          index: 0,
+                      },
+                      value: { type: 'int-const', value: 1 },
+                      time: { type: 'tim-const', value: 0 },
+                      operation: 'bin-equal',
+                      hysteresis: 0,
+                      'init-state': 1,
+                  }
         ) as Body;
         clearTimeout(setConfigTimer);
         setConfigTimer = undefined;
