@@ -17,12 +17,13 @@ export const useFuncsStore = defineStore('funcsStore', () => {
         labelsArr: string[],
     ) {
         if (!funcLabels.value[device]) {
+            const prev = [...funcLabels.value];
             const res = [];
             for (let i = funcLabels.value.length; i < device; i++) {
                 res.push([]);
             }
             res.push([{ name: type, val: labelsArr }]);
-            funcLabels.value = [...res];
+            funcLabels.value = [...prev, ...res];
         } else {
             const res = [...funcLabels.value];
             const obj = res[device].find((el) => el.name === type);
