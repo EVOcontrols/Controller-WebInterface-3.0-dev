@@ -267,6 +267,7 @@ const activeMenuItem = computed<(typeof menuItems)[number]>(() => {
 });
 
 const isDev = import.meta.env.DEV;
+const timeoutDev = 10000;
 
 const isDisabled = ref(false);
 
@@ -516,12 +517,11 @@ async function getEntState(
         if (isAborted.value) {
             return;
         }
-        setTimeout(
-            () => {
-                getEntState(device, filteredReqArr);
-            },
-            isPriorWOpen.value ? 200 : mbDevs.value.length ? 20 : 100,
-        );
+        const timeoutProd = isPriorWOpen.value ? 200 : mbDevs.value.length ? 20 : 100;
+        const timeout = isDev ? timeoutDev : timeoutProd;
+        setTimeout(() => {
+            getEntState(device, filteredReqArr);
+        }, timeout);
     }
 }
 
@@ -623,10 +623,9 @@ async function setDevicesStates() {
         }
     }
     // getDevicesStatesTimer = setTimeout(setDevicesStates, 3000);
-    getDevicesStatesTimer = setTimeout(
-        setDevicesStates,
-        isPriorWOpen.value ? timeout.value * 5 : timeout.value,
-    );
+    const timeoutProd = isPriorWOpen.value ? timeout.value * 5 : timeout.value;
+    const timePause = isDev ? timeoutDev : timeoutProd;
+    getDevicesStatesTimer = setTimeout(setDevicesStates, timePause);
 }
 
 async function getOWIds(
@@ -860,14 +859,14 @@ async function getExtDevs() {
 }
 
 async function getExtStatuses() {
-    // if (window.location.pathname.includes('panel') && !isRebootRequired.value) {
     if (window.location.hash.includes('panel') && !isRebootRequired.value) {
         try {
-            const r = (await (await api.get('get_ext_devs')).data).list as Device[];
-            indexStore.setExtDevsList(r as ExtDevsListRaw);
+            const response = await api.get('get_ext_devs');
+            const { list } = response.data as { list: Device[] };
+            indexStore.setExtDevsList(list as ExtDevsListRaw);
             const newR = [];
-            for (let i = 0; i < r.length; i += 1) {
-                newR.push(Object.assign(r[i], { index: i + 1 }));
+            for (let i = 0; i < list.length; i += 1) {
+                newR.push(Object.assign(list[i], { index: i + 1 }));
             }
             const devs = newR.filter((item) => item.type !== 'none');
             devs.forEach(async (d) => {
@@ -886,7 +885,8 @@ async function getExtStatuses() {
             );
         }
     }
-    getExtStatusesTimer = setTimeout(getExtStatuses, 1000);
+    const timeout = isDev ? timeoutDev : 1000;
+    getExtStatusesTimer = setTimeout(getExtStatuses, timeout);
 }
 
 async function getExtDevsCfg(d: number) {
