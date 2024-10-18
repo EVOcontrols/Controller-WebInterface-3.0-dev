@@ -329,7 +329,6 @@
                                     >
                                         {{ `${t('bus')} ${i + 1}` }}
                                     </div>
-                                    {{ Object.entries(w).filter((el) => el[0] !== 'mode') }}
                                     <div
                                         v-for="(p, y) in Object.entries(w).filter(
                                             (el) => el[0] !== 'mode',

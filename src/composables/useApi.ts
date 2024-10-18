@@ -15,8 +15,6 @@ export function useApi() {
 
     const isAborted = ref(false);
 
-    let isFree = true;
-
     function createNewAbortController() {
         isAborted.value = false;
         abortController = new AbortController();
@@ -34,14 +32,10 @@ export function useApi() {
 
     api.interceptors.request.use(
         (config) => {
-            if (!isFree) {
-                throw new Error('isBusy');
-            }
             const isUser = config.url?.startsWith('/user/');
             if (!signal || signal.aborted) {
                 createNewAbortController();
             }
-            isFree = false;
             return {
                 ...config,
                 // url: isUser ? config.url : `/api/${config.url}`,
@@ -86,13 +80,11 @@ export function useApi() {
                     indexStore.setIsAuth(undefined);
                     router.push({ name: 'login' });
                 } else {
-                    isFree = true;
                     throw new Error();
                 }
             } else if (notConnected.value) {
                 indexStore.setIsNotConnected(false);
             }
-            isFree = true;
             return response;
         },
         async (error: AxiosError) => {
@@ -107,11 +99,6 @@ export function useApi() {
                     await new Promise((res) => {
                         setTimeout(res, 1000);
                     });
-                }
-                isFree = true;
-            } else {
-                if (error.message !== 'isBusy') {
-                    isFree = true;
                 }
             }
             return Promise.reject(error);

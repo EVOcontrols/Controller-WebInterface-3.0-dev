@@ -60,7 +60,7 @@ export const createConfig = (
 };
 
 function createInitStateConfig(curBodyVal: Body, t: (key: string) => string): Config | null {
-    if (!curBodyVal['init-state'] !== undefined) {
+    if (curBodyVal['init-state'] === undefined) {
         return null;
     }
 
