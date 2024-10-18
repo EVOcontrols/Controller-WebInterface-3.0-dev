@@ -518,7 +518,7 @@ async function getEntState(
             return;
         }
         const timeoutProd = isPriorWOpen.value ? 200 : mbDevs.value.length ? 20 : 100;
-        const timeout = isDev ? timeoutDev : timeoutProd;
+        const timeout = isDev ? timeoutDev / 5 : timeoutProd;
         setTimeout(() => {
             getEntState(device, filteredReqArr);
         }, timeout);
