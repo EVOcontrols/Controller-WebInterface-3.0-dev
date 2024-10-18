@@ -1,4 +1,3 @@
-
 import type { AxiosRequestConfig } from 'axios';
 
 type Method = 'get' | 'post';
@@ -35,6 +34,10 @@ export const useApiStore = defineStore('apiStore', () => {
 
     const lastBgQueryIndex = computed(() => bgQueries.value.length - 1);
 
+    function delay(ms: number) {
+        return new Promise((resolve) => setTimeout(resolve, ms));
+    }
+
     async function query<T = any>(
         method: Method,
         url: string,
@@ -43,6 +46,9 @@ export const useApiStore = defineStore('apiStore', () => {
         isQueryBg = false,
     ) {
         let queryId: number | undefined;
+
+        await delay(50);
+
         if (!isQueryBg) {
             queryId = Math.random();
             directQueriesIds.add(queryId);
@@ -50,6 +56,7 @@ export const useApiStore = defineStore('apiStore', () => {
                 indexStore.setLongQueryRunning(true);
             }
         }
+
         try {
             const r = await apiInstance[method]<T>(url, params, axiosParams);
             return r;

@@ -189,7 +189,7 @@ const { readFile } = useReadWriteFiles();
 const indexStore = useIndexStore();
 const funcStore = useFuncsStore();
 
-const api = indexStore.getApi().api as axios.AxiosInstance;
+const { api } = useApiStore();
 const isAborted = indexStore.getApi().isAborted;
 
 const { devices } = storeToRefs(indexStore);

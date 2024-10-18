@@ -1065,7 +1065,7 @@ async function save() {
     emit('creatingFinish');
 }
 
-function set() {
+function reRenderLayout(p: number) {
     if (isLoading.value) return;
     isUpdating.value = true;
 
@@ -1108,7 +1108,7 @@ function handleBtnClick(configItemIndex: number, btnsItemIndex: number, val: str
     }
     checkConfigToSave();
     // checkValue(configItemIndex, btnsItemIndex, val);
-    set();
+    reRenderLayout(1);
 }
 
 function handleTabClick(configItemIndex: number, tabsItemIndex: number, val: string | number) {
@@ -1124,7 +1124,7 @@ function handleTabClick(configItemIndex: number, tabsItemIndex: number, val: str
         config.value = prevConfig;
     }
     checkConfigToSave();
-    set();
+    reRenderLayout(2);
 }
 
 function handleRadioBtnClick(configItemIndex: number, radioBtnsItemIndex: number, val: string) {
@@ -1135,7 +1135,7 @@ function handleRadioBtnClick(configItemIndex: number, radioBtnsItemIndex: number
         config.value = prevConfig;
     }
     checkConfigToSave();
-    set();
+    reRenderLayout(3);
 }
 
 function handleDropChange(configItemIndex: number, dropItemIndex: number, vals: number[]) {
@@ -1146,7 +1146,7 @@ function handleDropChange(configItemIndex: number, dropItemIndex: number, vals: 
         config.value = prevConfig;
     }
     checkConfigToSave();
-    set();
+    reRenderLayout(4);
 }
 
 function handleCheckboxClick(
@@ -1174,7 +1174,7 @@ function handleCheckboxClick(
         config.value = prevConfig;
     }
     checkConfigToSave();
-    set();
+    reRenderLayout(5);
 }
 
 function handleInput(configItemIndex: number, inputItemIndex: number, val: number) {
@@ -1186,7 +1186,7 @@ function handleInput(configItemIndex: number, inputItemIndex: number, val: numbe
     }
     // checkValue(configItemIndex, inputItemIndex, val);
     checkConfigToSave();
-    set();
+    reRenderLayout(6);
 }
 
 function checkValue(configItemIndex: number, inputItemIndex: number, val: string | number) {
@@ -1239,10 +1239,11 @@ function setInputError(configItemIndex: number, inputItemIndex: number, res: boo
         config.value = prevConfig;
     }
     checkConfigToSave();
-    set();
+    reRenderLayout(7);
 }
 
-function get1W(ent: EntNum, device: number) {
+async function get1W(ent: EntNum, device: number) {
+    await getEntConfig(ent, device);
     const interfaces =
         ent === 1 ? interfaces1.value : ent === 2 ? interfaces2.value : interfaces3.value;
     const entConfig =
@@ -1302,7 +1303,7 @@ async function getInterfaces(ent: EntNum, device: number) {
         if (isValidType && !typeCabap.includes('1w') && typeCabap !== 'mb-var') {
             interfaces.push(typeCabap as Interface);
         } else if (typeCabap.includes('1w')) {
-            get1W(ent, device);
+            await get1W(ent, device);
         } else if (typeCabap === 'mb-var') {
             await getMb(ent, device);
         }
@@ -1370,22 +1371,24 @@ async function getLabels(num: EntNum, type: UDF) {
 function parseEntity(ent: Ent) {
     const entNum = ent1.value.length ? (ent2.value.length ? 3 : 2) : 1;
 
-    const ent1WConfigs = [ent1WConfig1.value, ent1WConfig2.value, ent1WConfig3.value];
-    const ents = [ent1.value, ent2.value, ent3.value];
-    const interfaces = [interfaces1.value, interfaces2.value, interfaces3.value];
-    const interfacesLength = interfaces[entNum - 1].length;
+    const interfacesL = [interfaces1.value, interfaces2.value, interfaces3.value];
+    const interfacesLength = interfacesL[entNum - 1].length;
 
     if (!interfacesLength && ent.device !== undefined) {
         getInterfaces(entNum, ent.device);
     }
 
+    const ent1WConfigs = [ent1WConfig1.value, ent1WConfig2.value, ent1WConfig3.value];
+    const ents = [ent1.value, ent2.value, ent3.value];
+    const interfaces = [interfaces1.value, interfaces2.value, interfaces3.value];
+
     const invalidTypes = ['none', 'error', 'int-const'];
     if (!invalidTypes.includes(ent.type) && curDevCapab.value) {
-        const ent1WConfigLength = ent1WConfigs[entNum - 1].length;
+        // const ent1WConfigLength = ent1WConfigs[entNum - 1].length;
 
-        if (!ent1WConfigLength && ent.device !== undefined) {
-            getEntConfig(entNum, ent.device);
-        }
+        // if (!ent1WConfigLength && ent.device !== undefined) {
+        //    getEntConfig(entNum, ent.device);
+        // }
 
         const mbTypes = ['mb-co', 'mb-ir', 'mb-hr', 'mb-di'];
         const keyCapab = mbTypes.includes(ent.type) ? 'mb-var' : (ent.type as EntType);
@@ -1414,6 +1417,7 @@ function parseEntity(ent: Ent) {
         getLabels(entNum, ent.type as UDF);
     }
 
+    console.log('ent1WConfigs', ent1WConfigs);
     const OWConfig =
         !props.device || props.device.addr === 0 ? ent1WConfigs[entNum - 1] : cur1WConfig.value;
 

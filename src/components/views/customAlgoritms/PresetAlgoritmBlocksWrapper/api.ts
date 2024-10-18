@@ -1,13 +1,11 @@
-import axios from 'axios';
 import { Capab, EntityForBody, UDF } from './types';
 import { LabelsType } from '@/typings/files';
 
-const indexStore = useIndexStore();
-const { ip } = storeToRefs(indexStore);
 const { readFile } = useReadWriteFiles();
+const { api } = useApiStore();
 
 const TIMEOUT_DEFAULT = 500;
-const RETRIES_DEFAULT = 3;
+const RETRIES_DEFAULT = 50;
 
 const fetchWithRetries = async <T>(
     fetchFn: () => Promise<T>,
@@ -33,44 +31,30 @@ const fetchWithRetries = async <T>(
 export const $apiGetConfig = async (device?: number) => {
     return fetchWithRetries(async () => {
         const url = device ? 'get_ext_cfg' : 'get_config';
-        const { data } = await axios.post(
-            `http://${ip.value}/api/v3/${url}`,
-            JSON.stringify({ device }),
-        );
+        const params = device ? { device } : undefined;
+        const { data } = await api.post(url, params);
         return data;
     });
 };
 
 export const $apiGetUdfConfig = async (typeVal: string, device: number, indexRow: number) => {
     return fetchWithRetries(async () => {
-        const { data } = await axios.post(
-            `http://${ip.value}/api/v3/get_udf_cfg`,
-            JSON.stringify({
-                type: typeVal,
-                device,
-                index: indexRow,
-            }),
-        );
+        const params = { type: typeVal, device, index: indexRow };
+        const { data } = await api.post('get_udf_cfg', params);
         return data;
     });
 };
 
 export const $apiGetDevCapab = async (device: number): Promise<Capab> => {
     return fetchWithRetries(async () => {
-        const { data } = await axios.post(
-            `http://${ip.value}/api/v3/get_dev_capab`,
-            JSON.stringify({ device }),
-        );
+        const { data } = await api.post('get_dev_capab', { device });
         return data as Capab;
     });
 };
 
 export const $apiGetMbInfo = async (device: number) => {
     return fetchWithRetries(async () => {
-        const { data } = await axios.post(
-            `http://${ip.value}/api/v3/get_mb_info`,
-            JSON.stringify({ device, bus: 0 }),
-        );
+        const { data } = await api.post('get_mb_info', { device, bus: 0 });
         return data;
     });
 };
@@ -92,20 +76,14 @@ export const $apiReadFileData = async (addr: number, type: UDF) => {
 
 export const $apiGetEntState = async (body: { entities: EntityForBody[] }) => {
     return fetchWithRetries(async () => {
-        const { data } = await axios.post(
-            `http://${ip.value}/api/v3/get_ent_state`,
-            JSON.stringify({ body }),
-        );
+        const { data } = await api.post('get_ent_state', body);
         return data;
     });
 };
 
 export const $apiSaveUdfConfig = async (body: any) => {
     return fetchWithRetries(async () => {
-        const { data } = await axios.post(
-            `http://${ip.value}/api/v3/set_udf_cfg`,
-            JSON.stringify({ body }),
-        );
+        const { data } = await api.post('set_udf_cfg', body);
         return data;
     });
 };

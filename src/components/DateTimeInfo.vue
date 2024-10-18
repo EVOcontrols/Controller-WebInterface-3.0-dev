@@ -69,7 +69,7 @@ const indexStore = useIndexStore();
 const { lang, notConnected, rebootingDeviceAddr, isLongQueryRunning, controllerDateTime } =
     storeToRefs(indexStore);
 
-const api = indexStore.getApi().api;
+const { api } = useApiStore();
 
 const isAborted = indexStore.getApi().isAborted;
 

@@ -209,7 +209,7 @@ const route = useRoute();
 
 const router = useRouter();
 
-const api = indexStore.getApi().api as axios.AxiosInstance;
+const { api } = useApiStore();
 
 const isAborted = indexStore.getApi().isAborted;
 
@@ -823,7 +823,6 @@ async function setMbMode() {
         checkOWs(0, r.data['1-wire'] as { mode: 'off' | 'sens' | 'rom' | 'gpio' }[]);
         checkMb(0, ngcModbusMode.value === 'variables' ? [{ mode: 'variables' }] : []);
     } catch (error) {
-        console.log(error);
         if (isAborted.value) {
             return;
         }

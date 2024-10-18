@@ -21,7 +21,7 @@ export const createParsedConfig = (
     OWConfig: Mode1W[],
     entItems: EntBind[],
     t: (key: string) => string,
-    device?: Device,
+    propDevice?: Device,
     entBus?: number,
     entDevice?: number,
     entIndex?: number,
@@ -33,7 +33,7 @@ export const createParsedConfig = (
         resultConfig.push(titleConfig);
     }
 
-    const deviceConfig = createDeviceConfig(entType, typeVal, t, device);
+    const deviceConfig = createDeviceConfig(typeVal, t, propDevice, entDevice);
     if (deviceConfig) {
         resultConfig.push(deviceConfig);
     }
@@ -96,16 +96,16 @@ function createTitleConfig(
 }
 
 function createDeviceConfig(
-    entType: EntType,
     typeVal: UDF,
     t: (key: string) => string,
-    device?: Device,
+    propDevice?: Device,
+    entDevice?: number,
 ): Config | null {
-    if (entType === undefined) return null;
+    if (entDevice === undefined) return null;
 
     const isActOrTrans =
-        (device && device.addr) ||
-        ((!device || !device.addr) && (typeVal === 'udf-act' || typeVal === 'udf-trans'));
+        (propDevice && propDevice.addr) ||
+        ((!propDevice || !propDevice.addr) && (typeVal === 'udf-act' || typeVal === 'udf-trans'));
 
     const devVals = isActOrTrans
         ? [
@@ -137,7 +137,7 @@ function createDeviceConfig(
         tabs: [
             {
                 vals: devVals,
-                val: isActOrTrans ? 0 : entType,
+                val: isActOrTrans ? 0 : entDevice,
             },
         ],
         radioBtns: [],
@@ -161,6 +161,7 @@ function createBusConfig(
     OWConfig.forEach((el, index) => {
         buses.push({ val: `${el.mode}${index}`, label: `${t('tabs.bus')}${index + 1}` });
     });
+    console.log('entBus', entBus, 'buses', buses, 'OWConfig', OWConfig);
 
     return {
         curKey: 5,
@@ -202,7 +203,14 @@ function createObjConfig(
     t: (key: string) => string,
     entIndex?: number,
 ): Config | null {
-    if (['none', 'error', 'int-const', 'prev-val'].includes(entType)) return null;
+    if (
+        entType === 'none' ||
+        entType === 'error' ||
+        entType === 'int-const' ||
+        entType === 'prev-val'
+    ) {
+        return null;
+    }
 
     return {
         curKey: 4,

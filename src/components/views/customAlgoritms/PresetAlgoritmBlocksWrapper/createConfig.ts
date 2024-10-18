@@ -93,6 +93,7 @@ function createEntityConfig(
     curBodyVal: Body,
     cbParseEntity: (ent: Ent) => Config[],
 ): Config[] | null {
+    // console.log('createEntityConfig, curBodyVal', curBodyVal);
     if (!curBodyVal.entity || curBodyVal.entity.type === 'prev-val') {
         return null;
     }
@@ -100,6 +101,7 @@ function createEntityConfig(
     const configs = cbParseEntity(curBodyVal.entity);
     if (!configs || !configs.length) return null;
 
+    // console.log('createEntityConfig r', configs);
     return configs;
 }
 
