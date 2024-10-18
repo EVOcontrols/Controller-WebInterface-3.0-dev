@@ -1065,13 +1065,13 @@ async function save() {
     emit('creatingFinish');
 }
 
-function reRenderLayout(p: number) {
+async function reRenderLayout(p: number) {
     if (isLoading.value) return;
     isUpdating.value = true;
 
     const obj = createObjByType(props.type.val);
     curBody.value = obj as Body;
-    setConfig();
+    await setConfig();
 
     ent1.value = [];
     ent2.value = [];
@@ -1368,14 +1368,14 @@ async function getLabels(num: EntNum, type: UDF) {
     }
 }
 
-function parseEntity(ent: Ent) {
+async function parseEntity(ent: Ent) {
     const entNum = ent1.value.length ? (ent2.value.length ? 3 : 2) : 1;
 
     const interfacesL = [interfaces1.value, interfaces2.value, interfaces3.value];
     const interfacesLength = interfacesL[entNum - 1].length;
 
     if (!interfacesLength && ent.device !== undefined) {
-        getInterfaces(entNum, ent.device);
+        await getInterfaces(entNum, ent.device);
     }
 
     const ent1WConfigs = [ent1WConfig1.value, ent1WConfig2.value, ent1WConfig3.value];
@@ -1414,10 +1414,9 @@ function parseEntity(ent: Ent) {
     const isUdf = udfTypes.some((t) => t === ent.type);
     const deviceAddr = props.device ? props.device.addr : 0;
     if (isUdf && !funcLabels.value[deviceAddr].find(({ name }) => name === ent.type)) {
-        getLabels(entNum, ent.type as UDF);
+        await getLabels(entNum, ent.type as UDF);
     }
 
-    console.log('ent1WConfigs', ent1WConfigs);
     const OWConfig =
         !props.device || props.device.addr === 0 ? ent1WConfigs[entNum - 1] : cur1WConfig.value;
 
@@ -1598,10 +1597,10 @@ function parseMultiSelect(
     ];
 }
 
-function setConfig() {
+async function setConfig() {
     if (!curBody.value) return;
 
-    const resultConfig = createConfig(
+    const resultConfig = await createConfig(
         curBody.value,
         props.type.val,
         t,
@@ -1643,7 +1642,7 @@ async function getConfig() {
         await configEditing();
     }
 
-    setConfig();
+    await setConfig();
     checkConfigToSave();
     setTimeout(() => {
         isLoading.value = false;

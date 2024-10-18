@@ -2,11 +2,11 @@ import type { Body, Ent, Time } from '@/typings/funcs';
 import { Config, UDF } from './types';
 import type { Device } from '@/stores';
 
-export const createConfig = (
+export const createConfig = async (
     curBodyVal: Body,
     typeVal: UDF,
     t: (key: string) => string,
-    cbParseEntity: (ent: Ent) => Config[],
+    cbParseEntity: (ent: Ent) => Promise<Config[]>,
     cbParseTime: (time: Time, title: string) => Config[] | undefined,
     cbParseMultiSelect: (
         type: 'udf-act' | 'udf-cond',
@@ -16,8 +16,8 @@ export const createConfig = (
     ) => Config[] | undefined,
     isCreating: boolean,
     propDevice?: Device,
-): Config[] => {
-    return [
+): Promise<Config[]> => {
+    const generators = [
         (curBody: Body) => createInitStateConfig(curBody, t),
         (curBody: Body) => createEntityConfig(curBody, cbParseEntity),
         (curBody: Body) => createLeftConfig(curBody, typeVal, cbParseEntity),
@@ -47,16 +47,21 @@ export const createConfig = (
         (curBody: Body) => createCycleModeConfig(curBody, typeVal, t),
         (curBody: Body) => createMinTimeConfig(curBody, cbParseTime, t),
         (curBody: Body) => createMaxTimeConfig(curBody, cbParseTime, t),
-    ].reduce<Config[]>((allConfig, generator) => {
-        const result = generator(curBodyVal);
+    ];
+
+    const allConfigs: Config[] = [];
+    for (const generator of generators) {
+        const result = await generator(curBodyVal);
+
         if (Array.isArray(result)) {
-            return allConfig.concat(result);
+            allConfigs.push(...result);
         }
-        if (result) {
-            allConfig.push(result);
+
+        if (!Array.isArray(result) && result) {
+            allConfigs.push(result);
         }
-        return allConfig;
-    }, []);
+    }
+    return allConfigs;
 };
 
 function createInitStateConfig(curBodyVal: Body, t: (key: string) => string): Config | null {
@@ -89,62 +94,60 @@ function createInitStateConfig(curBodyVal: Body, t: (key: string) => string): Co
     };
 }
 
-function createEntityConfig(
+async function createEntityConfig(
     curBodyVal: Body,
-    cbParseEntity: (ent: Ent) => Config[],
-): Config[] | null {
-    // console.log('createEntityConfig, curBodyVal', curBodyVal);
+    cbParseEntity: (ent: Ent) => Promise<Config[]>,
+): Promise<Config[] | null> {
     if (!curBodyVal.entity || curBodyVal.entity.type === 'prev-val') {
         return null;
     }
 
-    const configs = cbParseEntity(curBodyVal.entity);
+    const configs = await cbParseEntity(curBodyVal.entity);
     if (!configs || !configs.length) return null;
 
-    // console.log('createEntityConfig r', configs);
     return configs;
 }
 
-function createLeftConfig(
+async function createLeftConfig(
     curBodyVal: Body,
     typeVal: UDF,
-    cbParseEntity: (ent: Ent) => Config[],
-): Config[] | null {
+    cbParseEntity: (ent: Ent) => Promise<Config[]>,
+): Promise<Config[] | null> {
     if (typeVal !== 'udf-trans' || !curBodyVal.left || curBodyVal.left.type === 'prev-val') {
         return null;
     }
 
-    const configs = cbParseEntity(curBodyVal.left);
+    const configs = await cbParseEntity(curBodyVal.left);
     if (!configs || !configs.length) return null;
 
     return configs;
 }
 
-function createRightConfig(
+async function createRightConfig(
     curBodyVal: Body,
     typeVal: UDF,
-    cbParseEntity: (ent: Ent) => Config[],
-): Config[] | null {
+    cbParseEntity: (ent: Ent) => Promise<Config[]>,
+): Promise<Config[] | null> {
     if (typeVal !== 'udf-trans' || !curBodyVal.right || curBodyVal.right.type === 'prev-val') {
         return null;
     }
 
-    const configs = cbParseEntity(curBodyVal.right);
+    const configs = await cbParseEntity(curBodyVal.right);
     if (!configs || !configs.length) return null;
 
     return configs.map((el) => Object.assign(el, { curKey: el.curKey + 4 }));
 }
 
-function createResultConfig(
+async function createResultConfig(
     curBodyVal: Body,
     typeVal: UDF,
-    cbParseEntity: (ent: Ent) => Config[],
-): Config[] | null {
+    cbParseEntity: (ent: Ent) => Promise<Config[]>,
+): Promise<Config[] | null> {
     if (typeVal !== 'udf-trans' || !curBodyVal.result || curBodyVal.result.type === 'prev-val') {
         return null;
     }
 
-    const configs = cbParseEntity(curBodyVal.result);
+    const configs = await cbParseEntity(curBodyVal.result);
     if (!configs || !configs.length) return null;
 
     return configs.map((el) => Object.assign(el, { curKey: el.curKey + 8 }));
@@ -476,10 +479,10 @@ function createOperationBinConfig(
           };
 }
 
-function createValueConfig(
+async function createValueConfig(
     curBodyVal: Body,
-    cbParseEntity: (ent: Ent) => Config[],
-): Config[] | null {
+    cbParseEntity: (ent: Ent) => Promise<Config[]>,
+): Promise<Config[] | null> {
     if (
         !curBodyVal['value'] ||
         curBodyVal['value']['type'] === 'int-const' ||
@@ -489,7 +492,7 @@ function createValueConfig(
         return null;
     }
 
-    const configs = cbParseEntity(curBodyVal.value);
+    const configs = await cbParseEntity(curBodyVal.value);
     if (!configs || !configs.length) return null;
 
     return configs.map((el) => Object.assign(el, { curKey: el.curKey + 9 }));
@@ -571,11 +574,11 @@ function createIntConstConfig(
     };
 }
 
-function createStopValConfig(
+async function createStopValConfig(
     curBodyVal: Body,
     typeVal: UDF,
-    cbParseEntity: (ent: Ent) => Config[],
-): Config[] | null {
+    cbParseEntity: (ent: Ent) => Promise<Config[]>,
+): Promise<Config[] | null> {
     if (
         typeVal !== 'udf-act' ||
         !curBodyVal['stop-val'] ||
@@ -586,7 +589,7 @@ function createStopValConfig(
         return null;
     }
 
-    const configs = cbParseEntity(curBodyVal['stop-val']);
+    const configs = await cbParseEntity(curBodyVal['stop-val']);
     if (!configs || !configs.length) return null;
 
     return configs.map((el) => Object.assign(el, { curKey: el.curKey + 15 }));
@@ -692,11 +695,11 @@ function createBinEqualConfig(
           };
 }
 
-function createActValueConfig(
+async function createActValueConfig(
     curBodyVal: Body,
     typeVal: UDF,
-    cbParseEntity: (ent: Ent) => Config[],
-): Config[] | null {
+    cbParseEntity: (ent: Ent) => Promise<Config[]>,
+): Promise<Config[] | null> {
     if (
         typeVal !== 'udf-act' ||
         !curBodyVal['value'] ||
@@ -707,7 +710,7 @@ function createActValueConfig(
         return null;
     }
 
-    const configs = cbParseEntity(curBodyVal.value);
+    const configs = await cbParseEntity(curBodyVal.value);
     if (!configs || !configs.length) return null;
 
     return configs.map((el) => Object.assign(el, { curKey: el.curKey + 21 }));
