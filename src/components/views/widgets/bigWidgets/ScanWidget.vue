@@ -87,7 +87,7 @@
                             >{{ index + 1 }}</span
                         >
                         <span class="flex-1 text-[#6CB5D3]">{{
-                            element.val[0] !== null ? element.label : ''
+                            element.val[0] !== null ? element.id : ''
                         }}</span>
                         <span
                             v-if="element.val[0] !== null"
@@ -300,6 +300,7 @@ function addId(id: string, index: number) {
             : valsList.value.findIndex((el) => el.val === null);
     const values = [...valsList.value];
     values[place].id = id;
+    values[place].label = id;
     valsList.value = [...values];
     let ids = [...idsList.value];
     ids.splice(index, 1);

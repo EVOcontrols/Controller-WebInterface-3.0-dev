@@ -1305,7 +1305,7 @@ const { t } = useI18n({
                 },
             },
             funcsNumberPerPage: {
-                param: 'Количество элементов в списке \nна странице “Функции”',
+                param: 'Количество элементов в списке \nна странице “Алгоритмы”',
                 fields: {
                     funcsNumberPerPage: {
                         param: 'Количество',
