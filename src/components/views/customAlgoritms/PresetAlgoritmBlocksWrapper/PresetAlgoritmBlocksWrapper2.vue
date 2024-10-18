@@ -1,0 +1,872 @@
+<template>
+    <div
+        class="bg-[#0A2B47] rounded-[8px] flex-1"
+        v-if="!isLoading"
+    >
+        <div class="flex flex-col pb-1">
+            <div class="flex-1 flex">
+                <div class="pl-[1.875rem] pr-6 pt-7">
+                    <div class="w-[1px] h-full bg-[#158EF8]"></div>
+                </div>
+                <div :style="{ width: 'calc(100% - 55px)' }">
+                    <PresetAlgoritmBlock
+                        v-for="(item, i) in config"
+                        :key="i"
+                        :numb="i"
+                        :queue="item.queue"
+                        :isFirst="!i"
+                        :isLast="!!(config && i === config.length - 1)"
+                        :titles="item.titles"
+                        :btns="item.btns"
+                        :tabs="item.tabs"
+                        :radioBtns="item.radioBtns"
+                        :checkBoxes="item.checkBoxes"
+                        :inputs="item.inputs"
+                        :dropDowns="item.dropDowns"
+                        @handleBtnClick="
+                            (btnsItemIndex: number, val: string | number) => {
+                                handleBtnClick(i, btnsItemIndex, val);
+                            }
+                        "
+                        @handleTabClick="
+                            (tabsItemIndex: number, val: string | number) => {
+                                handleTabClick(i, tabsItemIndex, val);
+                            }
+                        "
+                        @handleRadioBtnClick="
+                            (radioBtnsItemIndex: number, val: string) => {
+                                handleRadioBtnClick(i, radioBtnsItemIndex, val);
+                            }
+                        "
+                        @handleCheckboxClick="
+                            (
+                                checkboxItemIndex: number,
+                                val: string,
+                                status: boolean,
+                                part: 1 | 2,
+                            ) => {
+                                handleCheckboxClick(i, checkboxItemIndex, val, status, part);
+                            }
+                        "
+                        @handleInput="
+                            (inputItemIndex: number, val: number) => {
+                                handleInput(i, inputItemIndex, val);
+                            }
+                        "
+                        @handleDropDownClick="
+                            (itemIndex: number) => {
+                                handleDropDownClick(i, itemIndex);
+                            }
+                        "
+                        @setInputError="
+                            (inputItemIndex: number, res: boolean) => {
+                                setInputError(i, inputItemIndex, res);
+                            }
+                        "
+                    />
+                </div>
+            </div>
+        </div>
+        <div class="w-full h-[1px] bg-[#2C5982]"></div>
+        <div class="h-[3.5rem] px-6 flex items-center justify-end">
+            <SaveButton
+                :isSaving="isSaving"
+                class="w-[7.563rem]"
+                @click="save"
+            />
+        </div>
+        <ModalWrapper
+            v-if="shownDropDown"
+            :is-saving="false"
+            :cancel-text="t('popUp.btns.cancel')"
+            :confirm-text="t('popUp.btns.confirm')"
+            :width-class="'w-[32.125rem]'"
+            @close="shownDropDown = undefined"
+            @confirm="
+                () => {
+                    handleDropChange(
+                        shownDropDown ? shownDropDown.configItemIndex : 0,
+                        0,
+                        shownDropDown?.vals || [],
+                    );
+                    shownDropDown = undefined;
+                }
+            "
+        >
+            <template #title-icon>
+                <span
+                    v-if="shownDropDown.type === 'obj'"
+                    v-html="object"
+                ></span>
+                <IButtonIcon
+                    v-else-if="shownDropDown.type === 'bin'"
+                    :class="
+                        true
+                            ? '[&>path]:fill-[#00D6AF] [&>rect]:fill-[#00D6AF]'
+                            : '[&>path]:fill-[#5891C2] [&>rect]:fill-[#5891C2]'
+                    "
+                />
+                <span
+                    v-else-if="shownDropDown.type === '1w-sens'"
+                    v-html="ow"
+                ></span>
+                <div
+                    v-else
+                    class="select-none w-[1.375rem] h-[1.375rem] rounded-[3px] border border-[#4C84B6] flex items-center justify-center text-[#4C84B6]"
+                >
+                    {{
+                        shownDropDown.type === 'var'
+                            ? 'П'
+                            : shownDropDown.type === 'cond'
+                            ? 'У'
+                            : 'Д'
+                    }}
+                </div>
+            </template>
+            <template #title
+                >{{ t('popUp.select') }}
+                {{
+                    shownDropDown.type === 'act'
+                        ? t('popUp.actions')
+                        : shownDropDown.type === 'cond'
+                        ? 'popUp.conditions'
+                        : t('popUp.obj')
+                }}</template
+            >
+            <template #content>
+                <div class="relative text-[#6cb5d3] text-sm leading-[1.272] whitespace-pre mt-2">
+                    <UiInput
+                        :init-value="headerInput"
+                        :placeholder="t('popUp.placeholder')"
+                        name="'name, group, template'"
+                        initType="string"
+                        class="table-cell !w-full !pl-[40px] !pr-6 !h-[40px] flex-1 bg-[#113351]"
+                        :status="'valid'"
+                        :input-type="['string']"
+                        @value-changed="
+                            $event === undefined || $event === ''
+                                ? (headerInput = '')
+                                : (headerInput = $event)
+                        "
+                    />
+                    <span
+                        v-html="search"
+                        class="[&>svg]:h-[20px] [&>svg]:w-[20px] absolute top-[10px] left-[12px]"
+                    ></span>
+                    <div class="bg-[#113351] p-2 mt-[10px] rounded-[6px] overflow-y-hidden">
+                        <div
+                            v-dragscroll.y
+                            class="overflow-y-auto w-full scrollbar-4 relative h-[23.5rem]"
+                        >
+                            <div
+                                class="h-9 w-full"
+                                v-for="(item, i) in shownDropDown.items.filter((el) =>
+                                    el.name.includes(headerInput),
+                                )"
+                                :key="i"
+                            >
+                                <div
+                                    class="w-full h-full px-[10px] flex items-center transition-colors duration-300 hover:bg-[#163E61]"
+                                    :class="shownDropDown.vals.includes(i) ? 'bg-[#163E61]' : ''"
+                                    @click="
+                                        () => {
+                                            if (
+                                                (shownDropDown && shownDropDown.type === 'act') ||
+                                                (shownDropDown && shownDropDown.type === 'cond')
+                                            ) {
+                                                const canSelect =
+                                                    shownDropDown &&
+                                                    (shownDropDown.vals.length === 0 ||
+                                                        shownDropDown.vals.includes(item.i - 1) ||
+                                                        shownDropDown.vals.includes(item.i + 1));
+
+                                                if (canSelect) {
+                                                    if (shownDropDown.vals.includes(item.i)) {
+                                                        shownDropDown.vals = shownDropDown.vals
+                                                            .filter((num) => num !== item.i)
+                                                            .sort();
+                                                    } else {
+                                                        shownDropDown.vals = [
+                                                            ...shownDropDown.vals,
+                                                            item.i,
+                                                        ].sort();
+                                                    }
+                                                } else {
+                                                    shownDropDown.vals = [item.i];
+                                                }
+                                            } else if (shownDropDown) {
+                                                shownDropDown.vals = [item.i];
+                                            }
+                                        }
+                                    "
+                                >
+                                    <div class="w-5 mr-4">
+                                        {{ i + 1 }}
+                                    </div>
+                                    <IButtonIcon
+                                        v-if="shownDropDown.type === 'bin'"
+                                        class="mr-4"
+                                        :class="
+                                            item.val
+                                                ? '[&>path]:fill-[#00D6AF] [&>rect]:fill-[#00D6AF]'
+                                                : '[&>path]:fill-[#5891C2] [&>rect]:fill-[#5891C2]'
+                                        "
+                                    />
+                                    <div class="flex-1 text-sm text-[#8DC5F6]">
+                                        {{ item.name || '&#8212' }}
+                                    </div>
+                                    <div
+                                        v-if="shownDropDown.type !== 'bin'"
+                                        class="text-sm"
+                                        :class="
+                                            shownDropDown.realType === '1w-sens'
+                                                ? Array.isArray(item.val) &&
+                                                  item.val[0] !== null &&
+                                                  (item.val[0] as number) > 0
+                                                    ? 'text-[#EB8246]'
+                                                    : 'text-[#35A1FF]'
+                                                : 'text-[#8DC5F6]'
+                                        "
+                                    >
+                                        {{
+                                            shownDropDown.realType === '1w-sens' &&
+                                            Array.isArray(item.val) &&
+                                            item.val[0] !== null
+                                                ? tempUnit === '°C'
+                                                    ? `${
+                                                          Math.round((item.val[0] as number) / 10) /
+                                                          10
+                                                      }°C`
+                                                    : `${
+                                                          (Math.round(
+                                                              (item.val[0] as number) / 10,
+                                                          ) /
+                                                              10) *
+                                                              1.8 +
+                                                          32
+                                                      }°F`
+                                                : shownDropDown.realType === 'pwm-out' &&
+                                                  typeof item.val === 'number'
+                                                ? `${item.val / 100}%`
+                                                : shownDropDown.realType === 'adc-in' &&
+                                                  typeof item.val === 'number'
+                                                ? `${item.val}%`
+                                                : Array.isArray(item.val)
+                                                ? ''
+                                                : item.val
+                                        }}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div
+                        class="flex items-center gap-2 text-sm text-[#8DC5F6] mt-4"
+                        v-if="shownDropDown.type === 'act' || shownDropDown.type === 'cond'"
+                    >
+                        <span v-html="info"></span>
+                        {{ t('popUp.info') }}
+                    </div>
+                </div>
+            </template>
+        </ModalWrapper>
+    </div>
+    <div
+        v-else
+        class="p-2 flex items-center justify-center"
+    >
+        <span
+            v-html="spinner"
+            class="self-center mb-4 [&>svg]:w-[5rem] [&>svg>path]:fill-[#148ef8]"
+        ></span>
+    </div>
+</template>
+
+<script lang="ts" setup>
+import PresetAlgoritmBlock from '@/components/views/customAlgoritms/PresetAlgoritmBlock.vue';
+import SaveButton from '@/components/Ui/SaveButton.vue';
+import ModalWrapper from '@/components/ModalWrapper.vue';
+import object from '@/assets/img/object.svg?raw';
+import ow from '@/assets/img/ow.svg?raw';
+import IButtonIcon from '@/assets/IButtonIcon.vue';
+import search from '@/assets/img/search.svg?raw';
+import UiInput from '@/components/Ui/UiInput.vue';
+import info from '@/assets/img/info.svg?raw';
+import type { Device } from '@/stores';
+import axios from 'axios';
+import spinner from '@/assets/img/spinner-inside-button.svg?raw';
+import type { Body, Ent, Time } from '@/typings/funcs';
+import type { ControllerSettings } from '@/typings/settings';
+const { readFile } = useReadWriteFiles();
+import type { LabelsType } from '@/typings/files';
+import { translate } from '@/locales/PresetAlgoritmBlocksWrapper';
+import {
+    Capab,
+    DropDown,
+    Interface,
+    Mode1W,
+    ModeMb,
+    ORDER,
+    PropsTypes,
+    Config,
+    EntBind,
+    UDF,
+    EntType,
+    EntNum,
+    DropDownRealType,
+    DropDownItem,
+} from './types';
+import {
+    $apiGetDevCapab,
+    $apiGetDevConfig,
+    $apiGetEntConfig,
+    $apiGetEntState,
+    $apiGetMbInfo,
+    $apiGetUdfConfig,
+    $apiReadFile,
+} from './api';
+import { getInitCurBody } from './curBody';
+import { createConfig } from './createConfig';
+import { createParsedConfig } from './createParsedConfig';
+import { createBodyState } from './createBodyState';
+
+const funcStore = useFuncsStore();
+
+const props = defineProps<{
+    type: PropsTypes;
+    device?: Device;
+    index: number;
+    isCreating: boolean;
+}>();
+
+const emit = defineEmits<{
+    (e: 'creatingFinish'): void;
+}>();
+
+const indexStore = useIndexStore();
+
+const { devices, labels, tempUnit, devCapabs, valuesConstRange } = storeToRefs(indexStore);
+const { funcLabels } = storeToRefs(funcStore);
+
+const api = indexStore.getApi().api as axios.AxiosInstance;
+const isAborted = indexStore.getApi().isAborted;
+
+const isSaving = ref(false);
+
+const isLoading = ref(false);
+
+const isSaveBtnDisabled = ref(true);
+
+const initConfig = ref<string>();
+
+const inputErrors = new Set();
+
+const headerInput = ref('');
+
+const shownDropDown = ref<DropDown>();
+
+const curDevCapab = ref<Capab>();
+
+const order = ORDER;
+
+const cur1WConfig = ref<Mode1W[]>([]);
+const curMbConfig = ref<ModeMb[]>([]);
+
+const interfaces1 = ref<Interface[]>([]);
+const interfaces2 = ref<Interface[]>([]);
+const interfaces3 = ref<Interface[]>([]);
+
+const config = ref<Config[]>([]);
+
+let initBody = null;
+
+const curBody = ref<Body>();
+
+const ent1 = ref<EntBind[]>([]);
+const ent2 = ref<EntBind[]>([]);
+const ent3 = ref<EntBind[]>([]);
+const time1 = ref<EntBind[]>([]);
+const time2 = ref<EntBind[]>([]);
+const time3 = ref<EntBind[]>([]);
+const multiSelect = ref<EntBind[]>([]);
+const entLabels1 = ref<string[]>([]);
+const entLabels2 = ref<string[]>([]);
+const entLabels3 = ref<string[]>([]);
+const ent1WConfig1 = ref<Mode1W[]>([]);
+const ent1WConfig2 = ref<Mode1W[]>([]);
+const ent1WConfig3 = ref<Mode1W[]>([]);
+
+const isUpdating = ref(false);
+
+function createObjUdfAct() {}
+
+function createObjUdfCond() {}
+
+function createObjUdfTrans() {}
+
+function createAnotherObj() {}
+
+function createObjByType(type: string) {}
+
+async function save() {}
+
+function set() {}
+
+function checkConfigToSave() {}
+
+function handleBtnClick(configItemIndex: number, btnsItemIndex: number, val: string | number) {}
+
+function handleTabClick(configItemIndex: number, tabsItemIndex: number, val: string | number) {}
+
+function handleRadioBtnClick(configItemIndex: number, radioBtnsItemIndex: number, val: string) {}
+
+function handleDropChange(configItemIndex: number, dropItemIndex: number, vals: number[]) {}
+
+function handleCheckboxClick(
+    configItemIndex: number,
+    checkboxItemIndex: number,
+    val: string,
+    status: boolean,
+    part: 1 | 2,
+) {}
+
+function handleInput(configItemIndex: number, inputItemIndex: number, val: number) {}
+
+function checkValue(configItemIndex: number, inputItemIndex: number, val: string | number) {}
+
+function handleDropDownClick(configItemIndex: number, itemIndex: number) {}
+
+function setInputError(configItemIndex: number, inputItemIndex: number, res: boolean) {}
+
+function get1W(ent: EntNum, device: number) {
+    const interfaces =
+        ent === 1 ? interfaces1.value : ent === 2 ? interfaces2.value : interfaces3.value;
+    const entConfig =
+        ent === 1 ? ent1WConfig1.value : ent === 2 ? ent1WConfig2.value : ent1WConfig3.value;
+    const configToUse = device ? cur1WConfig.value : entConfig;
+
+    configToUse.forEach((item) => {
+        if (item.mode !== 'off' && !interfaces.includes(`1w-${item.mode}`)) {
+            interfaces.push(`1w-${item.mode}`);
+        }
+    });
+}
+
+async function getMb(ent: EntNum, device: number) {
+    const data = await $apiGetMbInfo(device);
+    const interfaces =
+        ent === 1 ? interfaces1.value : ent === 2 ? interfaces2.value : interfaces3.value;
+
+    const mbTypes = ['co', 'ir', 'hr', 'di']; // todo coil or co?
+    mbTypes.forEach((mbType) => {
+        if (data.type.includes(mbType)) {
+            interfaces.push(`mb-${mbType}` as Interface);
+        }
+    });
+}
+
+async function getDevConfig() {
+    const data = await $apiGetDevConfig(props.device?.addr);
+    cur1WConfig.value = data['1-wire'] as Mode1W[];
+    curMbConfig.value = data['rs-485'] as ModeMb[];
+}
+
+async function getEntConfig(ent: EntNum, device: number) {
+    // todo refactor
+    const data = await $apiGetEntConfig(device);
+    const val = data['1-wire'] as { mode: 'off' | 'sens' | 'rom' | 'gpio' }[];
+
+    if (ent === 1) {
+        ent1WConfig1.value = val;
+    } else if (ent === 2) {
+        ent1WConfig2.value = val;
+    } else {
+        ent1WConfig3.value = val;
+    }
+}
+
+async function getInterfaces(ent: EntNum, device: number) {
+    const deviceId = device !== props.device?.addr ? device : 0;
+    const capab = await $apiGetDevCapab(deviceId);
+    curDevCapab.value = capab;
+
+    const interfaces =
+        ent === 1 ? interfaces1.value : ent === 2 ? interfaces2.value : interfaces3.value;
+
+    for (let [typeCabap, quantityCapab] of Object.entries(capab)) {
+        const isValidType = quantityCapab && order.includes(typeCabap);
+
+        if (isValidType && !typeCabap.includes('1w') && typeCabap !== 'mb-var') {
+            interfaces.push(typeCabap as Interface);
+        } else if (typeCabap.includes('1w')) {
+            get1W(ent, device);
+        } else if (typeCabap === 'mb-var') {
+            await getMb(ent, device);
+        }
+    }
+}
+
+async function getData(
+    num: EntNum,
+    type: DropDownRealType,
+    quant: number,
+    device?: number,
+    bus?: number,
+    isTime?: boolean,
+    isMult?: boolean,
+) {
+    // todo refactor
+    if (!curDevCapab.value) return;
+
+    const body = createBodyState(type, quant, bus, device, props.device);
+    const data = await $apiGetEntState(body);
+    const arr: DropDownItem[] = [];
+
+    let curLabels: string[] = [];
+    const entLabels = [entLabels1.value, entLabels2.value, entLabels3.value];
+    const udfTypes: UDF[] = ['udf-act', 'udf-cond', 'udf-trans', 'udf-trig'];
+    const isUdf = udfTypes.some((t) => t === type);
+    if (isUdf) {
+        curLabels = entLabels[num - 1];
+    } else {
+        const addr = props.device ? (props.device.addr === 0 ? device || 0 : 0) : 0;
+        const labelsVar = labels.value[addr]?.find((el) => el.interf === type)?.val[bus || 0]; //0-bus
+        curLabels = (Array.isArray(labelsVar) ? labelsVar : []) as string[];
+    }
+
+    data.entities[0].state.forEach((el: number | null | (number | null)[], index: number) => {
+        arr.push({ val: el, name: curLabels[index] || '', i: index });
+    });
+
+    if (isTime) {
+        if (num === 1) {
+            time1.value = [...arr] as DropDownItem[];
+        } else if (num === 2) {
+            time2.value = [...arr] as DropDownItem[];
+        } else {
+            time3.value = [...arr] as DropDownItem[];
+        }
+    } else if (isMult) {
+        multiSelect.value = [...arr] as DropDownItem[];
+    } else {
+        if (num === 1) {
+            ent1.value = [...arr];
+        } else if (num === 2) {
+            ent2.value = [...arr];
+        } else {
+            ent3.value = [...arr];
+        }
+    }
+}
+
+async function getLabels(num: EntNum, type: UDF) {
+    const addr = props.device ? props.device.addr : 0;
+    const reqLabels = await $apiReadFile(addr, type);
+    const labels = reqLabels === 'notFound' ? [] : reqLabels.labels;
+    funcStore.setLabels(addr, type, labels);
+
+    if (num === 1) {
+        entLabels1.value = labels;
+    } else if (num === 2) {
+        entLabels2.value = labels;
+    } else {
+        entLabels3.value = labels;
+    }
+}
+
+function parseEntity(ent: Ent) {
+    // todo refactor
+    const entNum = ent1.value.length ? (ent2.value.length ? 3 : 2) : 1;
+
+    const interfaces = [interfaces1.value, interfaces2.value, interfaces3.value];
+    const interfacesLength = interfaces[entNum - 1].length;
+
+    if (!interfacesLength && ent.device !== undefined) {
+        getInterfaces(entNum, ent.device);
+    }
+
+    const invalidTypes = ['none', 'error', 'int-const'];
+    if (!invalidTypes.includes(ent.type) && curDevCapab.value) {
+        const ent1WConfigs = [ent1WConfig1.value, ent1WConfig1.value, ent1WConfig1.value];
+        const ent1WConfigLength = ent1WConfigs[entNum - 1].length;
+
+        if (!ent1WConfigLength && ent.device !== undefined) {
+            getEntConfig(entNum, ent.device);
+        }
+
+        const mbTypes = ['mb-co', 'mb-ir', 'mb-hr', 'mb-di'];
+        const keyCapab = mbTypes.includes(ent.type) ? 'mb-var' : (ent.type as EntType);
+        let quant = curDevCapab.value[keyCapab];
+
+        if (
+            ent.device !== undefined &&
+            ((props.device && props.device.addr) ||
+                ((!props.device || !props.device.addr) &&
+                    (props.type.val === 'udf-act' || props.type.val === 'udf-cond')))
+        ) {
+            const capabs = devCapabs.value[ent.device];
+            let cur = quant;
+            if (capabs) {
+                const isMb = mbTypes.some((t) => t === ent.type);
+                const indexDevCapab = isMb ? 'mb-var' : (ent.type as EntType);
+                cur = capabs[indexDevCapab];
+            }
+            quant = cur;
+        }
+        if (ent.type !== 'prev-val') {
+            getData(entNum, ent.type as DropDownRealType, quant, ent.device, ent.bus);
+        }
+    }
+
+    const udfTypes: UDF[] = ['udf-act', 'udf-cond', 'udf-trans', 'udf-trig'];
+    const isUdf = udfTypes.some((t) => t === ent.type);
+    const deviceAddr = props.device ? props.device.addr : 0;
+    if (isUdf && !funcLabels.value[deviceAddr].find(({ name }) => name === ent.type)) {
+        getLabels(entNum, ent.type as UDF);
+    }
+
+    const OWConfig =
+        !props.device || props.device.addr === 0
+            ? entNum === 1
+                ? ent1WConfig1.value
+                : entNum === 2
+                ? ent1WConfig2.value
+                : ent1WConfig3.value
+            : cur1WConfig.value;
+
+    const entItems = entNum === 1 ? ent1.value : entNum === 2 ? [...ent2.value] : [...ent3.value];
+
+    return createParsedConfig(
+        ent.type,
+        props.type.val,
+        interfaces[entNum - 1],
+        OWConfig,
+        entItems,
+        t,
+        props.device,
+        ent.bus,
+        ent.device,
+        ent.index,
+    );
+}
+
+function getConstBtns() {
+    return [
+        {
+            vals: [
+                { label: t('btns.const'), val: 'const' },
+                { label: t('btns.timVar'), val: 'tim-var' },
+            ],
+            val: 'const',
+        },
+        {
+            vals: [
+                { label: t('btns.ms'), val: 'ms', class: 'w-[66px] !px-2 !h-8' },
+                { label: t('btns.s'), val: 's', class: 'w-[66px] !px-2 !h-8' },
+                { label: t('btns.min'), val: 'min', class: 'w-[66px] !px-2 !h-8' },
+            ],
+            val: 'ms',
+            inline: true,
+        },
+    ];
+}
+
+function getVarBtns() {
+    return [
+        {
+            vals: [
+                { label: t('btns.const'), val: 'const' },
+                { label: t('btns.timVar'), val: 'tim-var' },
+            ],
+            val: 'tim-var',
+        },
+    ];
+}
+
+function parseTime(time: Time, title: string): Config[] | undefined {
+    const timeNum = time1.value.length ? (time2.value.length ? 3 : 2) : 1;
+    if (!props.device || !curDevCapab.value) return;
+
+    if (time.type === 'tim-var') {
+        getData(
+            timeNum,
+            'tim-var',
+            curDevCapab.value['tim-var'],
+            props.device.addr,
+            undefined,
+            true,
+        );
+    }
+
+    const isConst = time.type === 'tim-const';
+    return [
+        {
+            curKey: 28,
+            queue: isConst
+                ? [
+                      { name: 'title', index: 0 },
+                      { name: 'btns', index: 0 },
+                      { name: 'input', index: 0 },
+                      { name: 'btns', index: 1 },
+                  ]
+                : [
+                      { name: 'title', index: 0 },
+                      { name: 'btns', index: 0 },
+                      { name: 'title', index: 1 },
+                      { name: 'dropDown', index: 0 },
+                  ],
+            titles: isConst ? [title] : [title, t('titles.object')],
+            btns: isConst ? getConstBtns() : getVarBtns(),
+            tabs: [],
+            radioBtns: [],
+            checkBoxes: [],
+            inputs: isConst ? [{ val: time.value || 0, min: 0, isError: false, inline: true }] : [],
+            dropDowns: isConst
+                ? []
+                : [
+                      {
+                          type: 'var',
+                          realType: 'tim-var',
+                          items:
+                              timeNum === 1
+                                  ? time1.value
+                                  : timeNum === 2
+                                  ? [...time2.value]
+                                  : [...time3.value],
+                          vals: [],
+                      },
+                  ],
+        },
+    ];
+}
+
+function parseMultiSelect(
+    type: 'udf-act' | 'udf-cond',
+    idx: number,
+    quant: number,
+    logic?: 'and' | 'or',
+): Config[] | undefined {
+    if (!props.device || !curDevCapab.value) return;
+
+    const addr = props.device ? props.device.addr : 0;
+    if (!funcLabels.value[addr].find((el) => el.name === type)) {
+        getLabels(1, type);
+    }
+
+    getData(1, type, curDevCapab.value[type], addr, undefined, false, true);
+
+    const isAction = type === 'udf-act';
+    return [
+        {
+            curKey: 30,
+            queue: isAction
+                ? [
+                      { name: 'title', index: 0 },
+                      { name: 'dropDown', index: 0 },
+                  ]
+                : [
+                      { name: 'title', index: 0 },
+                      { name: 'btns', index: 0 },
+                      { name: 'dropDown', index: 0 },
+                  ],
+            titles: [t('titles.selectActions')],
+            btns: isAction
+                ? []
+                : [
+                      {
+                          vals: [
+                              { label: t('btns.anyCond'), val: 'or' },
+                              { label: t('btns.allCond'), val: 'and' },
+                          ],
+                          val: logic === 'or' ? 'or' : 'and',
+                      },
+                  ],
+            tabs: [],
+            radioBtns: [],
+            checkBoxes: [],
+            inputs: [],
+            dropDowns: isAction
+                ? [
+                      {
+                          type: 'act',
+                          realType: 'tim-var',
+                          items: [...multiSelect.value].sort((el) => el.i),
+                          vals: quant
+                              ? [...multiSelect.value]
+                                    .sort((el) => el.i)
+                                    .map((el) => el.i)
+                                    .slice(idx, idx + quant)
+                              : [],
+                      },
+                  ]
+                : [
+                      {
+                          type: 'cond',
+                          realType: 'tim-var',
+                          items: [...multiSelect.value],
+                          vals: [],
+                      },
+                  ],
+        },
+    ];
+}
+
+function setConfig() {
+    if (!curBody.value) return;
+
+    const resultConfig = createConfig(
+        curBody.value,
+        props.type.val,
+        t,
+        parseEntity,
+        parseTime,
+        parseMultiSelect,
+        props.isCreating,
+        props.device,
+    );
+
+    config.value = resultConfig.sort();
+}
+
+function configCreating() {
+    curBody.value = getInitCurBody(props.type.val);
+    initBody = curBody.value;
+}
+
+async function configEditing() {
+    const data = await $apiGetUdfConfig(
+        props.type.val,
+        props.device ? props.device.addr : 0,
+        props.index,
+    );
+
+    if (!curBody.value) {
+        curBody.value = data.trigger || data.condition || data.action || data.transform;
+    }
+    initBody = curBody.value;
+    initConfig.value = JSON.stringify(config.value);
+}
+
+async function getConfig() {
+    if (!config.value.length) isLoading.value = true;
+
+    if (props.isCreating) {
+        configCreating();
+    } else {
+        await configEditing();
+    }
+
+    setConfig();
+    checkConfigToSave();
+    setTimeout(() => {
+        isLoading.value = false;
+    }, 2000);
+}
+
+onMounted(() => {
+    getDevConfig();
+    getConfig();
+});
+
+const { t } = useI18n(translate);
+</script>

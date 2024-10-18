@@ -79,7 +79,15 @@
             ></OutlinedButton>
         </div>
         <CollapseTransition :duration="300">
-            <PresetAlgoritmBlocksWrapper
+            <!--            <PresetAlgoritmBlocksWrapper-->
+            <!--                v-if="props.isOpen || props.item.isCreating"-->
+            <!--                :type="props.curAction"-->
+            <!--                :device="props.device"-->
+            <!--                :index="index"-->
+            <!--                :isCreating="!!props.item.isCreating"-->
+            <!--                @creatingFinish="emit('creatingFinish')"-->
+            <!--            />-->
+            <PresetAlgoritmBlocksWrapper2
                 v-if="props.isOpen || props.item.isCreating"
                 :type="props.curAction"
                 :device="props.device"
@@ -99,6 +107,7 @@ import scrollArrow from '@/assets/img/scroll-arrow.svg?raw';
 import CollapseTransition from '@/components/CollapseTransition.vue';
 import OutlinedButton from '@/components/Ui/OutlinedButton.vue';
 import PresetAlgoritmBlocksWrapper from '@/components/views/customAlgoritms/PresetAlgoritmBlocksWrapper.vue';
+import PresetAlgoritmBlocksWrapper2 from '@/components/views/customAlgoritms/PresetAlgoritmBlocksWrapper/PresetAlgoritmBlocksWrapper2.vue';
 import type { Device } from '@/stores';
 
 const indexStore = useIndexStore();
