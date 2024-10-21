@@ -1972,7 +1972,7 @@ function parseEntity(ent: Ent) {
                             return order.indexOf(a.val as string) - order.indexOf(b.val as string);
                         }),
                     val: ent.type as string,
-                    dependentDropDownIndex: 3,
+                    dependentDropDownIndex: 4,
                 },
             ],
             radioBtns: [],

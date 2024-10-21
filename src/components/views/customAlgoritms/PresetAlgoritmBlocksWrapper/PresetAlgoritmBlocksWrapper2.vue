@@ -1118,8 +1118,11 @@ function handleTabClick(configItemIndex: number, tabsItemIndex: number, val: str
         prevConfig[configItemIndex].tabs[tabsItemIndex].val = val;
         const depInd = prevConfig[configItemIndex].tabs[tabsItemIndex].dependentDropDownIndex;
         if (depInd !== undefined) {
-            prevConfig[depInd].dropDowns[0].type =
-                val === 'bin-out' ? 'bin' : val === '1w-sens' ? '1w-sens' : 'obj';
+            const object = prevConfig.find(({ curKey }) => curKey === 4);
+            if (object) {
+                object.dropDowns[0].type =
+                    val === 'bin-out' ? 'bin' : val === '1w-sens' ? '1w-sens' : 'obj';
+            }
         }
         config.value = prevConfig;
     }
@@ -1337,9 +1340,10 @@ async function getData(
         curLabels = (Array.isArray(labelsVar) ? labelsVar : []) as string[];
     }
 
-    data.entities[0].state.forEach((el: number | null | (number | null)[], index: number) => {
-        arr.push({ val: el, name: curLabels[index] || '', i: index });
-    });
+    data.entities[0].state !== 'err' &&
+        data.entities[0].state.forEach((el: number | null | (number | null)[], index: number) => {
+            arr.push({ val: el, name: curLabels[index] || '', i: index });
+        });
 
     const timeConfigMap = { 1: time1, 2: time2, 3: time3 };
     const entConfigMap = { 1: ent1, 2: ent2, 3: ent3 };

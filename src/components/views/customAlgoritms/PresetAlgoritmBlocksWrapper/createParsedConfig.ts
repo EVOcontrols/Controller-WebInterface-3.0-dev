@@ -85,7 +85,7 @@ function createTitleConfig(
                         return order.indexOf(a.val as string) - order.indexOf(b.val as string);
                     }),
                 val: entType as string,
-                dependentDropDownIndex: 3,
+                dependentDropDownIndex: 4,
             },
         ],
         radioBtns: [],
@@ -161,7 +161,6 @@ function createBusConfig(
     OWConfig.forEach((el, index) => {
         buses.push({ val: `${el.mode}${index}`, label: `${t('tabs.bus')}${index + 1}` });
     });
-    console.log('entBus', entBus, 'buses', buses, 'OWConfig', OWConfig);
 
     return {
         curKey: 5,
