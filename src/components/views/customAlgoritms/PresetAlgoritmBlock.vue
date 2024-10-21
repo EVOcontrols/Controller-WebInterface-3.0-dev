@@ -296,7 +296,21 @@
                             : 'Д'
                     }}
                 </div>
-                <div class="text-[#8DC5F6] pl-1 flex-1 select-none">
+                <div
+                    v-if="getNameDropDown().length"
+                    class="text-[#8DC5F6] pl-1 flex-1 select-none"
+                >
+                    <div
+                        v-for="(item, i) in getNameDropDown()"
+                        :key="i"
+                    >
+                        {{ item.index }} - {{ item.name }}
+                    </div>
+                </div>
+                <div
+                    v-else
+                    class="text-[#8DC5F6] pl-1 flex-1 select-none"
+                >
                     {{ t('select') }}
                     {{ props.dropDowns[item.index].type === 'act' ? t('actions') : t('obj') }}
                 </div>
@@ -423,6 +437,14 @@ const emit = defineEmits<{
         part: 1 | 2,
     ): void;
 }>();
+
+function getNameDropDown(): { index: number; name: string }[] {
+    const { vals, items } = props.dropDowns[0];
+    return vals.map((val) => ({
+        index: val,
+        name: items[val].name,
+    }));
+}
 
 const { t } = useI18n({
     messages: {

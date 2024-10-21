@@ -4,7 +4,7 @@ import { LabelsType } from '@/typings/files';
 const { readFile } = useReadWriteFiles();
 const { api } = useApiStore();
 
-const TIMEOUT_DEFAULT = 500;
+const TIMEOUT_DEFAULT = 50;
 const RETRIES_DEFAULT = 50;
 
 const fetchWithRetries = async <T>(
