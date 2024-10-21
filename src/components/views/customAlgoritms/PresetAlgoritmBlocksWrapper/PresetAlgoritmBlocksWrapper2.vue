@@ -345,9 +345,6 @@ const indexStore = useIndexStore();
 const { devices, labels, tempUnit, devCapabs, valuesConstRange } = storeToRefs(indexStore);
 const { funcLabels } = storeToRefs(funcStore);
 
-const api = indexStore.getApi().api as axios.AxiosInstance;
-const isAborted = indexStore.getApi().isAborted;
-
 const isSaving = ref(false);
 
 const isLoading = ref(false);
@@ -867,24 +864,27 @@ function createObjUdfTrans() {
     };
 }
 
-function createAnotherObj() {
+function createObjUdfTrig() {
     let ent = {
         type: config.value.find((el) => el.curKey === 2)?.tabs[0].val,
         device: config.value.find((el) => el.curKey === 3)?.tabs[0].val,
         index: config.value.find((el) => el.curKey === 4)?.dropDowns[0].vals[0],
     };
-    if (
-        config.value.find((el) => el.curKey === 2)?.tabs[0].val === 'mb-var' ||
-        config.value.find((el) => el.curKey === 2)?.tabs[0].val === '1w-rom' ||
-        config.value.find((el) => el.curKey === 2)?.tabs[0].val === '1w-sens' ||
-        config.value.find((el) => el.curKey === 2)?.tabs[0].val === '1w-gpio'
-    ) {
+
+    // todo рефактор этих функций
+    const target = config.value.find((el) => el.curKey === 2);
+    const validValues = ['mb-var', '1w-rom', '1w-sens', '1w-gpio'];
+    if (target && validValues.includes(target.tabs[0].val as string)) {
+        const interfProp = props.device?.interf.find(
+            (i) => typeof i === 'object' && i.interf === target.tabs[0].val,
+        ) as { interf: string; bus: number };
+        const busProp = interfProp ? interfProp.bus : 0;
         ent = Object.assign(
             ent,
             config.value.find((el) => el.curKey === 2)?.tabs[0].val === '1w-sens'
-                ? { bus: config.value.find((el) => el.curKey === 5)?.tabs[0].val, io: 0 }
+                ? { bus: config.value.find((el) => el.curKey === 5)?.tabs[0].val || busProp, io: 0 }
                 : {
-                      bus: config.value.find((el) => el.curKey === 5)?.tabs[0].val,
+                      bus: config.value.find((el) => el.curKey === 5)?.tabs[0].val || busProp,
                   },
         );
     }
@@ -1034,7 +1034,7 @@ function createObjByType(type: string) {
         case 'udf-trans':
             return createObjUdfTrans();
         default:
-            return createAnotherObj();
+            return createObjUdfTrig();
     }
 }
 
@@ -1072,19 +1072,6 @@ async function reRenderLayout(p: number) {
     const obj = createObjByType(props.type.val);
     curBody.value = obj as Body;
     await setConfig();
-
-    ent1.value = [];
-    ent2.value = [];
-    ent3.value = [];
-    time1.value = [];
-    time2.value = [];
-    time3.value = [];
-    entLabels1.value = [];
-    entLabels2.value = [];
-    entLabels3.value = [];
-    ent1WConfig1.value = [];
-    ent1WConfig2.value = [];
-    ent1WConfig3.value = [];
 }
 
 function checkConfigToSave() {
@@ -1193,6 +1180,7 @@ function handleInput(configItemIndex: number, inputItemIndex: number, val: numbe
 }
 
 function checkValue(configItemIndex: number, inputItemIndex: number, val: string | number) {
+    // todo включить эту функцию
     if (!config.value) return;
     const prevConfig = [...config.value];
     const prevConfigItem = prevConfig[configItemIndex];
@@ -1615,7 +1603,8 @@ async function setConfig() {
         props.device,
     );
 
-    config.value = resultConfig.sort();
+    const sortedConfig = resultConfig.sort();
+    config.value = sortedConfig;
 }
 
 function configCreating() {
@@ -1650,7 +1639,7 @@ async function getConfig() {
     checkConfigToSave();
     setTimeout(() => {
         isLoading.value = false;
-    }, 2000);
+    }, 4000);
 }
 
 onMounted(() => {
