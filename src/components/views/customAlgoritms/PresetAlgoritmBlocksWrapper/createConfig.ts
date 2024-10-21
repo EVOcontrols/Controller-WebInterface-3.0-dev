@@ -1,5 +1,5 @@
 import type { Body, Ent, Time } from '@/typings/funcs';
-import { Config, UDF } from './types';
+import { Config, CurKeyMap, UDF } from './types';
 import type { Device } from '@/stores';
 
 export const createConfig = async (
@@ -70,7 +70,7 @@ function createInitStateConfig(curBodyVal: Body, t: (key: string) => string): Co
     }
 
     return {
-        curKey: 1,
+        curKey: CurKeyMap.StatusStartSystem,
         queue: [
             { name: 'title', index: 0 },
             { name: 'btns', index: 0 },
@@ -163,7 +163,7 @@ function createCompareConfig(
     }
 
     return {
-        curKey: 6,
+        curKey: CurKeyMap.TypeUdf,
         queue: [
             { name: 'title', index: 0 },
             { name: 'radioBtns', index: 0 },
@@ -200,7 +200,7 @@ function createComparisonOperationConfig(
         (typeVal === 'udf-cond' && curBodyVal['operation'])
     ) {
         return {
-            curKey: 7,
+            curKey: CurKeyMap.ComparisonOperation,
             queue: [
                 { name: 'title', index: 0 },
                 { name: 'radioBtns', index: 0 },
@@ -246,7 +246,7 @@ function createMathOperationConfig(
     }
 
     return {
-        curKey: 7,
+        curKey: CurKeyMap.ComparisonOperation,
         queue: [
             { name: 'title', index: 0 },
             { name: 'radioBtns', index: 0 },
@@ -303,7 +303,7 @@ function createBitOperationConfig(
     }
 
     return {
-        curKey: 7,
+        curKey: CurKeyMap.ComparisonOperation,
         queue: [
             { name: 'title', index: 0 },
             { name: 'radioBtns', index: 0 },
@@ -353,8 +353,20 @@ function createActionConfig(
         return null;
     }
 
+    const radioOptions = [
+        { label: t('radioBtns.set'), val: 'set' },
+        { label: t('radioBtns.invert'), val: 'invert' },
+        { label: 'modify', val: 'modify' },
+        { label: 'change', val: 'change' },
+        { label: t('radioBtns.cyclicChange'), val: 'cycle' },
+        { label: t('radioBtns.stop'), val: 'stop' },
+    ];
+    if (!propDevice || !propDevice.addr) {
+        radioOptions.push({ label: 'save', val: 'save' });
+    }
+
     return {
-        curKey: 6,
+        curKey: CurKeyMap.TypeUdf,
         queue: [
             { name: 'title', index: 0 },
             { name: 'radioBtns', index: 0 },
@@ -364,25 +376,7 @@ function createActionConfig(
         tabs: [],
         radioBtns: [
             {
-                vals:
-                    propDevice && propDevice.addr
-                        ? [
-                              { label: t('radioBtns.set'), val: 'set' },
-                              { label: t('radioBtns.invert'), val: 'invert' },
-                              { label: 'modify', val: 'modify' },
-                              { label: 'change', val: 'change' },
-                              { label: t('radioBtns.cyclicChange'), val: 'cycle' },
-                              { label: t('radioBtns.stop'), val: 'stop' },
-                          ]
-                        : [
-                              { label: t('radioBtns.set'), val: 'set' },
-                              { label: t('radioBtns.invert'), val: 'invert' },
-                              { label: 'modify', val: 'modify' },
-                              { label: 'change', val: 'change' },
-                              { label: t('radioBtns.cyclicChange'), val: 'cycle' },
-                              { label: t('radioBtns.stop'), val: 'stop' },
-                              { label: 'save', val: 'save' },
-                          ],
+                vals: radioOptions,
                 val: curBodyVal['type'],
                 groupName: 'set',
             },
@@ -399,7 +393,7 @@ function createComparisonValConfig(curBodyVal: Body, t: (key: string) => string)
     }
 
     return {
-        curKey: 8,
+        curKey: CurKeyMap.ComparisonValue,
         queue: [
             { name: 'title', index: 0 },
             { name: 'btns', index: 0 },
@@ -434,7 +428,7 @@ function createOperationBinConfig(
 
     return curBodyVal['operation'] === 'bin-equal' || curBodyVal['operation'] === 'bin-not-equal'
         ? {
-              curKey: 9,
+              curKey: CurKeyMap.Select,
               queue: [
                   { name: 'title', index: 0 },
                   { name: 'btns', index: 0 },
@@ -456,7 +450,7 @@ function createOperationBinConfig(
               dropDowns: [],
           }
         : {
-              curKey: 10,
+              curKey: CurKeyMap.Enter,
               queue: [
                   { name: 'title', index: 0 },
                   { name: 'input', index: 0 },
@@ -508,7 +502,7 @@ function createStopValueConfig(
     }
 
     return {
-        curKey: 15,
+        curKey: CurKeyMap.StopValue,
         queue: [
             { name: 'title', index: 0 },
             { name: 'btns', index: 0 },
@@ -551,7 +545,7 @@ function createIntConstConfig(
     }
 
     return {
-        curKey: 16,
+        curKey: CurKeyMap.EnterStopValue,
         queue: [
             { name: 'title', index: 0 },
             { name: 'input', index: 0 },
@@ -605,7 +599,7 @@ function createEndValueConfig(
     }
 
     return {
-        curKey: 21,
+        curKey: CurKeyMap.EndValue,
         queue: [
             { name: 'title', index: 0 },
             { name: 'btns', index: 0 },
@@ -650,7 +644,7 @@ function createBinEqualConfig(
 
     return curBodyVal['operation'] === 'bin-equal' || curBodyVal['operation'] === 'bin-not-equal'
         ? {
-              curKey: 22,
+              curKey: CurKeyMap.BinOperation,
               queue: [
                   { name: 'title', index: 0 },
                   { name: 'btns', index: 0 },
@@ -672,7 +666,7 @@ function createBinEqualConfig(
               dropDowns: [],
           }
         : {
-              curKey: 22,
+              curKey: CurKeyMap.BinOperation,
               queue: [
                   { name: 'title', index: 0 },
                   { name: 'input', index: 0 },
@@ -726,7 +720,7 @@ function createHysteresisConfig(
     }
 
     return {
-        curKey: 27,
+        curKey: CurKeyMap.Hysteresis,
         queue: [
             { name: 'title', index: 0 },
             { name: 'input', index: 0 },
@@ -858,7 +852,7 @@ function createStartStopModeConfig(
             ? ['triggerNoMatches']
             : ['conditionNoMatches'];
     return {
-        curKey: 31,
+        curKey: CurKeyMap.StartStopMode,
         queue: [{ name: 'checkBox', index: 0 }],
         titles: [],
         btns: [],
@@ -907,7 +901,7 @@ function createCycleModeConfig(
     }
 
     return {
-        curKey: 32,
+        curKey: CurKeyMap.CyclicMode,
         queue: [
             { name: 'title', index: 0 },
             { name: 'btns', index: 0 },

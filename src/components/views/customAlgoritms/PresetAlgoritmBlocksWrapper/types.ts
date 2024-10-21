@@ -173,3 +173,26 @@ export const ORDER = [
     'int-var',
     'tim-var',
 ];
+
+export const enum CurKeyMap {
+    StatusStartSystem = 1,
+    Interface = 2,
+    Device = 3,
+    Object = 4,
+    Bus = 5,
+    TypeUdf = 6,
+    ComparisonOperation = 7,
+    ComparisonValue = 8,
+    Select = 9,
+    Enter = 10,
+    StopValue = 15,
+    EnterStopValue = 16,
+    EndValue = 21,
+    BinOperation = 22,
+    Hysteresis = 27,
+    Time = 28,
+    TimeVar = 29,
+    MultiSelect = 30,
+    StartStopMode = 31,
+    CyclicMode = 32,
+}

@@ -1,4 +1,13 @@
-import { Config, ORDER, UDF, Interface, Mode1W, EntBind, DropDownRealType } from './types';
+import {
+    Config,
+    ORDER,
+    UDF,
+    Interface,
+    Mode1W,
+    EntBind,
+    DropDownRealType,
+    CurKeyMap,
+} from './types';
 import { EntType } from '@/typings/funcs';
 import { Device } from '@/stores';
 
@@ -60,7 +69,7 @@ function createTitleConfig(
     if (invalidType.includes(entType)) return null;
 
     return {
-        curKey: 2,
+        curKey: CurKeyMap.Interface,
         queue: [
             { name: 'title', index: 0 },
             { name: 'tabs', index: 0 },
@@ -119,7 +128,7 @@ function createDeviceConfig(
           });
 
     return {
-        curKey: 3,
+        curKey: CurKeyMap.Device,
         queue: [
             { name: 'title', index: 0 },
             { name: 'tabs', index: 0 },
@@ -163,7 +172,7 @@ function createBusConfig(
     });
 
     return {
-        curKey: 5,
+        curKey: CurKeyMap.Bus,
         queue: [
             { name: 'title', index: 0 },
             { name: 'tabs', index: 0 },
@@ -212,7 +221,7 @@ function createObjConfig(
     }
 
     return {
-        curKey: 4,
+        curKey: CurKeyMap.Object,
         queue: [
             { name: 'title', index: 0 },
             { name: 'dropDown', index: 0 },

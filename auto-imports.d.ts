@@ -16,6 +16,7 @@ declare global {
   const $apiReadFileData: typeof import('./src/components/views/customAlgoritms/PresetAlgoritmBlocksWrapper/api')['$apiReadFileData']
   const $apiSaveUdfConfig: typeof import('./src/components/views/customAlgoritms/PresetAlgoritmBlocksWrapper/api')['$apiSaveUdfConfig']
   const CheckBox: (typeof import('./src/components/views/panel-choice/CheckBox.vue'))['default']
+  const CurKeyMap: typeof import('./src/components/views/customAlgoritms/PresetAlgoritmBlocksWrapper/types')['CurKeyMap']
   const DevicesChoice: (typeof import('./src/components/views/panel-choice/DevicesChoice.vue'))['default']
   const EffectScope: typeof import('vue')['EffectScope']
   const FunctionBlock: (typeof import('./src/components/views/functions/FunctionBlock.vue'))['default']
@@ -54,6 +55,7 @@ declare global {
   const createEventHook: typeof import('@vueuse/core')['createEventHook']
   const createGlobalState: typeof import('@vueuse/core')['createGlobalState']
   const createInjectionState: typeof import('@vueuse/core')['createInjectionState']
+  const createObjByType: typeof import('./src/components/views/customAlgoritms/PresetAlgoritmBlocksWrapper/createUdfObj')['createObjByType']
   const createParsedConfig: typeof import('./src/components/views/customAlgoritms/PresetAlgoritmBlocksWrapper/createParsedConfig')['createParsedConfig']
   const createPinia: typeof import('pinia')['createPinia']
   const createReactiveFn: typeof import('@vueuse/core')['createReactiveFn']
@@ -69,6 +71,7 @@ declare global {
   const defineStore: typeof import('pinia')['defineStore']
   const eagerComputed: typeof import('@vueuse/core')['eagerComputed']
   const effectScope: typeof import('vue')['effectScope']
+  const enum: typeof import('./src/components/views/customAlgoritms/PresetAlgoritmBlocksWrapper/types')['enum']
   const extendRef: typeof import('@vueuse/core')['extendRef']
   const funcsNumbersPerPage: typeof import('./src/data/funcs')['funcsNumbersPerPage']
   const getActivePinia: typeof import('pinia')['getActivePinia']
@@ -379,6 +382,7 @@ declare module 'vue' {
     readonly $apiReadFile: UnwrapRef<typeof import('./src/components/views/customAlgoritms/PresetAlgoritmBlocksWrapper/api')['$apiReadFile']>
     readonly $apiReadFileData: UnwrapRef<typeof import('./src/components/views/customAlgoritms/PresetAlgoritmBlocksWrapper/api')['$apiReadFileData']>
     readonly $apiSaveUdfConfig: UnwrapRef<typeof import('./src/components/views/customAlgoritms/PresetAlgoritmBlocksWrapper/api')['$apiSaveUdfConfig']>
+    readonly CurKeyMap: UnwrapRef<typeof import('./src/components/views/customAlgoritms/PresetAlgoritmBlocksWrapper/types')['CurKeyMap']>
     readonly EffectScope: UnwrapRef<typeof import('vue')['EffectScope']>
     readonly ORDER: UnwrapRef<typeof import('./src/components/views/customAlgoritms/PresetAlgoritmBlocksWrapper/types')['ORDER']>
     readonly _: UnwrapRef<typeof import('./src/plugins/lodash')['_']>
@@ -400,6 +404,7 @@ declare module 'vue' {
     readonly createEventHook: UnwrapRef<typeof import('@vueuse/core')['createEventHook']>
     readonly createGlobalState: UnwrapRef<typeof import('@vueuse/core')['createGlobalState']>
     readonly createInjectionState: UnwrapRef<typeof import('@vueuse/core')['createInjectionState']>
+    readonly createObjByType: UnwrapRef<typeof import('./src/components/views/customAlgoritms/PresetAlgoritmBlocksWrapper/createUdfObj')['createObjByType']>
     readonly createParsedConfig: UnwrapRef<typeof import('./src/components/views/customAlgoritms/PresetAlgoritmBlocksWrapper/createParsedConfig')['createParsedConfig']>
     readonly createPinia: UnwrapRef<typeof import('pinia')['createPinia']>
     readonly createReactiveFn: UnwrapRef<typeof import('@vueuse/core')['createReactiveFn']>
@@ -714,6 +719,7 @@ declare module '@vue/runtime-core' {
     readonly $apiReadFile: UnwrapRef<typeof import('./src/components/views/customAlgoritms/PresetAlgoritmBlocksWrapper/api')['$apiReadFile']>
     readonly $apiReadFileData: UnwrapRef<typeof import('./src/components/views/customAlgoritms/PresetAlgoritmBlocksWrapper/api')['$apiReadFileData']>
     readonly $apiSaveUdfConfig: UnwrapRef<typeof import('./src/components/views/customAlgoritms/PresetAlgoritmBlocksWrapper/api')['$apiSaveUdfConfig']>
+    readonly CurKeyMap: UnwrapRef<typeof import('./src/components/views/customAlgoritms/PresetAlgoritmBlocksWrapper/types')['CurKeyMap']>
     readonly EffectScope: UnwrapRef<typeof import('vue')['EffectScope']>
     readonly ORDER: UnwrapRef<typeof import('./src/components/views/customAlgoritms/PresetAlgoritmBlocksWrapper/types')['ORDER']>
     readonly _: UnwrapRef<typeof import('./src/plugins/lodash')['_']>
@@ -735,6 +741,7 @@ declare module '@vue/runtime-core' {
     readonly createEventHook: UnwrapRef<typeof import('@vueuse/core')['createEventHook']>
     readonly createGlobalState: UnwrapRef<typeof import('@vueuse/core')['createGlobalState']>
     readonly createInjectionState: UnwrapRef<typeof import('@vueuse/core')['createInjectionState']>
+    readonly createObjByType: UnwrapRef<typeof import('./src/components/views/customAlgoritms/PresetAlgoritmBlocksWrapper/createUdfObj')['createObjByType']>
     readonly createParsedConfig: UnwrapRef<typeof import('./src/components/views/customAlgoritms/PresetAlgoritmBlocksWrapper/createParsedConfig')['createParsedConfig']>
     readonly createPinia: UnwrapRef<typeof import('pinia')['createPinia']>
     readonly createReactiveFn: UnwrapRef<typeof import('@vueuse/core')['createReactiveFn']>
