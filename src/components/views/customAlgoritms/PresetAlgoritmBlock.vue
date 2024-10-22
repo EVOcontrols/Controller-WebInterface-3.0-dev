@@ -249,6 +249,7 @@
                     :input-type="['int']"
                     :nullable="false"
                     :required="true"
+                    :debounce-delay="1000"
                     @status-changed="
                         emit(
                             'setInputError',
@@ -304,7 +305,7 @@
                         v-for="(item, i) in getNameDropDown()"
                         :key="i"
                     >
-                        {{ item.index }} - {{ item.name }}
+                        {{ item.index + 1 }} - {{ item.name }}
                     </div>
                 </div>
                 <div

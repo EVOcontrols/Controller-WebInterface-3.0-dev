@@ -47,9 +47,11 @@ const props = withDefaults(
         disabled?: boolean;
         inputType?: ('ip' | 'url')[] | ['int'] | ['latitude'] | ['longitude'] | ['string'];
         nullable?: U;
+        debounceDelay?: number;
     }>(),
     {
         autoSelect: false,
+        debounceDelay: 10,
     },
 );
 
@@ -184,7 +186,7 @@ watchDebounced(
     () => {
         valueChangedHandler();
     },
-    { immediate: true, debounce: 10 },
+    { immediate: true, debounce: props.debounceDelay },
 );
 
 watchDebounced(
@@ -192,7 +194,7 @@ watchDebounced(
     () => {
         valueChangedHandler();
     },
-    { debounce: 10 },
+    { debounce: props.debounceDelay },
 );
 
 watch(

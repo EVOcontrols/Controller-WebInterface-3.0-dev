@@ -475,7 +475,7 @@ function createObjUdfTrans(config: Config[], propDevice?: Device) {
     };
 }
 
-function createObjUdfTrig(config: Config[], propDevice?: Device) {
+function createObjUdfTrig(config: Config[], propDevice?: Device): any {
     const statusStart = config.find((el) => el.curKey === CurKeyMap.StatusStartSystem);
     const interfType = config.find((el) => el.curKey === CurKeyMap.Interface);
     const device = config.find((el) => el.curKey === CurKeyMap.Device);

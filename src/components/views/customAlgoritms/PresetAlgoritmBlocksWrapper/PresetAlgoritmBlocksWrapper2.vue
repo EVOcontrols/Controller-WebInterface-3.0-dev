@@ -393,6 +393,19 @@ const ent1WConfig3 = ref<Mode1W[]>([]);
 
 const isUpdating = ref(false);
 
+function modifyTime(obj: any, timeConfig: any) {
+    if (obj.time && obj.time.type === 'tim-const' && timeConfig) {
+        const multiplier =
+            timeConfig.btns[1].val === 'ms' ? 10 : timeConfig.btns[1].val === 's' ? 1000 : 60000;
+
+        return {
+            ...obj.time,
+            value: obj.time.value * multiplier,
+        };
+    }
+    return obj.time;
+}
+
 async function save() {
     isSaving.value = true;
 
@@ -403,14 +416,20 @@ async function save() {
     };
 
     const obj = createObjByType(props.type.val, config.value, props.device);
+    const timeConfig = config.value.find((el) => el.curKey === CurKeyMap.Time);
+    const modifiedTime = {
+        ...obj,
+        time: modifyTime(obj, timeConfig),
+    };
+
     if (props.type.val === 'udf-act') {
-        body = Object.assign(body, { action: obj });
+        body = Object.assign(body, { action: modifiedTime });
     } else if (props.type.val === 'udf-cond') {
-        body = Object.assign(body, { condition: obj });
+        body = Object.assign(body, { condition: modifiedTime });
     } else if (props.type.val === 'udf-trans') {
-        body = Object.assign(body, { transform: obj });
+        body = Object.assign(body, { transform: modifiedTime });
     } else {
-        body = Object.assign(body, { trigger: obj });
+        body = Object.assign(body, { trigger: modifiedTime });
     }
 
     await $apiSaveUdfConfig(body);
@@ -441,15 +460,28 @@ function checkConfigToSave() {
     }
 }
 
-function handleBtnClick(configItemIndex: number, btnsItemIndex: number, val: string | number) {
+async function handleBtnClick(
+    configItemIndex: number,
+    btnsItemIndex: number,
+    val: string | number,
+) {
     if (!config.value) return;
     const prevConfig = [...config.value];
     if (prevConfig[configItemIndex] && prevConfig[configItemIndex].btns[btnsItemIndex]) {
+        if (
+            prevConfig[configItemIndex].curKey === CurKeyMap.Time &&
+            (val === 'tim-var' || val === 'tim-const')
+        ) {
+            const time = await parseTime({ type: val }, t('titles.during'));
+            if (time && time.length) {
+                prevConfig[configItemIndex] = time[0];
+            }
+        }
+
         prevConfig[configItemIndex].btns[btnsItemIndex].val = val;
         config.value = prevConfig;
     }
     checkConfigToSave();
-    // checkValue(configItemIndex, btnsItemIndex, val);
     reRenderLayout(1);
 }
 
@@ -527,35 +559,30 @@ function handleInput(configItemIndex: number, inputItemIndex: number, val: numbe
     const prevConfig = [...config.value];
     if (prevConfig[configItemIndex] && prevConfig[configItemIndex].inputs[inputItemIndex]) {
         prevConfig[configItemIndex].inputs[inputItemIndex].val = val;
+
+        // todo write validate
+        // if (prevConfig[configItemIndex].curKey === CurKeyMap.Time) {
+        //     const [firstBtn, secondBtn] = prevConfig[configItemIndex].btns;
+        //     const values =
+        //         firstBtn.val === 'tim-const'
+        //             ? valuesConstRange.value.find(
+        //                   (obj) =>
+        //                       obj.interf === (((firstBtn.val as string) + secondBtn.val) as string),
+        //               )?.values
+        //             : valuesConstRange.value.find((obj) => obj.interf === firstBtn.val)?.values;
+        //
+        //     if (prevConfig[configItemIndex].inputs[inputItemIndex]) {
+        //         prevConfig[configItemIndex].inputs[inputItemIndex].min = values ? values.min : 0;
+        //         prevConfig[configItemIndex].inputs[inputItemIndex].max = values
+        //             ? values.max
+        //             : 15000;
+        //     }
+        // }
+
         config.value = prevConfig;
     }
-    // checkValue(configItemIndex, inputItemIndex, val);
     checkConfigToSave();
     reRenderLayout(6);
-}
-
-function checkValue(configItemIndex: number, inputItemIndex: number, val: string | number) {
-    // todo включить эту функцию
-    if (!config.value) return;
-    const prevConfig = [...config.value];
-    const prevConfigItem = prevConfig[configItemIndex];
-    if (!prevConfigItem) return;
-    const { btns } = prevConfigItem;
-    const [firstBtn, secondBtn] = btns;
-    const values =
-        firstBtn.val === 'const'
-            ? valuesConstRange.value.find(
-                  (obj) => obj.interf === (((firstBtn.val as string) + secondBtn.val) as string),
-              )?.values
-            : valuesConstRange.value.find((obj) => obj.interf === firstBtn.val)?.values;
-    const min = values ? values.min : 0;
-    const max = values ? values.max : 0;
-    const index = typeof val === 'number' ? inputItemIndex : 0;
-    if (prevConfigItem.inputs[index]) {
-        prevConfigItem.inputs[index].min = min;
-        prevConfigItem.inputs[index].max = max;
-        config.value = prevConfig;
-    }
 }
 
 function handleDropDownClick(configItemIndex: number, itemIndex: number) {
@@ -783,13 +810,14 @@ async function parseEntity(ent: Ent) {
 }
 
 function getConstBtns() {
+    const time = config.value.find((el) => el.curKey === CurKeyMap.Time);
     return [
         {
             vals: [
-                { label: t('btns.const'), val: 'const' },
+                { label: t('btns.const'), val: 'tim-const' },
                 { label: t('btns.timVar'), val: 'tim-var' },
             ],
-            val: 'const',
+            val: time?.btns[0].val || 'tim-const',
         },
         {
             vals: [
@@ -797,7 +825,7 @@ function getConstBtns() {
                 { label: t('btns.s'), val: 's', class: 'w-[66px] !px-2 !h-8' },
                 { label: t('btns.min'), val: 'min', class: 'w-[66px] !px-2 !h-8' },
             ],
-            val: 'ms',
+            val: time?.btns[1].val || 'ms',
             inline: true,
         },
     ];
@@ -807,7 +835,7 @@ function getVarBtns() {
     return [
         {
             vals: [
-                { label: t('btns.const'), val: 'const' },
+                { label: t('btns.const'), val: 'tim-const' },
                 { label: t('btns.timVar'), val: 'tim-var' },
             ],
             val: 'tim-var',

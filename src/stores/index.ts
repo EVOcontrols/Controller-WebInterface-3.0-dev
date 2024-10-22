@@ -115,9 +115,9 @@ export const useIndexStore = defineStore('indexStore', () => {
     ]);
 
     const valuesConstRange = ref<{ interf: string; values: { min: number; max: number } }[]>([
-        { interf: 'constms', values: { min: 0, max: 15000 } },
-        { interf: 'consts', values: { min: 0, max: 15000 } },
-        { interf: 'constmin', values: { min: 0, max: 250 } },
+        { interf: 'tim-constms', values: { min: 0, max: 15000 } },
+        { interf: 'tim-consts', values: { min: 0, max: 15000 } },
+        { interf: 'tim-constmin', values: { min: 0, max: 250 } },
     ]);
 
     const sortedChosenInterfaces = ref<string[]>([]);
