@@ -7,13 +7,13 @@ export const createConfig = async (
     typeVal: UDF,
     t: (key: string) => string,
     cbParseEntity: (ent: Ent) => Promise<Config[]>,
-    cbParseTime: (time: Time, title: string) => Config[] | undefined,
+    cbParseTime: (time: Time, title: string) => Promise<Config[] | undefined>,
     cbParseMultiSelect: (
         type: 'udf-act' | 'udf-cond',
         idx: number,
         quant: number,
         logic?: 'and' | 'or',
-    ) => Config[] | undefined,
+    ) => Promise<Config[] | undefined>,
     isCreating: boolean,
     propDevice?: Device,
 ): Promise<Config[]> => {
@@ -735,53 +735,53 @@ function createHysteresisConfig(
     };
 }
 
-function createTimeConfig(
+async function createTimeConfig(
     curBodyVal: Body,
-    cbParseTime: (time: Time, title: string) => Config[] | undefined,
+    cbParseTime: (time: Time, title: string) => Promise<Config[] | undefined>,
     t: (key: string) => string,
-): Config[] | null {
+): Promise<Config[] | null> {
     if (!curBodyVal['time']) {
         return null;
     }
 
-    const configs = cbParseTime(curBodyVal['time'], t('titles.during'));
+    const configs = await cbParseTime(curBodyVal['time'], t('titles.during'));
     if (!configs || !configs.length) return null;
 
     return configs;
 }
 
-function createDelayConfig(
+async function createDelayConfig(
     curBodyVal: Body,
-    cbParseTime: (time: Time, title: string) => Config[] | undefined,
+    cbParseTime: (time: Time, title: string) => Promise<Config[] | undefined>,
     t: (key: string) => string,
-): Config[] | null {
+): Promise<Config[] | null> {
     if (!curBodyVal['delay']) {
         return null;
     }
 
-    const configs = cbParseTime(curBodyVal['delay'], t('titles.delay'));
+    const configs = await cbParseTime(curBodyVal['delay'], t('titles.delay'));
     if (!configs || !configs.length) return null;
 
     return configs.map((el) => Object.assign(el, { curKey: 29 }));
 }
 
-function createPauseConfig(
+async function createPauseConfig(
     curBodyVal: Body,
-    cbParseTime: (time: Time, title: string) => Config[] | undefined,
+    cbParseTime: (time: Time, title: string) => Promise<Config[] | undefined>,
     t: (key: string) => string,
-): Config[] | null {
+): Promise<Config[] | null> {
     if (!curBodyVal['time'] || curBodyVal.type !== 'cycle') {
         return null;
     }
 
     //TODO
-    const configs = cbParseTime(curBodyVal['time'], t('titles.pause'));
+    const configs = await cbParseTime(curBodyVal['time'], t('titles.pause'));
     if (!configs || !configs.length) return null;
 
     return configs.map((el) => Object.assign(el, { curKey: 29 }));
 }
 
-function createActionMultiSelectConfig(
+async function createActionMultiSelectConfig(
     curBodyVal: Body,
     typeVal: UDF,
     cbParseMultiSelect: (
@@ -789,13 +789,13 @@ function createActionMultiSelectConfig(
         idx: number,
         quant: number,
         logic?: 'and' | 'or',
-    ) => Config[] | undefined,
-): Config[] | null {
+    ) => Promise<Config[] | undefined>,
+): Promise<Config[] | null> {
     if (typeVal !== 'udf-trig') {
         return null;
     }
 
-    const configs = cbParseMultiSelect(
+    const configs = await cbParseMultiSelect(
         'udf-act',
         curBodyVal['act-idx'] || 0,
         curBodyVal['act-qty'] || 0,
@@ -804,7 +804,7 @@ function createActionMultiSelectConfig(
     return configs;
 }
 
-function createConditionMultiSelectConfig(
+async function createConditionMultiSelectConfig(
     curBodyVal: Body,
     typeVal: UDF,
     cbParseMultiSelect: (
@@ -812,13 +812,13 @@ function createConditionMultiSelectConfig(
         idx: number,
         quant: number,
         logic?: 'and' | 'or',
-    ) => Config[] | undefined,
-): Config[] | null {
+    ) => Promise<Config[] | undefined>,
+): Promise<Config[] | null> {
     if (typeVal !== 'udf-act') {
         return null;
     }
 
-    const configs = cbParseMultiSelect(
+    const configs = await cbParseMultiSelect(
         'udf-cond',
         curBodyVal['cond-idx'] || 0,
         curBodyVal['cond-qty'] || 0,
@@ -934,31 +934,31 @@ function createCycleModeConfig(
     };
 }
 
-function createMinTimeConfig(
+async function createMinTimeConfig(
     curBodyVal: Body,
-    cbParseTime: (time: Time, title: string) => Config[] | undefined,
+    cbParseTime: (time: Time, title: string) => Promise<Config[] | undefined>,
     t: (key: string) => string,
-): Config[] | null {
+): Promise<Config[] | null> {
     if (!curBodyVal['min-time']) {
         return null;
     }
 
-    const configs = cbParseTime(curBodyVal['min-time'], t('titles.minTime'));
+    const configs = await cbParseTime(curBodyVal['min-time'], t('titles.minTime'));
     if (!configs || !configs.length) return null;
 
     return configs.map((el) => Object.assign(el, { curKey: el.curKey + 5 }));
 }
 
-function createMaxTimeConfig(
+async function createMaxTimeConfig(
     curBodyVal: Body,
-    cbParseTime: (time: Time, title: string) => Config[] | undefined,
+    cbParseTime: (time: Time, title: string) => Promise<Config[] | undefined>,
     t: (key: string) => string,
-): Config[] | null {
+): Promise<Config[] | null> {
     if (!curBodyVal['max-time']) {
         return null;
     }
 
-    const configs = cbParseTime(curBodyVal['max-time'], t('titles.maxTime'));
+    const configs = await cbParseTime(curBodyVal['max-time'], t('titles.maxTime'));
     if (!configs || !configs.length) return null;
 
     return configs.map((el) => Object.assign(el, { curKey: el.curKey + 6 }));

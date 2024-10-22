@@ -815,12 +815,12 @@ function getVarBtns() {
     ];
 }
 
-function parseTime(time: Time, title: string): Config[] | undefined {
+async function parseTime(time: Time, title: string): Promise<Config[] | undefined> {
     const timeNum = time1.value.length ? (time2.value.length ? 3 : 2) : 1;
     if (!props.device || !curDevCapab.value) return;
 
     if (time.type === 'tim-var') {
-        getData(
+        await getData(
             timeNum,
             'tim-var',
             curDevCapab.value['tim-var'],
@@ -872,20 +872,20 @@ function parseTime(time: Time, title: string): Config[] | undefined {
     ];
 }
 
-function parseMultiSelect(
+async function parseMultiSelect(
     type: 'udf-act' | 'udf-cond',
     idx: number,
     quant: number,
     logic?: 'and' | 'or',
-): Config[] | undefined {
+): Promise<Config[] | undefined> {
     if (!props.device || !curDevCapab.value) return;
 
     const addr = props.device ? props.device.addr : 0;
     if (!funcLabels.value[addr].find((el) => el.name === type)) {
-        getLabels(1, type);
+        await getLabels(1, type);
     }
 
-    getData(1, type, curDevCapab.value[type], addr, undefined, false, true);
+    await getData(1, type, curDevCapab.value[type], addr, undefined, false, true);
 
     const isAction = type === 'udf-act';
     return [
