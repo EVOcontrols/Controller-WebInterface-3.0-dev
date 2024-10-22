@@ -726,7 +726,6 @@ async function parseEntity(ent: Ent) {
     }
 
     const ent1WConfigs = [ent1WConfig1.value, ent1WConfig2.value, ent1WConfig3.value];
-    const ents = [ent1.value, ent2.value, ent3.value];
     const interfaces = [interfaces1.value, interfaces2.value, interfaces3.value];
 
     const invalidTypes = ['none', 'error', 'int-const'];
@@ -753,7 +752,7 @@ async function parseEntity(ent: Ent) {
         }
 
         if (ent.type !== 'prev-val') {
-            getData(entNum, ent.type as DropDownRealType, quant, ent.device, ent.bus);
+            await getData(entNum, ent.type as DropDownRealType, quant, ent.device, ent.bus);
         }
     }
 
@@ -767,7 +766,7 @@ async function parseEntity(ent: Ent) {
     const OWConfig =
         !props.device || props.device.addr === 0 ? ent1WConfigs[entNum - 1] : cur1WConfig.value;
 
-    const entItems = ents[entNum - 1];
+    const entItems = entNum === 1 ? ent1.value : entNum === 2 ? [...ent2.value] : [...ent3.value];
 
     return createParsedConfig(
         ent.type,

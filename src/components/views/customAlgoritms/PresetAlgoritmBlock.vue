@@ -440,6 +440,7 @@ const emit = defineEmits<{
 
 function getNameDropDown(): { index: number; name: string }[] {
     const { vals, items } = props.dropDowns[0];
+    if (!items.length) return [];
     return vals.map((val) => ({
         index: val,
         name: items[val].name,
