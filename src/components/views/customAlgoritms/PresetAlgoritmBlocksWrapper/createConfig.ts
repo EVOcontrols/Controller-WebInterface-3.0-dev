@@ -762,7 +762,7 @@ async function createDelayConfig(
     const configs = await cbParseTime(curBodyVal['delay'], t('titles.delay'));
     if (!configs || !configs.length) return null;
 
-    return configs.map((el) => Object.assign(el, { curKey: 29 }));
+    return configs.map((el) => Object.assign(el, { curKey: CurKeyMap.Delay }));
 }
 
 async function createPauseConfig(
@@ -778,7 +778,7 @@ async function createPauseConfig(
     const configs = await cbParseTime(curBodyVal['time'], t('titles.pause'));
     if (!configs || !configs.length) return null;
 
-    return configs.map((el) => Object.assign(el, { curKey: 29 }));
+    return configs.map((el) => Object.assign(el, { curKey: CurKeyMap.Pause }));
 }
 
 async function createActionMultiSelectConfig(

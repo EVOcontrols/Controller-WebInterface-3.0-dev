@@ -191,8 +191,11 @@ export const enum CurKeyMap {
     BinOperation = 22,
     Hysteresis = 27,
     Time = 28,
-    TimeVar = 29,
+    Delay = 29,
+    Pause = 29, // todo 29 same delay
     MultiSelect = 30,
     StartStopMode = 31,
     CyclicMode = 32,
+    MinTime = 33,
+    MaxTime = 34,
 }

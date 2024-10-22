@@ -14,7 +14,7 @@ function createObjUdfAct(config: Config[], propDevice?: Device) {
     const typeUdf = config.find((el) => el.curKey === CurKeyMap.TypeUdf);
     const comparisonOperation = config.find((el) => el.curKey === CurKeyMap.ComparisonOperation);
     const time = config.find((el) => el.curKey === CurKeyMap.Time);
-    const timeVar = config.find((el) => el.curKey === CurKeyMap.TimeVar);
+    const delay = config.find((el) => el.curKey === CurKeyMap.Delay);
     const multiSelect = config.find((el) => el.curKey === CurKeyMap.MultiSelect);
     const startStopMode = config.find((el) => el.curKey === CurKeyMap.StartStopMode);
     const cyclicMode = config.find((el) => el.curKey === CurKeyMap.CyclicMode);
@@ -56,14 +56,14 @@ function createObjUdfAct(config: Config[], propDevice?: Device) {
         type: typeUdf?.radioBtns[0].val,
         entity: ent,
         delay:
-            timeVar?.btns[0].val === 'tim-var'
+            delay?.btns[0].val === 'tim-var'
                 ? {
                       type: 'tim-var',
-                      index: timeVar?.dropDowns[0].vals[0],
+                      index: delay?.dropDowns[0].vals[0],
                   }
                 : {
                       type: 'tim-const',
-                      value: timeVar?.inputs[0].val,
+                      value: delay?.inputs[0].val,
                   },
         'cond-idx': multiSelect?.dropDowns[0].vals[0] || 0,
         'cond-qty': multiSelect?.dropDowns[0].vals.length || 0,
@@ -493,8 +493,8 @@ function createObjUdfTrig(config: Config[], propDevice?: Device): any {
     const c12 = config.find((el) => el.curKey === 12);
     const c13 = config.find((el) => el.curKey === 13);
     const c14 = config.find((el) => el.curKey === 14);
-    const c33 = config.find((el) => el.curKey === 33);
-    const c34 = config.find((el) => el.curKey === 34);
+    const minTime = config.find((el) => el.curKey === CurKeyMap.MinTime);
+    const maxTime = config.find((el) => el.curKey === CurKeyMap.MaxTime);
 
     let ent = {
         type: interfType?.tabs[0].val,
@@ -551,24 +551,24 @@ function createObjUdfTrig(config: Config[], propDevice?: Device): any {
             value: ent,
             unsigned: false,
             'min-time':
-                c33?.btns[0].val === 'tim-var'
+                minTime?.btns[0].val === 'tim-var'
                     ? {
                           type: 'tim-var',
-                          index: c33?.dropDowns[0].vals[0],
+                          index: minTime?.dropDowns[0].vals[0],
                       }
                     : {
                           type: 'tim-const',
-                          value: c33?.inputs[0].val,
+                          value: minTime?.inputs[0].val,
                       },
             'max-time':
-                c34?.btns[0].val === 'tim-var'
+                maxTime?.btns[0].val === 'tim-var'
                     ? {
                           type: 'tim-var',
-                          index: c34?.dropDowns[0].vals[0],
+                          index: maxTime?.dropDowns[0].vals[0],
                       }
                     : {
                           type: 'tim-const',
-                          value: c34?.inputs[0].val,
+                          value: maxTime?.inputs[0].val,
                       },
         };
         obj = Object.assign(obj, curObj);

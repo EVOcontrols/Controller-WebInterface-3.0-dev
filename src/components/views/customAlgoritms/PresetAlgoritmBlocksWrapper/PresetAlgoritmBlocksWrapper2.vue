@@ -393,17 +393,17 @@ const ent1WConfig3 = ref<Mode1W[]>([]);
 
 const isUpdating = ref(false);
 
-function modifyTime(obj: any, timeConfig: any) {
-    if (obj.time && obj.time.type === 'tim-const' && timeConfig) {
+function modifyTime(obj: any, timeConfig: any, prop: string) {
+    if (obj[prop] && obj[prop].type === 'tim-const' && timeConfig) {
         const multiplier =
             timeConfig.btns[1].val === 'ms' ? 10 : timeConfig.btns[1].val === 's' ? 1000 : 60000;
 
         return {
-            ...obj.time,
-            value: obj.time.value * multiplier,
+            ...obj[prop],
+            value: obj[prop].value * multiplier,
         };
     }
-    return obj.time;
+    return undefined;
 }
 
 async function save() {
@@ -417,9 +417,25 @@ async function save() {
 
     const obj = createObjByType(props.type.val, config.value, props.device);
     const timeConfig = config.value.find((el) => el.curKey === CurKeyMap.Time);
+    const minTimeConfig = config.value.find((el) => el.curKey === CurKeyMap.MinTime);
+    const maxTimeConfig = config.value.find((el) => el.curKey === CurKeyMap.MaxTime);
+    const delayConfig = config.value.find((el) => el.curKey === CurKeyMap.Delay);
+    const pauseConfig = config.value.find((el) => el.curKey === CurKeyMap.Pause);
     const modifiedTime = {
         ...obj,
-        time: modifyTime(obj, timeConfig),
+        ...(modifyTime(obj, timeConfig, 'time') && { time: modifyTime(obj, timeConfig, 'time') }),
+        ...(modifyTime(obj, minTimeConfig, 'min-time') && {
+            'min-time': modifyTime(obj, minTimeConfig, 'min-time'),
+        }),
+        ...(modifyTime(obj, maxTimeConfig, 'max-time') && {
+            'max-time': modifyTime(obj, maxTimeConfig, 'max-time'),
+        }),
+        ...(modifyTime(obj, delayConfig, 'delay') && {
+            delay: modifyTime(obj, delayConfig, 'delay'),
+        }),
+        ...(modifyTime(obj, pauseConfig, 'pause') && {
+            pause: modifyTime(obj, pauseConfig, 'pause'),
+        }),
     };
 
     if (props.type.val === 'udf-act') {
@@ -469,10 +485,16 @@ async function handleBtnClick(
     const prevConfig = [...config.value];
     if (prevConfig[configItemIndex] && prevConfig[configItemIndex].btns[btnsItemIndex]) {
         if (
-            prevConfig[configItemIndex].curKey === CurKeyMap.Time &&
+            [
+                CurKeyMap.Time,
+                CurKeyMap.MinTime,
+                CurKeyMap.MaxTime,
+                CurKeyMap.Delay,
+                CurKeyMap.Pause,
+            ].includes(prevConfig[configItemIndex].curKey) &&
             (val === 'tim-var' || val === 'tim-const')
         ) {
-            const time = await parseTime({ type: val }, t('titles.during'));
+            const time = await parseTime({ type: val }, prevConfig[configItemIndex].titles[0]);
             if (time && time.length) {
                 prevConfig[configItemIndex] = time[0];
             }
@@ -809,15 +831,34 @@ async function parseEntity(ent: Ent) {
     );
 }
 
-function getConstBtns() {
-    const time = config.value.find((el) => el.curKey === CurKeyMap.Time);
+function getConfigTimeByTitle(title: string) {
+    switch (title) {
+        case t('titles.during'): {
+            return config.value.find((el) => el.curKey === CurKeyMap.Time);
+        }
+        case t('titles.delay'): {
+            return config.value.find((el) => el.curKey === CurKeyMap.Delay);
+        }
+        case t('titles.pause'): {
+            return config.value.find((el) => el.curKey === CurKeyMap.Pause);
+        }
+        case t('titles.minTime'): {
+            return config.value.find((el) => el.curKey === CurKeyMap.MinTime);
+        }
+        case t('titles.maxTime'): {
+            return config.value.find((el) => el.curKey === CurKeyMap.MaxTime);
+        }
+    }
+}
+
+function getConstBtns(title: string) {
     return [
         {
             vals: [
                 { label: t('btns.const'), val: 'tim-const' },
                 { label: t('btns.timVar'), val: 'tim-var' },
             ],
-            val: time?.btns[0].val || 'tim-const',
+            val: getConfigTimeByTitle(title)?.btns[0].val || 'tim-const',
         },
         {
             vals: [
@@ -825,13 +866,13 @@ function getConstBtns() {
                 { label: t('btns.s'), val: 's', class: 'w-[66px] !px-2 !h-8' },
                 { label: t('btns.min'), val: 'min', class: 'w-[66px] !px-2 !h-8' },
             ],
-            val: time?.btns[1].val || 'ms',
+            val: getConfigTimeByTitle(title)?.btns[1].val || 'ms',
             inline: true,
         },
     ];
 }
 
-function getVarBtns() {
+function getVarBtns(title: string) {
     return [
         {
             vals: [
@@ -858,6 +899,21 @@ async function parseTime(time: Time, title: string): Promise<Config[] | undefine
         );
     }
 
+    // let s = time.value || 0;
+    // let newS = s;
+    // let units: 'ms' | 's' | 'min';
+    // if (s <= 150000) {
+    //     units = 'ms';
+    //     newS = s / 10;
+    // } else if (s > 150000 && s % 60000 === 0) {
+    //     units = 'min';
+    //     newS = s / 60000;
+    // } else {
+    //     units = 's';
+    //     newS = s / 1000;
+    // }
+
+    const items = timeNum === 1 ? time1.value : timeNum === 2 ? [...time2.value] : [...time3.value];
     const isConst = time.type === 'tim-const';
     return [
         {
@@ -876,7 +932,7 @@ async function parseTime(time: Time, title: string): Promise<Config[] | undefine
                       { name: 'dropDown', index: 0 },
                   ],
             titles: isConst ? [title] : [title, t('titles.object')],
-            btns: isConst ? getConstBtns() : getVarBtns(),
+            btns: isConst ? getConstBtns(title) : getVarBtns(title),
             tabs: [],
             radioBtns: [],
             checkBoxes: [],
@@ -887,12 +943,7 @@ async function parseTime(time: Time, title: string): Promise<Config[] | undefine
                       {
                           type: 'var',
                           realType: 'tim-var',
-                          items:
-                              timeNum === 1
-                                  ? time1.value
-                                  : timeNum === 2
-                                  ? [...time2.value]
-                                  : [...time3.value],
+                          items: items,
                           vals: [],
                       },
                   ],
@@ -986,6 +1037,7 @@ async function setConfig() {
     );
 
     const sortedConfig = resultConfig.sort();
+    // console.log('sortedConfig', sortedConfig);
     config.value = sortedConfig;
 }
 
