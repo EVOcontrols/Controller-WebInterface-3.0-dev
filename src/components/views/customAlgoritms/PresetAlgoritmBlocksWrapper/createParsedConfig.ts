@@ -215,7 +215,7 @@ function createObjConfig(
         entType === 'none' ||
         entType === 'error' ||
         entType === 'int-const' ||
-        entType === 'prev-val'
+        entType === 'prev-value'
     ) {
         return null;
     }

@@ -125,7 +125,7 @@ function createObjUdfAct(config: Config[], propDevice?: Device) {
             };
         } else {
             stopVal = {
-                type: 'prev-val',
+                type: 'prev-value',
             };
         }
 
@@ -202,7 +202,7 @@ function createObjUdfAct(config: Config[], propDevice?: Device) {
             };
         } else {
             stopVal = {
-                type: 'prev-val',
+                type: 'prev-value',
             };
         }
         const curObj = {

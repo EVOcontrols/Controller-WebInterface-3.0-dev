@@ -12,7 +12,7 @@ export type Ent = {
 export type EntType =
     | 'none'
     | 'error'
-    | 'prev-val'
+    | 'prev-value'
     | 'int-const'
     | 'bin-in'
     | 'bin-out'

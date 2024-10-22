@@ -800,7 +800,7 @@ async function parseEntity(ent: Ent) {
             }
         }
 
-        if (ent.type !== 'prev-val') {
+        if (ent.type !== 'prev-value') {
             await getData(entNum, ent.type as DropDownRealType, quant, ent.device, ent.bus);
         }
     }

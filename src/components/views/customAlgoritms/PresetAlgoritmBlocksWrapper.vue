@@ -666,7 +666,7 @@ function createObjUdfAct() {
             };
         } else {
             stopVal = {
-                type: 'prev-val',
+                type: 'prev-value',
             };
         }
         const curObj = {
@@ -758,7 +758,7 @@ function createObjUdfAct() {
             };
         } else {
             stopVal = {
-                type: 'prev-val',
+                type: 'prev-value',
             };
         }
         const curObj = {
@@ -1919,7 +1919,7 @@ function parseEntity(ent: Ent) {
             }
             quant = cur;
         }
-        if (ent.type !== 'prev-val') {
+        if (ent.type !== 'prev-value') {
             getData(entNum, ent.type, quant, ent.device, ent.bus);
         }
     }
@@ -2080,7 +2080,7 @@ function parseEntity(ent: Ent) {
         ent.type !== 'none' &&
         ent.type !== 'error' &&
         ent.type !== 'int-const' &&
-        ent.type !== 'prev-val'
+        ent.type !== 'prev-value'
     )
         res.push({
             curKey: 4,
@@ -2343,7 +2343,7 @@ function setConfig() {
         if (
             curBody.value['entity'] &&
             curBody.value.entity &&
-            curBody.value.entity.type !== 'prev-val'
+            curBody.value.entity.type !== 'prev-value'
         ) {
             const val = parseEntity(curBody.value.entity);
             if (val) res.push(...val);
@@ -2352,7 +2352,7 @@ function setConfig() {
             props.type.val === 'udf-trans' &&
             curBody.value['left'] &&
             curBody.value.left &&
-            curBody.value.left.type !== 'prev-val'
+            curBody.value.left.type !== 'prev-value'
         ) {
             const val = parseEntity(curBody.value.left);
             if (val) res.push(...val);
@@ -2361,7 +2361,7 @@ function setConfig() {
             props.type.val === 'udf-trans' &&
             curBody.value['right'] &&
             curBody.value.right &&
-            curBody.value.right.type !== 'prev-val'
+            curBody.value.right.type !== 'prev-value'
         ) {
             const val = parseEntity(curBody.value.right)?.map((el) =>
                 Object.assign(el, { curKey: el.curKey + 4 }),
@@ -2372,7 +2372,7 @@ function setConfig() {
             props.type.val === 'udf-trans' &&
             curBody.value['result'] &&
             curBody.value.result &&
-            curBody.value.result.type !== 'prev-val'
+            curBody.value.result.type !== 'prev-value'
         ) {
             const val = parseEntity(curBody.value.result)?.map((el) =>
                 Object.assign(el, { curKey: el.curKey + 8 }),
@@ -2681,7 +2681,7 @@ function setConfig() {
                         val:
                             curBody.value['stop-val'].type === 'int-const'
                                 ? 'const'
-                                : curBody.value['stop-val'].type === 'prev-val'
+                                : curBody.value['stop-val'].type === 'prev-value'
                                 ? 'prev'
                                 : 'obj',
                     },
@@ -2725,7 +2725,7 @@ function setConfig() {
             props.type.val === 'udf-act' &&
             curBody.value['stop-val'] &&
             curBody.value['stop-val']['type'] !== 'int-const' &&
-            curBody.value['stop-val']['type'] !== 'prev-val'
+            curBody.value['stop-val']['type'] !== 'prev-value'
         ) {
             if (curBody.value['stop-val'] && curBody.value.entity) {
                 const val = parseEntity(curBody.value['stop-val'])?.map((el) =>
@@ -2752,7 +2752,7 @@ function setConfig() {
                         val:
                             curBody.value['value'].type === 'int-const'
                                 ? 'const'
-                                : curBody.value['value'].type === 'prev-val'
+                                : curBody.value['value'].type === 'prev-value'
                                 ? 'prev'
                                 : 'obj',
                     },
@@ -2822,7 +2822,7 @@ function setConfig() {
             props.type.val === 'udf-act' &&
             curBody.value['value'] &&
             curBody.value['value']['type'] !== 'int-const' &&
-            curBody.value['value']['type'] !== 'prev-val'
+            curBody.value['value']['type'] !== 'prev-value'
         ) {
             if (curBody.value['value'] && curBody.value.entity) {
                 const val = parseEntity(curBody.value.value)?.map((el) =>

@@ -98,7 +98,7 @@ async function createEntityConfig(
     curBodyVal: Body,
     cbParseEntity: (ent: Ent) => Promise<Config[]>,
 ): Promise<Config[] | null> {
-    if (!curBodyVal.entity || curBodyVal.entity.type === 'prev-val') {
+    if (!curBodyVal.entity || curBodyVal.entity.type === 'prev-value') {
         return null;
     }
 
@@ -113,7 +113,7 @@ async function createLeftConfig(
     typeVal: UDF,
     cbParseEntity: (ent: Ent) => Promise<Config[]>,
 ): Promise<Config[] | null> {
-    if (typeVal !== 'udf-trans' || !curBodyVal.left || curBodyVal.left.type === 'prev-val') {
+    if (typeVal !== 'udf-trans' || !curBodyVal.left || curBodyVal.left.type === 'prev-value') {
         return null;
     }
 
@@ -128,7 +128,7 @@ async function createRightConfig(
     typeVal: UDF,
     cbParseEntity: (ent: Ent) => Promise<Config[]>,
 ): Promise<Config[] | null> {
-    if (typeVal !== 'udf-trans' || !curBodyVal.right || curBodyVal.right.type === 'prev-val') {
+    if (typeVal !== 'udf-trans' || !curBodyVal.right || curBodyVal.right.type === 'prev-value') {
         return null;
     }
 
@@ -143,7 +143,7 @@ async function createResultConfig(
     typeVal: UDF,
     cbParseEntity: (ent: Ent) => Promise<Config[]>,
 ): Promise<Config[] | null> {
-    if (typeVal !== 'udf-trans' || !curBodyVal.result || curBodyVal.result.type === 'prev-val') {
+    if (typeVal !== 'udf-trans' || !curBodyVal.result || curBodyVal.result.type === 'prev-value') {
         return null;
     }
 
@@ -518,7 +518,7 @@ function createStopValueConfig(
                 val:
                     curBodyVal['stop-val'].type === 'int-const'
                         ? 'const'
-                        : curBodyVal['stop-val'].type === 'prev-val'
+                        : curBodyVal['stop-val'].type === 'prev-value'
                         ? 'prev'
                         : 'obj',
             },
@@ -577,7 +577,7 @@ async function createStopValConfig(
         typeVal !== 'udf-act' ||
         !curBodyVal['stop-val'] ||
         curBodyVal['stop-val']['type'] === 'int-const' ||
-        curBodyVal['stop-val']['type'] === 'prev-val' ||
+        curBodyVal['stop-val']['type'] === 'prev-value' ||
         !curBodyVal.entity
     ) {
         return null;
@@ -615,7 +615,7 @@ function createEndValueConfig(
                 val:
                     curBodyVal['value'].type === 'int-const'
                         ? 'const'
-                        : curBodyVal['value'].type === 'prev-val'
+                        : curBodyVal['value'].type === 'prev-value'
                         ? 'prev'
                         : 'obj',
             },
@@ -698,7 +698,7 @@ async function createActValueConfig(
         typeVal !== 'udf-act' ||
         !curBodyVal['value'] ||
         curBodyVal['value']['type'] === 'int-const' ||
-        curBodyVal['value']['type'] === 'prev-val' ||
+        curBodyVal['value']['type'] === 'prev-value' ||
         !curBodyVal.entity
     ) {
         return null;
