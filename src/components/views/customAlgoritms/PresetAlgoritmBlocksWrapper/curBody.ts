@@ -1,6 +1,7 @@
 import type { Body } from '@/typings/funcs';
+import type { UDF } from './types';
 
-export const getInitCurBody = (val: 'udf-act' | 'udf-cond' | 'udf-trans' | 'udf-trig'): Body => {
+export const getInitCurBody = (val: UDF, device?: number): Body => {
     switch (val) {
         case 'udf-act':
             return {
@@ -82,7 +83,7 @@ export const getInitCurBody = (val: 'udf-act' | 'udf-cond' | 'udf-trans' | 'udf-
                 type: 'compare',
                 entity: {
                     type: '1w-rom',
-                    device: 0,
+                    device: device || 0,
                     bus: 0,
                     index: 0,
                 },

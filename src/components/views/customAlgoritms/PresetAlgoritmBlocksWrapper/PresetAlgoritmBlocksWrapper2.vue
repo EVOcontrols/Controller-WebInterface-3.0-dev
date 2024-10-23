@@ -314,7 +314,6 @@ import {
     CurKeyMap,
 } from './types';
 import {
-    $apiGetDevCapab,
     $apiGetConfig,
     $apiGetEntState,
     $apiGetMbInfo,
@@ -327,6 +326,10 @@ import { createConfig } from './createConfig';
 import { createParsedConfig } from './createParsedConfig';
 import { createBodyState } from './createBodyState';
 import { createObjByType } from './createUdfObj';
+import { ControllerSettings } from '@/typings/settings';
+
+const isDev = import.meta.env.DEV;
+const timeoutDev = 10000;
 
 const funcStore = useFuncsStore();
 
@@ -372,6 +375,8 @@ const interfaces2 = ref<Interface[]>([]);
 const interfaces3 = ref<Interface[]>([]);
 
 const config = ref<Config[]>([]);
+
+const configByAddr = ref<ControllerSettings>();
 
 let initBody = null;
 
@@ -638,7 +643,7 @@ function setInputError(configItemIndex: number, inputItemIndex: number, res: boo
 }
 
 async function get1W(ent: EntNum, device: number) {
-    await getEntConfig(ent, device);
+    await getEntConfig(ent);
     const interfaces =
         ent === 1 ? interfaces1.value : ent === 2 ? interfaces2.value : interfaces3.value;
     const entConfig =
@@ -667,26 +672,32 @@ async function getMb(ent: EntNum, device: number) {
 
 async function getDevConfig() {
     const data = await $apiGetConfig(props.device?.addr);
+    configByAddr.value = data;
     cur1WConfig.value = data['1-wire'] as Mode1W[];
     curMbConfig.value = data['rs-485'] as ModeMb[];
 }
 
-async function getEntConfig(ent: EntNum, device: number) {
-    const data = await $apiGetConfig(device);
-    const val = data['1-wire'] as { mode: 'off' | 'sens' | 'rom' | 'gpio' }[];
+async function getEntConfig(ent: EntNum) {
+    const data = configByAddr.value;
+    if (data) {
+        const val = data['1-wire'] as Mode1W[];
 
-    if (ent === 1) {
-        ent1WConfig1.value = val;
-    } else if (ent === 2) {
-        ent1WConfig2.value = val;
+        if (ent === 1) {
+            ent1WConfig1.value = val;
+        } else if (ent === 2) {
+            ent1WConfig2.value = val;
+        } else {
+            ent1WConfig3.value = val;
+        }
     } else {
-        ent1WConfig3.value = val;
+        await new Promise((resolve) => setTimeout(resolve, isDev ? timeoutDev / 100 : 5));
+        await getEntConfig(ent);
     }
 }
 
 async function getInterfaces(ent: EntNum, device: number) {
     const deviceId = device !== props.device?.addr ? device : 0;
-    const capab = await $apiGetDevCapab(deviceId);
+    const capab = devCapabs.value[deviceId];
     if (!capab) return;
     curDevCapab.value = capab;
 
@@ -1044,7 +1055,7 @@ async function setConfig() {
 }
 
 function configCreating() {
-    curBody.value = getInitCurBody(props.type.val);
+    curBody.value = getInitCurBody(props.type.val, props.device?.addr);
     initBody = curBody.value;
 }
 

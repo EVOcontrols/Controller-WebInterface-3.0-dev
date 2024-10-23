@@ -6,7 +6,6 @@
 export {}
 declare global {
   const $apiGetConfig: typeof import('./src/components/views/customAlgoritms/PresetAlgoritmBlocksWrapper/api')['$apiGetConfig']
-  const $apiGetDevCapab: typeof import('./src/components/views/customAlgoritms/PresetAlgoritmBlocksWrapper/api')['$apiGetDevCapab']
   const $apiGetDevConfig: (typeof import('./src/components/views/customAlgoritms/PresetAlgoritmBlocksWrapper/api'))['$apiGetDevConfig']
   const $apiGetEntConfig: (typeof import('./src/components/views/customAlgoritms/PresetAlgoritmBlocksWrapper/api'))['$apiGetEntConfig']
   const $apiGetEntState: typeof import('./src/components/views/customAlgoritms/PresetAlgoritmBlocksWrapper/api')['$apiGetEntState']
@@ -374,7 +373,6 @@ import { UnwrapRef } from 'vue'
 declare module 'vue' {
   interface ComponentCustomProperties {
     readonly $apiGetConfig: UnwrapRef<typeof import('./src/components/views/customAlgoritms/PresetAlgoritmBlocksWrapper/api')['$apiGetConfig']>
-    readonly $apiGetDevCapab: UnwrapRef<typeof import('./src/components/views/customAlgoritms/PresetAlgoritmBlocksWrapper/api')['$apiGetDevCapab']>
     readonly $apiGetEntState: UnwrapRef<typeof import('./src/components/views/customAlgoritms/PresetAlgoritmBlocksWrapper/api')['$apiGetEntState']>
     readonly $apiGetMbInfo: UnwrapRef<typeof import('./src/components/views/customAlgoritms/PresetAlgoritmBlocksWrapper/api')['$apiGetMbInfo']>
     readonly $apiGetUdfConfig: UnwrapRef<typeof import('./src/components/views/customAlgoritms/PresetAlgoritmBlocksWrapper/api')['$apiGetUdfConfig']>
@@ -711,7 +709,6 @@ declare module 'vue' {
 declare module '@vue/runtime-core' {
   interface ComponentCustomProperties {
     readonly $apiGetConfig: UnwrapRef<typeof import('./src/components/views/customAlgoritms/PresetAlgoritmBlocksWrapper/api')['$apiGetConfig']>
-    readonly $apiGetDevCapab: UnwrapRef<typeof import('./src/components/views/customAlgoritms/PresetAlgoritmBlocksWrapper/api')['$apiGetDevCapab']>
     readonly $apiGetEntState: UnwrapRef<typeof import('./src/components/views/customAlgoritms/PresetAlgoritmBlocksWrapper/api')['$apiGetEntState']>
     readonly $apiGetMbInfo: UnwrapRef<typeof import('./src/components/views/customAlgoritms/PresetAlgoritmBlocksWrapper/api')['$apiGetMbInfo']>
     readonly $apiGetUdfConfig: UnwrapRef<typeof import('./src/components/views/customAlgoritms/PresetAlgoritmBlocksWrapper/api')['$apiGetUdfConfig']>

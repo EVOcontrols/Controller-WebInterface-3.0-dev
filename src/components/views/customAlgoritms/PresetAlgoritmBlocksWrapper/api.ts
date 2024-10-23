@@ -46,13 +46,6 @@ export const $apiGetUdfConfig = async (typeVal: string, device: number, indexRow
     });
 };
 
-export const $apiGetDevCapab = async (device: number): Promise<Capab | null> => {
-    return fetchWithRetries(async () => {
-        const { data } = await api.post('get_dev_capab', { device });
-        return data as Capab;
-    });
-};
-
 export const $apiGetMbInfo = async (device: number) => {
     return fetchWithRetries(async () => {
         const { data } = await api.post('get_mb_info', { device, bus: 0 });
