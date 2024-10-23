@@ -406,7 +406,7 @@ function createComparisonValConfig(curBodyVal: Body, t: (key: string) => string)
                     { label: t('btns.obj'), val: 'obj', class: 'w-[109px]' },
                 ],
                 val: curBodyVal['value'].type === 'int-const' ? 'const' : 'obj',
-                disabled: true,
+                disabled: false,
             },
         ],
         tabs: [],

@@ -11,7 +11,7 @@ const fetchWithRetries = async <T>(
     fetchFn: () => Promise<T>,
     retries = RETRIES_DEFAULT,
     timeout = TIMEOUT_DEFAULT,
-): Promise<T> => {
+): Promise<T | null> => {
     try {
         return await fetchFn();
     } catch (error) {
@@ -23,7 +23,8 @@ const fetchWithRetries = async <T>(
                 }, timeout);
             });
         } else {
-            throw new Error('Failed to fetch data after multiple attempts');
+            console.error('ERR: Failed to fetch data after multiple attempts');
+            return null;
         }
     }
 };
@@ -45,7 +46,7 @@ export const $apiGetUdfConfig = async (typeVal: string, device: number, indexRow
     });
 };
 
-export const $apiGetDevCapab = async (device: number): Promise<Capab> => {
+export const $apiGetDevCapab = async (device: number): Promise<Capab | null> => {
     return fetchWithRetries(async () => {
         const { data } = await api.post('get_dev_capab', { device });
         return data as Capab;
@@ -59,7 +60,10 @@ export const $apiGetMbInfo = async (device: number) => {
     });
 };
 
-export const $apiReadFile = async (addr: number, type: UDF): Promise<LabelsType | 'notFound'> => {
+export const $apiReadFile = async (
+    addr: number,
+    type: UDF,
+): Promise<LabelsType | 'notFound' | null> => {
     return fetchWithRetries(async () => {
         return await $apiReadFileData(addr, type);
     });
@@ -85,5 +89,5 @@ export const $apiSaveUdfConfig = async (body: any) => {
     return fetchWithRetries(async () => {
         const { data } = await api.post('set_udf_cfg', body);
         return data;
-    });
+    }, 10);
 };

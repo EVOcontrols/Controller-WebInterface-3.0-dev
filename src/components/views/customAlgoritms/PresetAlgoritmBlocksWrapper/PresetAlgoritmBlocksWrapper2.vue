@@ -72,7 +72,7 @@
             <SaveButton
                 :isSaving="isSaving"
                 class="w-[7.563rem]"
-                @click="save"
+                @click="saveData"
             />
         </div>
         <ModalWrapper
@@ -406,7 +406,7 @@ function modifyTime(obj: any, timeConfig: any, prop: string) {
     return undefined;
 }
 
-async function save() {
+async function saveData() {
     isSaving.value = true;
 
     let body = {
@@ -687,6 +687,7 @@ async function getEntConfig(ent: EntNum, device: number) {
 async function getInterfaces(ent: EntNum, device: number) {
     const deviceId = device !== props.device?.addr ? device : 0;
     const capab = await $apiGetDevCapab(deviceId);
+    if (!capab) return;
     curDevCapab.value = capab;
 
     const interfaces =
@@ -752,6 +753,7 @@ async function getData(
 async function getLabels(num: EntNum, type: UDF) {
     const addr = props.device ? props.device.addr : 0;
     const reqLabels = await $apiReadFile(addr, type);
+    if (!reqLabels) return;
     const labels = reqLabels === 'notFound' ? [] : reqLabels.labels;
     funcStore.setLabels(addr, type, labels);
 
