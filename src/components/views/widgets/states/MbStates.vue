@@ -287,7 +287,7 @@ import ArrowIcon from '@/assets/ArrowIcon.vue';
 
 const indexStore = useIndexStore();
 
-const api = indexStore.getApi().api;
+const { api } = useApiStore();
 
 const isAborted = indexStore.getApi().isAborted;
 

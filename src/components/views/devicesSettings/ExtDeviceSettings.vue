@@ -214,7 +214,7 @@
                                         :init-value="
                                             isKeyOf(devSettings['rs-485'][0], p.param)
                                                 ? devSettings['rs-485'][0][p.param]
-                                                : undefined
+                                                : p.defVal
                                         "
                                         :name="p.param"
                                         initType="number"
@@ -329,7 +329,6 @@
                                     >
                                         {{ `${t('bus')} ${i + 1}` }}
                                     </div>
-                                    {{ Object.entries(w).filter((el) => el[0] !== 'mode') }}
                                     <div
                                         v-for="(p, y) in Object.entries(w).filter(
                                             (el) => el[0] !== 'mode',
@@ -444,11 +443,11 @@ const isEmpty = await _.isEmpty();
 const isEqual = await _.isEqual();
 
 const rsAdvancedParams = [
-    { param: 'read-tmo', min: 0, max: 65535 },
-    { param: 'write-tmo', min: 0, max: 65535 },
-    { param: 'read-delay', min: 0, max: 65535 },
-    { param: 'write-delay', min: 0, max: 65535 },
-    { param: 'cycle-delay', min: 0, max: 65535 },
+    { param: 'read-tmo', min: 0, max: 65535, defVal: 200 },
+    { param: 'write-tmo', min: 0, max: 65535, defVal: 250 },
+    { param: 'read-delay', min: 0, max: 65535, defVal: 50 },
+    { param: 'write-delay', min: 0, max: 65535, defVal: 50 },
+    { param: 'cycle-delay', min: 0, max: 65535, defVal: 50 },
 ] as const;
 
 const oneWiresParams = computed<

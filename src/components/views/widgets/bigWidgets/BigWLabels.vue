@@ -440,12 +440,14 @@ function handleDblClick(s: number | null, index: number) {
     setTimeout(() => {
         const data = dataInput.value;
         if (!data) return;
+        data.focus();
         if (props.w.w.i === 'pwm-out') {
             if (s === null) return;
             data.value = String(s / 100);
         } else {
             data.value = s === null ? '' : String(activeLabel.value?.state);
         }
+        data.setSelectionRange(0, data.value.length);
     }, 20);
     setActiveLabelTop();
     window.addEventListener('click', saveData);

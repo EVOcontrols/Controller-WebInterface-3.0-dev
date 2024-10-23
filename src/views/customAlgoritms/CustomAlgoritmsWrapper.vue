@@ -189,11 +189,11 @@ const { readFile } = useReadWriteFiles();
 const indexStore = useIndexStore();
 const funcStore = useFuncsStore();
 
-const api = indexStore.getApi().api as axios.AxiosInstance;
+const { api } = useApiStore();
 const isAborted = indexStore.getApi().isAborted;
 
-const { devices } = storeToRefs(indexStore);
-const { funcLabels } = storeToRefs(funcStore);
+const { devices, devCapabs } = storeToRefs(indexStore);
+const { funcLabels, funcsNumberPerPage } = storeToRefs(funcStore);
 
 type Action =
     | { label: 'triggers'; val: 'udf-trig' }
@@ -202,6 +202,9 @@ type Action =
     | { label: 'transformations'; val: 'udf-trans' };
 
 type Algoritm = { val: 0 | 1 | null; label: string; isCreating?: boolean };
+
+const isDev = import.meta.env.DEV;
+const timeoutDev = 10000;
 
 const curDev = ref<Device>(devices.value[0]);
 let showStatusTimer: ReturnType<typeof setTimeout> | undefined;
@@ -452,6 +455,7 @@ async function getData(labels: string[], dir: 'l' | 'r') {
             ? maxTrans.value
             : maxTrig.value;
     if (quant) {
+        const quantity = quant > funcsNumberPerPage.value ? funcsNumberPerPage.value : quant;
         try {
             const r = await api.post('get_ent_state', {
                 entities: [
@@ -459,7 +463,7 @@ async function getData(labels: string[], dir: 'l' | 'r') {
                         type: curAct,
                         device: curDev.value ? curDev.value.addr : 0,
                         index: 0,
-                        quantity: quant,
+                        quantity,
                     },
                 ],
             });
@@ -473,16 +477,18 @@ async function getData(labels: string[], dir: 'l' | 'r') {
             } else {
                 algoritms2.value = [...res];
             }
+            const timeout = isDev ? timeoutDev : 5000;
             getDataTimer = setTimeout(() => {
                 getData(labels, dir);
-            }, 5000);
+            }, timeout);
         } catch (error) {
             if (isAborted.value) {
                 return;
             }
+            const timeout = isDev ? timeoutDev / 2 : 20;
             getDataTimer = setTimeout(() => {
                 getData(labels, dir);
-            }, 20);
+            }, timeout);
         }
     } else {
         getDataTimer = setTimeout(() => {
@@ -492,27 +498,14 @@ async function getData(labels: string[], dir: 'l' | 'r') {
 }
 
 async function getMaxs() {
-    try {
-        const r = await api.post<{
-            'udf-act': number;
-            'udf-cond': number;
-            'udf-trans': number;
-            'udf-trig': number;
-        }>('get_dev_capab', {
-            device: curDev.value ? curDev.value.addr : 0,
-        });
-        const res = r.data;
-        maxAct.value = res['udf-act'];
-        maxCond.value = res['udf-cond'];
-        maxTrans.value = res['udf-trans'];
-        maxTrig.value = res['udf-trig'];
-    } catch (error) {
-        if (isAborted.value) {
-            return [0, 0, 0, 0];
-        }
-        setTimeout(() => {
-            getMaxs();
-        }, 5);
+    const capabs = devCapabs.value[curDev.value ? curDev.value.addr : 0];
+    if (capabs) {
+        maxAct.value = capabs['udf-act'];
+        maxCond.value = capabs['udf-cond'];
+        maxTrans.value = capabs['udf-trans'];
+        maxTrig.value = capabs['udf-trig'];
+    } else {
+        setTimeout(getMaxs, isDev ? timeoutDev / 100 : 5);
     }
 }
 

@@ -75,11 +75,11 @@ export const useIndexStore = defineStore('indexStore', () => {
         | []
     >([]);
 
-    const ip = ref<string>(window.location.host || '192.168.0.30');
+    // const ip = ref<string>(window.location.host || '192.168.0.30');
     // const ip = ref<string>(window.location.host || '192.168.10.51');
     // const ip = ref<string>('192.168.10.51');
     // const ip = ref<string>('10.8.0.1:49163');
-    // const ip = ref<string>('65.21.176.66:49163');
+    const ip = ref<string>('65.21.176.66:49163');
 
     const mbDevs = ref<number[][][]>([]);
 
@@ -115,9 +115,9 @@ export const useIndexStore = defineStore('indexStore', () => {
     ]);
 
     const valuesConstRange = ref<{ interf: string; values: { min: number; max: number } }[]>([
-        { interf: 'constms', values: { min: 0, max: 15000 } },
-        { interf: 'consts', values: { min: 0, max: 15000 } },
-        { interf: 'constmin', values: { min: 0, max: 250 } },
+        { interf: 'tim-constms', values: { min: 0, max: 15000 } },
+        { interf: 'tim-consts', values: { min: 0, max: 15000 } },
+        { interf: 'tim-constmin', values: { min: 0, max: 250 } },
     ]);
 
     const sortedChosenInterfaces = ref<string[]>([]);
