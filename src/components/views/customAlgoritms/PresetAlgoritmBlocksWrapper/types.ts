@@ -59,7 +59,7 @@ export type Capab = {
 };
 
 export type Mode1W = { mode: 'off' | 'sens' | 'rom' | 'gpio' };
-export type ModeMb = { mode: 'off' | 'variables' };
+export type ModeMb = { mode: 'off' | 'variables' | 'ext-devs' };
 
 export type Interface =
     | '1w-rom'

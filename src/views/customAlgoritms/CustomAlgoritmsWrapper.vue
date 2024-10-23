@@ -477,7 +477,7 @@ async function getData(labels: string[], dir: 'l' | 'r') {
             } else {
                 algoritms2.value = [...res];
             }
-            const timeout = isDev ? timeoutDev / 2 : 5000;
+            const timeout = isDev ? timeoutDev : 5000;
             getDataTimer = setTimeout(() => {
                 getData(labels, dir);
             }, timeout);
@@ -485,7 +485,7 @@ async function getData(labels: string[], dir: 'l' | 'r') {
             if (isAborted.value) {
                 return;
             }
-            const timeout = isDev ? timeoutDev / 4 : 20;
+            const timeout = isDev ? timeoutDev / 2 : 20;
             getDataTimer = setTimeout(() => {
                 getData(labels, dir);
             }, timeout);

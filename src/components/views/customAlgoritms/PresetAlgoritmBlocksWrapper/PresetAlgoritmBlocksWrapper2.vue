@@ -711,7 +711,7 @@ async function getInterfaces(ent: EntNum, device: number) {
             interfaces.push(typeCabap as Interface);
         } else if (typeCabap.includes('1w')) {
             await get1W(ent, device);
-        } else if (typeCabap === 'mb-var') {
+        } else if (typeCabap === 'mb-var' && curMbConfig.value?.[0]?.mode !== 'ext-devs') {
             await getMb(ent, device);
         }
     }
@@ -1055,7 +1055,7 @@ async function setConfig() {
 }
 
 function configCreating() {
-    curBody.value = getInitCurBody(props.type.val, props.device?.addr);
+    curBody.value = getInitCurBody(props.type.val);
     initBody = curBody.value;
 }
 

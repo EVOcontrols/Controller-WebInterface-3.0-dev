@@ -8,7 +8,7 @@ export const getInitCurBody = (val: UDF, device?: number): Body => {
                 type: 'invert',
                 entity: {
                     type: 'pwm-out',
-                    device: 1,
+                    device: 1, // для ngc может быть не 0, для нгио всегда 0
                     index: 1,
                 },
                 delay: {
@@ -30,7 +30,7 @@ export const getInitCurBody = (val: UDF, device?: number): Body => {
                 },
                 'stop-val': {
                     type: 'pwm-out',
-                    device: 1,
+                    device: 0,
                     index: 2,
                 },
                 'stop-on-trig': true,
@@ -43,7 +43,7 @@ export const getInitCurBody = (val: UDF, device?: number): Body => {
                     type: '1w-sens',
                     bus: 1,
                     index: 0,
-                    device: 1,
+                    device: 0,
                     io: 0,
                 },
                 value: {
@@ -61,7 +61,7 @@ export const getInitCurBody = (val: UDF, device?: number): Body => {
                 operation: '+',
                 result: {
                     type: 'pwm-out',
-                    device: 1,
+                    device: 1, // для ngc может быть не 0, для нгио всегда 0
                     index: 1,
                 },
                 left: {
@@ -76,6 +76,7 @@ export const getInitCurBody = (val: UDF, device?: number): Body => {
                 },
                 'init-state': 0,
             } as Body;
+        case 'udf-trig':
         default:
             return {
                 'act-idx': 0,
@@ -83,7 +84,7 @@ export const getInitCurBody = (val: UDF, device?: number): Body => {
                 type: 'compare',
                 entity: {
                     type: '1w-rom',
-                    device: device || 0,
+                    device: 0,
                     bus: 0,
                     index: 0,
                 },
