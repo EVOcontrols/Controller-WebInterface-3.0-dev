@@ -627,19 +627,19 @@ function handleDropDownClick(configItemIndex: number, itemIndex: number) {
 }
 
 function setInputError(configItemIndex: number, inputItemIndex: number, res: boolean) {
-    if (res) {
-        inputErrors.add(configItemIndex + '-' + inputItemIndex);
-    } else {
-        inputErrors.delete(configItemIndex + '-' + inputItemIndex);
-    }
-    if (!config.value) return;
-    const prevConfig = [...config.value];
-    if (prevConfig[configItemIndex] && prevConfig[configItemIndex].inputs[inputItemIndex]) {
-        prevConfig[configItemIndex].inputs[inputItemIndex].isError = res;
-        config.value = prevConfig;
-    }
-    checkConfigToSave();
-    reRenderLayout(7);
+    // if (res) {
+    //     inputErrors.add(configItemIndex + '-' + inputItemIndex);
+    // } else {
+    //     inputErrors.delete(configItemIndex + '-' + inputItemIndex);
+    // }
+    // if (!config.value) return;
+    // const prevConfig = [...config.value];
+    // if (prevConfig[configItemIndex] && prevConfig[configItemIndex].inputs[inputItemIndex]) {
+    //     prevConfig[configItemIndex].inputs[inputItemIndex].isError = res;
+    //     config.value = prevConfig;
+    // }
+    // checkConfigToSave();
+    // reRenderLayout(7);
 }
 
 async function get1W(ent: EntNum, device: number) {

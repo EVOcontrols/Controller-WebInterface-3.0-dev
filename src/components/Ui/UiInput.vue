@@ -172,8 +172,11 @@ function valueChangedHandler() {
             setStatus('invalid');
             return;
         }
-        lastInitValue = parsed as V;
-        emit('valueChanged', parsed as V);
+        if (parsed !== lastInitValue) {
+            // if (lastInitValue === undefined || parsed !== (lastInitValue as unknown as number)) {
+            lastInitValue = parsed as V;
+            emit('valueChanged', parsed as V);
+        }
     } else if (props.nullable === true) {
         lastInitValue = null as V;
         emit('valueChanged', null as V);
