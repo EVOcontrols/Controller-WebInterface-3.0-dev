@@ -8,7 +8,7 @@ export const getInitCurBody = (val: UDF, device?: number): Body => {
                 type: 'invert',
                 entity: {
                     type: 'pwm-out',
-                    device: 1, // для ngc может быть не 0, для нгио всегда 0
+                    device: 0, // для ngc может быть не 0, для нгио всегда 0
                     index: 1,
                 },
                 delay: {

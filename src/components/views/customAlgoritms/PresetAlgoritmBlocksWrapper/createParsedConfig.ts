@@ -114,18 +114,20 @@ function createDeviceConfig(
 
     const isActOrTrans =
         (propDevice && propDevice.addr) ||
-        ((!propDevice || !propDevice.addr) && (typeVal === 'udf-act' || typeVal === 'udf-trans'));
+        ((!propDevice || !propDevice.addr) && (typeVal === 'udf-cond' || typeVal === 'udf-trig'));
 
+    const mainLabel = propDevice?.addr ? `IO ${propDevice?.addr}` : 'NGC';
     const devVals = isActOrTrans
         ? [
               {
                   val: 0,
-                  label: 'NGC',
+                  label: mainLabel,
               },
           ]
         : devices.value.map((el) => {
               return { val: el.addr, label: el.addr ? `IO ${el.addr}` : 'NGC' };
           });
+    const val = isActOrTrans ? 0 : entDevice;
 
     return {
         curKey: CurKeyMap.Device,
@@ -146,7 +148,7 @@ function createDeviceConfig(
         tabs: [
             {
                 vals: devVals,
-                val: isActOrTrans ? 0 : entDevice,
+                val,
             },
         ],
         radioBtns: [],

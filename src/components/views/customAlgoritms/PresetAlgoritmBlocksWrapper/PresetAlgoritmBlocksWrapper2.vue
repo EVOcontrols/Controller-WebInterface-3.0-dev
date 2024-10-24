@@ -1086,9 +1086,12 @@ async function getConfig() {
 
     await setConfig();
     checkConfigToSave();
-    setTimeout(() => {
-        isLoading.value = false;
-    }, 4000);
+    setTimeout(
+        () => {
+            isLoading.value = false;
+        },
+        isDev ? timeoutDev / 2.5 : 2000,
+    );
 }
 
 onMounted(() => {
