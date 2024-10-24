@@ -917,10 +917,10 @@ async function parseTime(time: Time, title: string): Promise<Config[] | undefine
     // let s = time.value || 0;
     // let newS = s;
     // let units: 'ms' | 's' | 'min';
-    // if (s <= 150000) {
+    // if (s <= 15000) {
     //     units = 'ms';
     //     newS = s / 10;
-    // } else if (s > 150000 && s % 60000 === 0) {
+    // } else if (s > 15000 && s % 60000 === 0) {
     //     units = 'min';
     //     newS = s / 60000;
     // } else {
