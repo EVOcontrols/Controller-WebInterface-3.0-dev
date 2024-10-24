@@ -193,7 +193,7 @@ const { api } = useApiStore();
 const isAborted = indexStore.getApi().isAborted;
 
 const { devices, devCapabs } = storeToRefs(indexStore);
-const { funcLabels, funcsNumberPerPage } = storeToRefs(funcStore);
+const { funcLabels } = storeToRefs(funcStore);
 
 type Action =
     | { label: 'triggers'; val: 'udf-trig' }
@@ -455,7 +455,6 @@ async function getData(labels: string[], dir: 'l' | 'r') {
             ? maxTrans.value
             : maxTrig.value;
     if (quant) {
-        const quantity = quant > funcsNumberPerPage.value ? funcsNumberPerPage.value : quant;
         try {
             const r = await api.post('get_ent_state', {
                 entities: [
@@ -463,7 +462,7 @@ async function getData(labels: string[], dir: 'l' | 'r') {
                         type: curAct,
                         device: curDev.value ? curDev.value.addr : 0,
                         index: 0,
-                        quantity,
+                        quantity: quant,
                     },
                 ],
             });

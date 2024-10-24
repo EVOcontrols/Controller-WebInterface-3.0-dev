@@ -121,6 +121,7 @@
             v-if="pages.length"
             class="absolute bottom-0 left-[50%] translate-x-[-50%] w-[5.625rem] h-[2.875rem] rounded-t-[8px] bg-[#113351] shadow-[0_0_7px_0_#07243D] flex items-center justify-center gap-1 py-[10px]"
         >
+            {{ pages.length }}
             <ArrowIcon
                 class="rotate-180"
                 :class="[
@@ -229,6 +230,8 @@ const actions: (
 
 const pages = computed<Algoritm[][]>(() => {
     const arr: Algoritm[][] = [];
+    console.log('funcsNumberPerPage.value', funcsNumberPerPage.value);
+    console.log('props.items', props.items);
     for (let i = 0; i < props.items.length; i += funcsNumberPerPage.value) {
         let end;
         if (i + funcsNumberPerPage.value < props.items.length) {
@@ -238,6 +241,7 @@ const pages = computed<Algoritm[][]>(() => {
         }
         arr.push(props.items.filter((el) => el.label.includes(headerInput.value)).slice(i, end));
     }
+    console.log('arr', arr);
     return arr;
 });
 

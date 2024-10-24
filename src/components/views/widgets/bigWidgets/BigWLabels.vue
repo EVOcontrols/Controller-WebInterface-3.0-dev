@@ -461,17 +461,20 @@ function handleDblClick(s: number | null, index: number, field: 'label' | 'value
         const data = dataInput.value;
         const label = labelInput.value;
         if (!data) return;
+
         if (label && field === 'label') {
             label.focus();
         } else {
             data.focus();
         }
+
         if (props.w.w.i === 'pwm-out') {
             if (s === null) return;
             data.value = String(s / 100);
         } else {
             data.value = s === null ? '' : String(activeLabel.value?.state);
         }
+
         if (label && field === 'label') {
             label.setSelectionRange(0, label.value.length);
         } else {
