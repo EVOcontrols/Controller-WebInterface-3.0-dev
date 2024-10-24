@@ -426,7 +426,7 @@ function createOperationBinConfig(
     isCreating: boolean,
     t: (key: string) => string,
 ): Config | null {
-    if (!curBodyVal['value'] || (curBodyVal['value']['type'] !== 'int-const' && !isCreating)) {
+    if (!curBodyVal['value'] || curBodyVal['value']['type'] !== 'int-const') {
         return null;
     }
 
