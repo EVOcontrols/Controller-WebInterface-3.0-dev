@@ -28,7 +28,7 @@ export const createConfig = async (
         (curBody: Body) => createMathOperationConfig(curBody, typeVal, t),
         (curBody: Body) => createBitOperationConfig(curBody, typeVal, t),
         (curBody: Body) => createActionConfig(curBody, typeVal, t, propDevice),
-        (curBody: Body) => createComparisonValConfig(curBody, t),
+        (curBody: Body) => createComparisonValConfig(curBody, typeVal, t),
         (curBody: Body) => createOperationBinConfig(curBody, isCreating, t),
         (curBody: Body) => createValueConfig(curBody, cbParseEntity),
         (curBody: Body) => createStopValueConfig(curBody, typeVal, t),
@@ -359,10 +359,10 @@ function createActionConfig(
         { label: 'modify', val: 'modify' },
         { label: 'change', val: 'change' },
         { label: t('radioBtns.cyclicChange'), val: 'cycle' },
-        { label: t('radioBtns.stop'), val: 'stop' },
+        { label: `${t('radioBtns.stop')} WIP`, val: 'stop', disabled: true },
     ];
     if (!propDevice || !propDevice.addr) {
-        radioOptions.push({ label: 'save', val: 'save' });
+        radioOptions.push({ label: 'save WIP', val: 'save', disabled: true });
     }
 
     return {
@@ -387,7 +387,11 @@ function createActionConfig(
     };
 }
 
-function createComparisonValConfig(curBodyVal: Body, t: (key: string) => string): Config | null {
+function createComparisonValConfig(
+    curBodyVal: Body,
+    typeVal: UDF,
+    t: (key: string) => string,
+): Config | null {
     if (!curBodyVal['value']) {
         return null;
     }
@@ -398,7 +402,7 @@ function createComparisonValConfig(curBodyVal: Body, t: (key: string) => string)
             { name: 'title', index: 0 },
             { name: 'btns', index: 0 },
         ],
-        titles: [t('titles.comparisonVal')],
+        titles: typeVal !== 'udf-act' ? [t('titles.comparisonVal')] : [t('titles.value')],
         btns: [
             {
                 vals: [

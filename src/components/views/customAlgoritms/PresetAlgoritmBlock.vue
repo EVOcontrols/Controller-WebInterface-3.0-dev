@@ -123,9 +123,12 @@
                         :id="option.val"
                         :value="option.val"
                         :checked="option.val === props.radioBtns[item.index].val"
+                        :disabled="option.disabled"
                         @change="
                             () => {
-                                $emit('handleRadioBtnClick', item.index, option.val);
+                                if (!option.disabled) {
+                                    $emit('handleRadioBtnClick', item.index, option.val);
+                                }
                             }
                         "
                     />
@@ -372,7 +375,7 @@ const props = defineProps<{
         val: string | number;
     }[];
     radioBtns: {
-        vals: { label: string; val: string }[];
+        vals: { label: string; val: string; disabled?: boolean }[];
         val: string;
         groupName: string;
         wrap?: boolean;

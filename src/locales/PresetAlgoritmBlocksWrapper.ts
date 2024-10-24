@@ -47,7 +47,7 @@ export const translate = {
                 infinite: 'Infinite',
                 initDir: 'Initial direction',
                 delay: 'Delay',
-                pause: 'Pause',
+                pause: 'Pause (not work correct WIP)',
             },
             btns: {
                 on: 'ON',
@@ -177,7 +177,7 @@ export const translate = {
                 infinite: 'Бесконечный',
                 initDir: 'Начальное направление',
                 delay: 'Задержка',
-                pause: 'Пауза',
+                pause: 'Пауза (не работает правильно WIP)',
             },
             btns: {
                 on: 'ВКЛЮЧЕНО',
