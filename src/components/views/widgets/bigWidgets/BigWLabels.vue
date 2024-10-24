@@ -100,7 +100,7 @@
                                     checkValue();
                                 }
                             "
-                            >{{ t('10ms') }}</span
+                            >{{ t('1ms') }}</span
                         >
                         <span
                             class="text-sm w-[73px] h-full font-roboto flex items-center justify-center"
@@ -422,7 +422,7 @@ function handleDblClick(s: number | null, index: number) {
         if (s) {
             if (s <= 150000) {
                 units = 'ms';
-                newS = s / 10;
+                newS = s;
             } else if (s > 150000 && s % 60000 === 0) {
                 units = 'min';
                 newS = s / 60000;
@@ -588,7 +588,7 @@ async function setData(index: number, state: string | number | null, d?: number 
         } else if (props.w.w.i === 'tim-var') {
             val = +data.value;
             if (activeLabel.value?.units === 'ms') {
-                val *= 10;
+                val *= 1;
             } else if (activeLabel.value?.units === 's') {
                 val *= 1000;
             } else if (activeLabel.value?.units === 'min') {
@@ -652,7 +652,7 @@ const { t } = useI18n({
             },
             true: 'ИСТИНА',
             false: 'ЛОЖЬ',
-            '10ms': 'х10 МС',
+            '1ms': 'х1 МС',
             '1s': 'х1 СЕК',
             '1min': 'х1 МИН',
             ms: 'мс',
@@ -667,7 +667,7 @@ const { t } = useI18n({
             },
             true: 'TRUE',
             false: 'FALSE',
-            '10ms': 'х10 MS',
+            '1ms': 'х1 MS',
             '1s': 'х1 SEC',
             '1min': 'х1 MIN',
             ms: 'ms',

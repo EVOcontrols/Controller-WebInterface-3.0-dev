@@ -401,7 +401,7 @@ const isUpdating = ref(false);
 function modifyTime(obj: any, timeConfig: any, prop: string) {
     if (obj[prop] && obj[prop].type === 'tim-const' && timeConfig) {
         const multiplier =
-            timeConfig.btns[1].val === 'ms' ? 10 : timeConfig.btns[1].val === 's' ? 1000 : 60000;
+            timeConfig.btns[1].val === 'ms' ? 1 : timeConfig.btns[1].val === 's' ? 1000 : 60000;
 
         return {
             ...obj[prop],
