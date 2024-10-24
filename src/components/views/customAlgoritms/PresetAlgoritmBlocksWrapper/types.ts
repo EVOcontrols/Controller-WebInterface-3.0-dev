@@ -193,8 +193,8 @@ export const enum CurKeyMap {
     StopValueInterface = 17,
     StopValueDevice = 18,
     StopValueObject = 19,
-    EndValue = 21,
-    BinOperation = 22,
+    // EndValue = 21, // лишнее, снёс
+    // BinOperation = 22, // лишнее, снёс
     Hysteresis = 27,
     Time = 28,
     Delay = 29,

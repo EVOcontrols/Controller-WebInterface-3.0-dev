@@ -34,8 +34,6 @@ export const createConfig = async (
         (curBody: Body) => createStopValueConfig(curBody, typeVal, t),
         (curBody: Body) => createIntConstConfig(curBody, typeVal, t),
         (curBody: Body) => createStopValConfig(curBody, typeVal, cbParseEntity),
-        (curBody: Body) => createEndValueConfig(curBody, typeVal, t),
-        (curBody: Body) => createBinEqualConfig(curBody, typeVal, isCreating, t),
         (curBody: Body) => createActValueConfig(curBody, typeVal, cbParseEntity),
         (curBody: Body) => createHysteresisConfig(curBody, typeVal, t),
         (curBody: Body) => createTimeConfig(curBody, cbParseTime, t),
@@ -589,106 +587,6 @@ async function createStopValConfig(
     if (!configs || !configs.length) return null;
 
     return configs.map((el) => Object.assign(el, { curKey: el.curKey + 15 }));
-}
-
-function createEndValueConfig(
-    curBodyVal: Body,
-    typeVal: UDF,
-    t: (key: string) => string,
-): Config | null {
-    if (typeVal !== 'udf-act' || !curBodyVal['value']) {
-        return null;
-    }
-
-    return {
-        curKey: CurKeyMap.EndValue,
-        queue: [
-            { name: 'title', index: 0 },
-            { name: 'btns', index: 0 },
-        ],
-        titles: [t('titles.endValue')],
-        btns: [
-            {
-                vals: [
-                    { label: t('btns.prev'), val: 'prev', class: 'w-[109px]' },
-                    { label: t('btns.const'), val: 'const', class: 'w-[109px]' },
-                    { label: t('btns.obj'), val: 'obj' },
-                ],
-                val:
-                    curBodyVal['value'].type === 'int-const'
-                        ? 'const'
-                        : curBodyVal['value'].type === 'prev-value'
-                        ? 'prev'
-                        : 'obj',
-            },
-        ],
-        tabs: [],
-        radioBtns: [],
-        checkBoxes: [],
-        inputs: [],
-        dropDowns: [],
-    };
-}
-
-function createBinEqualConfig(
-    curBodyVal: Body,
-    typeVal: UDF,
-    isCreating: boolean,
-    t: (key: string) => string,
-): Config | null {
-    if (
-        typeVal !== 'udf-act' ||
-        !curBodyVal['value'] ||
-        (curBodyVal['value']['type'] !== 'int-const' && !isCreating)
-    ) {
-        return null;
-    }
-
-    return curBodyVal['operation'] === 'bin-equal' || curBodyVal['operation'] === 'bin-not-equal'
-        ? {
-              curKey: CurKeyMap.BinOperation,
-              queue: [
-                  { name: 'title', index: 0 },
-                  { name: 'btns', index: 0 },
-              ],
-              titles: [t('titles.select')],
-              btns: [
-                  {
-                      vals: [
-                          { label: 0, val: 0, class: 'w-[80px]' },
-                          { label: 1, val: 1, class: 'w-[80px]' },
-                      ],
-                      val: curBodyVal['value'].value || 0,
-                  },
-              ],
-              tabs: [],
-              radioBtns: [],
-              checkBoxes: [],
-              inputs: [],
-              dropDowns: [],
-          }
-        : {
-              curKey: CurKeyMap.BinOperation,
-              queue: [
-                  { name: 'title', index: 0 },
-                  { name: 'input', index: 0 },
-              ],
-              titles: [t('titles.enter')],
-              btns: [],
-              tabs: [],
-              radioBtns: [],
-              checkBoxes: [],
-              inputs: [
-                  {
-                      subtitle: t('titles.value'),
-                      val: curBodyVal['value'].value || 0,
-                      min: -32768,
-                      max: 32767,
-                      isError: false,
-                  },
-              ],
-              dropDowns: [],
-          };
 }
 
 async function createActValueConfig(
