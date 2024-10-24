@@ -6,7 +6,7 @@
         <transition name="label">
             <div
                 v-if="activeLabel && isLabelChange"
-                class="absolute bg-[#092E4B] z-[2] rounded-r-[16px] p-4 pr-6 flex items-center select-none origin-top-left flex flex-col gap-[6px]"
+                class="absolute bg-[#092E4B] z-[2] rounded-r-[16px] p-4 pr-6 flex items-center select-none origin-top-left flex-col gap-[6px]"
                 :class="[
                     isInvalidData ? 'h-[88px]' : 'h-[68px]',
                     !['bin-var', 'tim-var'].includes(props.w.w.i)
@@ -28,8 +28,9 @@
                                     props.w.w.i === 'bin-out' && activeLabel.state,
                             },
                         ]"
-                        >{{ activeLabel.i + 1 }}</span
                     >
+                        {{ activeLabel.i + 1 }}
+                    </span>
                     <input
                         type="text"
                         :placeholder="placeholder"
@@ -54,18 +55,19 @@
                                 :maxlength="props.w.w.i === 'pwm-out' ? 5 : 6"
                                 :disabled="props.w.w.i === 'tim-var' && !activeLabel.units"
                                 ref="dataInput"
-                                class="w-full flex-1 bg-transparent h-full text-[#8DC5F6] text-[#8DC5F6] text-end transition-colors duration-300"
+                                class="w-full flex-1 bg-transparent h-full text-[#8DC5F6] text-end transition-colors duration-300"
                                 :class="{ 'text-[#F83068]': isInvalidData }"
                                 @input="checkValue"
                             />
                         </div>
-                        {{ props.w.w.i === 'pwm-out' ? '%' : '' }}</span
-                    >
+                        {{ props.w.w.i === 'pwm-out' ? '%' : '' }}
+                    </span>
                     <span
                         v-else-if="['adc-in'].includes(props.w.w.i)"
                         class="w-[72px] h-full flex items-center justify-center rounded-r-[8px] bg-[#185385] text-[#8DC5F6] px-1 transition-colors duration-300"
-                        >{{ activeLabel.state }}%</span
                     >
+                        {{ activeLabel.state }}%
+                    </span>
                     <div
                         v-else-if="props.w.w.i === 'bin-var'"
                         class="flex h-8 ml-2"
@@ -74,14 +76,16 @@
                             class="text-[#97FFE7] text-sm w-[73px] h-full rounded-l-[6px] font-roboto flex items-center justify-center"
                             :class="activeLabel.state === 1 ? 'bg-[#176F6F]' : 'bg-[#0D424D]'"
                             @click="handleBinVarClick(true)"
-                            >{{ t('true') }}</span
                         >
+                            {{ t('true') }}
+                        </span>
                         <span
                             class="text-[#97FFE7] text-sm w-[73px] h-full rounded-r-[6px] font-roboto flex items-center justify-center"
                             :class="activeLabel.state === 0 ? 'bg-[#176F6F]' : 'bg-[#0D424D]'"
                             @click="handleBinVarClick(false)"
-                            >{{ t('false') }}</span
                         >
+                            {{ t('false') }}
+                        </span>
                     </div>
                     <div
                         v-if="props.w.w.i === 'tim-var'"
@@ -100,8 +104,9 @@
                                     checkValue();
                                 }
                             "
-                            >{{ t('1ms') }}</span
                         >
+                            {{ t('1ms') }}
+                        </span>
                         <span
                             class="text-sm w-[73px] h-full font-roboto flex items-center justify-center"
                             :class="
@@ -115,8 +120,9 @@
                                     checkValue();
                                 }
                             "
-                            >{{ t('1s') }}</span
                         >
+                            {{ t('1s') }}
+                        </span>
                         <span
                             class="text-sm w-[73px] h-full rounded-r-[6px] font-roboto flex items-center justify-center"
                             :class="
@@ -130,8 +136,9 @@
                                     checkValue();
                                 }
                             "
-                            >{{ t('1min') }}</span
                         >
+                            {{ t('1min') }}
+                        </span>
                     </div>
                 </div>
                 <div
@@ -204,10 +211,11 @@
                         <span
                             v-else-if="props.w.w.i === 'tim-var'"
                             class="w-[53px] text-end pr-[10px] group-hover:underline text-[#ADEBFF]"
-                            >{{
+                        >
+                            {{
                                 s === null
                                     ? '\u2013'
-                                    : s <= 150000
+                                    : s <= 15000
                                     ? `${s} ${t('ms')}`
                                     : s > 150000 && s % 60000 === 0
                                     ? `${s / 60000} ${t('min')}`
@@ -431,6 +439,9 @@ function handleDblClick(s: number | null, index: number) {
                 newS = s / 1000;
             }
         }
+        if (newS === null || newS === 0) {
+            units = 'ms';
+        }
         activeLabel.value = { i: index, state: newS, label: curLabels.value[index], units: units };
     } else {
         activeLabel.value = { i: index, state: s, label: curLabels.value[index] };
@@ -580,7 +591,7 @@ async function setData(index: number, state: string | number | null, d?: number 
     if (props.w.w.i === 'bin-var') {
         val = state as number | null;
     } else {
-        if (!data) return;
+        if (!data || data.value === '') return;
         if (props.w.w.i === 'pwm-out') {
             val = Math.round(+data.value * 100);
         } else if (props.w.w.i === 'int-var') {
