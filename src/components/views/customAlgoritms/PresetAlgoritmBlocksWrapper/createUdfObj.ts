@@ -106,7 +106,6 @@ function createObjUdfAct(config: Config[], propDevice?: Device) {
                 device: stopValDevice?.tabs[0].val || 0,
                 index: stopValObject?.dropDowns[0].vals[0] || 2,
             };
-            console.log('OBJ', 'stopVal', JSON.parse(JSON.stringify(stopVal)));
             if (
                 stopValInterfType &&
                 validValuesWithBus.includes(stopValInterfType.tabs[0].val as string)
