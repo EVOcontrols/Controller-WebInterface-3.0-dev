@@ -865,13 +865,15 @@ function getConfigTimeByTitle(title: string) {
 }
 
 function getConstBtns(title: string) {
+    const configTime = getConfigTimeByTitle(title);
+    const val = configTime?.btns[0].val;
     return [
         {
             vals: [
                 { label: t('btns.const'), val: 'tim-const' },
                 { label: t('btns.timVar'), val: 'tim-var' },
             ],
-            val: getConfigTimeByTitle(title)?.btns[0].val || 'tim-const',
+            val: val || 'tim-const',
         },
         {
             vals: [
@@ -879,7 +881,7 @@ function getConstBtns(title: string) {
                 { label: t('btns.s'), val: 's', class: 'w-[66px] !px-2 !h-8' },
                 { label: t('btns.min'), val: 'min', class: 'w-[66px] !px-2 !h-8' },
             ],
-            val: getConfigTimeByTitle(title)?.btns[1].val || 'ms',
+            val: (val === 'tim-const' && configTime?.btns[1].val) || 'ms',
             inline: true,
         },
     ];
@@ -1050,7 +1052,7 @@ async function setConfig() {
     );
 
     const sortedConfig = resultConfig.sort();
-    // console.log('sortedConfig', sortedConfig);
+    console.log('sortedConfig', sortedConfig);
     config.value = sortedConfig;
 }
 
