@@ -22,15 +22,15 @@ function createObjUdfAct(config: Config[], propDevice?: Device) {
     const select = config.find((el) => el.curKey === CurKeyMap.Select);
     const enter = config.find((el) => el.curKey === CurKeyMap.Enter);
     const stopValConfig = config.find((el) => el.curKey === CurKeyMap.StopValue);
-    const enterStopVal = config.find((el) => el.curKey === CurKeyMap.EnterStopValue);
+    const stopValEnter = config.find((el) => el.curKey === CurKeyMap.StopValueEnter);
+    const stopValInterfType = config.find((el) => el.curKey === CurKeyMap.StopValueInterface);
+    const stopValDevice = config.find((el) => el.curKey === CurKeyMap.StopValueDevice);
+    const stopValObject = config.find((el) => el.curKey === CurKeyMap.StopValueObject);
 
     const c11 = config.find((el) => el.curKey === 11);
     const c12 = config.find((el) => el.curKey === 12);
     const c13 = config.find((el) => el.curKey === 13);
     const c14 = config.find((el) => el.curKey === 14);
-    const c17 = config.find((el) => el.curKey === 17);
-    const c18 = config.find((el) => el.curKey === 18);
-    const c19 = config.find((el) => el.curKey === 19);
     const c20 = config.find((el) => el.curKey === 20);
 
     let ent = {
@@ -76,9 +76,9 @@ function createObjUdfAct(config: Config[], propDevice?: Device) {
         let ent = {};
         if (comparisonVal?.btns[0].val === 'obj') {
             ent = {
-                type: c11?.tabs[0].val,
-                device: c12?.tabs[0].val,
-                index: c13?.dropDowns[0].vals[0],
+                type: c11?.tabs[0].val || 'bin-in',
+                device: c12?.tabs[0].val || 0,
+                index: c13?.dropDowns[0].vals[0] || 0,
             };
             if (c11 && validValuesWithBus.includes(c11.tabs[0].val as string)) {
                 const interfProp = propDevice?.interf.find(
@@ -102,18 +102,22 @@ function createObjUdfAct(config: Config[], propDevice?: Device) {
         let stopVal = {};
         if (stopValConfig?.btns[0].val === 'obj') {
             stopVal = {
-                type: c17?.tabs[0].val,
-                device: c18?.tabs[0].val,
-                index: c19?.dropDowns[0].vals[0],
+                type: stopValInterfType?.tabs[0].val || 'pwm-out',
+                device: stopValDevice?.tabs[0].val || 0,
+                index: stopValObject?.dropDowns[0].vals[0] || 2,
             };
-            if (c17 && validValuesWithBus.includes(c17.tabs[0].val as string)) {
+            console.log('OBJ', 'stopVal', JSON.parse(JSON.stringify(stopVal)));
+            if (
+                stopValInterfType &&
+                validValuesWithBus.includes(stopValInterfType.tabs[0].val as string)
+            ) {
                 const interfProp = propDevice?.interf.find(
-                    (i) => typeof i === 'object' && i.interf === c17.tabs[0].val,
+                    (i) => typeof i === 'object' && i.interf === stopValInterfType.tabs[0].val,
                 ) as InterfProp;
                 const busProp = interfProp ? interfProp.bus : 0;
                 stopVal = Object.assign(
                     stopVal,
-                    c17?.tabs[0].val === '1w-sens'
+                    stopValInterfType?.tabs[0].val === '1w-sens'
                         ? { bus: c20?.tabs[0].val || busProp, io: 0 }
                         : { bus: c20?.tabs[0].val || busProp },
                 );
@@ -121,7 +125,7 @@ function createObjUdfAct(config: Config[], propDevice?: Device) {
         } else if (stopValConfig?.btns[0].val === 'const') {
             stopVal = {
                 type: 'int-const',
-                value: enterStopVal?.inputs[0].val,
+                value: stopValEnter?.inputs[0].val,
             };
         } else {
             stopVal = {
@@ -150,9 +154,9 @@ function createObjUdfAct(config: Config[], propDevice?: Device) {
         let ent = {};
         if (comparisonVal?.btns[0].val === 'obj') {
             ent = {
-                type: c11?.tabs[0].val,
-                device: c12?.tabs[0].val,
-                index: c13?.dropDowns[0].vals[0],
+                type: c11?.tabs[0].val || 'bin-in',
+                device: c12?.tabs[0].val || 0,
+                index: c13?.dropDowns[0].vals[0] || 0,
             };
             if (c11 && validValuesWithBus.includes(c11.tabs[0].val as string)) {
                 const interfProp = propDevice?.interf.find(
@@ -179,18 +183,21 @@ function createObjUdfAct(config: Config[], propDevice?: Device) {
         let stopVal = {};
         if (stopValConfig?.btns[0].val === 'obj') {
             stopVal = {
-                type: c17?.tabs[0].val,
-                device: c18?.tabs[0].val,
-                index: c19?.dropDowns[0].vals[0],
+                type: stopValInterfType?.tabs[0].val || 'pwm-out',
+                device: stopValDevice?.tabs[0].val || 0,
+                index: stopValObject?.dropDowns[0].vals[0] || 2,
             };
-            if (c17 && validValuesWithBus.includes(c17.tabs[0].val as string)) {
+            if (
+                stopValInterfType &&
+                validValuesWithBus.includes(stopValInterfType.tabs[0].val as string)
+            ) {
                 const interfProp = propDevice?.interf.find(
-                    (i) => typeof i === 'object' && i.interf === c17.tabs[0].val,
+                    (i) => typeof i === 'object' && i.interf === stopValInterfType.tabs[0].val,
                 ) as InterfProp;
                 const busProp = interfProp ? interfProp.bus : 0;
                 stopVal = Object.assign(
                     stopVal,
-                    c17?.tabs[0].val === '1w-sens'
+                    stopValInterfType?.tabs[0].val === '1w-sens'
                         ? { bus: c20?.tabs[0].val || busProp, io: 0 }
                         : { bus: c20?.tabs[0].val || busProp },
                 );
@@ -198,7 +205,7 @@ function createObjUdfAct(config: Config[], propDevice?: Device) {
         } else if (stopValConfig?.btns[0].val === 'const') {
             stopVal = {
                 type: 'int-const',
-                value: enterStopVal?.inputs[0].val,
+                value: stopValEnter?.inputs[0].val,
             };
         } else {
             stopVal = {
@@ -228,9 +235,9 @@ function createObjUdfAct(config: Config[], propDevice?: Device) {
         let ent = {};
         if (comparisonVal?.btns[0].val === 'obj') {
             ent = {
-                type: c11?.tabs[0].val,
-                device: c12?.tabs[0].val,
-                index: c13?.dropDowns[0].vals[0],
+                type: c11?.tabs[0].val || 'bin-in',
+                device: c12?.tabs[0].val || 0,
+                index: c13?.dropDowns[0].vals[0] || 0,
             };
             if (c11 && validValuesWithBus.includes(c11.tabs[0].val as string)) {
                 const interfProp = propDevice?.interf.find(
@@ -340,9 +347,9 @@ function createObjUdfCond(config: Config[], propDevice?: Device) {
     let val = {};
     if (comparisonVal?.btns[0].val === 'obj') {
         val = {
-            type: c11?.tabs[0].val,
-            device: c12?.tabs[0].val,
-            index: c13?.dropDowns[0].vals[0],
+            type: c11?.tabs[0].val || 'bin-in',
+            device: c12?.tabs[0].val || 0,
+            index: c13?.dropDowns[0].vals[0] || 0,
         };
         if (c11 && validValuesWithBus.includes(c11.tabs[0].val as string)) {
             const interfProp = propDevice?.interf.find(
@@ -525,9 +532,9 @@ function createObjUdfTrig(config: Config[], propDevice?: Device): any {
         let ent = {};
         if (comparisonVal?.btns[0].val === 'obj') {
             ent = {
-                type: c11?.tabs[0].val,
-                device: c12?.tabs[0].val,
-                index: c13?.dropDowns[0].vals[0],
+                type: c11?.tabs[0].val || 'bin-in',
+                device: c12?.tabs[0].val || 0,
+                index: c13?.dropDowns[0].vals[0] || 0,
             };
             if (c11 && validValuesWithBus.includes(c11.tabs[0].val as string)) {
                 const interfProp = propDevice?.interf.find(
@@ -576,9 +583,9 @@ function createObjUdfTrig(config: Config[], propDevice?: Device): any {
         let ent = {};
         if (comparisonVal?.btns[0].val === 'obj') {
             ent = {
-                type: c11?.tabs[0].val,
-                device: c12?.tabs[0].val,
-                index: c13?.dropDowns[0].vals[0],
+                type: c11?.tabs[0].val || 'bin-in',
+                device: c12?.tabs[0].val || 0,
+                index: c13?.dropDowns[0].vals[0] || 0,
             };
             if (c11 && validValuesWithBus.includes(c11.tabs[0].val as string)) {
                 const interfProp = propDevice?.interf.find(

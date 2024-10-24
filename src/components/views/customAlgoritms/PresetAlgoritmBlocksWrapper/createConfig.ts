@@ -477,15 +477,14 @@ async function createValueConfig(
     curBodyVal: Body,
     cbParseEntity: (ent: Ent) => Promise<Config[]>,
 ): Promise<Config[] | null> {
-    if (
-        !curBodyVal['value'] ||
-        curBodyVal['value']['type'] === 'int-const' ||
-        !curBodyVal['value'] ||
-        !curBodyVal.entity
-    ) {
+    if (!curBodyVal['value'] || curBodyVal['value']['type'] === 'int-const') {
+        return null;
+    }
+    if (!curBodyVal.entity) {
         return null;
     }
 
+    // console.log(9, curBodyVal.value);
     const configs = await cbParseEntity(curBodyVal.value);
     if (!configs || !configs.length) return null;
 
@@ -501,6 +500,7 @@ function createStopValueConfig(
         return null;
     }
 
+    // console.log('5555555555', 'curBodyVal, curBodyVal', curBodyVal);
     return {
         curKey: CurKeyMap.StopValue,
         queue: [
@@ -545,7 +545,7 @@ function createIntConstConfig(
     }
 
     return {
-        curKey: CurKeyMap.EnterStopValue,
+        curKey: CurKeyMap.StopValueEnter,
         queue: [
             { name: 'title', index: 0 },
             { name: 'input', index: 0 },
@@ -583,6 +583,7 @@ async function createStopValConfig(
         return null;
     }
 
+    // console.log('666666666666666', 'curBodyVal, curBodyVal', curBodyVal);
     const configs = await cbParseEntity(curBodyVal['stop-val']);
     if (!configs || !configs.length) return null;
 
@@ -704,6 +705,7 @@ async function createActValueConfig(
         return null;
     }
 
+    // console.log(21, curBodyVal.value);
     const configs = await cbParseEntity(curBodyVal.value);
     if (!configs || !configs.length) return null;
 

@@ -488,6 +488,8 @@ async function handleBtnClick(
 ) {
     if (!config.value) return;
     const prevConfig = [...config.value];
+    console.log('configItemIndex', configItemIndex, 'btnsItemIndex', btnsItemIndex, 'val', val);
+    console.log('prevConfig', JSON.parse(JSON.stringify(prevConfig)));
     if (prevConfig[configItemIndex] && prevConfig[configItemIndex].btns[btnsItemIndex]) {
         if (
             [
@@ -729,6 +731,7 @@ async function getData(
     if (!curDevCapab.value) return;
 
     const body = createBodyState(type, quant, bus, device, props.device);
+    console.log('type, ', type, 'body', body);
     const data = await $apiGetEntState(body);
     const arr: DropDownItem[] = [];
 
@@ -814,6 +817,7 @@ async function parseEntity(ent: Ent) {
         }
 
         if (ent.type !== 'prev-value') {
+            console.log('ent.type', ent.type);
             await getData(entNum, ent.type as DropDownRealType, quant, ent.device, ent.bus);
         }
     }
@@ -1037,6 +1041,7 @@ async function parseMultiSelect(
 
 async function setConfig() {
     if (!curBody.value) return;
+    console.log('curBody.value', JSON.parse(JSON.stringify(curBody.value)));
 
     const resultConfig = await createConfig(
         curBody.value,
