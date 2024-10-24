@@ -33,6 +33,7 @@
                     </span>
                     <input
                         type="text"
+                        ref="labelInput"
                         :placeholder="placeholder"
                         :value="activeLabel.label"
                         :maxlength="32"
@@ -164,14 +165,16 @@
                     ref="scrollEl"
                 >
                     <div
-                        class="label group w-full flex text-[#6CB5D3] items-center transition-colors duration-500 rounded select-none hover:bg-[#0C2F4D] gap-2"
+                        class="label w-full flex text-[#6CB5D3] items-center transition-colors duration-500 rounded select-none hover:bg-[#0C2F4D] gap-2"
                         :class="activeLabel?.i === index ? 'min-h-[68px]' : 'min-h-[30px]'"
                         v-for="(s, index) in state"
                         :key="index"
-                        @dblclick="handleDblClick(s, index)"
                     >
-                        <span class="w-[22px] text-end group-hover:underline">{{ index + 1 }}</span>
-                        <span class="flex-1 group-hover:underline group-hover:text-[#ADEBFF]">
+                        <span class="w-[22px] text-end hover:underline">{{ index + 1 }}</span>
+                        <span
+                            class="flex-1 hover:underline hover:text-[#ADEBFF]"
+                            @dblclick="handleDblClick(s, index, 'label')"
+                        >
                             {{ curLabels && curLabels[index] ? curLabels[index] : '\u2013' }}
                         </span>
                         <span
@@ -185,12 +188,14 @@
                                     '1w-rom',
                                 ].includes(props.w.w.i)
                             "
-                            class="w-[63px] text-[#ADEBFF] text-end pr-[10px] group-hover:underline"
-                            >{{ s / 100 }}%</span
+                            class="w-[63px] text-[#ADEBFF] text-end pr-[10px] hover:underline"
+                            @dblclick="handleDblClick(s, index, 'value')"
                         >
+                            {{ s / 100 }}%
+                        </span>
                         <span
                             v-else-if="['int-var', 'bin-var'].includes(props.w.w.i)"
-                            class="w-[53px] text-end pr-[10px] group-hover:underline"
+                            class="w-[53px] text-end pr-[10px] hover:underline"
                             :class="
                                 props.w.w.i !== 'bin-var'
                                     ? 'text-[#ADEBFF]'
@@ -198,7 +203,9 @@
                                     ? 'text-[#176F6F]'
                                     : 'text-[#35FED0]'
                             "
-                            >{{
+                            @dblclick="handleDblClick(s, index, 'value')"
+                        >
+                            {{
                                 s === null
                                     ? '\u2013'
                                     : props.w.w.i !== 'bin-var'
@@ -206,11 +213,12 @@
                                     : s
                                     ? t('true')
                                     : t('false')
-                            }}</span
-                        >
+                            }}
+                        </span>
                         <span
                             v-else-if="props.w.w.i === 'tim-var'"
-                            class="w-[53px] text-end pr-[10px] group-hover:underline text-[#ADEBFF]"
+                            class="w-[53px] text-end pr-[10px] hover:underline text-[#ADEBFF]"
+                            @dblclick="handleDblClick(s, index, 'value')"
                         >
                             {{
                                 s === null
@@ -220,8 +228,8 @@
                                     : s > 15000 && s % 60000 === 0
                                     ? `${s / 60000} ${t('min')}`
                                     : `${s / 1000} ${t('s')}`
-                            }}</span
-                        >
+                            }}
+                        </span>
                     </div>
                 </div>
                 <div
@@ -238,7 +246,7 @@
                         ]"
                         v-for="(s, index) in tempState"
                         :key="index"
-                        @dblclick="handleDblClick(s, index)"
+                        @dblclick="handleDblClick(s, index, 'value')"
                     >
                         <span
                             class="w-[22px] text-end"
@@ -280,7 +288,7 @@
                         ]"
                         v-for="(s, index) in state"
                         :key="index"
-                        @dblclick="handleDblClick(s, index)"
+                        @dblclick="handleDblClick(s, index, 'value')"
                     >
                         <span
                             class="w-[22px] text-end"
@@ -347,6 +355,7 @@ const min = ref(0);
 const max = ref(0);
 
 const dataInput = ref<HTMLInputElement | undefined>();
+const labelInput = ref<HTMLInputElement | undefined>();
 
 const indexStore = useIndexStore();
 
@@ -420,7 +429,7 @@ function handleScroll() {
     scrollTop.value = el.scrollTop;
 }
 
-function handleDblClick(s: number | null, index: number) {
+function handleDblClick(s: number | null, index: number, field: 'label' | 'value') {
     if (props.w.w.i === 'pwm-out') {
         if (s === null) return;
         activeLabel.value = { i: index, state: s / 100, label: curLabels.value[index] };
@@ -450,15 +459,24 @@ function handleDblClick(s: number | null, index: number) {
     isLabelChange.value = true;
     setTimeout(() => {
         const data = dataInput.value;
+        const label = labelInput.value;
         if (!data) return;
-        data.focus();
+        if (label && field === 'label') {
+            label.focus();
+        } else {
+            data.focus();
+        }
         if (props.w.w.i === 'pwm-out') {
             if (s === null) return;
             data.value = String(s / 100);
         } else {
             data.value = s === null ? '' : String(activeLabel.value?.state);
         }
-        data.setSelectionRange(0, data.value.length);
+        if (label && field === 'label') {
+            label.setSelectionRange(0, label.value.length);
+        } else {
+            data.setSelectionRange(0, data.value.length);
+        }
     }, 20);
     setActiveLabelTop();
     window.addEventListener('click', saveData);
