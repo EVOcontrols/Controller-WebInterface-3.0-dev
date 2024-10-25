@@ -201,7 +201,8 @@ type Action =
     | { label: 'actions'; val: 'udf-act' }
     | { label: 'transformations'; val: 'udf-trans' };
 
-type Algoritm = { val: 0 | 1 | null; label: string; isCreating?: boolean };
+type Val = 0 | 1 | null;
+type Algoritm = { val: Val; label: string; isCreating?: boolean };
 
 const isDev = import.meta.env.DEV;
 const timeoutDev = 10000;
@@ -432,18 +433,22 @@ async function getLabels(type: 'udf-act' | 'udf-cond' | 'udf-trans' | 'udf-trig'
         funcStore.setLabels(addr, type, []);
         clearTimeout(getDataTimer);
         getDataTimer = undefined;
-        getData([], dir);
+        await getData(dir);
     } else {
         const { labels } = reqLabels as LabelsType;
         funcStore.setLabels(addr, type, labels);
         clearTimeout(getDataTimer);
         getDataTimer = undefined;
-        getData(labels, dir);
+        await getData(dir);
     }
 }
 
-async function getData(labels: string[], dir: 'l' | 'r') {
+async function getData(dir: 'l' | 'r') {
+    const addr = curDev.value || devices.value[0] ? (curDev.value || devices.value[0]).addr : 0;
     const curAct = dir === 'l' ? curActionLeft.value.val : curActionRight.value.val;
+    let curLabelsLeft = funcLabels.value[addr].find((el) => el.name === curAct)?.val as string[];
+    let curLabelsRight = funcLabels.value[addr].find((el) => el.name === curAct)?.val as string[];
+
     const quant =
         curAct === 'udf-act'
             ? maxAct.value
@@ -454,7 +459,7 @@ async function getData(labels: string[], dir: 'l' | 'r') {
             : maxTrig.value;
     if (quant) {
         try {
-            const r = await api.post('get_ent_state', {
+            const { data } = await api.post('get_ent_state', {
                 entities: [
                     {
                         type: curAct,
@@ -464,19 +469,19 @@ async function getData(labels: string[], dir: 'l' | 'r') {
                     },
                 ],
             });
-            const state = r.data.entities[0].state;
-            const res: Algoritm[] = [];
-            for (let i = 0; i < state.length; i++) {
-                res.push({ val: state[i], label: labels[i] || '' });
-            }
+            const { state } = data.entities[0];
+            const resultAlgoritms: Algoritm[] = state.map((val: Val, idx: number) => {
+                const label = dir === 'l' ? curLabelsLeft[idx] || '' : curLabelsRight[idx] || '';
+                return { val, label };
+            });
             if (dir === 'l') {
-                algoritms1.value = [...res];
+                algoritms1.value = [...resultAlgoritms];
             } else {
-                algoritms2.value = [...res];
+                algoritms2.value = [...resultAlgoritms];
             }
             const timeout = isDev ? timeoutDev : 5000;
             getDataTimer = setTimeout(() => {
-                getData(labels, dir);
+                getData(dir);
             }, timeout);
         } catch (error) {
             if (isAborted.value) {
@@ -484,12 +489,12 @@ async function getData(labels: string[], dir: 'l' | 'r') {
             }
             const timeout = isDev ? timeoutDev / 2 : 20;
             getDataTimer = setTimeout(() => {
-                getData(labels, dir);
+                getData(dir);
             }, timeout);
         }
     } else {
         getDataTimer = setTimeout(() => {
-            getData(labels, dir);
+            getData(dir);
         }, 20);
     }
 }
@@ -512,14 +517,14 @@ onBeforeMount(async () => {
     let curLabelsLeft = funcLabels.value[addr]?.find((el) => el.name === curActionLeft.value.val);
     let curLabelsRight = funcLabels.value[addr]?.find((el) => el.name === curActionRight.value.val);
     if (!curLabelsLeft) {
-        getLabels(curActionLeft.value.val, 'l');
+        await getLabels(curActionLeft.value.val, 'l');
     } else {
-        getData(curLabelsLeft.val, 'l');
+        await getData('l');
     }
     if (!curLabelsRight) {
-        getLabels(curActionRight.value.val, 'r');
+        await getLabels(curActionRight.value.val, 'r');
     } else {
-        getData(curLabelsRight.val, 'r');
+        await getData('r');
     }
 });
 
@@ -535,13 +540,10 @@ watch(devices, () => {
 });
 
 watch(funcLabels, () => {
-    const addr = curDev.value || devices.value[0] ? (curDev.value || devices.value[0]).addr : 0;
-    let curLabelsLeft = funcLabels.value[addr].find((el) => el.name === curActionLeft.value.val)?.val as string[];
-    let curLabelsRight = funcLabels.value[addr].find((el) => el.name === curActionRight.value.val)?.val as string[];
     clearTimeout(getDataTimer);
     getDataTimer = undefined;
-    getData(curLabelsLeft || [], 'l');
-    getData(curLabelsRight || [], 'r');
+    getData('l');
+    getData('r');
 });
 
 watch(curDev, async () => {
@@ -556,14 +558,14 @@ watch(curDev, async () => {
     let curLabelsLeft = funcLabels.value[addr]?.find((el) => el.name === curActionLeft.value.val);
     let curLabelsRight = funcLabels.value[addr]?.find((el) => el.name === curActionRight.value.val);
     if (!curLabelsLeft) {
-        getLabels(curActionLeft.value.val, 'l');
+        await getLabels(curActionLeft.value.val, 'l');
     } else {
-        getData(curLabelsLeft.val, 'l');
+        await getData('l');
     }
     if (!curLabelsRight) {
-        getLabels(curActionRight.value.val, 'r');
+        await getLabels(curActionRight.value.val, 'r');
     } else {
-        getData(curLabelsRight.val, 'r');
+        await getData('r');
     }
 });
 
@@ -574,7 +576,7 @@ watch(curActionLeft, () => {
     if (!curLabelsLeft) {
         getLabels(curActionLeft.value.val, 'l');
     } else {
-        getData(curLabelsLeft.val, 'l');
+        getData('l');
     }
 });
 
@@ -585,7 +587,7 @@ watch(curActionRight, () => {
     if (!curLabelsRight) {
         getLabels(curActionRight.value.val, 'r');
     } else {
-        getData(curLabelsRight.val, 'r');
+        getData('r');
     }
 });
 

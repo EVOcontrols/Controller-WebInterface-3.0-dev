@@ -15,7 +15,7 @@
                         :numb="i"
                         :queue="item.queue"
                         :isFirst="!i"
-                        :isLast="!!(config && i === config.length - 1)"
+                        :isLast="config && i === config.length - 1"
                         :titles="item.titles"
                         :btns="item.btns"
                         :tabs="item.tabs"
@@ -39,12 +39,7 @@
                             }
                         "
                         @handleCheckboxClick="
-                            (
-                                checkboxItemIndex: number,
-                                val: string,
-                                status: boolean,
-                                part: 1 | 2,
-                            ) => {
+                            (checkboxItemIndex: number, val: string, status: boolean, part: 1 | 2) => {
                                 handleCheckboxClick(i, checkboxItemIndex, val, status, part);
                             }
                         "
@@ -84,11 +79,7 @@
             @close="shownDropDown = undefined"
             @confirm="
                 () => {
-                    handleDropChange(
-                        shownDropDown ? shownDropDown.configItemIndex : 0,
-                        0,
-                        shownDropDown?.vals || [],
-                    );
+                    handleDropChange(shownDropDown ? shownDropDown.configItemIndex : 0, 0, shownDropDown?.vals || []);
                     shownDropDown = undefined;
                 }
             "
@@ -114,13 +105,7 @@
                     v-else
                     class="select-none w-[1.375rem] h-[1.375rem] rounded-[3px] border border-[#4C84B6] flex items-center justify-center text-[#4C84B6]"
                 >
-                    {{
-                        shownDropDown.type === 'var'
-                            ? 'П'
-                            : shownDropDown.type === 'cond'
-                            ? 'У'
-                            : 'Д'
-                    }}
+                    {{ shownDropDown.type === 'var' ? 'П' : shownDropDown.type === 'cond' ? 'У' : 'Д' }}
                 </div>
             </template>
             <template #title
@@ -144,9 +129,7 @@
                         :status="'valid'"
                         :input-type="['string']"
                         @value-changed="
-                            $event === undefined || $event === ''
-                                ? (headerInput = '')
-                                : (headerInput = $event)
+                            $event === undefined || $event === '' ? (headerInput = '') : (headerInput = $event)
                         "
                     />
                     <span
@@ -160,45 +143,13 @@
                         >
                             <div
                                 class="h-9 w-full"
-                                v-for="(item, i) in shownDropDown.items.filter((el) =>
-                                    el.name.includes(headerInput),
-                                )"
+                                v-for="(item, i) in shownDropDown.items.filter((el) => el.name.includes(headerInput))"
                                 :key="i"
                             >
                                 <div
                                     class="w-full h-full px-[10px] flex items-center transition-colors duration-300 hover:bg-[#163E61]"
                                     :class="shownDropDown.vals.includes(i) ? 'bg-[#163E61]' : ''"
-                                    @click="
-                                        () => {
-                                            if (
-                                                (shownDropDown && shownDropDown.type === 'act') ||
-                                                (shownDropDown && shownDropDown.type === 'cond')
-                                            ) {
-                                                const canSelect =
-                                                    shownDropDown &&
-                                                    (shownDropDown.vals.length === 0 ||
-                                                        shownDropDown.vals.includes(item.i - 1) ||
-                                                        shownDropDown.vals.includes(item.i + 1));
-
-                                                if (canSelect) {
-                                                    if (shownDropDown.vals.includes(item.i)) {
-                                                        shownDropDown.vals = shownDropDown.vals
-                                                            .filter((num) => num !== item.i)
-                                                            .sort();
-                                                    } else {
-                                                        shownDropDown.vals = [
-                                                            ...shownDropDown.vals,
-                                                            item.i,
-                                                        ].sort();
-                                                    }
-                                                } else {
-                                                    shownDropDown.vals = [item.i];
-                                                }
-                                            } else if (shownDropDown) {
-                                                shownDropDown.vals = [item.i];
-                                            }
-                                        }
-                                    "
+                                    @click="handleClickSelect(item)"
                                 >
                                     <div class="w-5 mr-4">
                                         {{ i + 1 }}
@@ -233,23 +184,11 @@
                                             Array.isArray(item.val) &&
                                             item.val[0] !== null
                                                 ? tempUnit === '°C'
-                                                    ? `${
-                                                          Math.round((item.val[0] as number) / 10) /
-                                                          10
-                                                      }°C`
-                                                    : `${
-                                                          (Math.round(
-                                                              (item.val[0] as number) / 10,
-                                                          ) /
-                                                              10) *
-                                                              1.8 +
-                                                          32
-                                                      }°F`
-                                                : shownDropDown.realType === 'pwm-out' &&
-                                                  typeof item.val === 'number'
+                                                    ? `${Math.round((item.val[0] as number) / 10) / 10}°C`
+                                                    : `${(Math.round((item.val[0] as number) / 10) / 10) * 1.8 + 32}°F`
+                                                : shownDropDown.realType === 'pwm-out' && typeof item.val === 'number'
                                                 ? `${item.val / 100}%`
-                                                : shownDropDown.realType === 'adc-in' &&
-                                                  typeof item.val === 'number'
+                                                : shownDropDown.realType === 'adc-in' && typeof item.val === 'number'
                                                 ? `${item.val}%`
                                                 : Array.isArray(item.val)
                                                 ? ''
@@ -400,8 +339,7 @@ const isUpdating = ref(false);
 
 function modifyTime(obj: any, timeConfig: any, prop: string) {
     if (obj[prop] && obj[prop].type === 'tim-const' && timeConfig) {
-        const multiplier =
-            timeConfig.btns[1].val === 'ms' ? 1 : timeConfig.btns[1].val === 's' ? 1000 : 60000;
+        const multiplier = timeConfig.btns[1].val === 'ms' ? 1 : timeConfig.btns[1].val === 's' ? 1000 : 60000;
 
         return {
             ...obj[prop],
@@ -481,22 +419,14 @@ function checkConfigToSave() {
     }
 }
 
-async function handleBtnClick(
-    configItemIndex: number,
-    btnsItemIndex: number,
-    val: string | number,
-) {
+async function handleBtnClick(configItemIndex: number, btnsItemIndex: number, val: string | number) {
     if (!config.value) return;
     const prevConfig = [...config.value];
     if (prevConfig[configItemIndex] && prevConfig[configItemIndex].btns[btnsItemIndex]) {
         if (
-            [
-                CurKeyMap.Time,
-                CurKeyMap.MinTime,
-                CurKeyMap.MaxTime,
-                CurKeyMap.Delay,
-                CurKeyMap.Pause,
-            ].includes(prevConfig[configItemIndex].curKey) &&
+            [CurKeyMap.Time, CurKeyMap.MinTime, CurKeyMap.MaxTime, CurKeyMap.Delay, CurKeyMap.Pause].includes(
+                prevConfig[configItemIndex].curKey,
+            ) &&
             (val === 'tim-var' || val === 'tim-const')
         ) {
             const time = await parseTime({ type: val }, prevConfig[configItemIndex].titles[0]);
@@ -521,8 +451,7 @@ function handleTabClick(configItemIndex: number, tabsItemIndex: number, val: str
         if (depInd !== undefined) {
             const object = prevConfig.find(({ curKey }) => curKey === CurKeyMap.Object);
             if (object) {
-                object.dropDowns[0].type =
-                    val === 'bin-out' ? 'bin' : val === '1w-sens' ? '1w-sens' : 'obj';
+                object.dropDowns[0].type = val === 'bin-out' ? 'bin' : val === '1w-sens' ? '1w-sens' : 'obj';
             }
         }
         config.value = prevConfig;
@@ -570,9 +499,7 @@ function handleCheckboxClick(
             ].sort();
         } else {
             prevConfig[configItemIndex].checkBoxes[checkboxItemIndex][part].valsArr = [
-                ...prevConfig[configItemIndex].checkBoxes[checkboxItemIndex][part].valsArr.filter(
-                    (el) => el !== val,
-                ),
+                ...prevConfig[configItemIndex].checkBoxes[checkboxItemIndex][part].valsArr.filter((el) => el !== val),
             ];
         }
         config.value = prevConfig;
@@ -642,12 +569,28 @@ function setInputError(configItemIndex: number, inputItemIndex: number, res: boo
     // reRenderLayout(7);
 }
 
+function handleClickSelect(item: DropDownItem) {
+    if (!shownDropDown.value) return;
+
+    const canSelect =
+        (shownDropDown.value.type === 'act' || shownDropDown.value.type === 'cond') &&
+        (shownDropDown.value.vals.length === 0 ||
+            shownDropDown.value.vals.includes(item.i - 1) ||
+            shownDropDown.value.vals.includes(item.i + 1));
+
+    if (canSelect) {
+        shownDropDown.value.vals = shownDropDown.value.vals.includes(item.i)
+            ? shownDropDown.value.vals.filter((num) => num !== item.i).sort()
+            : [...shownDropDown.value.vals, item.i].sort();
+    } else {
+        shownDropDown.value.vals = [item.i];
+    }
+}
+
 async function get1W(ent: EntNum, device: number) {
     await getEntConfig(ent);
-    const interfaces =
-        ent === 1 ? interfaces1.value : ent === 2 ? interfaces2.value : interfaces3.value;
-    const entConfig =
-        ent === 1 ? ent1WConfig1.value : ent === 2 ? ent1WConfig2.value : ent1WConfig3.value;
+    const interfaces = ent === 1 ? interfaces1.value : ent === 2 ? interfaces2.value : interfaces3.value;
+    const entConfig = ent === 1 ? ent1WConfig1.value : ent === 2 ? ent1WConfig2.value : ent1WConfig3.value;
     const configToUse = device ? cur1WConfig.value : entConfig;
 
     configToUse.forEach((item) => {
@@ -659,8 +602,7 @@ async function get1W(ent: EntNum, device: number) {
 
 async function getMb(ent: EntNum, device: number) {
     const data = await $apiGetMbInfo(device);
-    const interfaces =
-        ent === 1 ? interfaces1.value : ent === 2 ? interfaces2.value : interfaces3.value;
+    const interfaces = ent === 1 ? interfaces1.value : ent === 2 ? interfaces2.value : interfaces3.value;
 
     const mbTypes = ['co', 'ir', 'hr', 'di']; // todo coil or co?
     mbTypes.forEach((mbType) => {
@@ -701,8 +643,7 @@ async function getInterfaces(ent: EntNum, device: number) {
     if (!capab) return;
     curDevCapab.value = capab;
 
-    const interfaces =
-        ent === 1 ? interfaces1.value : ent === 2 ? interfaces2.value : interfaces3.value;
+    const interfaces = ent === 1 ? interfaces1.value : ent === 2 ? interfaces2.value : interfaces3.value;
 
     for (let [typeCabap, quantityCapab] of Object.entries(capab)) {
         const isValidType = quantityCapab && order.includes(typeCabap);
@@ -825,8 +766,7 @@ async function parseEntity(ent: Ent) {
         await getLabels(entNum, ent.type as UDF);
     }
 
-    const OWConfig =
-        !props.device || props.device.addr === 0 ? ent1WConfigs[entNum - 1] : cur1WConfig.value;
+    const OWConfig = !props.device || props.device.addr === 0 ? ent1WConfigs[entNum - 1] : cur1WConfig.value;
 
     const entItems = entNum === 1 ? ent1.value : entNum === 2 ? [...ent2.value] : [...ent3.value];
 
@@ -904,14 +844,7 @@ async function parseTime(time: Time, title: string): Promise<Config[] | undefine
     if (!props.device || !curDevCapab.value) return;
 
     if (time.type === 'tim-var') {
-        await getData(
-            timeNum,
-            'tim-var',
-            curDevCapab.value['tim-var'],
-            props.device.addr,
-            undefined,
-            true,
-        );
+        await getData(timeNum, 'tim-var', curDevCapab.value['tim-var'], props.device.addr, undefined, true);
     }
 
     // let s = time.value || 0;
@@ -1051,9 +984,7 @@ async function setConfig() {
         props.device,
     );
 
-    const sortedConfig = resultConfig.sort();
-    console.log('sortedConfig', sortedConfig);
-    config.value = sortedConfig;
+    config.value = resultConfig.sort();
 }
 
 function configCreating() {
@@ -1062,11 +993,7 @@ function configCreating() {
 }
 
 async function configEditing() {
-    const data = await $apiGetUdfConfig(
-        props.type.val,
-        props.device ? props.device.addr : 0,
-        props.index,
-    );
+    const data = await $apiGetUdfConfig(props.type.val, props.device ? props.device.addr : 0, props.index);
 
     if (!curBody.value) {
         curBody.value = data.trigger || data.condition || data.action || data.transform;
