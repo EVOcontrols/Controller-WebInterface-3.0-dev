@@ -6,7 +6,7 @@
             :style="{ 'max-height': 'calc(100vh - 244px)' }"
         >
             <div class="bg-[#092740] rounded-[6px] overflow-hidden">
-                <Algoritm
+                <AlgoritmBlock
                     v-for="(item, i) in props.items"
                     :key="i"
                     :isActive="i + props.page * funcsNumberPerPage === props.activeItem"
@@ -30,7 +30,7 @@
 </template>
 
 <script lang="ts" setup>
-import Algoritm from '@/components/views/presetAlgoritms/Algoritm.vue';
+import AlgoritmBlock from '@/components/views/presetAlgoritms/AlgoritmBlock.vue';
 
 const funcsStore = useFuncsStore();
 

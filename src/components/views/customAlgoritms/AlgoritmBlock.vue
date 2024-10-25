@@ -71,7 +71,11 @@
             <OutlinedButton
                 v-else
                 class="group w-[36px] !min-w-[36px]"
-                @click="emit('addAlgoritm')"
+                @click="
+                    (e: Event) => {
+                        emit('addAlgoritm', e);
+                    }
+                "
                 ><span
                     class="[&>svg]:w-4 [&>svg]:h-4 [&>svg>path]:transition-colors [&>svg>path]:duration-500 [&>svg>path]:fill-[#148EF8] group-active:[&>svg>path]:fill-[#ADEBFF]"
                     v-html="add"
@@ -125,7 +129,7 @@ const emit = defineEmits<{
     (e: 'selectAlgoritm', value: boolean): void;
     (e: 'deleteAlgoritm'): void;
     (e: 'oneClick'): void;
-    (e: 'addAlgoritm'): void;
+    (e: 'addAlgoritm', event: Event): void;
     (e: 'creatingFinish'): void;
 }>();
 

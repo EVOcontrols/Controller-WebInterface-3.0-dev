@@ -3,9 +3,7 @@
         class="relative flex flex-col"
         :style="{ width: 'calc(50% - 6px)' }"
     >
-        <div
-            class="bg-[#092740] rounded-[6px] py-[15px] px-6 flex items-center gap-2 relative mb-4"
-        >
+        <div class="bg-[#092740] rounded-[6px] py-[15px] px-6 flex items-center gap-2 relative mb-4">
             <input
                 type="checkbox"
                 class="cursor-pointer"
@@ -75,11 +73,8 @@
                     props.items.filter((el) => el.val !== null).length === props.items.length
                 "
                 @click="
-                    () => {
-                        emit(
-                            'addAlgoritm',
-                            props.items.findIndex((el) => el.val === null),
-                        );
+                    (e: Event) => {
+                        addNewAlgoritm(e);
                     }
                 "
             >
@@ -90,15 +85,14 @@
                 <div
                     class="absolute right-0 -bottom-[58px] pl-8 invisible opacity-0 group-hover:visible group-hover:opacity-100 transition-[visibility,opacity] z-[1]"
                 >
-                    <div
-                        class="rounded-[6px] bg-[#1B4569] p-3 w-[250px] h-[50px] text-[13px] text-[#77C3FF]"
-                    >
+                    <div class="rounded-[6px] bg-[#1B4569] p-3 w-[250px] h-[50px] text-[13px] text-[#77C3FF]">
                         {{ t('addAlgoritm') }}
                     </div>
-                </div></PrimaryButton
-            >
+                </div>
+            </PrimaryButton>
         </div>
         <AlgoritmsWrapper
+            ref="algoritmsWrapperRef"
             :items="pages[curPage] || []"
             :checkedArr="props.selectedAlgoritms"
             :page="curPage"
@@ -111,8 +105,8 @@
             "
             @deleteAlgoritm="deleteAlgoritm"
             @addAlgoritm="
-                (index: number) => {
-                    emit('addAlgoritm', index);
+                (index: number, label: string | undefined) => {
+                    emit('addAlgoritm', index, label);
                 }
             "
             @creatingFinish="(index: number) => emit('creatingFinish', index)"
@@ -195,7 +189,7 @@ const props = defineProps<{
 
 const emit = defineEmits<{
     (e: 'deleteAlgoritm', indexes: Algoritm[], index: number): void;
-    (e: 'addAlgoritm', index: number): void;
+    (e: 'addAlgoritm', index: number, label: string | undefined): void;
     (e: 'selectAlgoritm', value: boolean, index: Algoritm): void;
     (e: 'selectAllAlgoritms', value: boolean): void;
     (e: 'setIsAllChecked', value: boolean): void;
@@ -211,6 +205,11 @@ const emit = defineEmits<{
 }>();
 
 type Algoritm = { val: 0 | 1 | null; label: string; isCreating?: boolean };
+
+interface AlgoritmsWrapperInstance {
+    changeLabel: (index: number, e: Event, isCreating?: boolean) => void;
+}
+const algoritmsWrapperRef = ref<AlgoritmsWrapperInstance | null>(null);
 
 const curPage = ref(0);
 const headerInput = ref('');
@@ -243,6 +242,13 @@ const pages = computed<Algoritm[][]>(() => {
 
 function deleteAlgoritm(indexes: Algoritm[], index: number) {
     emit('deleteAlgoritm', indexes, index);
+}
+
+function addNewAlgoritm(event: Event) {
+    const index = props.items.findIndex((el) => el.val === null);
+    if (algoritmsWrapperRef.value) {
+        algoritmsWrapperRef.value.changeLabel(index, event, true);
+    }
 }
 
 const { t } = useI18n({

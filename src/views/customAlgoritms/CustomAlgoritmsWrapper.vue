@@ -93,8 +93,8 @@
                     }
                 "
                 @addAlgoritm="
-                    (index: number) => {
-                        algoritms1[index] = { val: 0, label: '', isCreating: true };
+                    (index: number, label: string | undefined) => {
+                        algoritms1[index] = { val: 0, label: label ?? '', isCreating: true };
                         algoritms1Copy = algoritms1;
                         createAlgoritm1 = true;
                     }
@@ -135,8 +135,8 @@
                     }
                 "
                 @addAlgoritm="
-                    (index: number) => {
-                        algoritms2[index] = { val: 0, label: '', isCreating: true };
+                    (index: number, label: string | undefined) => {
+                        algoritms2[index] = { val: 0, label: label ?? '', isCreating: true };
                         algoritms2Copy = algoritms2;
                         createAlgoritm2 = true;
                     }
@@ -209,9 +209,7 @@ const timeoutDev = 10000;
 const curDev = ref<Device>(devices.value[0]);
 let showStatusTimer: ReturnType<typeof setTimeout> | undefined;
 let getDataTimer: ReturnType<typeof setTimeout> | undefined;
-const shownStatus = ref<{ serial: string; state: string; addr: number; version: string } | null>(
-    null,
-);
+const shownStatus = ref<{ serial: string; state: string; addr: number; version: string } | null>(null);
 const statusFormLeft = ref(0);
 const isMouseOnStatusForm = ref(false);
 const isMouseOnDevice = ref(false);
@@ -538,10 +536,8 @@ watch(devices, () => {
 
 watch(funcLabels, () => {
     const addr = curDev.value || devices.value[0] ? (curDev.value || devices.value[0]).addr : 0;
-    let curLabelsLeft = funcLabels.value[addr].find((el) => el.name === curActionLeft.value.val)
-        ?.val as string[];
-    let curLabelsRight = funcLabels.value[addr].find((el) => el.name === curActionRight.value.val)
-        ?.val as string[];
+    let curLabelsLeft = funcLabels.value[addr].find((el) => el.name === curActionLeft.value.val)?.val as string[];
+    let curLabelsRight = funcLabels.value[addr].find((el) => el.name === curActionRight.value.val)?.val as string[];
     clearTimeout(getDataTimer);
     getDataTimer = undefined;
     getData(curLabelsLeft || [], 'l');
