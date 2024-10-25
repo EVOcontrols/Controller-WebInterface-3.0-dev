@@ -173,7 +173,6 @@ function valueChangedHandler() {
             return;
         }
         if (parsed !== lastInitValue) {
-            // if (lastInitValue === undefined || parsed !== (lastInitValue as unknown as number)) {
             lastInitValue = parsed as V;
             emit('valueChanged', parsed as V);
         }
