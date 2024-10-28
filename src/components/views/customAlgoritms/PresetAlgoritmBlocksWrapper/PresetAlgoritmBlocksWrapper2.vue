@@ -407,6 +407,22 @@ async function reRenderLayout(p: number) {
     const obj = createObjByType(props.type.val, config.value, props.device);
     curBody.value = obj as Body;
     await setConfig();
+
+    ent1.value = [];
+    ent2.value = [];
+    ent3.value = [];
+    time1.value = [];
+    time2.value = [];
+    time3.value = [];
+    entLabels1.value = [];
+    entLabels2.value = [];
+    entLabels3.value = [];
+    ent1WConfig1.value = [];
+    ent1WConfig2.value = [];
+    ent1WConfig3.value = [];
+    interfaces1.value = [];
+    interfaces2.value = [];
+    interfaces3.value = [];
 }
 
 function checkConfigToSave() {
@@ -590,12 +606,11 @@ function handleClickSelect(item: DropDownItem) {
 }
 
 async function get1W(ent: EntNum, device: number) {
+    const OWConfig = configByAddr.value[device]['1-wire'];
     await getEntConfig(ent);
     const interfaces = ent === 1 ? interfaces1.value : ent === 2 ? interfaces2.value : interfaces3.value;
-    const entConfig = ent === 1 ? ent1WConfig1.value : ent === 2 ? ent1WConfig2.value : ent1WConfig3.value;
-    const configToUse = device ? cur1WConfig.value : entConfig;
 
-    configToUse.forEach((item) => {
+    OWConfig.forEach((item) => {
         if (item.mode !== 'off' && !interfaces.includes(`1w-${item.mode}`)) {
             interfaces.push(`1w-${item.mode}`);
         }
@@ -615,6 +630,8 @@ async function getMb(ent: EntNum, device: number) {
 }
 
 async function getDevConfig() {
+    if (!config.value.length) isLoading.value = true;
+
     for (const dev of devices.value) {
         const data = await $apiGetConfig(dev.addr);
         configByAddr.value = {
@@ -655,14 +672,18 @@ async function getInterfaces(ent: EntNum, device: number) {
 
     const interfaces = ent === 1 ? interfaces1.value : ent === 2 ? interfaces2.value : interfaces3.value;
 
-    for (let [typeCabap, quantityCapab] of Object.entries(capab)) {
+    for (let [typeCabap, quantityCapab] of Object.entries(capab) as [Interface, number][]) {
         const isValidType = quantityCapab && order.includes(typeCabap);
 
-        if (isValidType && !typeCabap.includes('1w') && typeCabap !== 'mb-var') {
-            interfaces.push(typeCabap as Interface);
-        } else if (typeCabap.includes('1w')) {
+        if (isValidType && !typeCabap.includes('1w') && typeCabap !== 'mb-var' && !interfaces.includes(typeCabap)) {
+            interfaces.push(typeCabap);
+        } else if (typeCabap.includes('1w') && !interfaces.includes(typeCabap)) {
             await get1W(ent, device);
-        } else if (typeCabap === 'mb-var' && curMbConfig.value?.[0]?.mode !== 'ext-devs') {
+        } else if (
+            typeCabap === 'mb-var' &&
+            curMbConfig.value?.[0]?.mode !== 'ext-devs' &&
+            !interfaces.includes(typeCabap)
+        ) {
             await getMb(ent, device);
         }
     }
@@ -776,8 +797,7 @@ async function parseEntity(ent: Ent) {
         await getLabels(entNum, ent.type as UDF);
     }
 
-    const addr = ent.device || 0;
-    const OWConfig = configByAddr.value[addr]['1-wire'];
+    const OWConfig = configByAddr.value[ent.device || 0]['1-wire'];
 
     const entItems = entNum === 1 ? ent1.value : entNum === 2 ? [...ent2.value] : [...ent3.value];
 
@@ -1034,9 +1054,9 @@ async function getConfig() {
     );
 }
 
-onMounted(() => {
-    getDevConfig();
-    getConfig();
+onMounted(async () => {
+    await getDevConfig();
+    await getConfig();
 });
 
 const { t } = useI18n(translate);

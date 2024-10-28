@@ -73,6 +73,7 @@ export type Interface =
     | 'mb-ir'
     | 'mb-hr'
     | 'mb-di'
+    | 'mb-var'
     | 'bin-var'
     | 'int-var'
     | 'tim-var';
