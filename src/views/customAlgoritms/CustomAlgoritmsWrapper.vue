@@ -315,10 +315,11 @@ function setAlgoritmsForDelete(
 
 async function deleteAlgoritms() {
     isAlgoritmsDeleting.value = true;
+    const { index } = algoritmsForDeletion.value[0];
     const body = {
         type: algoritmsForDeletion.value[0].type,
         device: curDev.value.addr,
-        index: algoritmsForDeletion.value[0].index,
+        index,
         ...(algoritmsForDeletion.value[0].type === 'udf-act' && { action: { type: 'none' } }),
         ...(algoritmsForDeletion.value[0].type === 'udf-cond' && { condition: { type: 'none' } }),
         ...(algoritmsForDeletion.value[0].type === 'udf-trig' && { trigger: { type: 'none' } }),
@@ -331,10 +332,20 @@ async function deleteAlgoritms() {
             const prev = [...algoritms1.value];
             prev[algoritmsForDeletion.value[0].index] = { val: null, label: '' };
             algoritms1.value = [...prev];
+            if (algoritms1Copy.value[index].isCreating === true) {
+                algoritms1.value[index].isCreating = undefined;
+                algoritms1Copy.value = [];
+                createAlgoritm1.value = false;
+            }
         } else {
             const prev = [...algoritms2.value];
             prev[algoritmsForDeletion.value[0].index] = { val: null, label: '' };
             algoritms2.value = [...prev];
+            if (algoritms2Copy.value[index].isCreating === true) {
+                algoritms2.value[index].isCreating = undefined;
+                algoritms2Copy.value = [];
+                createAlgoritm2.value = false;
+            }
         }
         isAlgoritmsDeleting.value = false;
     } catch (error) {
