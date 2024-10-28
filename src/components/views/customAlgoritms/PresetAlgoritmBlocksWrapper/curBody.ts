@@ -19,7 +19,7 @@ export const getInitCurBody = (val: UDF, device?: number): Body => {
                 'cond-qty': 1,
                 'start-on-cond': true,
                 'cond-logic': 'or',
-                'init-state': 0,
+                'init-state': 1,
                 value: {
                     type: 'int-const',
                     value: 0,
@@ -74,7 +74,7 @@ export const getInitCurBody = (val: UDF, device?: number): Body => {
                     device: 0,
                     index: 0,
                 },
-                'init-state': 0,
+                'init-state': 1,
             } as Body;
         case 'udf-trig':
         default:
