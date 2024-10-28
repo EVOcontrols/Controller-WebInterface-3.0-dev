@@ -1,13 +1,4 @@
-import {
-    Config,
-    ORDER,
-    UDF,
-    Interface,
-    Mode1W,
-    EntBind,
-    DropDownRealType,
-    CurKeyMap,
-} from './types';
+import { Config, ORDER, UDF, Interface, Mode1W, EntBind, DropDownRealType, CurKeyMap } from './types';
 import { EntType } from '@/typings/funcs';
 import { Device } from '@/stores';
 
@@ -37,14 +28,14 @@ export const createParsedConfig = (
 ): Config[] => {
     const resultConfig: Config[] = [];
 
-    const titleConfig = createTitleConfig(entType, typeVal, interfaces, t);
-    if (titleConfig) {
-        resultConfig.push(titleConfig);
-    }
-
     const deviceConfig = createDeviceConfig(typeVal, t, propDevice, entDevice);
     if (deviceConfig) {
         resultConfig.push(deviceConfig);
+    }
+
+    const interfaceConfig = createInterfaceConfig(entType, typeVal, interfaces, t);
+    if (interfaceConfig) {
+        resultConfig.push(interfaceConfig);
     }
 
     const busConfig = createBusConfig(entType, typeVal, OWConfig, t, entBus, entDevice);
@@ -60,7 +51,7 @@ export const createParsedConfig = (
     return resultConfig;
 };
 
-function createTitleConfig(
+function createInterfaceConfig(
     entType: EntType,
     typeVal: UDF,
     interfaces: Interface[],
@@ -213,12 +204,7 @@ function createObjConfig(
     t: (key: string) => string,
     entIndex?: number,
 ): Config | null {
-    if (
-        entType === 'none' ||
-        entType === 'error' ||
-        entType === 'int-const' ||
-        entType === 'prev-value'
-    ) {
+    if (entType === 'none' || entType === 'error' || entType === 'int-const' || entType === 'prev-value') {
         return null;
     }
 
