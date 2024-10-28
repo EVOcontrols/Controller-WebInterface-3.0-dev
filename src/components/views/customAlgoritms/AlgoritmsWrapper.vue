@@ -151,6 +151,10 @@ function handleClick(i: number) {
         clickTimeout.value = setTimeout(() => {
             if (openedAlgoritms.value.includes(i)) {
                 openedAlgoritms.value = openedAlgoritms.value.filter((el) => el !== i);
+
+                if (props.items[i].isCreating === true) {
+                    emit('creatingFinish', i);
+                }
             } else {
                 openedAlgoritms.value.push(i);
             }
@@ -299,7 +303,10 @@ watch(
 watch(
     () => props.items,
     (newValue, oldValue) => {
-        if (JSON.stringify(newValue) !== JSON.stringify(oldValue)) openedAlgoritms.value = [];
+        if (JSON.stringify(newValue) !== JSON.stringify(oldValue)) {
+            const indexCreating = newValue.findIndex((item) => item.isCreating === true);
+            openedAlgoritms.value = indexCreating !== -1 ? [indexCreating] : [];
+        }
     },
 );
 

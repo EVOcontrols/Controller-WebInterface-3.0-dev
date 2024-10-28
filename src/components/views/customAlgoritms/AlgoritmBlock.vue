@@ -84,7 +84,7 @@
         </div>
         <CollapseTransition :duration="300">
             <PresetAlgoritmBlocksWrapper2
-                v-if="props.isOpen || props.item.isCreating"
+                v-if="props.isOpen"
                 :type="props.curAction"
                 :device="props.device"
                 :index="index"
