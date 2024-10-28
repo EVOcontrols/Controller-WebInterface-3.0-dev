@@ -9,7 +9,7 @@ export const getInitCurBody = (val: UDF, device?: number): Body => {
                 entity: {
                     type: 'pwm-out',
                     device: 0, // для ngc может быть не 0, для нгио всегда 0
-                    index: 1,
+                    index: 0,
                 },
                 delay: {
                     type: 'tim-const',
@@ -31,7 +31,7 @@ export const getInitCurBody = (val: UDF, device?: number): Body => {
                 'stop-val': {
                     type: 'pwm-out',
                     device: 0,
-                    index: 2,
+                    index: 0,
                 },
                 'stop-on-trig': true,
                 'stop-on-cond': true,
@@ -62,17 +62,17 @@ export const getInitCurBody = (val: UDF, device?: number): Body => {
                 result: {
                     type: 'pwm-out',
                     device: 1, // для ngc может быть не 0, для нгио всегда 0
-                    index: 1,
+                    index: 0,
                 },
                 left: {
                     type: 'adc-in',
                     device: 0,
-                    index: 1,
+                    index: 0,
                 },
                 right: {
                     type: 'bin-out',
                     device: 0,
-                    index: 1,
+                    index: 0,
                 },
                 'init-state': 0,
             } as Body;

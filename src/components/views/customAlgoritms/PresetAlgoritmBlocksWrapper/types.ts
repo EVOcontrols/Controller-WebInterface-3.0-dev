@@ -176,8 +176,8 @@ export const ORDER = [
 
 export const enum CurKeyMap {
     StatusStartSystem = 1,
-    Device = 2,
-    Interface = 3,
+    Interface = 2,
+    Device = 3,
     Object = 4,
     Bus = 5,
     TypeUdf = 6,

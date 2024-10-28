@@ -315,7 +315,8 @@ const interfaces3 = ref<Interface[]>([]);
 
 const config = ref<Config[]>([]);
 
-const configByAddr = ref<ControllerSettings>();
+const curConfigByAddr = ref<ControllerSettings>();
+const configByAddr = ref<Record<string, ControllerSettings>>({});
 
 let initBody = null;
 
@@ -614,14 +615,22 @@ async function getMb(ent: EntNum, device: number) {
 }
 
 async function getDevConfig() {
+    for (const dev of devices.value) {
+        const data = await $apiGetConfig(dev.addr);
+        configByAddr.value = {
+            ...configByAddr.value,
+            [dev.addr]: data,
+        };
+    }
+
     const data = await $apiGetConfig(props.device?.addr);
-    configByAddr.value = data;
+    curConfigByAddr.value = data;
     cur1WConfig.value = data['1-wire'] as Mode1W[];
     curMbConfig.value = data['rs-485'] as ModeMb[];
 }
 
 async function getEntConfig(ent: EntNum) {
-    const data = configByAddr.value;
+    const data = curConfigByAddr.value;
     if (data) {
         const val = data['1-wire'] as Mode1W[];
 
@@ -737,7 +746,7 @@ async function parseEntity(ent: Ent) {
         // const ent1WConfigLength = ent1WConfigs[entNum - 1].length;
 
         // if (!ent1WConfigLength && ent.device !== undefined) {
-        //    getEntConfig(entNum, ent.device);
+        //     await getEntConfig(entNum, ent.device);
         // }
 
         const mbTypes = ['mb-co', 'mb-ir', 'mb-hr', 'mb-di'];
@@ -767,7 +776,8 @@ async function parseEntity(ent: Ent) {
         await getLabels(entNum, ent.type as UDF);
     }
 
-    const OWConfig = !props.device || props.device.addr === 0 ? ent1WConfigs[entNum - 1] : cur1WConfig.value;
+    const addr = ent.device || 0;
+    const OWConfig = configByAddr.value[addr]['1-wire'];
 
     const entItems = entNum === 1 ? ent1.value : entNum === 2 ? [...ent2.value] : [...ent3.value];
 

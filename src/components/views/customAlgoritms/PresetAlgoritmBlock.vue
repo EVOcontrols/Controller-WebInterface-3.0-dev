@@ -47,10 +47,7 @@
                     :key="j"
                     @click="
                         () => {
-                            if (
-                                btn.val !== props.btns[item.index].val &&
-                                !props.btns[item.index].disabled
-                            ) {
+                            if (btn.val !== props.btns[item.index].val && !props.btns[item.index].disabled) {
                                 $emit('handleBtnClick', item.index, btn.val);
                             }
                         }
@@ -95,11 +92,7 @@
             <div
                 v-else-if="item.name === 'radioBtns' && props.radioBtns[item.index]"
                 class="gap-3 w-full mt-[0.875rem]"
-                :class="
-                    props.radioBtns[item.index].wrap
-                        ? 'grid grid-cols-2'
-                        : 'flex flex-col flex-wrap'
-                "
+                :class="props.radioBtns[item.index].wrap ? 'grid grid-cols-2' : 'flex flex-col flex-wrap'"
                 :style="[
                     {
                         height: props.radioBtns[item.index].wrap
@@ -167,9 +160,7 @@
                                         'handleCheckboxClick',
                                         item.index,
                                         option.val,
-                                        !props.checkBoxes[item.index][1].valsArr.includes(
-                                            option.val,
-                                        ),
+                                        !props.checkBoxes[item.index][1].valsArr.includes(option.val),
                                         1,
                                     );
                                 }
@@ -178,9 +169,7 @@
                         <label
                             class="select-none nowrap"
                             :class="{
-                                'cursor-pointer': !props.checkBoxes[item.index][1].valsArr.includes(
-                                    option.val,
-                                ),
+                                'cursor-pointer': !props.checkBoxes[item.index][1].valsArr.includes(option.val),
                             }"
                             :for="option.val"
                             >{{ option.label }}</label
@@ -210,9 +199,7 @@
                                         'handleCheckboxClick',
                                         item.index,
                                         option.val,
-                                        !props.checkBoxes[item.index][2].valsArr.includes(
-                                            option.val,
-                                        ),
+                                        !props.checkBoxes[item.index][2].valsArr.includes(option.val),
                                         2,
                                     );
                                 }
@@ -221,9 +208,7 @@
                         <label
                             class="select-none nowrap"
                             :class="{
-                                'cursor-pointer': !props.checkBoxes[item.index][2].valsArr.includes(
-                                    option.val,
-                                ),
+                                'cursor-pointer': !props.checkBoxes[item.index][2].valsArr.includes(option.val),
                             }"
                             :for="option.val"
                             >{{ option.label }}</label
@@ -253,13 +238,7 @@
                     :nullable="false"
                     :required="true"
                     :debounce-delay="1000"
-                    @status-changed="
-                        emit(
-                            'setInputError',
-                            item.index,
-                            $event === 'invalid' || $event === 'empty',
-                        )
-                    "
+                    @status-changed="emit('setInputError', item.index, $event === 'invalid' || $event === 'empty')"
                     @value-changed="
                         $event === undefined
                             ? emit('handleInput', item.index, 0)
@@ -348,15 +327,7 @@ import IButtonIcon from '@/assets/IButtonIcon.vue';
 const props = defineProps<{
     numb: number;
     queue: {
-        name:
-            | 'title'
-            | 'subTitle'
-            | 'btns'
-            | 'tabs'
-            | 'dropDown'
-            | 'radioBtns'
-            | 'input'
-            | 'checkBox';
+        name: 'title' | 'subTitle' | 'btns' | 'tabs' | 'dropDown' | 'radioBtns' | 'input' | 'checkBox';
         index: number;
     }[];
     isFirst: boolean;
@@ -433,13 +404,7 @@ const emit = defineEmits<{
     (e: 'handleInput', inputItemIndex: number, val: number): void;
     (e: 'handleDropDownClick', inputItemIndex: number): void;
     (e: 'setInputError', inputItemIndex: number, res: boolean): void;
-    (
-        e: 'handleCheckboxClick',
-        checkboxItemIndex: number,
-        val: string,
-        status: boolean,
-        part: 1 | 2,
-    ): void;
+    (e: 'handleCheckboxClick', checkboxItemIndex: number, val: string, status: boolean, part: 1 | 2): void;
 }>();
 
 function getNameDropDown(): { index: number; name: string }[] {

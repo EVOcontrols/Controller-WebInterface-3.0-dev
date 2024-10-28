@@ -163,6 +163,11 @@ function createBusConfig(
     OWConfig.forEach((el, index) => {
         buses.push({ val: `${el.mode}${index}`, label: `${t('tabs.bus')}${index + 1}` });
     });
+    const vals = buses
+        .filter((bus) => bus.val.slice(0, bus.val.length - 1) === entType.slice(3))
+        .map((bus) => {
+            return { val: bus.val.slice(bus.val.length - 1), label: bus.label };
+        });
 
     return {
         curKey: CurKeyMap.Bus,
@@ -182,11 +187,7 @@ function createBusConfig(
         btns: [],
         tabs: [
             {
-                vals: buses
-                    .filter((bus) => bus.val.slice(0, bus.val.length - 1) === entType.slice(3))
-                    .map((bus) => {
-                        return { val: bus.val.slice(bus.val.length - 1), label: bus.label };
-                    }),
+                vals,
                 val: entBus,
             },
         ],
