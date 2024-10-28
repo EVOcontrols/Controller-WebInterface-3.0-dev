@@ -5,7 +5,7 @@
             :class="props.isActive ? 'h-[4.25rem]' : 'h-[3.625rem]'"
         >
             <div
-                class="flex flex-row h-[2.188rem] w-4 shrink-0 items-center rounded transition-[background-color,padding] select-none cursor-pointer on:bg-[#134d7d] items-center mr-8"
+                class="flex flex-row h-[2.188rem] w-4 shrink-0 items-center rounded transition-[background-color,padding] select-none cursor-pointer on:bg-[#134d7d] mr-8"
                 @click.stop=""
             >
                 <input
@@ -52,7 +52,7 @@
                 :class="[{ on: props.isOpen }]"
                 @click="emit('oneClick')"
             >
-                {{ props.item.label || '&#8212' }}
+                {{ props.item.label || '&#8212;' }}
                 <span
                     v-html="scrollArrow"
                     class="[&>svg]:h-[0.56rem] [&>svg]:w-[0.31rem] [&>svg>path]:!fill-[#8dc5f6] flex items-center cursor-pointer"
@@ -136,7 +136,7 @@ const emit = defineEmits<{
 async function handleClick() {
     if (props.item.isCreating) return;
     try {
-        const r = await api.post('set_ent_value', {
+        await api.post('set_ent_value', {
             type: props.curAction.val,
             device: props.device ? props.device.addr : 0,
             index: props.index,

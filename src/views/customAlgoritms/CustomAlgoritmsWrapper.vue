@@ -183,8 +183,9 @@ import DeleteAlgoritmPopUp from '@/components/views/customAlgoritms/DeleteAlgori
 import ControlBlock from '@/components/views/customAlgoritms/ControlBlock.vue';
 import type { LabelsType } from '@/typings/files';
 import axios from 'axios';
+import { UDF } from '@/components/views/customAlgoritms/PresetAlgoritmBlocksWrapper/types';
 
-const { readFile } = useReadWriteFiles();
+const { readFile, saveToFile } = useReadWriteFiles();
 
 const indexStore = useIndexStore();
 const funcStore = useFuncsStore();
@@ -314,46 +315,18 @@ function setAlgoritmsForDelete(
 
 async function deleteAlgoritms() {
     isAlgoritmsDeleting.value = true;
-    let body = {};
-    if (algoritmsForDeletion.value[0].type === 'udf-act') {
-        body = {
-            type: 'udf-act',
-            device: curDev.value.addr,
-            index: algoritmsForDeletion.value[0].index,
-            action: {
-                type: 'none',
-            },
-        };
-    } else if (algoritmsForDeletion.value[0].type === 'udf-cond') {
-        body = {
-            type: 'udf-cond',
-            device: curDev.value.addr,
-            index: algoritmsForDeletion.value[0].index,
-            condition: {
-                type: 'none',
-            },
-        };
-    } else if (algoritmsForDeletion.value[0].type === 'udf-trig') {
-        body = {
-            type: 'udf-trig',
-            device: curDev.value.addr,
-            index: algoritmsForDeletion.value[0].index,
-            trigger: {
-                type: 'none',
-            },
-        };
-    } else if (algoritmsForDeletion.value[0].type === 'udf-trans') {
-        body = {
-            type: 'udf-trans',
-            device: curDev.value.addr,
-            index: algoritmsForDeletion.value[0].index,
-            transform: {
-                type: 'none',
-            },
-        };
-    }
+    const body = {
+        type: algoritmsForDeletion.value[0].type,
+        device: curDev.value.addr,
+        index: algoritmsForDeletion.value[0].index,
+        ...(algoritmsForDeletion.value[0].type === 'udf-act' && { action: { type: 'none' } }),
+        ...(algoritmsForDeletion.value[0].type === 'udf-cond' && { condition: { type: 'none' } }),
+        ...(algoritmsForDeletion.value[0].type === 'udf-trig' && { trigger: { type: 'none' } }),
+        ...(algoritmsForDeletion.value[0].type === 'udf-trans' && { transform: { type: 'none' } }),
+    };
+
     try {
-        const r = await api.post('set_udf_cfg', body);
+        await api.post('set_udf_cfg', body);
         if (algoritmsForDeletion.value[0].type == curActionLeft.value.val) {
             const prev = [...algoritms1.value];
             prev[algoritmsForDeletion.value[0].index] = { val: null, label: '' };
@@ -363,7 +336,6 @@ async function deleteAlgoritms() {
             prev[algoritmsForDeletion.value[0].index] = { val: null, label: '' };
             algoritms2.value = [...prev];
         }
-        algoritmsForDeletion.value = [];
         isAlgoritmsDeleting.value = false;
     } catch (error) {
         if (isAborted.value) {
@@ -373,6 +345,8 @@ async function deleteAlgoritms() {
             deleteAlgoritms();
         }, 5);
     }
+
+    await saveLabels();
 }
 
 function selectAlgoritm(value: boolean, index: Algoritm, direction: 'l' | 'r') {
@@ -440,6 +414,47 @@ async function getLabels(type: 'udf-act' | 'udf-cond' | 'udf-trans' | 'udf-trig'
         clearTimeout(getDataTimer);
         getDataTimer = undefined;
         await getData(dir);
+    }
+}
+
+async function saveLabels() {
+    const addr = curDev.value || devices.value[0] ? (curDev.value || devices.value[0]).addr : 0;
+    let curLabelsLeft = funcLabels.value[addr].find((el) => el.name === curActionLeft.value.val)?.val as string[];
+    let curLabelsRight = funcLabels.value[addr].find((el) => el.name === curActionRight.value.val)?.val as string[];
+
+    const index = algoritmsForDeletion.value[0].index;
+    if (algoritmsForDeletion.value[0].type === curActionLeft.value.val) {
+        const cleanedLabelsLeft = [...curLabelsLeft];
+        cleanedLabelsLeft[index] = '';
+        await saveLabel(curActionLeft.value.val, addr, cleanedLabelsLeft);
+    } else {
+        const cleanedLabelsRight = [...curLabelsRight];
+        cleanedLabelsRight[index] = '';
+        await saveLabel(curActionRight.value.val, addr, cleanedLabelsRight);
+    }
+
+    algoritmsForDeletion.value = [];
+}
+
+async function saveLabel(interf: UDF, addr: number, labels: string[]) {
+    const isSavingError = await saveToFile(
+        {
+            type: 'labels',
+            interf,
+            device: addr,
+        },
+        { labels },
+    );
+
+    if (isSavingError) {
+        if (isAborted.value) {
+            return;
+        }
+        setTimeout(() => {
+            saveLabel(interf, addr, labels);
+        }, 5);
+    } else {
+        funcStore.setLabels(addr, interf, labels);
     }
 }
 

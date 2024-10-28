@@ -164,7 +164,7 @@
                                         "
                                     />
                                     <div class="flex-1 text-sm text-[#8DC5F6]">
-                                        {{ item.name || '&#8212' }}
+                                        {{ item.name || '&#8212;' }}
                                     </div>
                                     <div
                                         v-if="shownDropDown.type !== 'bin'"

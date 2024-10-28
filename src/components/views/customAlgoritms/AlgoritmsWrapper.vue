@@ -270,7 +270,7 @@ async function saveLabel(labels: string[]) {
             interf: props.curAction.val,
             device: props.device ? props.device.addr : 0,
         },
-        { labels: labels },
+        { labels },
     );
     if (isSavingError) {
         if (isAborted.value) {

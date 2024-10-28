@@ -39,12 +39,7 @@
                             }
                         "
                         @handleCheckboxClick="
-                            (
-                                checkboxItemIndex: number,
-                                val: string,
-                                status: boolean,
-                                part: 1 | 2,
-                            ) => {
+                            (checkboxItemIndex: number, val: string, status: boolean, part: 1 | 2) => {
                                 handleCheckboxClick(i, checkboxItemIndex, val, status, part);
                             }
                         "
@@ -84,11 +79,7 @@
             @close="shownDropDown = undefined"
             @confirm="
                 () => {
-                    handleDropChange(
-                        shownDropDown ? shownDropDown.configItemIndex : 0,
-                        0,
-                        shownDropDown?.vals || [],
-                    );
+                    handleDropChange(shownDropDown ? shownDropDown.configItemIndex : 0, 0, shownDropDown?.vals || []);
                     shownDropDown = undefined;
                 }
             "
@@ -114,13 +105,7 @@
                     v-else
                     class="select-none w-[1.375rem] h-[1.375rem] rounded-[3px] border border-[#4C84B6] flex items-center justify-center text-[#4C84B6]"
                 >
-                    {{
-                        shownDropDown.type === 'var'
-                            ? 'П'
-                            : shownDropDown.type === 'cond'
-                            ? 'У'
-                            : 'Д'
-                    }}
+                    {{ shownDropDown.type === 'var' ? 'П' : shownDropDown.type === 'cond' ? 'У' : 'Д' }}
                 </div>
             </template>
             <template #title
@@ -144,9 +129,7 @@
                         :status="'valid'"
                         :input-type="['string']"
                         @value-changed="
-                            $event === undefined || $event === ''
-                                ? (headerInput = '')
-                                : (headerInput = $event)
+                            $event === undefined || $event === '' ? (headerInput = '') : (headerInput = $event)
                         "
                     />
                     <span
@@ -160,9 +143,7 @@
                         >
                             <div
                                 class="h-9 w-full"
-                                v-for="(item, i) in shownDropDown.items.filter((el) =>
-                                    el.name.includes(headerInput),
-                                )"
+                                v-for="(item, i) in shownDropDown.items.filter((el) => el.name.includes(headerInput))"
                                 :key="i"
                             >
                                 <div
@@ -186,10 +167,7 @@
                                                             .filter((num) => num !== item.i)
                                                             .sort();
                                                     } else {
-                                                        shownDropDown.vals = [
-                                                            ...shownDropDown.vals,
-                                                            item.i,
-                                                        ].sort();
+                                                        shownDropDown.vals = [...shownDropDown.vals, item.i].sort();
                                                     }
                                                 } else {
                                                     shownDropDown.vals = [item.i];
@@ -213,7 +191,7 @@
                                         "
                                     />
                                     <div class="flex-1 text-sm text-[#8DC5F6]">
-                                        {{ item.name || '&#8212' }}
+                                        {{ item.name || '&#8212;' }}
                                     </div>
                                     <div
                                         v-if="shownDropDown.type !== 'bin'"
@@ -233,23 +211,11 @@
                                             Array.isArray(item.val) &&
                                             item.val[0] !== null
                                                 ? tempUnit === '°C'
-                                                    ? `${
-                                                          Math.round((item.val[0] as number) / 10) /
-                                                          10
-                                                      }°C`
-                                                    : `${
-                                                          (Math.round(
-                                                              (item.val[0] as number) / 10,
-                                                          ) /
-                                                              10) *
-                                                              1.8 +
-                                                          32
-                                                      }°F`
-                                                : shownDropDown.realType === 'pwm-out' &&
-                                                  typeof item.val === 'number'
+                                                    ? `${Math.round((item.val[0] as number) / 10) / 10}°C`
+                                                    : `${(Math.round((item.val[0] as number) / 10) / 10) * 1.8 + 32}°F`
+                                                : shownDropDown.realType === 'pwm-out' && typeof item.val === 'number'
                                                 ? `${item.val / 100}%`
-                                                : shownDropDown.realType === 'adc-in' &&
-                                                  typeof item.val === 'number'
+                                                : shownDropDown.realType === 'adc-in' && typeof item.val === 'number'
                                                 ? `${item.val}%`
                                                 : Array.isArray(item.val)
                                                 ? ''
@@ -1290,8 +1256,7 @@ function handleTabClick(configItemIndex: number, tabsItemIndex: number, val: str
         prevConfig[configItemIndex].tabs[tabsItemIndex].val = val;
         const depInd = prevConfig[configItemIndex].tabs[tabsItemIndex].dependentDropDownIndex;
         if (depInd !== undefined) {
-            prevConfig[depInd].dropDowns[0].type =
-                val === 'bin-out' ? 'bin' : val === '1w-sens' ? '1w-sens' : 'obj';
+            prevConfig[depInd].dropDowns[0].type = val === 'bin-out' ? 'bin' : val === '1w-sens' ? '1w-sens' : 'obj';
         }
         config.value = prevConfig;
     }
@@ -1338,9 +1303,7 @@ function handleCheckboxClick(
             ].sort();
         } else {
             prevConfig[configItemIndex].checkBoxes[checkboxItemIndex][part].valsArr = [
-                ...prevConfig[configItemIndex].checkBoxes[checkboxItemIndex][part].valsArr.filter(
-                    (el) => el !== val,
-                ),
+                ...prevConfig[configItemIndex].checkBoxes[checkboxItemIndex][part].valsArr.filter((el) => el !== val),
             ];
         }
         config.value = prevConfig;
@@ -1419,45 +1382,26 @@ async function getOW(ent: 1 | 2 | 3, device: number) {
         curOWConfig.value.forEach((item) => {
             if (
                 item.mode !== 'off' &&
-                !(
-                    ent === 1
-                        ? interfaces1.value
-                        : ent === 2
-                        ? interfaces2.value
-                        : interfaces3.value
-                ).includes(`1w-${item.mode}`)
+                !(ent === 1 ? interfaces1.value : ent === 2 ? interfaces2.value : interfaces3.value).includes(
+                    `1w-${item.mode}`,
+                )
             ) {
-                (ent === 1
-                    ? interfaces1.value
-                    : ent === 2
-                    ? interfaces2.value
-                    : interfaces3.value
-                ).push(`1w-${item.mode}`);
+                (ent === 1 ? interfaces1.value : ent === 2 ? interfaces2.value : interfaces3.value).push(
+                    `1w-${item.mode}`,
+                );
             }
         });
     } else {
-        (ent === 1
-            ? ent1OWConfig.value
-            : ent === 2
-            ? ent2OWConfig.value
-            : ent3OWConfig.value
-        ).forEach((item) => {
+        (ent === 1 ? ent1OWConfig.value : ent === 2 ? ent2OWConfig.value : ent3OWConfig.value).forEach((item) => {
             if (
                 item.mode !== 'off' &&
-                !(
-                    ent === 1
-                        ? interfaces1.value
-                        : ent === 2
-                        ? interfaces2.value
-                        : interfaces3.value
-                ).includes(`1w-${item.mode}`)
+                !(ent === 1 ? interfaces1.value : ent === 2 ? interfaces2.value : interfaces3.value).includes(
+                    `1w-${item.mode}`,
+                )
             ) {
-                (ent === 1
-                    ? interfaces1.value
-                    : ent === 2
-                    ? interfaces2.value
-                    : interfaces3.value
-                ).push(`1w-${item.mode}`);
+                (ent === 1 ? interfaces1.value : ent === 2 ? interfaces2.value : interfaces3.value).push(
+                    `1w-${item.mode}`,
+                );
             }
         });
     }
@@ -1470,36 +1414,16 @@ async function getMb(ent: 1 | 2 | 3, device: number) {
             bus: 0,
         });
         if (r.data.type.includes('coil')) {
-            (ent === 1
-                ? interfaces1.value
-                : ent === 2
-                ? interfaces2.value
-                : interfaces3.value
-            ).push('mb-co');
+            (ent === 1 ? interfaces1.value : ent === 2 ? interfaces2.value : interfaces3.value).push('mb-co');
         }
         if (r.data.type.includes('ir')) {
-            (ent === 1
-                ? interfaces1.value
-                : ent === 2
-                ? interfaces2.value
-                : interfaces3.value
-            ).push('mb-ir');
+            (ent === 1 ? interfaces1.value : ent === 2 ? interfaces2.value : interfaces3.value).push('mb-ir');
         }
         if (r.data.type.includes('hr')) {
-            (ent === 1
-                ? interfaces1.value
-                : ent === 2
-                ? interfaces2.value
-                : interfaces3.value
-            ).push('mb-hr');
+            (ent === 1 ? interfaces1.value : ent === 2 ? interfaces2.value : interfaces3.value).push('mb-hr');
         }
         if (r.data.type.includes('ir')) {
-            (ent === 1
-                ? interfaces1.value
-                : ent === 2
-                ? interfaces2.value
-                : interfaces3.value
-            ).push('mb-ir');
+            (ent === 1 ? interfaces1.value : ent === 2 ? interfaces2.value : interfaces3.value).push('mb-ir');
         }
     } catch (error) {
         if (isAborted.value) {
@@ -1622,12 +1546,7 @@ async function getInterfaces(ent: 1 | 2 | 3, device: number) {
         }
         for (let obj of Object.entries(r0.data)) {
             if (obj[1] && order.includes(obj[0]) && !obj[0].includes('1w') && obj[0] !== 'mb-var') {
-                (ent === 1
-                    ? interfaces1.value
-                    : ent === 2
-                    ? interfaces2.value
-                    : interfaces3.value
-                ).push(
+                (ent === 1 ? interfaces1.value : ent === 2 ? interfaces2.value : interfaces3.value).push(
                     obj[0] as
                         | '1w-rom'
                         | '1w-sens'
@@ -1694,14 +1613,8 @@ async function getData(
                     ? {
                           entities: [
                               {
-                                  type: ['mb-co', 'mb-ir', 'mb-hr', 'mb-di'].includes(type)
-                                      ? 'mb-var'
-                                      : type,
-                                  device: props.device
-                                      ? props.device.addr === 0
-                                          ? device || 0
-                                          : 0
-                                      : 0,
+                                  type: ['mb-co', 'mb-ir', 'mb-hr', 'mb-di'].includes(type) ? 'mb-var' : type,
+                                  device: props.device ? (props.device.addr === 0 ? device || 0 : 0) : 0,
                                   index: 0,
                                   quantity: quant,
                               },
@@ -1710,9 +1623,7 @@ async function getData(
                     : {
                           entities: [
                               {
-                                  type: ['mb-co', 'mb-ir', 'mb-hr', 'mb-di'].includes(type)
-                                      ? 'mb-var'
-                                      : type,
+                                  type: ['mb-co', 'mb-ir', 'mb-hr', 'mb-di'].includes(type) ? 'mb-var' : type,
                                   device: props.device
                                       ? props.device.addr === 0
                                           ? device || 0
@@ -1728,25 +1639,17 @@ async function getData(
             const r = await api.post('get_ent_state', body);
             const arr: { val: number | null | (number | null)[]; name: string; i: number }[] = [];
             let curLabels: string[] = [];
-            if (
-                type === 'udf-act' ||
-                type === 'udf-cond' ||
-                type === 'udf-trans' ||
-                type === 'udf-trig'
-            ) {
-                curLabels =
-                    num === 1 ? ent1Labels.value : num === 2 ? ent2Labels.value : ent3Labels.value;
+            if (type === 'udf-act' || type === 'udf-cond' || type === 'udf-trans' || type === 'udf-trig') {
+                curLabels = num === 1 ? ent1Labels.value : num === 2 ? ent2Labels.value : ent3Labels.value;
             } else {
-                const labelsVar = labels.value[
-                    props.device ? (props.device.addr === 0 ? device || 0 : 0) : 0
-                ]?.find((el) => el.interf === type)?.val[bus || 0]; //0-bus
+                const labelsVar = labels.value[props.device ? (props.device.addr === 0 ? device || 0 : 0) : 0]?.find(
+                    (el) => el.interf === type,
+                )?.val[bus || 0]; //0-bus
                 curLabels = (Array.isArray(labelsVar) ? labelsVar : []) as string[];
             }
-            r.data.entities[0].state.forEach(
-                (el: number | null | (number | null)[], index: number) => {
-                    arr.push({ val: el, name: curLabels[index] || '', i: index });
-                },
-            );
+            r.data.entities[0].state.forEach((el: number | null | (number | null)[], index: number) => {
+                arr.push({ val: el, name: curLabels[index] || '', i: index });
+            });
             if (isTime) {
                 if (num === 1) {
                     time1.value = [...arr] as {
@@ -1846,12 +1749,7 @@ function parseEntity(ent: Ent) {
     ) {
         getInterfaces(entNum, ent.device);
     }
-    if (
-        ent.type !== 'none' &&
-        ent.type !== 'error' &&
-        ent.type !== 'int-const' &&
-        curDevCapab.value
-    ) {
+    if (ent.type !== 'none' && ent.type !== 'error' && ent.type !== 'int-const' && curDevCapab.value) {
         if (
             !(entNum === 1
                 ? ent1OWConfig.value.length
@@ -1894,10 +1792,7 @@ function parseEntity(ent: Ent) {
             if (capabs) {
                 cur =
                     capabs[
-                        ent.type === 'mb-co' ||
-                        ent.type === 'mb-ir' ||
-                        ent.type === 'mb-hr' ||
-                        ent.type === 'mb-di'
+                        ent.type === 'mb-co' || ent.type === 'mb-ir' || ent.type === 'mb-hr' || ent.type === 'mb-di'
                             ? 'mb-var'
                             : (ent.type as
                                   | '1w-gpio'
@@ -1924,20 +1819,13 @@ function parseEntity(ent: Ent) {
         }
     }
     if (
-        (ent.type === 'udf-act' ||
-            ent.type === 'udf-cond' ||
-            ent.type === 'udf-trans' ||
-            ent.type === 'udf-trig') &&
+        (ent.type === 'udf-act' || ent.type === 'udf-cond' || ent.type === 'udf-trans' || ent.type === 'udf-trig') &&
         !funcLabels.value[props.device ? props.device.addr : 0].find((el) => el.name === ent.type)
     ) {
         getLabels(entNum, ent.type);
     }
     const res: Config[] = [];
-    if (
-        !['none', 'error', 'udf-trig', 'udf-cond', 'udf-act', 'udf-trans', 'int-const'].includes(
-            ent.type,
-        )
-    ) {
+    if (!['none', 'error', 'udf-trig', 'udf-cond', 'udf-act', 'udf-trans', 'int-const'].includes(ent.type)) {
         res.push({
             curKey: 2,
             queue: [
@@ -1958,11 +1846,7 @@ function parseEntity(ent: Ent) {
                 {
                     vals: Array.from(
                         new Set(
-                            entNum === 1
-                                ? interfaces1.value
-                                : entNum === 2
-                                ? interfaces2.value
-                                : interfaces3.value,
+                            entNum === 1 ? interfaces1.value : entNum === 2 ? interfaces2.value : interfaces3.value,
                         ),
                     )
                         .map((el) => {
@@ -1984,8 +1868,7 @@ function parseEntity(ent: Ent) {
     if (ent.device !== undefined) {
         const devVals =
             (props.device && props.device.addr) ||
-            ((!props.device || !props.device.addr) &&
-                (props.type.val === 'udf-act' || props.type.val === 'udf-trans'))
+            ((!props.device || !props.device.addr) && (props.type.val === 'udf-act' || props.type.val === 'udf-trans'))
                 ? [
                       {
                           val: 0,
@@ -2076,12 +1959,7 @@ function parseEntity(ent: Ent) {
         });
     }
 
-    if (
-        ent.type !== 'none' &&
-        ent.type !== 'error' &&
-        ent.type !== 'int-const' &&
-        ent.type !== 'prev-value'
-    )
+    if (ent.type !== 'none' && ent.type !== 'error' && ent.type !== 'int-const' && ent.type !== 'prev-value')
         res.push({
             curKey: 4,
             queue: [
@@ -2135,12 +2013,7 @@ function parseEntity(ent: Ent) {
                         | '1w-rom'
                         | '1w-sens'
                         | '1w-gpio',
-                    items:
-                        entNum === 1
-                            ? ent1.value
-                            : entNum === 2
-                            ? [...ent2.value]
-                            : [...ent3.value],
+                    items: entNum === 1 ? ent1.value : entNum === 2 ? [...ent2.value] : [...ent3.value],
                     vals: ent.index !== undefined ? [ent.index] : [],
                 },
             ],
@@ -2152,14 +2025,7 @@ function parseTime(time: Time, title: string) {
     const timeNum = time1.value.length ? (time2.value.length ? 3 : 2) : 1;
     if (!props.device || !curDevCapab.value) return;
     if (time.type === 'tim-var')
-        getData(
-            timeNum,
-            'tim-var',
-            curDevCapab.value['tim-var'],
-            props.device.addr,
-            undefined,
-            true,
-        );
+        getData(timeNum, 'tim-var', curDevCapab.value['tim-var'], props.device.addr, undefined, true);
     const res: Config[] = [];
     if (time.type === 'tim-const') {
         res.push({
@@ -2222,12 +2088,7 @@ function parseTime(time: Time, title: string) {
                 {
                     type: 'var',
                     realType: 'tim-var',
-                    items:
-                        timeNum === 1
-                            ? time1.value
-                            : timeNum === 2
-                            ? [...time2.value]
-                            : [...time3.value],
+                    items: timeNum === 1 ? time1.value : timeNum === 2 ? [...time2.value] : [...time3.value],
                     vals: [],
                 },
             ],
@@ -2236,12 +2097,7 @@ function parseTime(time: Time, title: string) {
     return res;
 }
 
-function parseMultiSelect(
-    type: 'udf-act' | 'udf-cond',
-    idx: number,
-    quant: number,
-    logic?: 'and' | 'or',
-) {
+function parseMultiSelect(type: 'udf-act' | 'udf-cond', idx: number, quant: number, logic?: 'and' | 'or') {
     if (!props.device || !curDevCapab.value) return;
     if (!funcLabels.value[props.device ? props.device.addr : 0].find((el) => el.name === type)) {
         getLabels(1, type);
@@ -2340,11 +2196,7 @@ function setConfig() {
                 dropDowns: [],
             });
         }
-        if (
-            curBody.value['entity'] &&
-            curBody.value.entity &&
-            curBody.value.entity.type !== 'prev-value'
-        ) {
+        if (curBody.value['entity'] && curBody.value.entity && curBody.value.entity.type !== 'prev-value') {
             const val = parseEntity(curBody.value.entity);
             if (val) res.push(...val);
         }
@@ -2363,9 +2215,7 @@ function setConfig() {
             curBody.value.right &&
             curBody.value.right.type !== 'prev-value'
         ) {
-            const val = parseEntity(curBody.value.right)?.map((el) =>
-                Object.assign(el, { curKey: el.curKey + 4 }),
-            );
+            const val = parseEntity(curBody.value.right)?.map((el) => Object.assign(el, { curKey: el.curKey + 4 }));
             if (val) res.push(...val);
         }
         if (
@@ -2374,9 +2224,7 @@ function setConfig() {
             curBody.value.result &&
             curBody.value.result.type !== 'prev-value'
         ) {
-            const val = parseEntity(curBody.value.result)?.map((el) =>
-                Object.assign(el, { curKey: el.curKey + 8 }),
-            );
+            const val = parseEntity(curBody.value.result)?.map((el) => Object.assign(el, { curKey: el.curKey + 8 }));
             if (val) res.push(...val);
         }
         if (props.type.val === 'udf-trig' && curBody.value['type']) {
@@ -2492,11 +2340,7 @@ function setConfig() {
                 dropDowns: [],
             });
         }
-        if (
-            props.type.val === 'udf-act' &&
-            curBody.value['type'] === 'modify' &&
-            curBody.value['operation']
-        ) {
+        if (props.type.val === 'udf-act' && curBody.value['type'] === 'modify' && curBody.value['operation']) {
             res.push({
                 curKey: 7,
                 queue: [
@@ -2607,8 +2451,7 @@ function setConfig() {
             (curBody.value['value']['type'] === 'int-const' || props.isCreating || isUpdating.value)
         ) {
             res.push(
-                curBody.value['operation'] === 'bin-equal' ||
-                    curBody.value['operation'] === 'bin-not-equal'
+                curBody.value['operation'] === 'bin-equal' || curBody.value['operation'] === 'bin-not-equal'
                     ? {
                           curKey: 9,
                           queue: [
@@ -2657,9 +2500,7 @@ function setConfig() {
         }
         if (curBody.value['value'] && curBody.value['value']['type'] !== 'int-const') {
             if (curBody.value['value'] && curBody.value.entity) {
-                const val = parseEntity(curBody.value.value)?.map((el) =>
-                    Object.assign(el, { curKey: el.curKey + 9 }),
-                );
+                const val = parseEntity(curBody.value.value)?.map((el) => Object.assign(el, { curKey: el.curKey + 9 }));
                 if (val) res.push(...val);
             }
         }
@@ -2770,8 +2611,7 @@ function setConfig() {
             (curBody.value['value']['type'] === 'int-const' || props.isCreating || isUpdating.value)
         ) {
             res.push(
-                curBody.value['operation'] === 'bin-equal' ||
-                    curBody.value['operation'] === 'bin-not-equal'
+                curBody.value['operation'] === 'bin-equal' || curBody.value['operation'] === 'bin-not-equal'
                     ? {
                           curKey: 22,
                           queue: [
@@ -2843,9 +2683,7 @@ function setConfig() {
                 tabs: [],
                 radioBtns: [],
                 checkBoxes: [],
-                inputs: [
-                    { val: curBody.value['hysteresis'], min: -32768, max: 32767, isError: false },
-                ],
+                inputs: [{ val: curBody.value['hysteresis'], min: -32768, max: 32767, isError: false }],
                 dropDowns: [],
             });
         }
@@ -2867,11 +2705,7 @@ function setConfig() {
             if (val) res.push(...val);
         }
         if (props.type.val === 'udf-trig') {
-            const val = parseMultiSelect(
-                'udf-act',
-                curBody.value['act-idx'] || 0,
-                curBody.value['act-qty'] || 0,
-            );
+            const val = parseMultiSelect('udf-act', curBody.value['act-idx'] || 0, curBody.value['act-qty'] || 0);
             if (val) res.push(...val);
         }
         if (props.type.val === 'udf-act') {
@@ -2909,9 +2743,7 @@ function setConfig() {
                     {
                         1: {
                             title: t('titles.startMode'),
-                            vals: [
-                                { label: t('checkBoxes.conditionsOccur'), val: 'conditionsOccur' },
-                            ],
+                            vals: [{ label: t('checkBoxes.conditionsOccur'), val: 'conditionsOccur' }],
                             valsArr: valArr1,
                         },
                         2: {
@@ -3100,8 +2932,7 @@ async function getConfig(i: number = 0) {
                 index: props.index,
             });
             if (!curBody.value) {
-                curBody.value =
-                    r.data.trigger || r.data.condition || r.data.action || r.data.transform;
+                curBody.value = r.data.trigger || r.data.condition || r.data.action || r.data.transform;
             }
             initBody = curBody.value;
             if (i < 3) {

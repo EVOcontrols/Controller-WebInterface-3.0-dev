@@ -1,7 +1,5 @@
 <template>
-    <div
-        class="fixed top-0 bottom-0 left-0 right-0 z-[4] bg-[#001D34B2] flex items-center justify-center"
-    >
+    <div class="fixed top-0 bottom-0 left-0 right-0 z-[4] bg-[#001D34B2] flex items-center justify-center">
         <div
             class="relative p-6 bg-[#0C314F] shadow-[0_0_22px_0_#082135] min-w-[26.25rem] rounded-[12px] flex flex-col gap-[18px] w-[26.25rem]"
             :style="{ height: 'fit-content' }"
@@ -37,7 +35,7 @@
                     />
                 </div>
                 <div class="text-sm font-semibold leading-[120%] text-[#ADEBFF] select-none">
-                    {{ props.algoritms[0].label || '&#8212' }}
+                    {{ props.algoritms[0].label || '&#8212;' }}
                 </div>
             </div>
             <div class="flex justify-end items-center gap-2">

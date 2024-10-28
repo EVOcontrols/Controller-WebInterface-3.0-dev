@@ -8,7 +8,7 @@
             class="h-8 w-[2px] bg-[#158EF8] rounded-r-[2px] absolute top-[13px] left-0"
         ></div>
         <div
-            class="flex flex-row h-[2.188rem] shrink-0 items-center rounded transition-[background-color,padding] select-none cursor-pointer on:bg-[#134d7d] items-center mr-8"
+            class="flex flex-row h-[2.188rem] shrink-0 items-center rounded transition-[background-color,padding] select-none cursor-pointer on:bg-[#134d7d] mr-8"
             @click.stop=""
         >
             <input
@@ -36,12 +36,8 @@
             />
         </div>
         <div class="flex-1 flex flex-col">
-            <div class="text-sm font-semibold leading-[120%] text-[#ADEBFF] select-none">
-                Название
-            </div>
-            <div class="text-sm font-semibold leading-[120%] text-[#6CB5D3] select-none">
-                Группа / Шаблон
-            </div>
+            <div class="text-sm font-semibold leading-[120%] text-[#ADEBFF] select-none">Название</div>
+            <div class="text-sm font-semibold leading-[120%] text-[#6CB5D3] select-none">Группа / Шаблон</div>
         </div>
         <div
             class="cursor-pointer w-4 h-4 group"

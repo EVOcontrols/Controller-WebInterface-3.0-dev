@@ -78,9 +78,7 @@
                 @mouseleave="indexStore.toggleIsEditPopUpShown(false)"
                 class="absolute flex flex-col gap-3 py-5 px-5 left-[136px] top-[174px] w-[270px] bg-[#1B4569] rounded-[10px] transition-[visibility,opacity] z-[1]"
             >
-                <span class="w-full text-[#A0D5FF] font-semibold text_wrap">{{
-                    t('infoBlock.title')
-                }}</span>
+                <span class="w-full text-[#A0D5FF] font-semibold text_wrap">{{ t('infoBlock.title') }}</span>
                 <div class="w-full text-balance text-[#77C3FF] text_wrap">
                     {{ t('infoBlock.text.p1')
                     }}{{ ngcModbusMode === 'off' ? t('infoBlock.text.off') : t('infoBlock.text.mb')
@@ -116,9 +114,7 @@
                         v-html="gears"
                         class="self-center mb-4 [&>svg]:w-12"
                     ></span>
-                    <div
-                        class="text-[#9adbf6] text-sm leading-[1.167] tracking-[0.03em] whitespace-pre"
-                    >
+                    <div class="text-[#9adbf6] text-sm leading-[1.167] tracking-[0.03em] whitespace-pre">
                         <div>
                             {{ t('initializing', { index: extDeviceInInitIndex }) }}
                         </div>
@@ -138,9 +134,7 @@
                         v-html="spinner"
                         class="self-center mb-4 [&>svg]:w-8 [&>svg>path]:fill-[#148ef8]"
                     ></span>
-                    <div
-                        class="text-[#9adbf6] text-sm leading-[1.167] tracking-[0.03em] whitespace-pre"
-                    >
+                    <div class="text-[#9adbf6] text-sm leading-[1.167] tracking-[0.03em] whitespace-pre">
                         <div>
                             {{ t('longQuery') }}
                         </div>
@@ -158,8 +152,6 @@ import admin from '@/assets/img/admin.svg?raw';
 import user from '@/assets/img/user.svg?raw';
 import DateTimeInfo from '@/components/DateTimeInfo.vue';
 import SelectedItemLine from '@/components/SelectedItemLine.vue';
-import LangNcSwitcher from '@/components/dev/LangNcSwitcher.vue';
-import type { CommonSettingsFileType } from '@/typings/files';
 import type { LabelsType, MbType } from '@/typings/files';
 import type { FuncsNumberPerPage } from '@/typings/funcs';
 import type { DeviceAddr } from '@/typings/common';
@@ -169,7 +161,6 @@ import gears from '@/assets/img/gears-animated.svg?raw';
 import type { ControllerSettings, ExtDevsListRaw } from '@/typings/settings';
 import spinner from '@/assets/img/spinner-inside-button.svg?raw';
 import type { Device, Interf } from '@/stores';
-import axios from 'axios';
 import { useStoreCommonSettingsFile } from '@/composables/useStoreCommonSettingsFile';
 
 const indexStore = useIndexStore();
@@ -189,9 +180,7 @@ const {
     visibleWidgets,
     ngcModbusMode,
     chosenDevices,
-    chosenInterfaces,
     isPriorWOpen,
-    devicesState,
     isEditPopUpShown,
     isRebootRequired,
     needToReqData,
@@ -282,8 +271,6 @@ const zIndex = ref<number | 'unset'>(0);
 let zIndexTimer: ReturnType<typeof setTimeout> | undefined;
 
 const currentUserRole = userRole.value;
-
-let getDevicesTimer: ReturnType<typeof setTimeout> | undefined;
 
 let getDevicesStatesTimer: ReturnType<typeof setTimeout> | undefined;
 
@@ -459,8 +446,7 @@ const { t } = useI18n({
                 customAlgoritms: 'Пользовательские алгоритмы',
                 settings: 'Настройки системы',
             },
-            initializing:
-                'Идет инициализация устройства расширения #{index}, пожалуйста подождите...',
+            initializing: 'Идет инициализация устройства расширения #{index}, пожалуйста подождите...',
             longQuery: 'Запрос занял больше времени, чем ожидалось. Пожалуйста, подождите...',
             admin: 'Администратор',
             user: 'Пользователь',
@@ -537,9 +523,7 @@ async function setDevicesStates() {
                     devices.value[index].state !== 'no-conn' &&
                     devices.value[index].state !== 'error') ||
                     (chosenDevices.value.includes(devices.value[index].addr) && index === 0)) &&
-                !devices.value
-                    .slice(0, index)
-                    .filter((elem: Device) => elem.addr === devices.value[index].addr).length
+                !devices.value.slice(0, index).filter((elem: Device) => elem.addr === devices.value[index].addr).length
             ) {
                 const reqArr: {
                     type: string;
@@ -561,17 +545,12 @@ async function setDevicesStates() {
                             val: number;
                             bus: number;
                         }[];
-                        if (
-                            (interfArr[i.bus] && interfArr[i.bus].val) ||
-                            (interfArr[0] && interfArr[0].val)
-                        ) {
+                        if ((interfArr[i.bus] && interfArr[i.bus].val) || (interfArr[0] && interfArr[0].val)) {
                             reqArr.push({
                                 type: i.interf,
                                 device: devices.value[index].addr,
                                 index: 0,
-                                quantity: interfArr[i.bus]
-                                    ? interfArr[i.bus].val
-                                    : interfArr[0].val,
+                                quantity: interfArr[i.bus] ? interfArr[i.bus].val : interfArr[0].val,
                                 bus: i.bus,
                             });
                         }
@@ -658,9 +637,7 @@ async function checkMb(d: number, mb: { mode: 'off' | 'variables' }[]) {
         let mbArr: { interf: string; bus: number }[] | null = null;
         for (let i = 0; i < mb.length; i += 1) {
             if (mb[i].mode === 'variables') {
-                mbArr !== null
-                    ? mbArr.push({ interf: 'mb-var', bus: i })
-                    : (mbArr = [{ interf: 'mb-var', bus: i }]);
+                mbArr !== null ? mbArr.push({ interf: 'mb-var', bus: i }) : (mbArr = [{ interf: 'mb-var', bus: i }]);
             }
         }
         if (!mbArr) mbArr = [];
@@ -691,11 +668,8 @@ async function checkOWs(d: number, ow: { mode: 'off' | 'sens' | 'rom' | 'gpio' }
         let owArr: { interf: string; bus: number }[] | null = null;
         for (let i = 0; i < ow.length; i += 1) {
             if (ow[i].mode !== 'off') {
-                const interf =
-                    ow[i].mode === 'sens' ? '1w-sens' : ow[i].mode === 'rom' ? '1w-rom' : '1w-gpio';
-                owArr !== null
-                    ? owArr.push({ interf: interf, bus: i })
-                    : (owArr = [{ interf: interf, bus: i }]);
+                const interf = ow[i].mode === 'sens' ? '1w-sens' : ow[i].mode === 'rom' ? '1w-rom' : '1w-gpio';
+                owArr !== null ? owArr.push({ interf: interf, bus: i }) : (owArr = [{ interf: interf, bus: i }]);
             }
         }
         if (!owArr) owArr = [];
@@ -768,13 +742,7 @@ async function getDevices(
             newArr.push(devicesArr.value[0]);
         }
         newArr.push(
-            Object.assign(
-                r0.data,
-                { index: index },
-                { devStatus: state },
-                { serial: serial },
-                { version: version },
-            ),
+            Object.assign(r0.data, { index: index }, { devStatus: state }, { serial: serial }, { version: version }),
         );
         devicesArr.value = [...newArr];
         if (device === 0) {
@@ -877,7 +845,7 @@ async function getExtStatuses() {
             if (isAborted.value) {
                 return;
             }
-            return new Promise((resolve) =>
+            return new Promise(() =>
                 setTimeout(() => {
                     getExtStatuses();
                 }, 20),
@@ -959,7 +927,7 @@ async function getMbDevsLabels(d: number, bus: number) {
         arr.push('');
     }
     if (reqLabels === 'error') {
-        return new Promise((resolve) =>
+        return new Promise(() =>
             setTimeout(() => {
                 getMbDevsLabels(d, bus);
             }, 5),
@@ -981,7 +949,7 @@ async function getMbDevs(d: number, bus: number) {
         bus: bus,
     });
     if (mbDevs === 'error') {
-        return new Promise((resolve) =>
+        return new Promise(() =>
             setTimeout(() => {
                 getMbDevs(d, bus);
             }, 5),
@@ -1019,7 +987,7 @@ async function getLabels(
                 interf: 'mb-var',
             });
             if (reqLabels === 'error') {
-                return new Promise((resolve) =>
+                return new Promise(() =>
                     setTimeout(() => {
                         getLabels(d, interf, bus);
                     }, 5),
@@ -1045,7 +1013,7 @@ async function getLabels(
             interf: interf,
         });
         if (reqLabels === 'error') {
-            return new Promise((resolve) =>
+            return new Promise(() =>
                 setTimeout(() => {
                     getLabels(d, interf, bus);
                 }, 5),
@@ -1074,9 +1042,7 @@ onMounted(async () => {
 
 function setInfo() {
     for (let i = 0; i < devicesArr.value.length; i += 1) {
-        if (
-            devices.value.findIndex((obj: Device) => obj.addr === devicesArr.value[i].index) === -1
-        ) {
+        if (devices.value.findIndex((obj: Device) => obj.addr === devicesArr.value[i].index) === -1) {
             let interfArr: [string | { interf: string; bus: number }] | null = null;
             for (let j = 0; j < interfaces.value.length; j++) {
                 if (devicesArr.value[i][interfaces.value[j].value]) {
@@ -1123,9 +1089,7 @@ function setInfo() {
                 Object.assign(
                     { addr: devicesArr.value[i].index as number }, // index!
                     {
-                        type: (devicesArr.value[i].type +
-                            ' ' +
-                            devicesArr.value[i].index) as string,
+                        type: (devicesArr.value[i].type + ' ' + devicesArr.value[i].index) as string,
                     },
                     {
                         interf: interfArr as [
