@@ -151,11 +151,7 @@ async function createResultConfig(
     return configs.map((el) => Object.assign(el, { curKey: el.curKey + 8 }));
 }
 
-function createCompareConfig(
-    curBodyVal: Body,
-    typeVal: UDF,
-    t: (key: string) => string,
-): Config | null {
+function createCompareConfig(curBodyVal: Body, typeVal: UDF, t: (key: string) => string): Config | null {
     if (typeVal !== 'udf-trig' || !curBodyVal['type']) {
         return null;
     }
@@ -186,11 +182,7 @@ function createCompareConfig(
     };
 }
 
-function createComparisonOperationConfig(
-    curBodyVal: Body,
-    typeVal: UDF,
-    t: (key: string) => string,
-): Config | null {
+function createComparisonOperationConfig(curBodyVal: Body, typeVal: UDF, t: (key: string) => string): Config | null {
     if (
         (typeVal === 'udf-trig' &&
             (curBodyVal['type'] === 'compare' || curBodyVal['type'] === 'hold') &&
@@ -234,11 +226,7 @@ function createComparisonOperationConfig(
     }
 }
 
-function createMathOperationConfig(
-    curBodyVal: Body,
-    typeVal: UDF,
-    t: (key: string) => string,
-): Config | null {
+function createMathOperationConfig(curBodyVal: Body, typeVal: UDF, t: (key: string) => string): Config | null {
     if (typeVal !== 'udf-trans' || !curBodyVal['operation']) {
         return null;
     }
@@ -291,11 +279,7 @@ function createMathOperationConfig(
     };
 }
 
-function createBitOperationConfig(
-    curBodyVal: Body,
-    typeVal: UDF,
-    t: (key: string) => string,
-): Config | null {
+function createBitOperationConfig(curBodyVal: Body, typeVal: UDF, t: (key: string) => string): Config | null {
     if (typeVal !== 'udf-act' || curBodyVal['type'] !== 'modify' || !curBodyVal['operation']) {
         return null;
     }
@@ -385,11 +369,7 @@ function createActionConfig(
     };
 }
 
-function createComparisonValConfig(
-    curBodyVal: Body,
-    typeVal: UDF,
-    t: (key: string) => string,
-): Config | null {
+function createComparisonValConfig(curBodyVal: Body, typeVal: UDF, t: (key: string) => string): Config | null {
     if (!curBodyVal['value']) {
         return null;
     }
@@ -419,11 +399,7 @@ function createComparisonValConfig(
     };
 }
 
-function createOperationBinConfig(
-    curBodyVal: Body,
-    isCreating: boolean,
-    t: (key: string) => string,
-): Config | null {
+function createOperationBinConfig(curBodyVal: Body, isCreating: boolean, t: (key: string) => string): Config | null {
     if (!curBodyVal['value'] || curBodyVal['value']['type'] !== 'int-const') {
         return null;
     }
@@ -492,11 +468,7 @@ async function createValueConfig(
     return configs.map((el) => Object.assign(el, { curKey: el.curKey + 9 }));
 }
 
-function createStopValueConfig(
-    curBodyVal: Body,
-    typeVal: UDF,
-    t: (key: string) => string,
-): Config | null {
+function createStopValueConfig(curBodyVal: Body, typeVal: UDF, t: (key: string) => string): Config | null {
     if (typeVal !== 'udf-act' || !curBodyVal['stop-val']) {
         return null;
     }
@@ -531,16 +503,8 @@ function createStopValueConfig(
     };
 }
 
-function createIntConstConfig(
-    curBodyVal: Body,
-    typeVal: UDF,
-    t: (key: string) => string,
-): Config | null {
-    if (
-        typeVal !== 'udf-act' ||
-        !curBodyVal['stop-val'] ||
-        curBodyVal['stop-val']['type'] !== 'int-const'
-    ) {
+function createIntConstConfig(curBodyVal: Body, typeVal: UDF, t: (key: string) => string): Config | null {
+    if (typeVal !== 'udf-act' || !curBodyVal['stop-val'] || curBodyVal['stop-val']['type'] !== 'int-const') {
         return null;
     }
 
@@ -610,11 +574,7 @@ async function createActValueConfig(
     return configs.map((el) => Object.assign(el, { curKey: el.curKey + 21 }));
 }
 
-function createHysteresisConfig(
-    curBodyVal: Body,
-    typeVal: UDF,
-    t: (key: string) => string,
-): Config | null {
+function createHysteresisConfig(curBodyVal: Body, typeVal: UDF, t: (key: string) => string): Config | null {
     if (typeVal !== 'udf-trig' || curBodyVal['hysteresis'] === undefined) {
         return null;
     }
@@ -695,11 +655,7 @@ async function createActionMultiSelectConfig(
         return null;
     }
 
-    const configs = await cbParseMultiSelect(
-        'udf-act',
-        curBodyVal['act-idx'] || 0,
-        curBodyVal['act-qty'] || 0,
-    );
+    const configs = await cbParseMultiSelect('udf-act', curBodyVal['act-idx'] || 0, curBodyVal['act-qty'] || 0);
     if (!configs || !configs.length) return null;
     return configs;
 }
@@ -728,11 +684,7 @@ async function createConditionMultiSelectConfig(
     return configs;
 }
 
-function createStartStopModeConfig(
-    curBodyVal: Body,
-    typeVal: UDF,
-    t: (key: string) => string,
-): Config | null {
+function createStartStopModeConfig(curBodyVal: Body, typeVal: UDF, t: (key: string) => string): Config | null {
     if (
         typeVal !== 'udf-act' ||
         curBodyVal['start-on-cond'] === undefined ||
@@ -786,11 +738,7 @@ function createStartStopModeConfig(
     };
 }
 
-function createCycleModeConfig(
-    curBodyVal: Body,
-    typeVal: UDF,
-    t: (key: string) => string,
-): Config | null {
+function createCycleModeConfig(curBodyVal: Body, typeVal: UDF, t: (key: string) => string): Config | null {
     if (
         typeVal !== 'udf-act' ||
         curBodyVal.type !== 'cycle' ||
@@ -846,7 +794,7 @@ async function createMinTimeConfig(
     const configs = await cbParseTime(curBodyVal['min-time'], t('titles.minTime'));
     if (!configs || !configs.length) return null;
 
-    return configs.map((el) => Object.assign(el, { curKey: el.curKey + 5 }));
+    return configs.map((el) => Object.assign(el, { curKey: CurKeyMap.MinTime }));
 }
 
 async function createMaxTimeConfig(
@@ -861,5 +809,5 @@ async function createMaxTimeConfig(
     const configs = await cbParseTime(curBodyVal['max-time'], t('titles.maxTime'));
     if (!configs || !configs.length) return null;
 
-    return configs.map((el) => Object.assign(el, { curKey: el.curKey + 6 }));
+    return configs.map((el) => Object.assign(el, { curKey: CurKeyMap.MaxTime }));
 }

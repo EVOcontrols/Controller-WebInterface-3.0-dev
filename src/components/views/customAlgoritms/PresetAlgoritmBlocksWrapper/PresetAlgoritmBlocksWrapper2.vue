@@ -402,6 +402,7 @@ async function reRenderLayout(p: number) {
     if (isLoading.value) return;
     isUpdating.value = true;
 
+    // console.log('config.value', JSON.parse(JSON.stringify(config.value)));
     const obj = createObjByType(props.type.val, config.value, props.device);
     curBody.value = obj as Body;
     await setConfig();
@@ -784,28 +785,7 @@ async function parseEntity(ent: Ent) {
     );
 }
 
-function getConfigTimeByTitle(title: string) {
-    switch (title) {
-        case t('titles.during'): {
-            return config.value.find((el) => el.curKey === CurKeyMap.Time);
-        }
-        case t('titles.delay'): {
-            return config.value.find((el) => el.curKey === CurKeyMap.Delay);
-        }
-        case t('titles.pause'): {
-            return config.value.find((el) => el.curKey === CurKeyMap.Pause);
-        }
-        case t('titles.minTime'): {
-            return config.value.find((el) => el.curKey === CurKeyMap.MinTime);
-        }
-        case t('titles.maxTime'): {
-            return config.value.find((el) => el.curKey === CurKeyMap.MaxTime);
-        }
-    }
-}
-
-function getConstBtns(title: string) {
-    const configTime = getConfigTimeByTitle(title);
+function getConstBtns(configTime?: Config) {
     const val = configTime?.btns[0].val;
     return [
         {
@@ -827,7 +807,7 @@ function getConstBtns(title: string) {
     ];
 }
 
-function getVarBtns(title: string) {
+function getVarBtns() {
     return [
         {
             vals: [
@@ -840,6 +820,7 @@ function getVarBtns(title: string) {
 }
 
 async function parseTime(time: Time, title: string): Promise<Config[] | undefined> {
+    // console.log('time, ', time, 'title', title);
     const timeNum = time1.value.length ? (time2.value.length ? 3 : 2) : 1;
     if (!props.device || !curDevCapab.value) return;
 
@@ -861,11 +842,12 @@ async function parseTime(time: Time, title: string): Promise<Config[] | undefine
     //     newS = s / 1000;
     // }
 
+    const configTime = getConfigTimeByTitle(title);
     const items = timeNum === 1 ? time1.value : timeNum === 2 ? [...time2.value] : [...time3.value];
     const isConst = time.type === 'tim-const';
     return [
         {
-            curKey: CurKeyMap.Time,
+            curKey: configTime?.curKey || CurKeyMap.Time,
             queue: isConst
                 ? [
                       { name: 'title', index: 0 },
@@ -880,7 +862,7 @@ async function parseTime(time: Time, title: string): Promise<Config[] | undefine
                       { name: 'dropDown', index: 0 },
                   ],
             titles: isConst ? [title] : [title, t('titles.object')],
-            btns: isConst ? getConstBtns(title) : getVarBtns(title),
+            btns: isConst ? getConstBtns(configTime) : getVarBtns(),
             tabs: [],
             radioBtns: [],
             checkBoxes: [],
@@ -892,11 +874,31 @@ async function parseTime(time: Time, title: string): Promise<Config[] | undefine
                           type: 'var',
                           realType: 'tim-var',
                           items: items,
-                          vals: [],
+                          vals: time.index !== undefined ? [time.index] : [],
                       },
                   ],
         },
     ];
+}
+
+function getConfigTimeByTitle(title: string): Config | undefined {
+    switch (title) {
+        case t('titles.during'): {
+            return config.value.find((el) => el.curKey === CurKeyMap.Time);
+        }
+        case t('titles.delay'): {
+            return config.value.find((el) => el.curKey === CurKeyMap.Delay);
+        }
+        case t('titles.pause'): {
+            return config.value.find((el) => el.curKey === CurKeyMap.Pause);
+        }
+        case t('titles.minTime'): {
+            return config.value.find((el) => el.curKey === CurKeyMap.MinTime);
+        }
+        case t('titles.maxTime'): {
+            return config.value.find((el) => el.curKey === CurKeyMap.MaxTime);
+        }
+    }
 }
 
 async function parseMultiSelect(
@@ -984,6 +986,7 @@ async function setConfig() {
         props.device,
     );
 
+    console.log('resultConfig.sort();', JSON.parse(JSON.stringify(resultConfig.sort())));
     config.value = resultConfig.sort();
 }
 
