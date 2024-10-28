@@ -665,7 +665,9 @@ async function getEntConfig(ent: EntNum) {
 }
 
 async function getInterfaces(ent: EntNum, device: number) {
-    const deviceId = device !== props.device?.addr ? device : 0;
+    const mainDevice = props.device?.addr || 0;
+    const isNGC = mainDevice === 0;
+    const deviceId = isNGC ? (device !== mainDevice ? device : mainDevice) : mainDevice;
     const capab = devCapabs.value[deviceId];
     if (!capab) return;
     curDevCapab.value = capab;
@@ -759,7 +761,7 @@ async function parseEntity(ent: Ent) {
         await getInterfaces(entNum, ent.device);
     }
 
-    const ent1WConfigs = [ent1WConfig1.value, ent1WConfig2.value, ent1WConfig3.value];
+    // const ent1WConfigs = [ent1WConfig1.value, ent1WConfig2.value, ent1WConfig3.value];
     const interfaces = [interfaces1.value, interfaces2.value, interfaces3.value];
 
     const invalidTypes = ['none', 'error', 'int-const'];
