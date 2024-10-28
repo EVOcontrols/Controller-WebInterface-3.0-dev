@@ -579,6 +579,10 @@ watch(curDev, async () => {
     maxTrig.value = 0;
     algoritms1.value = [];
     algoritms2.value = [];
+    algoritms1Copy.value = [];
+    algoritms2Copy.value = [];
+    createAlgoritm1.value = false;
+    createAlgoritm2.value = false;
     await getMaxs();
     const addr = curDev.value || devices.value[0] ? (curDev.value || devices.value[0]).addr : 0;
     let curLabelsLeft = funcLabels.value[addr]?.find((el) => el.name === curActionLeft.value.val);
