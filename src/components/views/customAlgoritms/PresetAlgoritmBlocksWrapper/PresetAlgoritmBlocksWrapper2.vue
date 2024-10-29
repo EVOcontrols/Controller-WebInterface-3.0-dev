@@ -959,7 +959,7 @@ async function parseMultiSelect(
                       { name: 'btns', index: 0 },
                       { name: 'dropDown', index: 0 },
                   ],
-            titles: [t('titles.selectActions')],
+            titles: isAction ? [t('titles.selectActions')] : [t('titles.selectConditions')],
             btns: isAction
                 ? []
                 : [
@@ -975,28 +975,19 @@ async function parseMultiSelect(
             radioBtns: [],
             checkBoxes: [],
             inputs: [],
-            dropDowns: isAction
-                ? [
-                      {
-                          type: 'act',
-                          realType: 'tim-var',
-                          items: [...multiSelect.value].sort((el) => el.i),
-                          vals: quant
-                              ? [...multiSelect.value]
-                                    .sort((el) => el.i)
-                                    .map((el) => el.i)
-                                    .slice(idx, idx + quant)
-                              : [],
-                      },
-                  ]
-                : [
-                      {
-                          type: 'cond',
-                          realType: 'tim-var',
-                          items: [...multiSelect.value],
-                          vals: [],
-                      },
-                  ],
+            dropDowns: [
+                {
+                    type: isAction ? 'act' : 'cond',
+                    realType: 'tim-var',
+                    items: [...multiSelect.value].sort((el) => el.i),
+                    vals: quant
+                        ? [...multiSelect.value]
+                              .sort((el) => el.i)
+                              .map((el) => el.i)
+                              .slice(idx, idx + quant)
+                        : [],
+                },
+            ],
         },
     ];
 }

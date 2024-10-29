@@ -15,8 +15,8 @@ export const getInitCurBody = (val: UDF, device: number): Body => {
                     type: 'tim-const',
                     value: 0,
                 },
-                'cond-idx': 1,
-                'cond-qty': 1,
+                'cond-idx': 0,
+                'cond-qty': 0,
                 'start-on-cond': true,
                 'cond-logic': 'or',
                 'init-state': 1,
@@ -78,7 +78,7 @@ export const getInitCurBody = (val: UDF, device: number): Body => {
         default:
             return {
                 'act-idx': 0,
-                'act-qty': 1,
+                'act-qty': 0,
                 type: 'compare',
                 entity: {
                     type: '1w-rom',
