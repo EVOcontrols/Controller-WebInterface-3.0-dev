@@ -114,7 +114,7 @@
                     shownDropDown.type === 'act'
                         ? t('popUp.actions')
                         : shownDropDown.type === 'cond'
-                        ? 'popUp.conditions'
+                        ? t('popUp.conditions')
                         : t('popUp.obj')
                 }}</template
             >
