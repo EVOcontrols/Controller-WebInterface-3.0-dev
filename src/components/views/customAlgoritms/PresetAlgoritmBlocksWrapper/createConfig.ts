@@ -133,7 +133,7 @@ async function createRightConfig(
     const configs = await cbParseEntity(curBodyVal.right);
     if (!configs || !configs.length) return null;
 
-    return configs.map((el) => Object.assign(el, { curKey: el.curKey + 4 }));
+    return configs.map((el) => ({ ...el, curKey: el.curKey + 4 }));
 }
 
 async function createResultConfig(
@@ -148,7 +148,7 @@ async function createResultConfig(
     const configs = await cbParseEntity(curBodyVal.result);
     if (!configs || !configs.length) return null;
 
-    return configs.map((el) => Object.assign(el, { curKey: el.curKey + 8 }));
+    return configs.map((el) => ({ ...el, curKey: el.curKey + 8 }));
 }
 
 function createCompareConfig(curBodyVal: Body, typeVal: UDF, t: (key: string) => string): Config | null {
@@ -465,7 +465,7 @@ async function createValueConfig(
     const configs = await cbParseEntity(curBodyVal.value);
     if (!configs || !configs.length) return null;
 
-    return configs.map((el) => Object.assign(el, { curKey: el.curKey + 9 }));
+    return configs.map((el) => ({ ...el, curKey: el.curKey + 9, titles: replaceTitlesValue(el.titles) }));
 }
 
 function createStopValueConfig(curBodyVal: Body, typeVal: UDF, t: (key: string) => string): Config | null {
@@ -550,7 +550,7 @@ async function createStopValConfig(
     const configs = await cbParseEntity(curBodyVal['stop-val']);
     if (!configs || !configs.length) return null;
 
-    return configs.map((el) => Object.assign(el, { curKey: el.curKey + 15 }));
+    return configs.map((el) => ({ ...el, curKey: el.curKey + 15, titles: replaceTitlesStopValue(el.titles) }));
 }
 
 async function createActValueConfig(
@@ -571,7 +571,7 @@ async function createActValueConfig(
     const configs = await cbParseEntity(curBodyVal.value);
     if (!configs || !configs.length) return null;
 
-    return configs.map((el) => Object.assign(el, { curKey: el.curKey + 21 }));
+    return configs.map((el) => ({ ...el, curKey: el.curKey + 21 }));
 }
 
 function createHysteresisConfig(curBodyVal: Body, typeVal: UDF, t: (key: string) => string): Config | null {
@@ -622,7 +622,7 @@ async function createDelayConfig(
     const configs = await cbParseTime(curBodyVal['delay'], t('titles.delay'));
     if (!configs || !configs.length) return null;
 
-    return configs.map((el) => Object.assign(el, { curKey: CurKeyMap.Delay }));
+    return configs.map((el) => ({ ...el, curKey: CurKeyMap.Delay }));
 }
 
 async function createPauseConfig(
@@ -638,7 +638,7 @@ async function createPauseConfig(
     const configs = await cbParseTime(curBodyVal['time'], t('titles.pause'));
     if (!configs || !configs.length) return null;
 
-    return configs.map((el) => Object.assign(el, { curKey: CurKeyMap.Pause }));
+    return configs.map((el) => ({ ...el, curKey: CurKeyMap.Pause }));
 }
 
 async function createActionMultiSelectConfig(
@@ -794,7 +794,7 @@ async function createMinTimeConfig(
     const configs = await cbParseTime(curBodyVal['min-time'], t('titles.minTime'));
     if (!configs || !configs.length) return null;
 
-    return configs.map((el) => Object.assign(el, { curKey: CurKeyMap.MinTime }));
+    return configs.map((el) => ({ ...el, curKey: CurKeyMap.MinTime }));
 }
 
 async function createMaxTimeConfig(
@@ -809,5 +809,21 @@ async function createMaxTimeConfig(
     const configs = await cbParseTime(curBodyVal['max-time'], t('titles.maxTime'));
     if (!configs || !configs.length) return null;
 
-    return configs.map((el) => Object.assign(el, { curKey: CurKeyMap.MaxTime }));
+    return configs.map((el) => ({ ...el, curKey: CurKeyMap.MaxTime }));
+}
+
+function replaceTitlesValue(titles: string[]): string[] {
+    return titles.map((title) =>
+        title
+            .replace(/триггера/i, 'значение')
+            .replace(/действия/i, 'значение')
+            .replace(/условия/i, 'значение')
+            .replace(/trigger/i, 'value')
+            .replace(/action/i, 'value')
+            .replace(/condition/i, 'value'),
+    );
+}
+
+function replaceTitlesStopValue(titles: string[]): string[] {
+    return titles.map((title) => title.replace(/действия/i, 'значения для остановки').replace(/action/i, 'stop value'));
 }

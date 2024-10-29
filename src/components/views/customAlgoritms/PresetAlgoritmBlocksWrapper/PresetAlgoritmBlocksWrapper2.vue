@@ -800,16 +800,6 @@ async function parseEntity(ent: Ent) {
 
     const entItems = entNum === 1 ? ent1.value : entNum === 2 ? [...ent2.value] : [...ent3.value];
 
-    console.log(
-        'ent, props.type.val, interfaces[entNum - 1], OWConfig, entItems, t, props.device',
-        ent,
-        props.type.val,
-        interfaces[entNum - 1],
-        OWConfig,
-        entItems,
-        t,
-        props.device,
-    );
     return createParsedConfig(ent, props.type.val, interfaces[entNum - 1], OWConfig, entItems, t, props.device);
 }
 
