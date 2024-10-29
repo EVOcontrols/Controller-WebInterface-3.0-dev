@@ -800,18 +800,7 @@ async function parseEntity(ent: Ent) {
 
     const entItems = entNum === 1 ? ent1.value : entNum === 2 ? [...ent2.value] : [...ent3.value];
 
-    return createParsedConfig(
-        ent.type,
-        props.type.val,
-        interfaces[entNum - 1],
-        OWConfig,
-        entItems,
-        t,
-        props.device,
-        ent.bus,
-        ent.device,
-        ent.index,
-    );
+    return createParsedConfig(ent, props.type.val, interfaces[entNum - 1], OWConfig, entItems, t, props.device);
 }
 
 function getConstBtns(configTime?: Config) {

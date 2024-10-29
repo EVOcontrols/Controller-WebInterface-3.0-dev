@@ -16,7 +16,7 @@
                 class="text-sm"
                 :class="{ 'mt-[0.875rem]': i }"
             >
-                {{ props.titles[item.index] }}
+                {{ getNameTitle(props.titles[item.index]) }}
             </div>
             <div
                 v-else-if="item.name === 'btns' && props.btns[item.index]"
@@ -406,6 +406,11 @@ const emit = defineEmits<{
     (e: 'setInputError', inputItemIndex: number, res: boolean): void;
     (e: 'handleCheckboxClick', checkboxItemIndex: number, val: string, status: boolean, part: 1 | 2): void;
 }>();
+
+function getNameTitle(title: string) {
+    const tempTitle = title.toLowerCase();
+    return tempTitle[0].toUpperCase() + tempTitle.slice(1);
+}
 
 function getNameDropDown(): { index: number; name: string }[] {
     const { vals, items } = props.dropDowns[0];

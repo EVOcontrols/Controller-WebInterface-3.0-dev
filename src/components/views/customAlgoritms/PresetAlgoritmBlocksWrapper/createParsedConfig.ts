@@ -1,5 +1,5 @@
 import { Config, ORDER, UDF, Interface, Mode1W, EntBind, DropDownRealType, CurKeyMap } from './types';
-import { EntType } from '@/typings/funcs';
+import { Ent, EntType } from '@/typings/funcs';
 import { Device } from '@/stores';
 
 const invalidType = ['none', 'error', 'udf-trig', 'udf-cond', 'udf-act', 'udf-trans', 'int-const'];
@@ -15,35 +15,32 @@ type Bus = {
 };
 
 export const createParsedConfig = (
-    entType: EntType,
+    ent: Ent,
     typeVal: UDF,
     interfaces: Interface[],
     OWConfig: Mode1W[],
     entItems: EntBind[],
     t: (key: string) => string,
     propDevice?: Device,
-    entBus?: number,
-    entDevice?: number,
-    entIndex?: number,
 ): Config[] => {
     const resultConfig: Config[] = [];
 
-    const deviceConfig = createDeviceConfig(typeVal, t, propDevice, entDevice);
+    const deviceConfig = createDeviceConfig(typeVal, t, propDevice, ent.device);
     if (deviceConfig) {
         resultConfig.push(deviceConfig);
     }
 
-    const interfaceConfig = createInterfaceConfig(entType, typeVal, interfaces, t);
+    const interfaceConfig = createInterfaceConfig(ent.type, typeVal, interfaces, t);
     if (interfaceConfig) {
         resultConfig.push(interfaceConfig);
     }
 
-    const busConfig = createBusConfig(entType, typeVal, OWConfig, t, entBus, entDevice);
+    const busConfig = createBusConfig(ent.type, typeVal, OWConfig, t, ent.bus, ent.device);
     if (busConfig) {
         resultConfig.push(busConfig);
     }
 
-    const objConfig = createObjConfig(entType, typeVal, entItems, t, entIndex);
+    const objConfig = createObjConfig(ent.type, typeVal, entItems, t, ent.index);
     if (objConfig) {
         resultConfig.push(objConfig);
     }
