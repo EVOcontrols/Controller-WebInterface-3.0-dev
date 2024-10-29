@@ -24,8 +24,7 @@
                         :class="[
                             { 'bg-[#5C2345] text-[#F83068]': isInvalidData },
                             {
-                                '!bg-[#055457] text-[#00D6AF]':
-                                    props.w.w.i === 'bin-out' && activeLabel.state,
+                                '!bg-[#055457] text-[#00D6AF]': props.w.w.i === 'bin-out' && activeLabel.state,
                             },
                         ]"
                     >
@@ -39,9 +38,7 @@
                         :maxlength="32"
                         class="flex-1 bg-[#123553] h-full text-[#8DC5F6] px-3 placeholder:text-[#8DC5F6]"
                         :class="{
-                            'rounded-r-[8px]': ['bin-in', 'bin-out', 'bin-var'].includes(
-                                props.w.w.i,
-                            ),
+                            'rounded-r-[8px]': ['bin-in', 'bin-out', 'bin-var'].includes(props.w.w.i),
                         }"
                         @input="(e) => handleLabelInput(e as InputEvent)"
                     />
@@ -179,14 +176,7 @@
                         </span>
                         <span
                             v-if="
-                                ![
-                                    'bin-in',
-                                    'bin-out',
-                                    'int-var',
-                                    'bin-var',
-                                    'tim-var',
-                                    '1w-rom',
-                                ].includes(props.w.w.i)
+                                !['bin-in', 'bin-out', 'int-var', 'bin-var', 'tim-var', '1w-rom'].includes(props.w.w.i)
                             "
                             class="w-[63px] text-[#ADEBFF] text-end pr-[10px] hover:underline"
                             @dblclick="handleDblClick(s, index, 'value')"
@@ -205,15 +195,7 @@
                             "
                             @dblclick="handleDblClick(s, index, 'value')"
                         >
-                            {{
-                                s === null
-                                    ? '\u2013'
-                                    : props.w.w.i !== 'bin-var'
-                                    ? s
-                                    : s
-                                    ? t('true')
-                                    : t('false')
-                            }}
+                            {{ s === null ? '\u2013' : props.w.w.i !== 'bin-var' ? s : s ? t('true') : t('false') }}
                         </span>
                         <span
                             v-else-if="props.w.w.i === 'tim-var'"
@@ -254,13 +236,7 @@
                             >{{ index + 1 }}</span
                         >
                         <span class="flex-1 group-hover:underline group-hover:text-[#ADEBFF]">
-                            {{
-                                s !== null
-                                    ? curLabels && curLabels.length
-                                        ? curLabels[index]
-                                        : ''
-                                    : ''
-                            }}
+                            {{ s !== null ? (curLabels && curLabels.length ? curLabels[index] : '') : '' }}
                         </span>
                         <span
                             v-if="s !== null"
@@ -296,13 +272,7 @@
                             >{{ index + 1 }}</span
                         >
                         <span class="flex-1 group-hover:underline group-hover:text-[#ADEBFF]">
-                            {{
-                                s !== null
-                                    ? curLabels && curLabels.length
-                                        ? curLabels[index]
-                                        : ''
-                                    : ''
-                            }}
+                            {{ s !== null ? (curLabels && curLabels.length ? curLabels[index] : '') : '' }}
                         </span>
                     </div>
                 </div>
@@ -393,8 +363,7 @@ function checkValue() {
     const data = dataInput.value;
     const values =
         props.w.w.i === 'tim-var' && activeLabel.value
-            ? valuesRange.value.find((obj) => obj.interf === props.w.w.i + activeLabel.value?.units)
-                  ?.values
+            ? valuesRange.value.find((obj) => obj.interf === props.w.w.i + activeLabel.value?.units)?.values
             : valuesRange.value.find((obj) => obj.interf === props.w.w.i)?.values;
     if (!data || !values) return;
     min.value = values.min;
@@ -406,12 +375,7 @@ function checkValue() {
     } else {
         isInvalidData.value = false;
     }
-    if (
-        props.w.w.i !== 'pwm-out' &&
-        val.includes('.') &&
-        activeLabel.value &&
-        activeLabel.value.units !== 's'
-    ) {
+    if (props.w.w.i !== 'pwm-out' && val.includes('.') && activeLabel.value && activeLabel.value.units !== 's') {
         val = val.slice(0, val.indexOf('.'));
     }
     data.value = val;
@@ -525,19 +489,19 @@ function saveData(e: KeyboardEvent | MouseEvent) {
     if (e.type === 'keypress') {
         const event: KeyboardEvent = e as KeyboardEvent;
         if (event.key === 'Enter') {
-            if (!isInvalidData.value) setData(activeLabel.value.i, activeLabel.value.state);
-            setLabel(activeLabel.value.i, activeLabel.value.label);
-            activeLabel.value = null;
-            isLabelChange.value = false;
-            isInvalidData.value = false;
+            trySendData(activeLabel.value.i, activeLabel.value.state, activeLabel.value.label);
         }
     } else if (e.type === 'click') {
-        if (!isInvalidData.value) setData(activeLabel.value.i, activeLabel.value.state);
-        setLabel(activeLabel.value.i, activeLabel.value.label);
-        activeLabel.value = null;
-        isLabelChange.value = false;
-        isInvalidData.value = false;
+        trySendData(activeLabel.value.i, activeLabel.value.state, activeLabel.value.label);
     }
+}
+
+function trySendData(index: number, state: string | number | null, label: string | undefined) {
+    if (!isInvalidData.value) setData(index, state);
+    setLabel(index, label);
+    activeLabel.value = null;
+    isLabelChange.value = false;
+    isInvalidData.value = false;
 }
 
 async function setLabel(index: number, label: string | undefined) {
@@ -638,7 +602,7 @@ async function setData(index: number, state: string | number | null, d?: number 
         body.value = d;
     }
     if (props.w.state[index] !== body.value) {
-        setVal(body);
+        await setVal(body);
     }
 }
 
