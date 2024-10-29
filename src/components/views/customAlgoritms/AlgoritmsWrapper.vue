@@ -44,7 +44,7 @@
                     "
                     @oneClick="handleClick(i)"
                     @addAlgoritm="(event) => addAlgoritm(i, event)"
-                    @creatingFinish="emit('creatingFinish', i)"
+                    @creatingFinish="handleCreatingFinish(i)"
                 />
             </div>
             <div
@@ -161,6 +161,11 @@ function handleClick(i: number) {
             clickTimeout.value = null;
         }, 300);
     }
+}
+
+function handleCreatingFinish(i: number) {
+    emit('creatingFinish', i);
+    handleClick(i);
 }
 
 function changeLabel(index: number, e: Event, isCreating?: boolean) {
