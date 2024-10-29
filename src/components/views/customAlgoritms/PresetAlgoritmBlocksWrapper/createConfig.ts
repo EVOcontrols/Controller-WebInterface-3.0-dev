@@ -2,6 +2,8 @@ import type { Body, Ent, Time } from '@/typings/funcs';
 import { Config, CurKeyMap, UDF } from './types';
 import type { Device } from '@/stores';
 
+const readonlyInterfaces = ['1w-rom', '1w-sens', 'bin-in', 'adc-in', 'mb-ir', 'mb-di'];
+
 export const createConfig = async (
     curBodyVal: Body,
     typeVal: UDF,
@@ -19,7 +21,7 @@ export const createConfig = async (
 ): Promise<Config[]> => {
     const generators = [
         (curBody: Body) => createInitStateConfig(curBody, t),
-        (curBody: Body) => createEntityConfig(curBody, cbParseEntity),
+        (curBody: Body) => createEntityConfig(curBody, typeVal, cbParseEntity),
         (curBody: Body) => createLeftConfig(curBody, typeVal, cbParseEntity),
         (curBody: Body) => createRightConfig(curBody, typeVal, cbParseEntity),
         (curBody: Body) => createResultConfig(curBody, typeVal, cbParseEntity),
@@ -94,6 +96,7 @@ function createInitStateConfig(curBodyVal: Body, t: (key: string) => string): Co
 
 async function createEntityConfig(
     curBodyVal: Body,
+    typeVal: UDF,
     cbParseEntity: (ent: Ent) => Promise<Config[]>,
 ): Promise<Config[] | null> {
     if (!curBodyVal.entity || curBodyVal.entity.type === 'prev-value') {
@@ -101,7 +104,23 @@ async function createEntityConfig(
     }
 
     const configs = await cbParseEntity(curBodyVal.entity);
+    console.log('configs', configs && JSON.parse(JSON.stringify(configs)));
     if (!configs || !configs.length) return null;
+
+    if (typeVal === 'udf-act') {
+        return configs.map((config) => {
+            if (config.curKey === CurKeyMap.Interface) {
+                return {
+                    ...config,
+                    tabs: config.tabs.map((tab) => ({
+                        ...tab,
+                        vals: tab.vals.filter((v) => !readonlyInterfaces.includes(String(v.val))),
+                    })),
+                };
+            }
+            return config;
+        });
+    }
 
     return configs;
 }
@@ -148,7 +167,15 @@ async function createResultConfig(
     const configs = await cbParseEntity(curBodyVal.result);
     if (!configs || !configs.length) return null;
 
-    return configs.map((el) => ({ ...el, curKey: el.curKey + 8, titles: replaceTitlesResult(el.titles) }));
+    return configs.map((el) => ({
+        ...el,
+        curKey: el.curKey + 8,
+        titles: replaceTitlesResult(el.titles),
+        tabs: el.tabs.map((tab) => ({
+            ...tab,
+            vals: tab.vals.filter((v) => !readonlyInterfaces.includes(String(v.val))),
+        })),
+    }));
 }
 
 function createCompareConfig(curBodyVal: Body, typeVal: UDF, t: (key: string) => string): Config | null {
