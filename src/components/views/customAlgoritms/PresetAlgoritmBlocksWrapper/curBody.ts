@@ -13,7 +13,7 @@ export const getInitCurBody = (val: UDF, device: number): Body => {
                 },
                 delay: {
                     type: 'tim-const',
-                    value: 5000,
+                    value: 0,
                 },
                 'cond-idx': 1,
                 'cond-qty': 1,
@@ -26,7 +26,7 @@ export const getInitCurBody = (val: UDF, device: number): Body => {
                 },
                 time: {
                     type: 'tim-const',
-                    value: 5000,
+                    value: 0,
                 },
                 'stop-val': {
                     type: 'pwm-out',
@@ -38,13 +38,11 @@ export const getInitCurBody = (val: UDF, device: number): Body => {
             };
         case 'udf-cond':
             return {
-                operation: 'less',
+                operation: 'equal',
                 entity: {
-                    type: '1w-sens',
-                    bus: 1,
+                    type: 'bin-in',
                     index: 0,
                     device,
-                    io: 0,
                 },
                 value: {
                     type: 'int-const',
@@ -52,7 +50,7 @@ export const getInitCurBody = (val: UDF, device: number): Body => {
                 },
                 time: {
                     type: 'tim-const',
-                    value: 3000,
+                    value: 0,
                 },
                 'init-state': 1,
             } as Body;

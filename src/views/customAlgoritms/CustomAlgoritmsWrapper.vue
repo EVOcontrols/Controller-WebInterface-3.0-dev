@@ -156,7 +156,12 @@
             :isLoading="isAlgoritmsDeleting"
             :type="algoritmsForDeletionType"
             @close="algoritmsForDeletion = []"
-            @delete="deleteAlgoritms"
+            @delete="
+                () => {
+                    deleteAlgoritms();
+                    saveLabels();
+                }
+            "
         />
         <ControlBlock
             v-if="selectedAlgoritmsLeft.length || selectedAlgoritmsRight.length"
@@ -315,7 +320,9 @@ function setAlgoritmsForDelete(
 
 async function deleteAlgoritms() {
     isAlgoritmsDeleting.value = true;
-    const { index } = algoritmsForDeletion.value[0];
+    const index = algoritmsForDeletion.value[0]?.index;
+    if (!index) return;
+
     const body = {
         type: algoritmsForDeletion.value[0].type,
         device: curDev.value.addr,
@@ -332,7 +339,7 @@ async function deleteAlgoritms() {
             const prev = [...algoritms1.value];
             prev[algoritmsForDeletion.value[0].index] = { val: null, label: '' };
             algoritms1.value = [...prev];
-            if (algoritms1Copy.value[index].isCreating === true) {
+            if (algoritms1Copy.value[index]?.isCreating === true) {
                 algoritms1.value[index].isCreating = undefined;
                 algoritms1Copy.value = [];
                 createAlgoritm1.value = false;
@@ -341,12 +348,13 @@ async function deleteAlgoritms() {
             const prev = [...algoritms2.value];
             prev[algoritmsForDeletion.value[0].index] = { val: null, label: '' };
             algoritms2.value = [...prev];
-            if (algoritms2Copy.value[index].isCreating === true) {
+            if (algoritms2Copy.value[index]?.isCreating === true) {
                 algoritms2.value[index].isCreating = undefined;
                 algoritms2Copy.value = [];
                 createAlgoritm2.value = false;
             }
         }
+        algoritmsForDeletion.value = [];
         isAlgoritmsDeleting.value = false;
     } catch (error) {
         if (isAborted.value) {
@@ -356,8 +364,6 @@ async function deleteAlgoritms() {
             deleteAlgoritms();
         }, 5);
     }
-
-    await saveLabels();
 }
 
 function selectAlgoritm(value: boolean, index: Algoritm, direction: 'l' | 'r') {
@@ -433,7 +439,9 @@ async function saveLabels() {
     let curLabelsLeft = funcLabels.value[addr].find((el) => el.name === curActionLeft.value.val)?.val as string[];
     let curLabelsRight = funcLabels.value[addr].find((el) => el.name === curActionRight.value.val)?.val as string[];
 
-    const index = algoritmsForDeletion.value[0].index;
+    const index = algoritmsForDeletion.value[0]?.index;
+    if (!index) return;
+
     if (algoritmsForDeletion.value[0].type === curActionLeft.value.val) {
         const cleanedLabelsLeft = [...curLabelsLeft];
         cleanedLabelsLeft[index] = '';
@@ -443,8 +451,6 @@ async function saveLabels() {
         cleanedLabelsRight[index] = '';
         await saveLabel(curActionRight.value.val, addr, cleanedLabelsRight);
     }
-
-    algoritmsForDeletion.value = [];
 }
 
 async function saveLabel(interf: UDF, addr: number, labels: string[]) {
@@ -601,6 +607,8 @@ watch(curDev, async () => {
 
 watch(curActionLeft, () => {
     algoritms1.value = [];
+    algoritms1Copy.value = [];
+    createAlgoritm1.value = false;
     const addr = curDev.value || devices.value[0] ? (curDev.value || devices.value[0]).addr : 0;
     let curLabelsLeft = funcLabels.value[addr]?.find((el) => el.name === curActionLeft.value.val);
     if (!curLabelsLeft) {
@@ -612,6 +620,8 @@ watch(curActionLeft, () => {
 
 watch(curActionRight, () => {
     algoritms2.value = [];
+    algoritms2Copy.value = [];
+    createAlgoritm2.value = false;
     const addr = curDev.value || devices.value[0] ? (curDev.value || devices.value[0]).addr : 0;
     let curLabelsRight = funcLabels.value[addr]?.find((el) => el.name === curActionRight.value.val);
     if (!curLabelsRight) {
