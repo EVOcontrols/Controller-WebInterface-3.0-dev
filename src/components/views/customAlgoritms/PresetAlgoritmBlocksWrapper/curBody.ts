@@ -1,14 +1,14 @@
 import type { Body } from '@/typings/funcs';
 import type { UDF } from './types';
 
-export const getInitCurBody = (val: UDF, device?: number): Body => {
+export const getInitCurBody = (val: UDF, device: number): Body => {
     switch (val) {
         case 'udf-act':
             return {
                 type: 'invert',
                 entity: {
                     type: 'pwm-out',
-                    device: 0, // для ngc может быть не 0, для нгио всегда 0
+                    device, // для ngc может быть не 0, для нгио всегда 0
                     index: 0,
                 },
                 delay: {
@@ -30,7 +30,7 @@ export const getInitCurBody = (val: UDF, device?: number): Body => {
                 },
                 'stop-val': {
                     type: 'pwm-out',
-                    device: 0,
+                    device,
                     index: 0,
                 },
                 'stop-on-trig': true,
@@ -43,7 +43,7 @@ export const getInitCurBody = (val: UDF, device?: number): Body => {
                     type: '1w-sens',
                     bus: 1,
                     index: 0,
-                    device: 0,
+                    device,
                     io: 0,
                 },
                 value: {
@@ -61,17 +61,17 @@ export const getInitCurBody = (val: UDF, device?: number): Body => {
                 operation: '+',
                 result: {
                     type: 'pwm-out',
-                    device: 1, // для ngc может быть не 0, для нгио всегда 0
+                    device, // для ngc может быть не 0, для нгио всегда 0
                     index: 0,
                 },
                 left: {
                     type: 'adc-in',
-                    device: 0,
+                    device,
                     index: 0,
                 },
                 right: {
                     type: 'bin-out',
-                    device: 0,
+                    device,
                     index: 0,
                 },
                 'init-state': 1,
@@ -84,7 +84,7 @@ export const getInitCurBody = (val: UDF, device?: number): Body => {
                 type: 'compare',
                 entity: {
                     type: '1w-rom',
-                    device: 0,
+                    device,
                     bus: 0,
                     index: 0,
                 },

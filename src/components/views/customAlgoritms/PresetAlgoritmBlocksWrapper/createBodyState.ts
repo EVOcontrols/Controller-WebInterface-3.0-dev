@@ -10,13 +10,7 @@ export const createBodyState = (
 ): { entities: EntityForBody[] } => {
     const mbTypes = ['mb-co', 'mb-ir', 'mb-hr', 'mb-di'];
     const entityType = mbTypes.includes(type) ? 'mb-var' : type;
-    const deviceAddr = propDevice
-        ? propDevice.addr === 0
-            ? device || 0
-            : bus === undefined
-            ? 0
-            : propDevice.addr
-        : 0;
+    const deviceAddr = propDevice ? (propDevice.addr === 0 ? device || 0 : propDevice.addr) : 0;
 
     const entity = {
         type: entityType,

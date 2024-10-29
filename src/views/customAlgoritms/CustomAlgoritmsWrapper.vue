@@ -472,8 +472,8 @@ async function saveLabel(interf: UDF, addr: number, labels: string[]) {
 async function getData(dir: 'l' | 'r') {
     const addr = curDev.value || devices.value[0] ? (curDev.value || devices.value[0]).addr : 0;
     const curAct = dir === 'l' ? curActionLeft.value.val : curActionRight.value.val;
-    let curLabelsLeft = funcLabels.value[addr].find((el) => el.name === curAct)?.val as string[];
-    let curLabelsRight = funcLabels.value[addr].find((el) => el.name === curAct)?.val as string[];
+    let curLabelsLeft = funcLabels.value[addr]?.find((el) => el.name === curAct)?.val as string[];
+    let curLabelsRight = funcLabels.value[addr]?.find((el) => el.name === curAct)?.val as string[];
 
     const quant =
         curAct === 'udf-act'

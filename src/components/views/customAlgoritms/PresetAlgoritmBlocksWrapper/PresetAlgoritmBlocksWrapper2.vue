@@ -677,16 +677,12 @@ async function getInterfaces(ent: EntNum, device: number) {
     for (let [typeCabap, quantityCapab] of Object.entries(capab) as [Interface, number][]) {
         const isValidType = quantityCapab && order.includes(typeCabap);
 
-        if (isValidType && !typeCabap.includes('1w') && typeCabap !== 'mb-var' && !interfaces.includes(typeCabap)) {
+        if (isValidType && !typeCabap.includes('1w') && typeCabap !== 'mb-var') {
             interfaces.push(typeCabap);
-        } else if (typeCabap.includes('1w') && !interfaces.includes(typeCabap)) {
-            await get1W(ent, device);
-        } else if (
-            typeCabap === 'mb-var' &&
-            curMbConfig.value?.[0]?.mode !== 'ext-devs' &&
-            !interfaces.includes(typeCabap)
-        ) {
-            await getMb(ent, device);
+        } else if (typeCabap.includes('1w')) {
+            await get1W(ent, deviceId);
+        } else if (typeCabap === 'mb-var' && curMbConfig.value?.[0]?.mode !== 'ext-devs') {
+            await getMb(ent, deviceId);
         }
     }
 }
@@ -713,7 +709,7 @@ async function getData(
     if (isUdf) {
         curLabels = entLabels[num - 1];
     } else {
-        const addr = props.device ? (props.device.addr === 0 ? device || 0 : 0) : 0;
+        const addr = props.device ? (props.device.addr === 0 ? device || 0 : props.device.addr) : 0;
         const labelsVar = labels.value[addr]?.find((el) => el.interf === type)?.val[bus || 0]; //0-bus
         curLabels = (Array.isArray(labelsVar) ? labelsVar : []) as string[];
     }
@@ -776,10 +772,11 @@ async function parseEntity(ent: Ent) {
         const keyCapab = mbTypes.includes(ent.type) ? 'mb-var' : (ent.type as EntType);
         let quant = curDevCapab.value[keyCapab];
 
-        const hasPropsDevice = props.device && props.device.addr;
+        const addr = props.device && props.device.addr;
         const isValidUdfType = props.type.val === 'udf-act' || props.type.val === 'udf-cond';
-        if (ent.device !== undefined && (hasPropsDevice || (!hasPropsDevice && isValidUdfType))) {
-            const capabs = devCapabs.value[ent.device];
+        if (ent.device !== undefined && (addr || (!addr && isValidUdfType))) {
+            const deviceId = addr === 0 ? ent.device : addr || ent.device;
+            const capabs = devCapabs.value[deviceId];
             if (capabs) {
                 const isMb = mbTypes.includes(ent.type);
                 const indexDevCapab = isMb ? 'mb-var' : (ent.type as EntType);
@@ -1007,6 +1004,7 @@ async function parseMultiSelect(
 async function setConfig() {
     if (!curBody.value) return;
 
+    console.log('curBody.value', JSON.parse(JSON.stringify(curBody.value)));
     const resultConfig = await createConfig(
         curBody.value,
         props.type.val,
@@ -1023,7 +1021,8 @@ async function setConfig() {
 }
 
 function configCreating() {
-    curBody.value = getInitCurBody(props.type.val);
+    const device = props.device?.addr || 0;
+    curBody.value = getInitCurBody(props.type.val, device);
     initBody = curBody.value;
 }
 
