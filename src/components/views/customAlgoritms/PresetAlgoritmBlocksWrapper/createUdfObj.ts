@@ -11,14 +11,14 @@ function createObjUdfAct(config: Config[], propDevice?: Device) {
     const device = config.find((el) => el.curKey === CurKeyMap.Device);
     const object = config.find((el) => el.curKey === CurKeyMap.Object);
     const bus = config.find((el) => el.curKey === CurKeyMap.Bus);
-    const typeUdf = config.find((el) => el.curKey === CurKeyMap.TypeUdf);
+    const interfaceRight = config.find((el) => el.curKey === CurKeyMap.InterfaceRight);
     const comparisonOperation = config.find((el) => el.curKey === CurKeyMap.ComparisonOperation);
     const time = config.find((el) => el.curKey === CurKeyMap.Time);
     const delay = config.find((el) => el.curKey === CurKeyMap.Delay);
     const multiSelect = config.find((el) => el.curKey === CurKeyMap.MultiSelect);
     const startStopMode = config.find((el) => el.curKey === CurKeyMap.StartStopMode);
     const cyclicMode = config.find((el) => el.curKey === CurKeyMap.CyclicMode);
-    const comparisonVal = config.find((el) => el.curKey === CurKeyMap.ComparisonValue);
+    const objectRight = config.find((el) => el.curKey === CurKeyMap.ObjectRight);
     const valInterfType = config.find((el) => el.curKey === CurKeyMap.ValueInterface);
     const valDevice = config.find((el) => el.curKey === CurKeyMap.ValueDevice);
     const valObject = config.find((el) => el.curKey === CurKeyMap.ValueObject);
@@ -53,7 +53,7 @@ function createObjUdfAct(config: Config[], propDevice?: Device) {
     }
 
     let obj = {
-        type: typeUdf?.radioBtns[0].val,
+        type: interfaceRight?.radioBtns[0].val,
         entity: ent,
         delay:
             delay?.btns[0].val === 'tim-var'
@@ -72,9 +72,9 @@ function createObjUdfAct(config: Config[], propDevice?: Device) {
         'init-state': statusStart?.btns[0].val === 'on' ? 1 : 0,
     };
 
-    if (typeUdf?.radioBtns[0].val === 'set' || typeUdf?.radioBtns[0].val === 'invert') {
+    if (interfaceRight?.radioBtns[0].val === 'set' || interfaceRight?.radioBtns[0].val === 'invert') {
         let ent = {};
-        if (comparisonVal?.btns[0].val === 'obj') {
+        if (objectRight?.btns[0].val === 'obj') {
             ent = {
                 type: valInterfType?.tabs[0].val || 'bin-in',
                 device: valDevice?.tabs[0].val || 0,
@@ -146,9 +146,9 @@ function createObjUdfAct(config: Config[], propDevice?: Device) {
             'stop-on-cond': startStopMode?.checkBoxes[0][2].valsArr.includes('conditionNoMatches'),
         };
         obj = Object.assign(obj, curObj);
-    } else if (typeUdf?.radioBtns[0].val === 'modify') {
+    } else if (interfaceRight?.radioBtns[0].val === 'modify') {
         let ent = {};
-        if (comparisonVal?.btns[0].val === 'obj') {
+        if (objectRight?.btns[0].val === 'obj') {
             ent = {
                 type: valInterfType?.tabs[0].val || 'bin-in',
                 device: valDevice?.tabs[0].val || 0,
@@ -224,9 +224,9 @@ function createObjUdfAct(config: Config[], propDevice?: Device) {
             'stop-on-cond': startStopMode?.checkBoxes[0][2].valsArr.includes('conditionNoMatches'),
         };
         obj = Object.assign(obj, curObj);
-    } else if (typeUdf?.radioBtns[0].val === 'change') {
+    } else if (interfaceRight?.radioBtns[0].val === 'change') {
         let ent = {};
-        if (comparisonVal?.btns[0].val === 'obj') {
+        if (objectRight?.btns[0].val === 'obj') {
             ent = {
                 type: valInterfType?.tabs[0].val || 'bin-in',
                 device: valDevice?.tabs[0].val || 0,
@@ -270,7 +270,7 @@ function createObjUdfAct(config: Config[], propDevice?: Device) {
             'stop-on-cond': startStopMode?.checkBoxes[0][2].valsArr.includes('conditionNoMatches'),
         };
         obj = Object.assign(obj, curObj);
-    } else if (typeUdf?.radioBtns[0].val === 'cycle') {
+    } else if (interfaceRight?.radioBtns[0].val === 'cycle') {
         const curObj = {
             time:
                 time?.btns[0].val === 'tim-var'
@@ -311,7 +311,7 @@ function createObjUdfCond(config: Config[], propDevice?: Device) {
     const bus = config.find((el) => el.curKey === CurKeyMap.Bus);
     const comparisonOperation = config.find((el) => el.curKey === CurKeyMap.ComparisonOperation);
     const time = config.find((el) => el.curKey === CurKeyMap.Time);
-    const comparisonVal = config.find((el) => el.curKey === CurKeyMap.ComparisonValue);
+    const objectRight = config.find((el) => el.curKey === CurKeyMap.ObjectRight);
     const valInterfType = config.find((el) => el.curKey === CurKeyMap.ValueInterface);
     const valDevice = config.find((el) => el.curKey === CurKeyMap.ValueDevice);
     const valObject = config.find((el) => el.curKey === CurKeyMap.ValueObject);
@@ -338,7 +338,7 @@ function createObjUdfCond(config: Config[], propDevice?: Device) {
         );
     }
     let val = {};
-    if (comparisonVal?.btns[0].val === 'obj') {
+    if (objectRight?.btns[0].val === 'obj') {
         val = {
             type: valInterfType?.tabs[0].val || 'bin-in',
             device: valDevice?.tabs[0].val || 0,
@@ -404,9 +404,10 @@ function createObjUdfTrans(config: Config[], propDevice?: Device) {
     const device = config.find((el) => el.curKey === CurKeyMap.Device);
     const object = config.find((el) => el.curKey === CurKeyMap.Object);
     const bus = config.find((el) => el.curKey === CurKeyMap.Bus);
-    const typeUdf = config.find((el) => el.curKey === CurKeyMap.TypeUdf);
+    const interfaceRight = config.find((el) => el.curKey === CurKeyMap.InterfaceRight);
+    const deviceRight = config.find((el) => el.curKey === CurKeyMap.DeviceRight);
     const comparisonOperation = config.find((el) => el.curKey === CurKeyMap.ComparisonOperation);
-    const comparisonVal = config.find((el) => el.curKey === CurKeyMap.ComparisonValue);
+    const objectRight = config.find((el) => el.curKey === CurKeyMap.ObjectRight);
     const valInterfType = config.find((el) => el.curKey === CurKeyMap.ValueInterface);
     const valDevice = config.find((el) => el.curKey === CurKeyMap.ValueDevice);
     const valObject = config.find((el) => el.curKey === CurKeyMap.ValueObject);
@@ -431,20 +432,20 @@ function createObjUdfTrans(config: Config[], propDevice?: Device) {
         );
     }
     let right = {
-        type: typeUdf?.tabs[0].val,
-        device: comparisonOperation?.tabs[0].val,
-        index: comparisonVal?.dropDowns[0].vals[0],
+        type: interfaceRight?.tabs[0].val,
+        device: deviceRight?.tabs[0].val,
+        index: objectRight?.dropDowns[0].vals[0],
     };
-    if (typeUdf && validValuesWithBus.includes(typeUdf.tabs[0].val as string)) {
+    if (interfaceRight && validValuesWithBus.includes(interfaceRight.tabs[0].val as string)) {
         const interfProp = propDevice?.interf.find(
-            (i) => typeof i === 'object' && i.interf === typeUdf.tabs[0].val,
+            (i) => typeof i === 'object' && i.interf === interfaceRight.tabs[0].val,
         ) as InterfProp;
         const busProp = interfProp ? interfProp.bus : 0;
         const busNumber = Number(select?.tabs[0].val);
         const busResult = Number.isNaN(busNumber) ? busProp : busNumber;
         right = Object.assign(
             right,
-            typeUdf?.tabs[0].val === '1w-sens' ? { bus: busResult, io: 0 } : { bus: busResult },
+            interfaceRight?.tabs[0].val === '1w-sens' ? { bus: busResult, io: 0 } : { bus: busResult },
         );
     }
     let result = {
@@ -466,7 +467,7 @@ function createObjUdfTrans(config: Config[], propDevice?: Device) {
     }
     return {
         'init-state': statusStart?.btns[0].val === 'on' ? 1 : 0,
-        operation: comparisonOperation?.radioBtns[0].val,
+        operation: comparisonOperation?.radioBtns[0].val || '+',
         left: left,
         right: right,
         result: result,
@@ -480,13 +481,13 @@ function createObjUdfTrig(config: Config[], propDevice?: Device): any {
     const device = config.find((el) => el.curKey === CurKeyMap.Device);
     const object = config.find((el) => el.curKey === CurKeyMap.Object);
     const bus = config.find((el) => el.curKey === CurKeyMap.Bus);
-    const typeUdf = config.find((el) => el.curKey === CurKeyMap.TypeUdf);
+    const interfaceRight = config.find((el) => el.curKey === CurKeyMap.InterfaceRight);
     const comparisonOperation = config.find((el) => el.curKey === CurKeyMap.ComparisonOperation);
     const time = config.find((el) => el.curKey === CurKeyMap.Time);
     const minTime = config.find((el) => el.curKey === CurKeyMap.MinTime);
     const maxTime = config.find((el) => el.curKey === CurKeyMap.MaxTime);
     const multiSelect = config.find((el) => el.curKey === CurKeyMap.MultiSelect);
-    const comparisonVal = config.find((el) => el.curKey === CurKeyMap.ComparisonValue);
+    const objectRight = config.find((el) => el.curKey === CurKeyMap.ObjectRight);
     const valInterfType = config.find((el) => el.curKey === CurKeyMap.ValueInterface);
     const valDevice = config.find((el) => el.curKey === CurKeyMap.ValueDevice);
     const valObject = config.find((el) => el.curKey === CurKeyMap.ValueObject);
@@ -514,15 +515,15 @@ function createObjUdfTrig(config: Config[], propDevice?: Device): any {
         );
     }
     let obj = {
-        type: typeUdf?.radioBtns[0].val,
+        type: interfaceRight?.radioBtns[0].val,
         entity: ent,
         'act-idx': multiSelect?.dropDowns[0].vals[0] || 0,
         'act-qty': multiSelect?.dropDowns[0].vals.length || 0,
         'init-state': statusStart?.btns[0].val === 'on' ? 1 : 0,
     };
-    if (typeUdf?.radioBtns[0].val === 'hold') {
+    if (interfaceRight?.radioBtns[0].val === 'hold') {
         let ent = {};
-        if (comparisonVal?.btns[0].val === 'obj') {
+        if (objectRight?.btns[0].val === 'obj') {
             ent = {
                 type: valInterfType?.tabs[0].val || 'bin-in',
                 device: valDevice?.tabs[0].val || 0,
@@ -571,9 +572,9 @@ function createObjUdfTrig(config: Config[], propDevice?: Device): any {
                       },
         };
         obj = Object.assign(obj, curObj);
-    } else if (typeUdf?.radioBtns[0].val === 'compare' || typeUdf?.radioBtns[0].val === 'hold') {
+    } else if (interfaceRight?.radioBtns[0].val === 'compare' || interfaceRight?.radioBtns[0].val === 'hold') {
         let ent = {};
-        if (comparisonVal?.btns[0].val === 'obj') {
+        if (objectRight?.btns[0].val === 'obj') {
             ent = {
                 type: valInterfType?.tabs[0].val || 'bin-in',
                 device: valDevice?.tabs[0].val || 0,

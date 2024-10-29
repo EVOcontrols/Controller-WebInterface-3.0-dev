@@ -181,9 +181,9 @@ export const enum CurKeyMap {
     Device = 3,
     Object = 4,
     Bus = 5,
-    TypeUdf = 6,
-    ComparisonOperation = 7,
-    ComparisonValue = 8,
+    InterfaceRight = 6,
+    DeviceRight = 7,
+    ObjectRight = 8,
     Select = 9,
     Enter = 10,
     ValueInterface = 11,
@@ -205,4 +205,5 @@ export const enum CurKeyMap {
     CyclicMode = 32,
     MinTime = 33,
     MaxTime = 34,
+    ComparisonOperation = 70,
 }

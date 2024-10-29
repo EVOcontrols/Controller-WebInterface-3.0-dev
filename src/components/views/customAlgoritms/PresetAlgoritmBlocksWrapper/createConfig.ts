@@ -118,7 +118,7 @@ async function createLeftConfig(
     const configs = await cbParseEntity(curBodyVal.left);
     if (!configs || !configs.length) return null;
 
-    return configs;
+    return configs.map((el) => ({ ...el, titles: replaceTitlesLeft(el.titles) }));
 }
 
 async function createRightConfig(
@@ -133,7 +133,7 @@ async function createRightConfig(
     const configs = await cbParseEntity(curBodyVal.right);
     if (!configs || !configs.length) return null;
 
-    return configs.map((el) => ({ ...el, curKey: el.curKey + 4 }));
+    return configs.map((el) => ({ ...el, curKey: el.curKey + 4, titles: replaceTitlesRight(el.titles) }));
 }
 
 async function createResultConfig(
@@ -148,7 +148,7 @@ async function createResultConfig(
     const configs = await cbParseEntity(curBodyVal.result);
     if (!configs || !configs.length) return null;
 
-    return configs.map((el) => ({ ...el, curKey: el.curKey + 8 }));
+    return configs.map((el) => ({ ...el, curKey: el.curKey + 8, titles: replaceTitlesResult(el.titles) }));
 }
 
 function createCompareConfig(curBodyVal: Body, typeVal: UDF, t: (key: string) => string): Config | null {
@@ -157,7 +157,7 @@ function createCompareConfig(curBodyVal: Body, typeVal: UDF, t: (key: string) =>
     }
 
     return {
-        curKey: CurKeyMap.TypeUdf,
+        curKey: CurKeyMap.InterfaceRight,
         queue: [
             { name: 'title', index: 0 },
             { name: 'radioBtns', index: 0 },
@@ -348,7 +348,7 @@ function createActionConfig(
     }
 
     return {
-        curKey: CurKeyMap.TypeUdf,
+        curKey: CurKeyMap.InterfaceRight,
         queue: [
             { name: 'title', index: 0 },
             { name: 'radioBtns', index: 0 },
@@ -375,7 +375,7 @@ function createComparisonValConfig(curBodyVal: Body, typeVal: UDF, t: (key: stri
     }
 
     return {
-        curKey: CurKeyMap.ComparisonValue,
+        curKey: CurKeyMap.ObjectRight,
         queue: [
             { name: 'title', index: 0 },
             { name: 'btns', index: 0 },
@@ -571,7 +571,7 @@ async function createActValueConfig(
     const configs = await cbParseEntity(curBodyVal.value);
     if (!configs || !configs.length) return null;
 
-    return configs.map((el) => ({ ...el, curKey: el.curKey + 21 }));
+    return configs.map((el) => ({ ...el, curKey: el.curKey + 21, titles: replaceTitlesValue(el.titles) }));
 }
 
 function createHysteresisConfig(curBodyVal: Body, typeVal: UDF, t: (key: string) => string): Config | null {
@@ -826,4 +826,20 @@ function replaceTitlesValue(titles: string[]): string[] {
 
 function replaceTitlesStopValue(titles: string[]): string[] {
     return titles.map((title) => title.replace(/действия/i, 'значения для остановки').replace(/action/i, 'stop value'));
+}
+
+function replaceTitlesLeft(titles: string[]): string[] {
+    return titles.map((title) =>
+        title.replace(/преобразования/i, 'левого аргумента').replace(/transform/i, 'left argument'),
+    );
+}
+
+function replaceTitlesRight(titles: string[]): string[] {
+    return titles.map((title) =>
+        title.replace(/преобразования/i, 'правого аргумента').replace(/transform/i, 'right argument'),
+    );
+}
+
+function replaceTitlesResult(titles: string[]): string[] {
+    return titles.map((title) => title.replace(/преобразования/i, 'результата').replace(/transform/i, 'result'));
 }
