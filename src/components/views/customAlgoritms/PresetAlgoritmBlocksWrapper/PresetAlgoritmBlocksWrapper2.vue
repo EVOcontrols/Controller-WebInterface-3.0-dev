@@ -992,7 +992,6 @@ async function setConfig() {
         parseEntity,
         parseTime,
         parseMultiSelect,
-        props.isCreating,
         props.device,
     );
 

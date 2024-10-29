@@ -16,7 +16,6 @@ export const createConfig = async (
         quant: number,
         logic?: 'and' | 'or',
     ) => Promise<Config[] | undefined>,
-    isCreating: boolean,
     propDevice?: Device,
 ): Promise<Config[]> => {
     const generators = [
@@ -31,12 +30,11 @@ export const createConfig = async (
         (curBody: Body) => createBitOperationConfig(curBody, typeVal, t),
         (curBody: Body) => createActionConfig(curBody, typeVal, t, propDevice),
         (curBody: Body) => createComparisonValConfig(curBody, typeVal, t),
-        (curBody: Body) => createOperationBinConfig(curBody, isCreating, t),
+        (curBody: Body) => createOperationBinConfig(curBody, t),
         (curBody: Body) => createValueConfig(curBody, cbParseEntity),
         (curBody: Body) => createStopValueConfig(curBody, typeVal, t),
         (curBody: Body) => createIntConstConfig(curBody, typeVal, t),
         (curBody: Body) => createStopValConfig(curBody, typeVal, cbParseEntity),
-        (curBody: Body) => createActValueConfig(curBody, typeVal, cbParseEntity),
         (curBody: Body) => createHysteresisConfig(curBody, typeVal, t),
         (curBody: Body) => createTimeConfig(curBody, cbParseTime, t),
         (curBody: Body) => createDelayConfig(curBody, cbParseTime, t),
@@ -104,7 +102,6 @@ async function createEntityConfig(
     }
 
     const configs = await cbParseEntity(curBodyVal.entity);
-    console.log('configs', configs && JSON.parse(JSON.stringify(configs)));
     if (!configs || !configs.length) return null;
 
     if (typeVal === 'udf-act') {
@@ -167,15 +164,22 @@ async function createResultConfig(
     const configs = await cbParseEntity(curBodyVal.result);
     if (!configs || !configs.length) return null;
 
-    return configs.map((el) => ({
-        ...el,
-        curKey: el.curKey + 8,
-        titles: replaceTitlesResult(el.titles),
-        tabs: el.tabs.map((tab) => ({
-            ...tab,
-            vals: tab.vals.filter((v) => !readonlyInterfaces.includes(String(v.val))),
-        })),
-    }));
+    return configs.map((config) => {
+        const updatedConfig = {
+            ...config,
+            curKey: config.curKey + 8,
+            titles: replaceTitlesResult(config.titles),
+        };
+
+        if (config.curKey === CurKeyMap.Interface) {
+            updatedConfig.tabs = config.tabs.map((tab) => ({
+                ...tab,
+                vals: tab.vals.filter((v) => !readonlyInterfaces.includes(String(v.val))),
+            }));
+        }
+
+        return updatedConfig;
+    });
 }
 
 function createCompareConfig(curBodyVal: Body, typeVal: UDF, t: (key: string) => string): Config | null {
@@ -426,7 +430,7 @@ function createComparisonValConfig(curBodyVal: Body, typeVal: UDF, t: (key: stri
     };
 }
 
-function createOperationBinConfig(curBodyVal: Body, isCreating: boolean, t: (key: string) => string): Config | null {
+function createOperationBinConfig(curBodyVal: Body, t: (key: string) => string): Config | null {
     if (!curBodyVal['value'] || curBodyVal['value']['type'] !== 'int-const') {
         return null;
     }
@@ -492,7 +496,22 @@ async function createValueConfig(
     const configs = await cbParseEntity(curBodyVal.value);
     if (!configs || !configs.length) return null;
 
-    return configs.map((el) => ({ ...el, curKey: el.curKey + 9, titles: replaceTitlesValue(el.titles) }));
+    return configs.map((config) => {
+        const updatedConfig = {
+            ...config,
+            curKey: config.curKey + 9,
+            titles: replaceTitlesValue(config.titles),
+        };
+
+        if (config.curKey === CurKeyMap.Device) {
+            updatedConfig.tabs = config.tabs.map((tab) => ({
+                ...tab,
+                vals: [tab.vals[0]],
+            }));
+        }
+
+        return updatedConfig;
+    });
 }
 
 function createStopValueConfig(curBodyVal: Body, typeVal: UDF, t: (key: string) => string): Config | null {
@@ -577,28 +596,22 @@ async function createStopValConfig(
     const configs = await cbParseEntity(curBodyVal['stop-val']);
     if (!configs || !configs.length) return null;
 
-    return configs.map((el) => ({ ...el, curKey: el.curKey + 15, titles: replaceTitlesStopValue(el.titles) }));
-}
+    return configs.map((config) => {
+        const updatedConfig = {
+            ...config,
+            curKey: config.curKey + 15,
+            titles: replaceTitlesStopValue(config.titles),
+        };
 
-async function createActValueConfig(
-    curBodyVal: Body,
-    typeVal: UDF,
-    cbParseEntity: (ent: Ent) => Promise<Config[]>,
-): Promise<Config[] | null> {
-    if (
-        typeVal !== 'udf-act' ||
-        !curBodyVal['value'] ||
-        curBodyVal['value']['type'] === 'int-const' ||
-        curBodyVal['value']['type'] === 'prev-value' ||
-        !curBodyVal.entity
-    ) {
-        return null;
-    }
+        if (config.curKey === CurKeyMap.Device) {
+            updatedConfig.tabs = config.tabs.map((tab) => ({
+                ...tab,
+                vals: [tab.vals[0]],
+            }));
+        }
 
-    const configs = await cbParseEntity(curBodyVal.value);
-    if (!configs || !configs.length) return null;
-
-    return configs.map((el) => ({ ...el, curKey: el.curKey + 21, titles: replaceTitlesValue(el.titles) }));
+        return updatedConfig;
+    });
 }
 
 function createHysteresisConfig(curBodyVal: Body, typeVal: UDF, t: (key: string) => string): Config | null {
