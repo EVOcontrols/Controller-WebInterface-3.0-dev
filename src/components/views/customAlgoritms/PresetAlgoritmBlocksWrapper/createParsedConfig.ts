@@ -48,50 +48,6 @@ export const createParsedConfig = (
     return resultConfig;
 };
 
-function createInterfaceConfig(
-    entType: EntType,
-    typeVal: UDF,
-    interfaces: Interface[],
-    t: (key: string) => string,
-): Config | null {
-    if (invalidType.includes(entType)) return null;
-
-    return {
-        curKey: CurKeyMap.Interface,
-        queue: [
-            { name: 'title', index: 0 },
-            { name: 'tabs', index: 0 },
-        ],
-        titles: [
-            typeVal === 'udf-act'
-                ? t('titles.actInterf')
-                : typeVal === 'udf-cond'
-                ? t('titles.condInterf')
-                : typeVal === 'udf-trans'
-                ? t('titles.transInterf')
-                : t('titles.trigInterf'),
-        ],
-        btns: [],
-        tabs: [
-            {
-                vals: Array.from(new Set(interfaces))
-                    .map((inter) => {
-                        return { val: inter, label: t(`tabs.${inter}`) };
-                    })
-                    .sort(function (a, b) {
-                        return order.indexOf(a.val as string) - order.indexOf(b.val as string);
-                    }),
-                val: entType as string,
-                dependentDropDownIndex: 4,
-            },
-        ],
-        radioBtns: [],
-        checkBoxes: [],
-        inputs: [],
-        dropDowns: [],
-    };
-}
-
 function createDeviceConfig(
     typeVal: UDF,
     t: (key: string) => string,
@@ -137,6 +93,50 @@ function createDeviceConfig(
             {
                 vals: devVals,
                 val,
+            },
+        ],
+        radioBtns: [],
+        checkBoxes: [],
+        inputs: [],
+        dropDowns: [],
+    };
+}
+
+function createInterfaceConfig(
+    entType: EntType,
+    typeVal: UDF,
+    interfaces: Interface[],
+    t: (key: string) => string,
+): Config | null {
+    if (invalidType.includes(entType)) return null;
+
+    return {
+        curKey: CurKeyMap.Interface,
+        queue: [
+            { name: 'title', index: 0 },
+            { name: 'tabs', index: 0 },
+        ],
+        titles: [
+            typeVal === 'udf-act'
+                ? t('titles.actInterf')
+                : typeVal === 'udf-cond'
+                ? t('titles.condInterf')
+                : typeVal === 'udf-trans'
+                ? t('titles.transInterf')
+                : t('titles.trigInterf'),
+        ],
+        btns: [],
+        tabs: [
+            {
+                vals: Array.from(new Set(interfaces))
+                    .map((inter) => {
+                        return { val: inter, label: t(`tabs.${inter}`) };
+                    })
+                    .sort(function (a, b) {
+                        return order.indexOf(a.val as string) - order.indexOf(b.val as string);
+                    }),
+                val: entType as string,
+                dependentDropDownIndex: 4,
             },
         ],
         radioBtns: [],
