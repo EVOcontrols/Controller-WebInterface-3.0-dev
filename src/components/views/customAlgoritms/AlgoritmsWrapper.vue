@@ -176,16 +176,18 @@ function changeLabel(index: number, e: Event, isCreating?: boolean) {
     setActiveLabel(index);
     setActiveLabelTop();
 
+    const removeHandlers = () => {
+        window.removeEventListener('click', handleSave);
+        window.removeEventListener('keypress', handleSave);
+    };
+    const handleSave = (event: MouseEvent | KeyboardEvent) => saveData(event, isCreating, removeHandlers);
+
     setTimeout(() => {
         const label = activeLabelInput.value;
         if (label) label.focus();
 
-        window.addEventListener('click', (event: MouseEvent) => {
-            saveData(event, isCreating);
-        });
-        window.addEventListener('keypress', (event: KeyboardEvent) => {
-            saveData(event, isCreating);
-        });
+        window.addEventListener('click', handleSave);
+        window.addEventListener('keypress', handleSave);
     }, 20);
 }
 
@@ -245,23 +247,23 @@ function handleScroll() {
     scrollTop.value = el.scrollTop;
 }
 
-async function saveData(e: KeyboardEvent | MouseEvent, isCreating?: boolean) {
+async function saveData(e: KeyboardEvent | MouseEvent, isCreating?: boolean, removeHandlers?: () => void) {
     if (!activeLabel.value) return;
     if (e.type === 'keypress') {
         const event: KeyboardEvent = e as KeyboardEvent;
         if (event.key === 'Enter') {
-            await sendLabel(activeLabel.value.i, activeLabel.value.label, isCreating);
+            await sendLabel(activeLabel.value.i, activeLabel.value.label, isCreating, removeHandlers);
         }
     } else if (e.type === 'click') {
-        await sendLabel(activeLabel.value.i, activeLabel.value.label, isCreating);
+        await sendLabel(activeLabel.value.i, activeLabel.value.label, isCreating, removeHandlers);
     }
 }
 
-async function sendLabel(index: number, label: string | undefined, isCreating?: boolean) {
+async function sendLabel(index: number, label: string | undefined, isCreating?: boolean, removeHandlers?: () => void) {
     await setLabel(index, label);
     activeLabel.value = undefined;
-    window.removeEventListener('click', saveData);
-    window.removeEventListener('keypress', saveData);
+
+    if (removeHandlers) removeHandlers();
 
     if (isCreating) emit('addAlgoritm', index, label);
 }
