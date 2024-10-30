@@ -228,7 +228,7 @@ const algoritms2Copy = ref<Algoritm[]>([]);
 const createAlgoritm1 = ref(false);
 const createAlgoritm2 = ref(false);
 const algoritmsForDeletion = ref<
-    { algoritm: Algoritm; type: 'udf-act' | 'udf-cond' | 'udf-trig' | 'udf-trans'; index: number }[]
+    { algoritm: Algoritm; type: 'udf-act' | 'udf-cond' | 'udf-trig' | 'udf-trans'; index: number | undefined }[]
 >([]);
 const algoritmsForDeletionType = ref<1 | 2>();
 const isAlgoritmsDeleting = ref(false);
@@ -321,7 +321,7 @@ function setAlgoritmsForDelete(
 async function deleteAlgoritms() {
     isAlgoritmsDeleting.value = true;
     const index = algoritmsForDeletion.value[0]?.index;
-    if (!index) return;
+    if (index === undefined) return;
 
     const body = {
         type: algoritmsForDeletion.value[0].type,
@@ -440,7 +440,7 @@ async function saveLabels() {
     let curLabelsRight = funcLabels.value[addr].find((el) => el.name === curActionRight.value.val)?.val as string[];
 
     const index = algoritmsForDeletion.value[0]?.index;
-    if (!index) return;
+    if (index === undefined) return;
 
     if (algoritmsForDeletion.value[0].type === curActionLeft.value.val) {
         const cleanedLabelsLeft = [...curLabelsLeft];
