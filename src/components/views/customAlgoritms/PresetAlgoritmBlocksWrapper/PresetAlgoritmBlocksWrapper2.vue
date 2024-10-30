@@ -251,6 +251,7 @@ import {
     DropDownRealType,
     DropDownItem,
     CurKeyMap,
+    BodySave,
 } from './types';
 import {
     $apiGetConfig,
@@ -285,7 +286,7 @@ const emit = defineEmits<{
 
 const indexStore = useIndexStore();
 
-const { devices, labels, tempUnit, devCapabs, valuesConstRange } = storeToRefs(indexStore);
+const { devices, labels, tempUnit, devCapabs } = storeToRefs(indexStore);
 const { funcLabels } = storeToRefs(funcStore);
 
 const isSaving = ref(false);
@@ -353,7 +354,7 @@ function modifyTime(obj: any, timeConfig: any, prop: string) {
 async function saveData() {
     isSaving.value = true;
 
-    let body = {
+    let body: BodySave = {
         type: props.type.val,
         device: props.device ? props.device.addr : 0,
         index: props.index,
@@ -383,13 +384,13 @@ async function saveData() {
     };
 
     if (props.type.val === 'udf-act') {
-        body = Object.assign(body, { action: modifiedTime });
+        body = { ...body, action: modifiedTime };
     } else if (props.type.val === 'udf-cond') {
-        body = Object.assign(body, { condition: modifiedTime });
+        body = { ...body, condition: modifiedTime };
     } else if (props.type.val === 'udf-trans') {
-        body = Object.assign(body, { transform: modifiedTime });
+        body = { ...body, transform: modifiedTime };
     } else {
-        body = Object.assign(body, { trigger: modifiedTime });
+        body = { ...body, trigger: modifiedTime };
     }
 
     await $apiSaveUdfConfig(body);
@@ -403,7 +404,6 @@ async function reRenderLayout(p: number) {
     if (isLoading.value) return;
     isUpdating.value = true;
 
-    // console.log('config.value', JSON.parse(JSON.stringify(config.value)));
     const obj = createObjByType(props.type.val, config.value, props.device);
     curBody.value = obj as Body;
     await setConfig();
@@ -838,7 +838,6 @@ function getVarBtns() {
 }
 
 async function parseTime(time: Time, title: string): Promise<Config[] | undefined> {
-    // console.log('time, ', time, 'title', title);
     const timeNum = time1.value.length ? (time2.value.length ? 3 : 2) : 1;
     if (!props.device || !curDevCapab.value) return;
 
@@ -984,7 +983,6 @@ async function parseMultiSelect(
 async function setConfig() {
     if (!curBody.value) return;
 
-    console.log('curBody.value', JSON.parse(JSON.stringify(curBody.value)));
     const resultConfig = await createConfig(
         curBody.value,
         props.type.val,
@@ -995,7 +993,6 @@ async function setConfig() {
         props.device,
     );
 
-    console.log('resultConfig.sort();', JSON.parse(JSON.stringify(resultConfig.sort())));
     config.value = resultConfig.sort();
 }
 

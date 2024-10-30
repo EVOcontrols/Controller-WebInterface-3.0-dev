@@ -1,5 +1,5 @@
-import { Capab, EntityForBody, UDF } from './types';
-import { LabelsType } from '@/typings/files';
+import type { BodySave, EntityForBody, UDF } from './types';
+import type { LabelsType } from '@/typings/files';
 
 const { readFile } = useReadWriteFiles();
 const { api } = useApiStore();
@@ -53,10 +53,7 @@ export const $apiGetMbInfo = async (device: number) => {
     });
 };
 
-export const $apiReadFile = async (
-    addr: number,
-    type: UDF,
-): Promise<LabelsType | 'notFound' | null> => {
+export const $apiReadFile = async (addr: number, type: UDF): Promise<LabelsType | 'notFound' | null> => {
     return fetchWithRetries(async () => {
         return await $apiReadFileData(addr, type);
     });
@@ -78,7 +75,7 @@ export const $apiGetEntState = async (body: { entities: EntityForBody[] }) => {
     });
 };
 
-export const $apiSaveUdfConfig = async (body: any) => {
+export const $apiSaveUdfConfig = async (body: BodySave) => {
     return fetchWithRetries(async () => {
         const { data } = await api.post('set_udf_cfg', body);
         return data;

@@ -1,5 +1,5 @@
 import type { Body, Ent, Time } from '@/typings/funcs';
-import { Config, CurKeyMap, UDF } from './types';
+import { type Config, CurKeyMap, type UDF } from './types';
 import type { Device } from '@/stores';
 
 const readonlyInterfaces = ['1w-rom', '1w-sens', 'bin-in', 'adc-in', 'mb-ir', 'mb-di'];

@@ -1,4 +1,4 @@
-import { Config, CurKeyMap } from './types';
+import type { Config, CurKeyMap } from './types';
 import type { Device } from '@/stores';
 
 type InterfProp = { interf: string; bus: number };

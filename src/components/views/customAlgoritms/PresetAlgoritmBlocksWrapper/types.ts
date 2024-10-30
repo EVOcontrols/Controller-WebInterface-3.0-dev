@@ -159,6 +159,16 @@ export type EntityForBody = {
     bus?: number;
 };
 
+export type BodySave = {
+    type: UDF;
+    device: number;
+    index: number;
+    action?: any;
+    condition?: any;
+    transform?: any;
+    trigger?: any;
+};
+
 export const ORDER = [
     '1w-rom',
     '1w-sens',

@@ -1,6 +1,6 @@
 import { Config, ORDER, UDF, Interface, Mode1W, EntBind, DropDownRealType, CurKeyMap } from './types';
-import { Ent, EntType } from '@/typings/funcs';
-import { Device } from '@/stores';
+import type { Ent, EntType } from '@/typings/funcs';
+import type { Device } from '@/stores';
 
 const invalidType = ['none', 'error', 'udf-trig', 'udf-cond', 'udf-act', 'udf-trans', 'int-const'];
 const order = ORDER;
