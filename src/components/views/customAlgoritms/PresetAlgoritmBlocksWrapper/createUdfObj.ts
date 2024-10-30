@@ -1,9 +1,42 @@
-import { Config, CurKeyMap } from './types';
+import { type Config, CurKeyMap } from './types';
 import type { Device } from '@/stores';
 
 type InterfProp = { interf: string; bus: number };
 
 const validValuesWithBus = ['mb-var', '1w-rom', '1w-sens', '1w-gpio'];
+
+function configureBus(
+    ent: any,
+    interfaceTypeConfig: Config | undefined,
+    busConfig: Config | undefined,
+    propDevice: Device | undefined,
+) {
+    if (interfaceTypeConfig && validValuesWithBus.includes(interfaceTypeConfig.tabs[0].val as string)) {
+        const interfaceProp = propDevice?.interf.find(
+            (i) => typeof i === 'object' && i.interf === interfaceTypeConfig.tabs[0].val,
+        ) as InterfProp;
+        const busProp = interfaceProp ? interfaceProp.bus : 0;
+        const busNumber = Number(busConfig?.tabs[0].val);
+        const busResult = Number.isNaN(busNumber) ? busProp : busNumber;
+        ent = {
+            ...ent,
+            ...(interfaceTypeConfig?.tabs[0].val === '1w-sens' ? { bus: busResult, io: 0 } : { bus: busResult }),
+        };
+    }
+    return ent;
+}
+
+function configureTime(timeConfig: Config | undefined) {
+    return timeConfig?.btns[0].val === 'tim-var'
+        ? {
+              type: 'tim-var',
+              index: timeConfig?.dropDowns[0].vals[0],
+          }
+        : {
+              type: 'tim-const',
+              value: timeConfig?.inputs[0].val,
+          };
+}
 
 function createObjUdfAct(config: Config[], propDevice?: Device) {
     const statusStart = config.find((el) => el.curKey === CurKeyMap.StatusStartSystem);
@@ -38,18 +71,7 @@ function createObjUdfAct(config: Config[], propDevice?: Device) {
         index: object?.dropDowns[0].vals[0],
     };
 
-    if (interfType && validValuesWithBus.includes(interfType.tabs[0].val as string)) {
-        const interfProp = propDevice?.interf.find(
-            (i) => typeof i === 'object' && i.interf === interfType.tabs[0].val,
-        ) as InterfProp;
-        const busProp = interfProp ? interfProp.bus : 0;
-        const busNumber = Number(bus?.tabs[0].val);
-        const busResult = Number.isNaN(busNumber) ? busProp : busNumber;
-        ent = Object.assign(
-            ent,
-            interfType?.tabs[0].val === '1w-sens' ? { bus: busResult, io: 0 } : { bus: busResult },
-        );
-    }
+    ent = configureBus(ent, interfType, bus, propDevice);
 
     let obj = {
         type: interfaceRight?.radioBtns[0].val,
@@ -79,18 +101,7 @@ function createObjUdfAct(config: Config[], propDevice?: Device) {
                 device: valDevice?.tabs[0].val || 0,
                 index: valObject?.dropDowns[0].vals[0] || 0,
             };
-            if (valInterfType && validValuesWithBus.includes(valInterfType.tabs[0].val as string)) {
-                const interfProp = propDevice?.interf.find(
-                    (i) => typeof i === 'object' && i.interf === valInterfType.tabs[0].val,
-                ) as InterfProp;
-                const busProp = interfProp ? interfProp.bus : 0;
-                const busNumber = Number(valBus?.tabs[0].val);
-                const busResult = Number.isNaN(busNumber) ? busProp : busNumber;
-                ent = Object.assign(
-                    ent,
-                    valInterfType?.tabs[0].val === '1w-sens' ? { bus: busResult, io: 0 } : { bus: busResult },
-                );
-            }
+            ent = configureBus(ent, valInterfType, valBus, propDevice);
         } else {
             ent = {
                 type: 'int-const',
@@ -105,18 +116,7 @@ function createObjUdfAct(config: Config[], propDevice?: Device) {
                 device: stopValDevice?.tabs[0].val || 0,
                 index: stopValObject?.dropDowns[0].vals[0] || 0,
             };
-            if (stopValInterfType && validValuesWithBus.includes(stopValInterfType.tabs[0].val as string)) {
-                const interfProp = propDevice?.interf.find(
-                    (i) => typeof i === 'object' && i.interf === stopValInterfType.tabs[0].val,
-                ) as InterfProp;
-                const busProp = interfProp ? interfProp.bus : 0;
-                const busNumber = Number(stopValBus?.tabs[0].val);
-                const busResult = Number.isNaN(busNumber) ? busProp : busNumber;
-                stopVal = Object.assign(
-                    stopVal,
-                    stopValInterfType?.tabs[0].val === '1w-sens' ? { bus: busResult, io: 0 } : { bus: busResult },
-                );
-            }
+            stopVal = configureBus(stopVal, stopValInterfType, stopValBus, propDevice);
         } else if (stopValConfig?.btns[0].val === 'const') {
             stopVal = {
                 type: 'int-const',
@@ -153,18 +153,7 @@ function createObjUdfAct(config: Config[], propDevice?: Device) {
                 device: valDevice?.tabs[0].val || 0,
                 index: valObject?.dropDowns[0].vals[0] || 0,
             };
-            if (valInterfType && validValuesWithBus.includes(valInterfType.tabs[0].val as string)) {
-                const interfProp = propDevice?.interf.find(
-                    (i) => typeof i === 'object' && i.interf === valInterfType.tabs[0].val,
-                ) as InterfProp;
-                const busProp = interfProp ? interfProp.bus : 0;
-                const busNumber = Number(valBus?.tabs[0].val);
-                const busResult = Number.isNaN(busNumber) ? busProp : busNumber;
-                ent = Object.assign(
-                    ent,
-                    valInterfType?.tabs[0].val === '1w-sens' ? { bus: busResult, io: 0 } : { bus: busResult },
-                );
-            }
+            ent = configureBus(ent, valInterfType, valBus, propDevice);
         } else {
             ent = {
                 type: 'int-const',
@@ -182,18 +171,7 @@ function createObjUdfAct(config: Config[], propDevice?: Device) {
                 device: stopValDevice?.tabs[0].val || 0,
                 index: stopValObject?.dropDowns[0].vals[0] || 0,
             };
-            if (stopValInterfType && validValuesWithBus.includes(stopValInterfType.tabs[0].val as string)) {
-                const interfProp = propDevice?.interf.find(
-                    (i) => typeof i === 'object' && i.interf === stopValInterfType.tabs[0].val,
-                ) as InterfProp;
-                const busProp = interfProp ? interfProp.bus : 0;
-                const busNumber = Number(stopValBus?.tabs[0].val);
-                const busResult = Number.isNaN(busNumber) ? busProp : busNumber;
-                stopVal = Object.assign(
-                    stopVal,
-                    stopValInterfType?.tabs[0].val === '1w-sens' ? { bus: busResult, io: 0 } : { bus: busResult },
-                );
-            }
+            stopVal = configureBus(stopVal, stopValInterfType, stopValBus, propDevice);
         } else if (stopValConfig?.btns[0].val === 'const') {
             stopVal = {
                 type: 'int-const',
@@ -231,18 +209,7 @@ function createObjUdfAct(config: Config[], propDevice?: Device) {
                 device: valDevice?.tabs[0].val || 0,
                 index: valObject?.dropDowns[0].vals[0] || 0,
             };
-            if (valInterfType && validValuesWithBus.includes(valInterfType.tabs[0].val as string)) {
-                const interfProp = propDevice?.interf.find(
-                    (i) => typeof i === 'object' && i.interf === valInterfType.tabs[0].val,
-                ) as InterfProp;
-                const busProp = interfProp ? interfProp.bus : 0;
-                const busNumber = Number(valBus?.tabs[0].val);
-                const busResult = Number.isNaN(busNumber) ? busProp : busNumber;
-                ent = Object.assign(
-                    ent,
-                    valInterfType?.tabs[0].val === '1w-sens' ? { bus: busResult, io: 0 } : { bus: busResult },
-                );
-            }
+            ent = configureBus(ent, valInterfType, valBus, propDevice);
         } else {
             ent = {
                 type: 'int-const',
@@ -323,18 +290,7 @@ function createObjUdfCond(config: Config[], propDevice?: Device) {
         device: device?.tabs[0].val,
         index: object?.dropDowns[0].vals[0],
     };
-    if (interfType && validValuesWithBus.includes(interfType.tabs[0].val as string)) {
-        const interfProp = propDevice?.interf.find(
-            (i) => typeof i === 'object' && i.interf === interfType.tabs[0].val,
-        ) as InterfProp;
-        const busProp = interfProp ? interfProp.bus : 0;
-        const busNumber = Number(bus?.tabs[0].val);
-        const busResult = Number.isNaN(busNumber) ? busProp : busNumber;
-        ent = Object.assign(
-            ent,
-            interfType?.tabs[0].val === '1w-sens' ? { bus: busResult, io: 0 } : { bus: busResult },
-        );
-    }
+    ent = configureBus(ent, interfType, bus, propDevice);
     let val = {};
     if (objectRight?.btns[0].val === 'obj') {
         val = {
@@ -342,18 +298,7 @@ function createObjUdfCond(config: Config[], propDevice?: Device) {
             device: valDevice?.tabs[0].val || 0,
             index: valObject?.dropDowns[0].vals[0] || 0,
         };
-        if (valInterfType && validValuesWithBus.includes(valInterfType.tabs[0].val as string)) {
-            const interfProp = propDevice?.interf.find(
-                (i) => typeof i === 'object' && i.interf === valInterfType.tabs[0].val,
-            ) as InterfProp;
-            const busProp = interfProp ? interfProp.bus : 0;
-            const busNumber = Number(valBus?.tabs[0].val);
-            const busResult = Number.isNaN(busNumber) ? busProp : busNumber;
-            val = Object.assign(
-                val,
-                valInterfType?.tabs[0].val === '1w-sens' ? { bus: busResult, io: 0 } : { bus: busResult },
-            );
-        }
+        val = configureBus(val, valInterfType, valBus, propDevice);
     } else {
         val = {
             type: 'int-const',
@@ -417,52 +362,19 @@ function createObjUdfTrans(config: Config[], propDevice?: Device) {
         device: device?.tabs[0].val,
         index: object?.dropDowns[0].vals[0],
     };
-    if (interfType && validValuesWithBus.includes(interfType.tabs[0].val as string)) {
-        const interfProp = propDevice?.interf.find(
-            (i) => typeof i === 'object' && i.interf === interfType.tabs[0].val,
-        ) as InterfProp;
-        const busProp = interfProp ? interfProp.bus : 0;
-        const busNumber = Number(bus?.tabs[0].val);
-        const busResult = Number.isNaN(busNumber) ? busProp : busNumber;
-        left = Object.assign(
-            left,
-            interfType?.tabs[0].val === '1w-sens' ? { bus: busResult, io: 0 } : { bus: busResult },
-        );
-    }
+    left = configureBus(left, interfType, bus, propDevice);
     let right = {
         type: interfaceRight?.tabs[0].val,
         device: deviceRight?.tabs[0].val,
         index: objectRight?.dropDowns[0].vals[0],
     };
-    if (interfaceRight && validValuesWithBus.includes(interfaceRight.tabs[0].val as string)) {
-        const interfProp = propDevice?.interf.find(
-            (i) => typeof i === 'object' && i.interf === interfaceRight.tabs[0].val,
-        ) as InterfProp;
-        const busProp = interfProp ? interfProp.bus : 0;
-        const busNumber = Number(select?.tabs[0].val);
-        const busResult = Number.isNaN(busNumber) ? busProp : busNumber;
-        right = Object.assign(
-            right,
-            interfaceRight?.tabs[0].val === '1w-sens' ? { bus: busResult, io: 0 } : { bus: busResult },
-        );
-    }
+    right = configureBus(right, interfaceRight, select, propDevice);
     let result = {
         type: enter?.tabs[0].val,
         device: valInterfType?.tabs[0].val,
         index: valDevice?.dropDowns[0].vals[0],
     };
-    if (enter && validValuesWithBus.includes(enter.tabs[0].val as string)) {
-        const interfProp = propDevice?.interf.find(
-            (i) => typeof i === 'object' && i.interf === enter.tabs[0].val,
-        ) as InterfProp;
-        const busProp = interfProp ? interfProp.bus : 0;
-        const busNumber = Number(valObject?.tabs[0].val);
-        const busResult = Number.isNaN(busNumber) ? busProp : busNumber;
-        result = Object.assign(
-            result,
-            enter?.tabs[0].val === '1w-sens' ? { bus: busResult, io: 0 } : { bus: busResult },
-        );
-    }
+    result = configureBus(result, enter, valObject, propDevice);
     return {
         'init-state': statusStart?.btns[0].val === 'on' ? 1 : 0,
         operation: comparisonOperation?.radioBtns[0].val || '+',
@@ -498,19 +410,8 @@ function createObjUdfTrig(config: Config[], propDevice?: Device): any {
         device: device?.tabs[0].val,
         index: object?.dropDowns[0].vals[0],
     };
+    ent = configureBus(ent, interfType, bus, propDevice);
 
-    if (interfType && validValuesWithBus.includes(interfType.tabs[0].val as string)) {
-        const interfProp = propDevice?.interf.find(
-            (i) => typeof i === 'object' && i.interf === interfType.tabs[0].val,
-        ) as InterfProp;
-        const busProp = interfProp ? interfProp.bus : 0;
-        const busNumber = Number(bus?.tabs[0].val);
-        const busResult = Number.isNaN(busNumber) ? busProp : busNumber;
-        ent = Object.assign(
-            ent,
-            interfType?.tabs[0].val === '1w-sens' ? { bus: busResult, io: 0 } : { bus: busResult },
-        );
-    }
     let obj = {
         type: interfaceRight?.radioBtns[0].val,
         entity: ent,
@@ -526,18 +427,7 @@ function createObjUdfTrig(config: Config[], propDevice?: Device): any {
                 device: valDevice?.tabs[0].val || 0,
                 index: valObject?.dropDowns[0].vals[0] || 0,
             };
-            if (valInterfType && validValuesWithBus.includes(valInterfType.tabs[0].val as string)) {
-                const interfProp = propDevice?.interf.find(
-                    (i) => typeof i === 'object' && i.interf === valInterfType.tabs[0].val,
-                ) as InterfProp;
-                const busProp = interfProp ? interfProp.bus : 0;
-                const busNumber = Number(valBus?.tabs[0].val);
-                const busResult = Number.isNaN(busNumber) ? busProp : busNumber;
-                ent = Object.assign(
-                    ent,
-                    valInterfType?.tabs[0].val === '1w-sens' ? { bus: busResult, io: 0 } : { bus: busResult },
-                );
-            }
+            ent = configureBus(ent, valInterfType, valBus, propDevice);
         } else {
             ent = {
                 type: 'int-const',
@@ -577,18 +467,7 @@ function createObjUdfTrig(config: Config[], propDevice?: Device): any {
                 device: valDevice?.tabs[0].val || 0,
                 index: valObject?.dropDowns[0].vals[0] || 0,
             };
-            if (valInterfType && validValuesWithBus.includes(valInterfType.tabs[0].val as string)) {
-                const interfProp = propDevice?.interf.find(
-                    (i) => typeof i === 'object' && i.interf === valInterfType.tabs[0].val,
-                ) as InterfProp;
-                const busProp = interfProp ? interfProp.bus : 0;
-                const busNumber = Number(valBus?.tabs[0].val);
-                const busResult = Number.isNaN(busNumber) ? busProp : busNumber;
-                ent = Object.assign(
-                    ent,
-                    valInterfType?.tabs[0].val === '1w-sens' ? { bus: busResult, io: 0 } : { bus: busResult },
-                );
-            }
+            ent = configureBus(ent, valInterfType, valBus, propDevice);
         } else {
             ent = {
                 type: 'int-const',
