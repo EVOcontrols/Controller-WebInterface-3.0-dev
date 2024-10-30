@@ -66,6 +66,7 @@
         <div class="h-[3.5rem] px-6 flex items-center justify-end">
             <SaveButton
                 :isSaving="isSaving"
+                :is-disabled="isSaveBtnDisabled"
                 class="w-[7.563rem]"
                 @click="saveData"
             />
