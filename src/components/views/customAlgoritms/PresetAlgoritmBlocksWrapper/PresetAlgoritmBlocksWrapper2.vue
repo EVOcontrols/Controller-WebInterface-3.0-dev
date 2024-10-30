@@ -1,8 +1,18 @@
 <template>
     <div
         class="bg-[#0A2B47] rounded-[8px] flex-1"
+        :class="[{ 'pointer-events-none': microLoading }]"
         v-if="!isLoading"
     >
+        <div
+            v-if="microLoading"
+            class="p-2 flex items-center justify-center absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"
+        >
+            <span
+                v-html="spinner"
+                class="self-center mb-4 [&>svg]:w-[5rem] [&>svg>path]:fill-[#148ef8]"
+            ></span>
+        </div>
         <div class="flex flex-col pb-1">
             <div class="flex-1 flex">
                 <div class="pl-[1.875rem] pr-6 pt-7">
@@ -293,6 +303,7 @@ const { funcLabels } = storeToRefs(funcStore);
 const isSaving = ref(false);
 
 const isLoading = ref(false);
+const microLoading = ref(false);
 
 const isSaveBtnDisabled = ref(true);
 
@@ -401,7 +412,7 @@ async function saveData() {
     emit('creatingFinish');
 }
 
-async function reRenderLayout(p: number) {
+async function reRenderLayout() {
     if (isLoading.value) return;
     isUpdating.value = true;
 
@@ -439,6 +450,7 @@ function checkConfigToSave() {
 }
 
 async function handleBtnClick(configItemIndex: number, btnsItemIndex: number, val: string | number) {
+    microLoading.value = true;
     if (!config.value) return;
     const prevConfig = [...config.value];
     if (prevConfig[configItemIndex] && prevConfig[configItemIndex].btns[btnsItemIndex]) {
@@ -458,10 +470,11 @@ async function handleBtnClick(configItemIndex: number, btnsItemIndex: number, va
         config.value = prevConfig;
     }
     checkConfigToSave();
-    reRenderLayout(1);
+    reRenderLayout();
 }
 
 function handleTabClick(configItemIndex: number, tabsItemIndex: number, val: string | number) {
+    microLoading.value = true;
     if (!config.value) return;
     const prevConfig = [...config.value];
     if (prevConfig[configItemIndex] && prevConfig[configItemIndex].tabs[tabsItemIndex]) {
@@ -476,10 +489,11 @@ function handleTabClick(configItemIndex: number, tabsItemIndex: number, val: str
         config.value = prevConfig;
     }
     checkConfigToSave();
-    reRenderLayout(2);
+    reRenderLayout();
 }
 
 function handleRadioBtnClick(configItemIndex: number, radioBtnsItemIndex: number, val: string) {
+    microLoading.value = true;
     if (!config.value) return;
     const prevConfig = [...config.value];
     if (prevConfig[configItemIndex] && prevConfig[configItemIndex].radioBtns[radioBtnsItemIndex]) {
@@ -487,10 +501,11 @@ function handleRadioBtnClick(configItemIndex: number, radioBtnsItemIndex: number
         config.value = prevConfig;
     }
     checkConfigToSave();
-    reRenderLayout(3);
+    reRenderLayout();
 }
 
 function handleDropChange(configItemIndex: number, dropItemIndex: number, vals: number[]) {
+    microLoading.value = true;
     if (!config.value) return;
     const prevConfig = [...config.value];
     if (prevConfig[configItemIndex] && prevConfig[configItemIndex].dropDowns[dropItemIndex]) {
@@ -498,7 +513,7 @@ function handleDropChange(configItemIndex: number, dropItemIndex: number, vals: 
         config.value = prevConfig;
     }
     checkConfigToSave();
-    reRenderLayout(4);
+    reRenderLayout();
 }
 
 function handleCheckboxClick(
@@ -508,6 +523,7 @@ function handleCheckboxClick(
     status: boolean,
     part: 1 | 2,
 ) {
+    microLoading.value = true;
     if (!config.value) return;
     const prevConfig = [...config.value];
     if (prevConfig[configItemIndex] && prevConfig[configItemIndex].checkBoxes[checkboxItemIndex]) {
@@ -524,10 +540,11 @@ function handleCheckboxClick(
         config.value = prevConfig;
     }
     checkConfigToSave();
-    reRenderLayout(5);
+    reRenderLayout();
 }
 
 function handleInput(configItemIndex: number, inputItemIndex: number, val: number) {
+    microLoading.value = true;
     if (!config.value) return;
     const prevConfig = [...config.value];
     if (prevConfig[configItemIndex] && prevConfig[configItemIndex].inputs[inputItemIndex]) {
@@ -555,7 +572,7 @@ function handleInput(configItemIndex: number, inputItemIndex: number, val: numbe
         config.value = prevConfig;
     }
     checkConfigToSave();
-    reRenderLayout(6);
+    reRenderLayout();
 }
 
 function handleDropDownClick(configItemIndex: number, itemIndex: number) {
@@ -573,6 +590,7 @@ function handleDropDownClick(configItemIndex: number, itemIndex: number) {
 }
 
 function setInputError(configItemIndex: number, inputItemIndex: number, res: boolean) {
+    // microLoading.value = true;
     // if (res) {
     //     inputErrors.add(configItemIndex + '-' + inputItemIndex);
     // } else {
@@ -585,7 +603,7 @@ function setInputError(configItemIndex: number, inputItemIndex: number, res: boo
     //     config.value = prevConfig;
     // }
     // checkConfigToSave();
-    // reRenderLayout(7);
+    // reRenderLayout();
 }
 
 function handleClickSelect(item: DropDownItem) {
@@ -995,6 +1013,7 @@ async function setConfig() {
     );
 
     config.value = resultConfig.sort();
+    microLoading.value = false;
 }
 
 function configCreating() {

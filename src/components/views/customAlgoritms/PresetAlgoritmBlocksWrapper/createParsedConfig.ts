@@ -206,6 +206,7 @@ function createObjConfig(
         return null;
     }
 
+    const vals = entIndex !== undefined && entIndex >= 0 && entIndex < entItems.length ? [entIndex] : [];
     return {
         curKey: CurKeyMap.Object,
         queue: [
@@ -242,7 +243,7 @@ function createObjConfig(
                         : 'var',
                 realType: entType as DropDownRealType,
                 items: entItems,
-                vals: entIndex !== undefined ? [entIndex] : [],
+                vals,
             },
         ],
     };

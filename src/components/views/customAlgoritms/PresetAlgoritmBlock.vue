@@ -417,7 +417,7 @@ function getNameDropDown(): { index: number; name: string }[] {
     if (!items.length) return [];
     return vals.map((val) => ({
         index: val,
-        name: items[val].name,
+        name: items[val]?.name || '',
     }));
 }
 
