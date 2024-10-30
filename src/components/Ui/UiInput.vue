@@ -47,9 +47,11 @@ const props = withDefaults(
         disabled?: boolean;
         inputType?: ('ip' | 'url')[] | ['int'] | ['latitude'] | ['longitude'] | ['string'];
         nullable?: U;
+        debounceDelay?: number;
     }>(),
     {
         autoSelect: false,
+        debounceDelay: 10,
     },
 );
 
@@ -170,8 +172,10 @@ function valueChangedHandler() {
             setStatus('invalid');
             return;
         }
-        lastInitValue = parsed as V;
-        emit('valueChanged', parsed as V);
+        if (parsed !== lastInitValue) {
+            lastInitValue = parsed as V;
+            emit('valueChanged', parsed as V);
+        }
     } else if (props.nullable === true) {
         lastInitValue = null as V;
         emit('valueChanged', null as V);
@@ -184,7 +188,7 @@ watchDebounced(
     () => {
         valueChangedHandler();
     },
-    { immediate: true, debounce: 10 },
+    { immediate: true, debounce: props.debounceDelay },
 );
 
 watchDebounced(
@@ -192,7 +196,7 @@ watchDebounced(
     () => {
         valueChangedHandler();
     },
-    { debounce: 10 },
+    { debounce: props.debounceDelay },
 );
 
 watch(

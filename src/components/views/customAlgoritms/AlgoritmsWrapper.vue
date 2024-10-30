@@ -14,17 +14,13 @@
                 :style="{ 'min-height': 'calc(100% - 32px)' }"
                 ref="scrollEl"
             >
-                <Algoritm
+                <AlgoritmBlock
                     v-for="(item, i) in props.items"
                     :key="i"
                     :item="item"
-                    :checked="
-                        props.checkedArr.includes(props.items[i + props.page * funcsNumberPerPage])
-                    "
+                    :checked="props.checkedArr.includes(props.items[i + props.page * funcsNumberPerPage])"
                     :index="i + props.page * funcsNumberPerPage"
-                    :isActive="
-                        !!(activeLabel && activeLabel.i === i + props.page * funcsNumberPerPage)
-                    "
+                    :isActive="!!(activeLabel && activeLabel.i === i + props.page * funcsNumberPerPage)"
                     :isOpen="openedAlgoritms.includes(i)"
                     :device="props.device"
                     :curAction="props.curAction"
@@ -47,8 +43,8 @@
                         }
                     "
                     @oneClick="handleClick(i)"
-                    @addAlgoritm="emit('addAlgoritm', i)"
-                    @creatingFinish="emit('creatingFinish', i)"
+                    @addAlgoritm="(event) => addAlgoritm(i, event)"
+                    @creatingFinish="handleCreatingFinish(i)"
                 />
             </div>
             <div
@@ -76,6 +72,7 @@
                     >
                     <input
                         type="text"
+                        ref="activeLabelInput"
                         :placeholder="t('placeholder')"
                         :value="activeLabel.label"
                         :maxlength="32"
@@ -89,7 +86,7 @@
 </template>
 
 <script lang="ts" setup>
-import Algoritm from '@/components/views/customAlgoritms/Algoritm.vue';
+import AlgoritmBlock from '@/components/views/customAlgoritms/AlgoritmBlock.vue';
 import spinner from '@/assets/img/spinner-inside-button.svg?raw';
 import type { Device } from '@/stores';
 
@@ -97,8 +94,6 @@ const { saveToFile } = useReadWriteFiles();
 
 const funcsStore = useFuncsStore();
 const indexStore = useIndexStore();
-
-const api = indexStore.getApi().api;
 
 const isAborted = indexStore.getApi().isAborted;
 
@@ -119,10 +114,11 @@ const props = defineProps<{
 const emit = defineEmits<{
     (e: 'selectAlgoritm', value: boolean, index: Algoritm): void;
     (e: 'deleteAlgoritm', indexes: Algoritm[], index: number): void;
-    (e: 'addAlgoritm', index: number): void;
+    (e: 'addAlgoritm', index: number, label: string | undefined): void;
     (e: 'creatingFinish', index: number): void;
 }>();
 
+const activeLabelInput = ref<HTMLInputElement | undefined>();
 const scrollWrapper = ref<HTMLElement | undefined>();
 const activeLabel = ref<{ label: string; i: number }>();
 const activeLabelTop = ref(86);
@@ -145,13 +141,8 @@ function deleteAlgoritm(indexes: Algoritm[], index: number) {
     emit('deleteAlgoritm', indexes, index);
 }
 
-function handleDblClick(index: number, e: Event) {
-    const target = e.target as HTMLElement;
-    if (target.closest('.modal')) return;
-    setActiveLabel(index);
-    setActiveLabelTop();
-    window.addEventListener('click', saveData);
-    window.addEventListener('keypress', saveData);
+function handleDblClick(index: number, event: Event) {
+    changeLabel(index, event);
 }
 
 function handleClick(i: number) {
@@ -162,12 +153,46 @@ function handleClick(i: number) {
         clickTimeout.value = setTimeout(() => {
             if (openedAlgoritms.value.includes(i)) {
                 openedAlgoritms.value = openedAlgoritms.value.filter((el) => el !== i);
+
+                if (props.items[i].isCreating === true) {
+                    emit('creatingFinish', i);
+                }
             } else {
                 openedAlgoritms.value.push(i);
             }
             clickTimeout.value = null;
         }, 300);
     }
+}
+
+function handleCreatingFinish(i: number) {
+    emit('creatingFinish', i);
+    handleClick(i);
+}
+
+function changeLabel(index: number, e: Event, isCreating?: boolean) {
+    const target = e.target as HTMLElement;
+    if (target.closest('.modal')) return;
+    setActiveLabel(index);
+    setActiveLabelTop();
+
+    const removeHandlers = () => {
+        window.removeEventListener('click', handleSave);
+        window.removeEventListener('keypress', handleSave);
+    };
+    const handleSave = (event: MouseEvent | KeyboardEvent) => saveData(event, isCreating, removeHandlers);
+
+    setTimeout(() => {
+        const label = activeLabelInput.value;
+        if (label) label.focus();
+
+        window.addEventListener('click', handleSave);
+        window.addEventListener('keypress', handleSave);
+    }, 20);
+}
+
+function addAlgoritm(index: number, event: Event) {
+    changeLabel(index, event, true);
 }
 
 function setActiveLabel(index: number) {
@@ -191,11 +216,7 @@ function setActiveLabelTop() {
                 addTop += el.children[1].clientHeight;
             }
         });
-    const top =
-        (activeLabel.value.i - props.page * funcsNumberPerPage.value) * 58 -
-        scrollTop.value +
-        86 +
-        addTop;
+    const top = (activeLabel.value.i - props.page * funcsNumberPerPage.value) * 58 - scrollTop.value + 86 + addTop;
     if (top < 86) {
         activeLabelTop.value = 86;
     } else if (Math.round(top) > wrapper.offsetHeight + 18) {
@@ -204,10 +225,7 @@ function setActiveLabelTop() {
                 if (!activeLabel.value) return;
                 isScrolling.value = true;
                 wrapper.scrollTo({
-                    top:
-                        (activeLabel.value.i - props.page * funcsNumberPerPage.value) * 58 +
-                        68 -
-                        wrapper.offsetHeight,
+                    top: (activeLabel.value.i - props.page * funcsNumberPerPage.value) * 58 + 68 - wrapper.offsetHeight,
                     behavior: 'smooth',
                 });
             }, 0);
@@ -229,31 +247,36 @@ function handleScroll() {
     scrollTop.value = el.scrollTop;
 }
 
-function saveData(e: KeyboardEvent | MouseEvent) {
+async function saveData(e: KeyboardEvent | MouseEvent, isCreating?: boolean, removeHandlers?: () => void) {
     if (!activeLabel.value) return;
     if (e.type === 'keypress') {
         const event: KeyboardEvent = e as KeyboardEvent;
         if (event.key === 'Enter') {
-            setLabel(activeLabel.value.i, activeLabel.value.label);
-            activeLabel.value = undefined;
+            await sendLabel(activeLabel.value.i, activeLabel.value.label, isCreating, removeHandlers);
         }
     } else if (e.type === 'click') {
-        setLabel(activeLabel.value.i, activeLabel.value.label);
-        activeLabel.value = undefined;
+        await sendLabel(activeLabel.value.i, activeLabel.value.label, isCreating, removeHandlers);
     }
+}
+
+async function sendLabel(index: number, label: string | undefined, isCreating?: boolean, removeHandlers?: () => void) {
+    await setLabel(index, label);
+    activeLabel.value = undefined;
+
+    if (removeHandlers) removeHandlers();
+
+    if (isCreating) emit('addAlgoritm', index, label);
 }
 
 async function setLabel(index: number, label: string | undefined) {
     if (!label) return;
     const currLabels =
-        funcLabels.value[props.device ? props.device.addr : 0].find(
-            (el) => el.name === props.curAction.val,
-        )?.val || [];
+        funcLabels.value[props.device ? props.device.addr : 0].find((el) => el.name === props.curAction.val)?.val || [];
 
     const newLabels = [...currLabels];
     newLabels[index] = label;
     curLabels.value = [...newLabels];
-    saveLabel(newLabels as string[]);
+    await saveLabel(newLabels as string[]);
 }
 
 async function saveLabel(labels: string[]) {
@@ -263,7 +286,7 @@ async function saveLabel(labels: string[]) {
             interf: props.curAction.val,
             device: props.device ? props.device.addr : 0,
         },
-        { labels: labels },
+        { labels },
     );
     if (isSavingError) {
         if (isAborted.value) {
@@ -292,9 +315,14 @@ watch(
 watch(
     () => props.items,
     (newValue, oldValue) => {
-        if (JSON.stringify(newValue) !== JSON.stringify(oldValue)) openedAlgoritms.value = [];
+        if (JSON.stringify(newValue) !== JSON.stringify(oldValue)) {
+            const indexCreating = newValue.findIndex((item) => item.isCreating === true);
+            openedAlgoritms.value = indexCreating !== -1 ? [indexCreating] : [];
+        }
     },
 );
+
+defineExpose({ changeLabel });
 
 const { t } = useI18n({
     messages: {

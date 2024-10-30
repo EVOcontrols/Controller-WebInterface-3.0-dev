@@ -16,7 +16,7 @@
                 class="text-sm"
                 :class="{ 'mt-[0.875rem]': i }"
             >
-                {{ props.titles[item.index] }}
+                {{ getNameTitle(props.titles[item.index]) }}
             </div>
             <div
                 v-else-if="item.name === 'btns' && props.btns[item.index]"
@@ -47,10 +47,7 @@
                     :key="j"
                     @click="
                         () => {
-                            if (
-                                btn.val !== props.btns[item.index].val &&
-                                !props.btns[item.index].disabled
-                            ) {
+                            if (btn.val !== props.btns[item.index].val && !props.btns[item.index].disabled) {
                                 $emit('handleBtnClick', item.index, btn.val);
                             }
                         }
@@ -95,11 +92,7 @@
             <div
                 v-else-if="item.name === 'radioBtns' && props.radioBtns[item.index]"
                 class="gap-3 w-full mt-[0.875rem]"
-                :class="
-                    props.radioBtns[item.index].wrap
-                        ? 'grid grid-cols-2'
-                        : 'flex flex-col flex-wrap'
-                "
+                :class="props.radioBtns[item.index].wrap ? 'grid grid-cols-2' : 'flex flex-col flex-wrap'"
                 :style="[
                     {
                         height: props.radioBtns[item.index].wrap
@@ -123,9 +116,12 @@
                         :id="option.val"
                         :value="option.val"
                         :checked="option.val === props.radioBtns[item.index].val"
+                        :disabled="option.disabled"
                         @change="
                             () => {
-                                $emit('handleRadioBtnClick', item.index, option.val);
+                                if (!option.disabled) {
+                                    $emit('handleRadioBtnClick', item.index, option.val);
+                                }
                             }
                         "
                     />
@@ -164,9 +160,7 @@
                                         'handleCheckboxClick',
                                         item.index,
                                         option.val,
-                                        !props.checkBoxes[item.index][1].valsArr.includes(
-                                            option.val,
-                                        ),
+                                        !props.checkBoxes[item.index][1].valsArr.includes(option.val),
                                         1,
                                     );
                                 }
@@ -175,9 +169,7 @@
                         <label
                             class="select-none nowrap"
                             :class="{
-                                'cursor-pointer': !props.checkBoxes[item.index][1].valsArr.includes(
-                                    option.val,
-                                ),
+                                'cursor-pointer': !props.checkBoxes[item.index][1].valsArr.includes(option.val),
                             }"
                             :for="option.val"
                             >{{ option.label }}</label
@@ -207,9 +199,7 @@
                                         'handleCheckboxClick',
                                         item.index,
                                         option.val,
-                                        !props.checkBoxes[item.index][2].valsArr.includes(
-                                            option.val,
-                                        ),
+                                        !props.checkBoxes[item.index][2].valsArr.includes(option.val),
                                         2,
                                     );
                                 }
@@ -218,9 +208,7 @@
                         <label
                             class="select-none nowrap"
                             :class="{
-                                'cursor-pointer': !props.checkBoxes[item.index][2].valsArr.includes(
-                                    option.val,
-                                ),
+                                'cursor-pointer': !props.checkBoxes[item.index][2].valsArr.includes(option.val),
                             }"
                             :for="option.val"
                             >{{ option.label }}</label
@@ -249,13 +237,8 @@
                     :input-type="['int']"
                     :nullable="false"
                     :required="true"
-                    @status-changed="
-                        emit(
-                            'setInputError',
-                            item.index,
-                            $event === 'invalid' || $event === 'empty',
-                        )
-                    "
+                    :debounce-delay="1000"
+                    @status-changed="emit('setInputError', item.index, $event === 'invalid' || $event === 'empty')"
                     @value-changed="
                         $event === undefined
                             ? emit('handleInput', item.index, 0)
@@ -296,7 +279,21 @@
                             : 'Д'
                     }}
                 </div>
-                <div class="text-[#8DC5F6] pl-1 flex-1 select-none">
+                <div
+                    v-if="getNameDropDown().length"
+                    class="text-[#8DC5F6] pl-1 flex-1 select-none"
+                >
+                    <div
+                        v-for="(item, i) in getNameDropDown()"
+                        :key="i"
+                    >
+                        {{ item.index + 1 }} - {{ item.name }}
+                    </div>
+                </div>
+                <div
+                    v-else
+                    class="text-[#8DC5F6] pl-1 flex-1 select-none"
+                >
                     {{ t('select') }}
                     {{ props.dropDowns[item.index].type === 'act' ? t('actions') : t('obj') }}
                 </div>
@@ -330,15 +327,7 @@ import IButtonIcon from '@/assets/IButtonIcon.vue';
 const props = defineProps<{
     numb: number;
     queue: {
-        name:
-            | 'title'
-            | 'subTitle'
-            | 'btns'
-            | 'tabs'
-            | 'dropDown'
-            | 'radioBtns'
-            | 'input'
-            | 'checkBox';
+        name: 'title' | 'subTitle' | 'btns' | 'tabs' | 'dropDown' | 'radioBtns' | 'input' | 'checkBox';
         index: number;
     }[];
     isFirst: boolean;
@@ -357,7 +346,7 @@ const props = defineProps<{
         val: string | number;
     }[];
     radioBtns: {
-        vals: { label: string; val: string }[];
+        vals: { label: string; val: string; disabled?: boolean }[];
         val: string;
         groupName: string;
         wrap?: boolean;
@@ -392,7 +381,7 @@ const props = defineProps<{
             | 'adc-in'
             | 'bin-out'
             | 'pwm-out'
-            | 'mb-co'
+            | 'mb-coil'
             | 'mb-ir'
             | 'mb-hr'
             | 'mb-di'
@@ -415,14 +404,22 @@ const emit = defineEmits<{
     (e: 'handleInput', inputItemIndex: number, val: number): void;
     (e: 'handleDropDownClick', inputItemIndex: number): void;
     (e: 'setInputError', inputItemIndex: number, res: boolean): void;
-    (
-        e: 'handleCheckboxClick',
-        checkboxItemIndex: number,
-        val: string,
-        status: boolean,
-        part: 1 | 2,
-    ): void;
+    (e: 'handleCheckboxClick', checkboxItemIndex: number, val: string, status: boolean, part: 1 | 2): void;
 }>();
+
+function getNameTitle(title: string) {
+    const tempTitle = title.toLowerCase();
+    return tempTitle[0].toUpperCase() + tempTitle.slice(1);
+}
+
+function getNameDropDown(): { index: number; name: string }[] {
+    const { vals, items } = props.dropDowns[0];
+    if (!items.length) return [];
+    return vals.map((val) => ({
+        index: val,
+        name: items[val]?.name || '',
+    }));
+}
 
 const { t } = useI18n({
     messages: {

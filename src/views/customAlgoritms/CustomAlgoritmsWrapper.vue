@@ -93,8 +93,8 @@
                     }
                 "
                 @addAlgoritm="
-                    (index: number) => {
-                        algoritms1[index] = { val: 0, label: '', isCreating: true };
+                    (index: number, label: string | undefined) => {
+                        algoritms1[index] = { val: 0, label: label ?? '', isCreating: true };
                         algoritms1Copy = algoritms1;
                         createAlgoritm1 = true;
                     }
@@ -135,8 +135,8 @@
                     }
                 "
                 @addAlgoritm="
-                    (index: number) => {
-                        algoritms2[index] = { val: 0, label: '', isCreating: true };
+                    (index: number, label: string | undefined) => {
+                        algoritms2[index] = { val: 0, label: label ?? '', isCreating: true };
                         algoritms2Copy = algoritms2;
                         createAlgoritm2 = true;
                     }
@@ -156,7 +156,12 @@
             :isLoading="isAlgoritmsDeleting"
             :type="algoritmsForDeletionType"
             @close="algoritmsForDeletion = []"
-            @delete="deleteAlgoritms"
+            @delete="
+                () => {
+                    deleteAlgoritms();
+                    saveLabels();
+                }
+            "
         />
         <ControlBlock
             v-if="selectedAlgoritmsLeft.length || selectedAlgoritmsRight.length"
@@ -183,16 +188,17 @@ import DeleteAlgoritmPopUp from '@/components/views/customAlgoritms/DeleteAlgori
 import ControlBlock from '@/components/views/customAlgoritms/ControlBlock.vue';
 import type { LabelsType } from '@/typings/files';
 import axios from 'axios';
+import { UDF } from '@/components/views/customAlgoritms/PresetAlgoritmBlocksWrapper/types';
 
-const { readFile } = useReadWriteFiles();
+const { readFile, saveToFile } = useReadWriteFiles();
 
 const indexStore = useIndexStore();
 const funcStore = useFuncsStore();
 
-const api = indexStore.getApi().api as axios.AxiosInstance;
+const { api } = useApiStore();
 const isAborted = indexStore.getApi().isAborted;
 
-const { devices } = storeToRefs(indexStore);
+const { devices, devCapabs } = storeToRefs(indexStore);
 const { funcLabels } = storeToRefs(funcStore);
 
 type Action =
@@ -201,14 +207,16 @@ type Action =
     | { label: 'actions'; val: 'udf-act' }
     | { label: 'transformations'; val: 'udf-trans' };
 
-type Algoritm = { val: 0 | 1 | null; label: string; isCreating?: boolean };
+type Val = 0 | 1 | null;
+type Algoritm = { val: Val; label: string; isCreating?: boolean };
+
+const isDev = import.meta.env.DEV;
+const timeoutDev = 10000;
 
 const curDev = ref<Device>(devices.value[0]);
 let showStatusTimer: ReturnType<typeof setTimeout> | undefined;
 let getDataTimer: ReturnType<typeof setTimeout> | undefined;
-const shownStatus = ref<{ serial: string; state: string; addr: number; version: string } | null>(
-    null,
-);
+const shownStatus = ref<{ serial: string; state: string; addr: number; version: string } | null>(null);
 const statusFormLeft = ref(0);
 const isMouseOnStatusForm = ref(false);
 const isMouseOnDevice = ref(false);
@@ -229,7 +237,7 @@ const selectedAlgoritmsRight = ref<Algoritm[]>([]);
 const isAllCheckedLeft = ref(false);
 const isAllCheckedRight = ref(false);
 const curActionLeft = ref<Action>({ label: 'triggers', val: 'udf-trig' });
-const curActionRight = ref<Action>({ label: 'triggers', val: 'udf-trig' });
+const curActionRight = ref<Action>({ label: 'actions', val: 'udf-act' });
 const maxAct = ref(0);
 const maxCond = ref(0);
 const maxTrans = ref(0);
@@ -312,54 +320,39 @@ function setAlgoritmsForDelete(
 
 async function deleteAlgoritms() {
     isAlgoritmsDeleting.value = true;
-    let body = {};
-    if (algoritmsForDeletion.value[0].type === 'udf-act') {
-        body = {
-            type: 'udf-act',
-            device: curDev.value.addr,
-            index: algoritmsForDeletion.value[0].index,
-            action: {
-                type: 'none',
-            },
-        };
-    } else if (algoritmsForDeletion.value[0].type === 'udf-cond') {
-        body = {
-            type: 'udf-cond',
-            device: curDev.value.addr,
-            index: algoritmsForDeletion.value[0].index,
-            condition: {
-                type: 'none',
-            },
-        };
-    } else if (algoritmsForDeletion.value[0].type === 'udf-trig') {
-        body = {
-            type: 'udf-trig',
-            device: curDev.value.addr,
-            index: algoritmsForDeletion.value[0].index,
-            trigger: {
-                type: 'none',
-            },
-        };
-    } else if (algoritmsForDeletion.value[0].type === 'udf-trans') {
-        body = {
-            type: 'udf-trans',
-            device: curDev.value.addr,
-            index: algoritmsForDeletion.value[0].index,
-            transform: {
-                type: 'none',
-            },
-        };
-    }
+    const index = algoritmsForDeletion.value[0]?.index;
+    if (!index) return;
+
+    const body = {
+        type: algoritmsForDeletion.value[0].type,
+        device: curDev.value.addr,
+        index,
+        ...(algoritmsForDeletion.value[0].type === 'udf-act' && { action: { type: 'none' } }),
+        ...(algoritmsForDeletion.value[0].type === 'udf-cond' && { condition: { type: 'none' } }),
+        ...(algoritmsForDeletion.value[0].type === 'udf-trig' && { trigger: { type: 'none' } }),
+        ...(algoritmsForDeletion.value[0].type === 'udf-trans' && { transform: { type: 'none' } }),
+    };
+
     try {
-        const r = await api.post('set_udf_cfg', body);
+        await api.post('set_udf_cfg', body);
         if (algoritmsForDeletion.value[0].type == curActionLeft.value.val) {
             const prev = [...algoritms1.value];
             prev[algoritmsForDeletion.value[0].index] = { val: null, label: '' };
             algoritms1.value = [...prev];
+            if (algoritms1Copy.value[index]?.isCreating === true) {
+                algoritms1.value[index].isCreating = undefined;
+                algoritms1Copy.value = [];
+                createAlgoritm1.value = false;
+            }
         } else {
             const prev = [...algoritms2.value];
             prev[algoritmsForDeletion.value[0].index] = { val: null, label: '' };
             algoritms2.value = [...prev];
+            if (algoritms2Copy.value[index]?.isCreating === true) {
+                algoritms2.value[index].isCreating = undefined;
+                algoritms2Copy.value = [];
+                createAlgoritm2.value = false;
+            }
         }
         algoritmsForDeletion.value = [];
         isAlgoritmsDeleting.value = false;
@@ -431,18 +424,63 @@ async function getLabels(type: 'udf-act' | 'udf-cond' | 'udf-trans' | 'udf-trig'
         funcStore.setLabels(addr, type, []);
         clearTimeout(getDataTimer);
         getDataTimer = undefined;
-        getData([], dir);
+        await getData(dir);
     } else {
         const { labels } = reqLabels as LabelsType;
         funcStore.setLabels(addr, type, labels);
         clearTimeout(getDataTimer);
         getDataTimer = undefined;
-        getData(labels, dir);
+        await getData(dir);
     }
 }
 
-async function getData(labels: string[], dir: 'l' | 'r') {
+async function saveLabels() {
+    const addr = curDev.value || devices.value[0] ? (curDev.value || devices.value[0]).addr : 0;
+    let curLabelsLeft = funcLabels.value[addr].find((el) => el.name === curActionLeft.value.val)?.val as string[];
+    let curLabelsRight = funcLabels.value[addr].find((el) => el.name === curActionRight.value.val)?.val as string[];
+
+    const index = algoritmsForDeletion.value[0]?.index;
+    if (!index) return;
+
+    if (algoritmsForDeletion.value[0].type === curActionLeft.value.val) {
+        const cleanedLabelsLeft = [...curLabelsLeft];
+        cleanedLabelsLeft[index] = '';
+        await saveLabel(curActionLeft.value.val, addr, cleanedLabelsLeft);
+    } else {
+        const cleanedLabelsRight = [...curLabelsRight];
+        cleanedLabelsRight[index] = '';
+        await saveLabel(curActionRight.value.val, addr, cleanedLabelsRight);
+    }
+}
+
+async function saveLabel(interf: UDF, addr: number, labels: string[]) {
+    const isSavingError = await saveToFile(
+        {
+            type: 'labels',
+            interf,
+            device: addr,
+        },
+        { labels },
+    );
+
+    if (isSavingError) {
+        if (isAborted.value) {
+            return;
+        }
+        setTimeout(() => {
+            saveLabel(interf, addr, labels);
+        }, 5);
+    } else {
+        funcStore.setLabels(addr, interf, labels);
+    }
+}
+
+async function getData(dir: 'l' | 'r') {
+    const addr = curDev.value || devices.value[0] ? (curDev.value || devices.value[0]).addr : 0;
     const curAct = dir === 'l' ? curActionLeft.value.val : curActionRight.value.val;
+    let curLabelsLeft = funcLabels.value[addr]?.find((el) => el.name === curAct)?.val as string[];
+    let curLabelsRight = funcLabels.value[addr]?.find((el) => el.name === curAct)?.val as string[];
+
     const quant =
         curAct === 'udf-act'
             ? maxAct.value
@@ -453,7 +491,7 @@ async function getData(labels: string[], dir: 'l' | 'r') {
             : maxTrig.value;
     if (quant) {
         try {
-            const r = await api.post('get_ent_state', {
+            const { data } = await api.post('get_ent_state', {
                 entities: [
                     {
                         type: curAct,
@@ -463,56 +501,45 @@ async function getData(labels: string[], dir: 'l' | 'r') {
                     },
                 ],
             });
-            const state = r.data.entities[0].state;
-            const res: Algoritm[] = [];
-            for (let i = 0; i < state.length; i++) {
-                res.push({ val: state[i], label: labels[i] || '' });
-            }
+            const { state } = data.entities[0];
+            const resultAlgoritms: Algoritm[] = state.map((val: Val, idx: number) => {
+                const label = dir === 'l' ? curLabelsLeft[idx] || '' : curLabelsRight[idx] || '';
+                return { val, label };
+            });
             if (dir === 'l') {
-                algoritms1.value = [...res];
+                algoritms1.value = [...resultAlgoritms];
             } else {
-                algoritms2.value = [...res];
+                algoritms2.value = [...resultAlgoritms];
             }
+            const timeout = isDev ? timeoutDev : 5000;
             getDataTimer = setTimeout(() => {
-                getData(labels, dir);
-            }, 5000);
+                getData(dir);
+            }, timeout);
         } catch (error) {
             if (isAborted.value) {
                 return;
             }
+            const timeout = isDev ? timeoutDev / 2 : 20;
             getDataTimer = setTimeout(() => {
-                getData(labels, dir);
-            }, 20);
+                getData(dir);
+            }, timeout);
         }
     } else {
         getDataTimer = setTimeout(() => {
-            getData(labels, dir);
+            getData(dir);
         }, 20);
     }
 }
 
 async function getMaxs() {
-    try {
-        const r = await api.post<{
-            'udf-act': number;
-            'udf-cond': number;
-            'udf-trans': number;
-            'udf-trig': number;
-        }>('get_dev_capab', {
-            device: curDev.value ? curDev.value.addr : 0,
-        });
-        const res = r.data;
-        maxAct.value = res['udf-act'];
-        maxCond.value = res['udf-cond'];
-        maxTrans.value = res['udf-trans'];
-        maxTrig.value = res['udf-trig'];
-    } catch (error) {
-        if (isAborted.value) {
-            return [0, 0, 0, 0];
-        }
-        setTimeout(() => {
-            getMaxs();
-        }, 5);
+    const capabs = devCapabs.value[curDev.value ? curDev.value.addr : 0];
+    if (capabs) {
+        maxAct.value = capabs['udf-act'];
+        maxCond.value = capabs['udf-cond'];
+        maxTrans.value = capabs['udf-trans'];
+        maxTrig.value = capabs['udf-trig'];
+    } else {
+        setTimeout(getMaxs, isDev ? timeoutDev / 100 : 5);
     }
 }
 
@@ -522,14 +549,14 @@ onBeforeMount(async () => {
     let curLabelsLeft = funcLabels.value[addr]?.find((el) => el.name === curActionLeft.value.val);
     let curLabelsRight = funcLabels.value[addr]?.find((el) => el.name === curActionRight.value.val);
     if (!curLabelsLeft) {
-        getLabels(curActionLeft.value.val, 'l');
+        await getLabels(curActionLeft.value.val, 'l');
     } else {
-        getData(curLabelsLeft.val, 'l');
+        await getData('l');
     }
     if (!curLabelsRight) {
-        getLabels(curActionRight.value.val, 'r');
+        await getLabels(curActionRight.value.val, 'r');
     } else {
-        getData(curLabelsRight.val, 'r');
+        await getData('r');
     }
 });
 
@@ -545,15 +572,10 @@ watch(devices, () => {
 });
 
 watch(funcLabels, () => {
-    const addr = curDev.value || devices.value[0] ? (curDev.value || devices.value[0]).addr : 0;
-    let curLabelsLeft = funcLabels.value[addr].find((el) => el.name === curActionLeft.value.val)
-        ?.val as string[];
-    let curLabelsRight = funcLabels.value[addr].find((el) => el.name === curActionRight.value.val)
-        ?.val as string[];
     clearTimeout(getDataTimer);
     getDataTimer = undefined;
-    getData(curLabelsLeft || [], 'l');
-    getData(curLabelsRight || [], 'r');
+    getData('l');
+    getData('r');
 });
 
 watch(curDev, async () => {
@@ -563,41 +585,49 @@ watch(curDev, async () => {
     maxTrig.value = 0;
     algoritms1.value = [];
     algoritms2.value = [];
+    algoritms1Copy.value = [];
+    algoritms2Copy.value = [];
+    createAlgoritm1.value = false;
+    createAlgoritm2.value = false;
     await getMaxs();
     const addr = curDev.value || devices.value[0] ? (curDev.value || devices.value[0]).addr : 0;
     let curLabelsLeft = funcLabels.value[addr]?.find((el) => el.name === curActionLeft.value.val);
     let curLabelsRight = funcLabels.value[addr]?.find((el) => el.name === curActionRight.value.val);
     if (!curLabelsLeft) {
-        getLabels(curActionLeft.value.val, 'l');
+        await getLabels(curActionLeft.value.val, 'l');
     } else {
-        getData(curLabelsLeft.val, 'l');
+        await getData('l');
     }
     if (!curLabelsRight) {
-        getLabels(curActionRight.value.val, 'r');
+        await getLabels(curActionRight.value.val, 'r');
     } else {
-        getData(curLabelsRight.val, 'r');
+        await getData('r');
     }
 });
 
 watch(curActionLeft, () => {
     algoritms1.value = [];
+    algoritms1Copy.value = [];
+    createAlgoritm1.value = false;
     const addr = curDev.value || devices.value[0] ? (curDev.value || devices.value[0]).addr : 0;
     let curLabelsLeft = funcLabels.value[addr]?.find((el) => el.name === curActionLeft.value.val);
     if (!curLabelsLeft) {
         getLabels(curActionLeft.value.val, 'l');
     } else {
-        getData(curLabelsLeft.val, 'l');
+        getData('l');
     }
 });
 
 watch(curActionRight, () => {
     algoritms2.value = [];
+    algoritms2Copy.value = [];
+    createAlgoritm2.value = false;
     const addr = curDev.value || devices.value[0] ? (curDev.value || devices.value[0]).addr : 0;
     let curLabelsRight = funcLabels.value[addr]?.find((el) => el.name === curActionRight.value.val);
     if (!curLabelsRight) {
         getLabels(curActionRight.value.val, 'r');
     } else {
-        getData(curLabelsRight.val, 'r');
+        getData('r');
     }
 });
 

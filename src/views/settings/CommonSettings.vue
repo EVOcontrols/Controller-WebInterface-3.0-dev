@@ -1133,10 +1133,10 @@ const { t } = useI18n({
                 },
             },
             funcsNumberPerPage: {
-                param: 'The number of items in the list \non the “Functions” page',
+                param: 'The number of items in the list \non the “Algorithms” page',
                 fields: {
                     funcsNumberPerPage: {
-                        param: 'Number of functions',
+                        param: 'Number of algorithms',
                     },
                 },
             },
@@ -1305,7 +1305,7 @@ const { t } = useI18n({
                 },
             },
             funcsNumberPerPage: {
-                param: 'Количество элементов в списке \nна странице “Функции”',
+                param: 'Количество элементов в списке \nна странице “Алгоритмы”',
                 fields: {
                     funcsNumberPerPage: {
                         param: 'Количество',

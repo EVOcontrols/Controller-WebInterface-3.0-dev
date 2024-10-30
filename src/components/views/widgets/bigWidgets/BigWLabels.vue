@@ -6,7 +6,7 @@
         <transition name="label">
             <div
                 v-if="activeLabel && isLabelChange"
-                class="absolute bg-[#092E4B] z-[2] rounded-r-[16px] p-4 pr-6 flex items-center select-none origin-top-left flex flex-col gap-[6px]"
+                class="absolute bg-[#092E4B] z-[2] rounded-r-[16px] p-4 pr-6 flex items-center select-none origin-top-left flex-col gap-[6px]"
                 :class="[
                     isInvalidData ? 'h-[88px]' : 'h-[68px]',
                     !['bin-var', 'tim-var'].includes(props.w.w.i)
@@ -24,22 +24,21 @@
                         :class="[
                             { 'bg-[#5C2345] text-[#F83068]': isInvalidData },
                             {
-                                '!bg-[#055457] text-[#00D6AF]':
-                                    props.w.w.i === 'bin-out' && activeLabel.state,
+                                '!bg-[#055457] text-[#00D6AF]': props.w.w.i === 'bin-out' && activeLabel.state,
                             },
                         ]"
-                        >{{ activeLabel.i + 1 }}</span
                     >
+                        {{ activeLabel.i + 1 }}
+                    </span>
                     <input
                         type="text"
+                        ref="labelInput"
                         :placeholder="placeholder"
                         :value="activeLabel.label"
                         :maxlength="32"
                         class="flex-1 bg-[#123553] h-full text-[#8DC5F6] px-3 placeholder:text-[#8DC5F6]"
                         :class="{
-                            'rounded-r-[8px]': ['bin-in', 'bin-out', 'bin-var'].includes(
-                                props.w.w.i,
-                            ),
+                            'rounded-r-[8px]': ['bin-in', 'bin-out', 'bin-var'].includes(props.w.w.i),
                         }"
                         @input="(e) => handleLabelInput(e as InputEvent)"
                     />
@@ -54,18 +53,19 @@
                                 :maxlength="props.w.w.i === 'pwm-out' ? 5 : 6"
                                 :disabled="props.w.w.i === 'tim-var' && !activeLabel.units"
                                 ref="dataInput"
-                                class="w-full flex-1 bg-transparent h-full text-[#8DC5F6] text-[#8DC5F6] text-end transition-colors duration-300"
+                                class="w-full flex-1 bg-transparent h-full text-[#8DC5F6] text-end transition-colors duration-300"
                                 :class="{ 'text-[#F83068]': isInvalidData }"
                                 @input="checkValue"
                             />
                         </div>
-                        {{ props.w.w.i === 'pwm-out' ? '%' : '' }}</span
-                    >
+                        {{ props.w.w.i === 'pwm-out' ? '%' : '' }}
+                    </span>
                     <span
                         v-else-if="['adc-in'].includes(props.w.w.i)"
                         class="w-[72px] h-full flex items-center justify-center rounded-r-[8px] bg-[#185385] text-[#8DC5F6] px-1 transition-colors duration-300"
-                        >{{ activeLabel.state }}%</span
                     >
+                        {{ activeLabel.state }}%
+                    </span>
                     <div
                         v-else-if="props.w.w.i === 'bin-var'"
                         class="flex h-8 ml-2"
@@ -74,14 +74,16 @@
                             class="text-[#97FFE7] text-sm w-[73px] h-full rounded-l-[6px] font-roboto flex items-center justify-center"
                             :class="activeLabel.state === 1 ? 'bg-[#176F6F]' : 'bg-[#0D424D]'"
                             @click="handleBinVarClick(true)"
-                            >{{ t('true') }}</span
                         >
+                            {{ t('true') }}
+                        </span>
                         <span
                             class="text-[#97FFE7] text-sm w-[73px] h-full rounded-r-[6px] font-roboto flex items-center justify-center"
                             :class="activeLabel.state === 0 ? 'bg-[#176F6F]' : 'bg-[#0D424D]'"
                             @click="handleBinVarClick(false)"
-                            >{{ t('false') }}</span
                         >
+                            {{ t('false') }}
+                        </span>
                     </div>
                     <div
                         v-if="props.w.w.i === 'tim-var'"
@@ -100,8 +102,9 @@
                                     checkValue();
                                 }
                             "
-                            >{{ t('10ms') }}</span
                         >
+                            {{ t('1ms') }}
+                        </span>
                         <span
                             class="text-sm w-[73px] h-full font-roboto flex items-center justify-center"
                             :class="
@@ -115,8 +118,9 @@
                                     checkValue();
                                 }
                             "
-                            >{{ t('1s') }}</span
                         >
+                            {{ t('1s') }}
+                        </span>
                         <span
                             class="text-sm w-[73px] h-full rounded-r-[6px] font-roboto flex items-center justify-center"
                             :class="
@@ -130,8 +134,9 @@
                                     checkValue();
                                 }
                             "
-                            >{{ t('1min') }}</span
                         >
+                            {{ t('1min') }}
+                        </span>
                     </div>
                 </div>
                 <div
@@ -157,33 +162,30 @@
                     ref="scrollEl"
                 >
                     <div
-                        class="label group w-full flex text-[#6CB5D3] items-center transition-colors duration-500 rounded select-none hover:bg-[#0C2F4D] gap-2"
+                        class="label w-full flex text-[#6CB5D3] items-center transition-colors duration-500 rounded select-none hover:bg-[#0C2F4D] gap-2"
                         :class="activeLabel?.i === index ? 'min-h-[68px]' : 'min-h-[30px]'"
                         v-for="(s, index) in state"
                         :key="index"
-                        @dblclick="handleDblClick(s, index)"
                     >
-                        <span class="w-[22px] text-end group-hover:underline">{{ index + 1 }}</span>
-                        <span class="flex-1 group-hover:underline group-hover:text-[#ADEBFF]">
+                        <span class="w-[22px] text-end hover:underline">{{ index + 1 }}</span>
+                        <span
+                            class="flex-1 hover:underline hover:text-[#ADEBFF]"
+                            @dblclick="handleDblClick(s, index, 'label')"
+                        >
                             {{ curLabels && curLabels[index] ? curLabels[index] : '\u2013' }}
                         </span>
                         <span
                             v-if="
-                                ![
-                                    'bin-in',
-                                    'bin-out',
-                                    'int-var',
-                                    'bin-var',
-                                    'tim-var',
-                                    '1w-rom',
-                                ].includes(props.w.w.i)
+                                !['bin-in', 'bin-out', 'int-var', 'bin-var', 'tim-var', '1w-rom'].includes(props.w.w.i)
                             "
-                            class="w-[63px] text-[#ADEBFF] text-end pr-[10px] group-hover:underline"
-                            >{{ s / 100 }}%</span
+                            class="w-[63px] text-[#ADEBFF] text-end pr-[10px] hover:underline"
+                            @dblclick="handleDblClick(s, index, 'value')"
                         >
+                            {{ s / 100 }}%
+                        </span>
                         <span
                             v-else-if="['int-var', 'bin-var'].includes(props.w.w.i)"
-                            class="w-[53px] text-end pr-[10px] group-hover:underline"
+                            class="w-[53px] text-end pr-[10px] hover:underline"
                             :class="
                                 props.w.w.i !== 'bin-var'
                                     ? 'text-[#ADEBFF]'
@@ -191,29 +193,25 @@
                                     ? 'text-[#176F6F]'
                                     : 'text-[#35FED0]'
                             "
-                            >{{
-                                s === null
-                                    ? '\u2013'
-                                    : props.w.w.i !== 'bin-var'
-                                    ? s
-                                    : s
-                                    ? t('true')
-                                    : t('false')
-                            }}</span
+                            @dblclick="handleDblClick(s, index, 'value')"
                         >
+                            {{ s === null ? '\u2013' : props.w.w.i !== 'bin-var' ? s : s ? t('true') : t('false') }}
+                        </span>
                         <span
                             v-else-if="props.w.w.i === 'tim-var'"
-                            class="w-[53px] text-end pr-[10px] group-hover:underline text-[#ADEBFF]"
-                            >{{
+                            class="w-[53px] text-end pr-[10px] hover:underline text-[#ADEBFF]"
+                            @dblclick="handleDblClick(s, index, 'value')"
+                        >
+                            {{
                                 s === null
                                     ? '\u2013'
-                                    : s <= 150000
+                                    : s <= 15000
                                     ? `${s} ${t('ms')}`
-                                    : s > 150000 && s % 60000 === 0
+                                    : s > 15000 && s % 60000 === 0
                                     ? `${s / 60000} ${t('min')}`
                                     : `${s / 1000} ${t('s')}`
-                            }}</span
-                        >
+                            }}
+                        </span>
                     </div>
                 </div>
                 <div
@@ -230,7 +228,7 @@
                         ]"
                         v-for="(s, index) in tempState"
                         :key="index"
-                        @dblclick="handleDblClick(s, index)"
+                        @dblclick="handleDblClick(s, index, 'value')"
                     >
                         <span
                             class="w-[22px] text-end"
@@ -238,13 +236,7 @@
                             >{{ index + 1 }}</span
                         >
                         <span class="flex-1 group-hover:underline group-hover:text-[#ADEBFF]">
-                            {{
-                                s !== null
-                                    ? curLabels && curLabels.length
-                                        ? curLabels[index]
-                                        : ''
-                                    : ''
-                            }}
+                            {{ s !== null ? (curLabels && curLabels.length ? curLabels[index] : '') : '' }}
                         </span>
                         <span
                             v-if="s !== null"
@@ -272,7 +264,7 @@
                         ]"
                         v-for="(s, index) in state"
                         :key="index"
-                        @dblclick="handleDblClick(s, index)"
+                        @dblclick="handleDblClick(s, index, 'value')"
                     >
                         <span
                             class="w-[22px] text-end"
@@ -280,13 +272,7 @@
                             >{{ index + 1 }}</span
                         >
                         <span class="flex-1 group-hover:underline group-hover:text-[#ADEBFF]">
-                            {{
-                                s !== null
-                                    ? curLabels && curLabels.length
-                                        ? curLabels[index]
-                                        : ''
-                                    : ''
-                            }}
+                            {{ s !== null ? (curLabels && curLabels.length ? curLabels[index] : '') : '' }}
                         </span>
                     </div>
                 </div>
@@ -339,6 +325,7 @@ const min = ref(0);
 const max = ref(0);
 
 const dataInput = ref<HTMLInputElement | undefined>();
+const labelInput = ref<HTMLInputElement | undefined>();
 
 const indexStore = useIndexStore();
 
@@ -376,8 +363,7 @@ function checkValue() {
     const data = dataInput.value;
     const values =
         props.w.w.i === 'tim-var' && activeLabel.value
-            ? valuesRange.value.find((obj) => obj.interf === props.w.w.i + activeLabel.value?.units)
-                  ?.values
+            ? valuesRange.value.find((obj) => obj.interf === props.w.w.i + activeLabel.value?.units)?.values
             : valuesRange.value.find((obj) => obj.interf === props.w.w.i)?.values;
     if (!data || !values) return;
     min.value = values.min;
@@ -389,12 +375,7 @@ function checkValue() {
     } else {
         isInvalidData.value = false;
     }
-    if (
-        props.w.w.i !== 'pwm-out' &&
-        val.includes('.') &&
-        activeLabel.value &&
-        activeLabel.value.units !== 's'
-    ) {
+    if (props.w.w.i !== 'pwm-out' && val.includes('.') && activeLabel.value && activeLabel.value.units !== 's') {
         val = val.slice(0, val.indexOf('.'));
     }
     data.value = val;
@@ -412,7 +393,7 @@ function handleScroll() {
     scrollTop.value = el.scrollTop;
 }
 
-function handleDblClick(s: number | null, index: number) {
+function handleDblClick(s: number | null, index: number, field: 'label' | 'value') {
     if (props.w.w.i === 'pwm-out') {
         if (s === null) return;
         activeLabel.value = { i: index, state: s / 100, label: curLabels.value[index] };
@@ -420,16 +401,19 @@ function handleDblClick(s: number | null, index: number) {
         let newS = s;
         let units: 'ms' | 's' | 'min' | undefined = undefined;
         if (s) {
-            if (s <= 150000) {
+            if (s <= 15000) {
                 units = 'ms';
-                newS = s / 10;
-            } else if (s > 150000 && s % 60000 === 0) {
+                newS = s;
+            } else if (s > 15000 && s % 60000 === 0) {
                 units = 'min';
                 newS = s / 60000;
             } else {
                 units = 's';
                 newS = s / 1000;
             }
+        }
+        if (newS === null || newS === 0) {
+            units = 'ms';
         }
         activeLabel.value = { i: index, state: newS, label: curLabels.value[index], units: units };
     } else {
@@ -439,12 +423,26 @@ function handleDblClick(s: number | null, index: number) {
     isLabelChange.value = true;
     setTimeout(() => {
         const data = dataInput.value;
+        const label = labelInput.value;
         if (!data) return;
+
+        if (label && field === 'label') {
+            label.focus();
+        } else {
+            data.focus();
+        }
+
         if (props.w.w.i === 'pwm-out') {
             if (s === null) return;
             data.value = String(s / 100);
         } else {
             data.value = s === null ? '' : String(activeLabel.value?.state);
+        }
+
+        if (label && field === 'label') {
+            label.setSelectionRange(0, label.value.length);
+        } else {
+            data.setSelectionRange(0, data.value.length);
         }
     }, 20);
     setActiveLabelTop();
@@ -491,19 +489,19 @@ function saveData(e: KeyboardEvent | MouseEvent) {
     if (e.type === 'keypress') {
         const event: KeyboardEvent = e as KeyboardEvent;
         if (event.key === 'Enter') {
-            if (!isInvalidData.value) setData(activeLabel.value.i, activeLabel.value.state);
-            setLabel(activeLabel.value.i, activeLabel.value.label);
-            activeLabel.value = null;
-            isLabelChange.value = false;
-            isInvalidData.value = false;
+            trySendData(activeLabel.value.i, activeLabel.value.state, activeLabel.value.label);
         }
     } else if (e.type === 'click') {
-        if (!isInvalidData.value) setData(activeLabel.value.i, activeLabel.value.state);
-        setLabel(activeLabel.value.i, activeLabel.value.label);
-        activeLabel.value = null;
-        isLabelChange.value = false;
-        isInvalidData.value = false;
+        trySendData(activeLabel.value.i, activeLabel.value.state, activeLabel.value.label);
     }
+}
+
+function trySendData(index: number, state: string | number | null, label: string | undefined) {
+    if (!isInvalidData.value) setData(index, state);
+    setLabel(index, label);
+    activeLabel.value = null;
+    isLabelChange.value = false;
+    isInvalidData.value = false;
 }
 
 async function setLabel(index: number, label: string | undefined) {
@@ -578,7 +576,7 @@ async function setData(index: number, state: string | number | null, d?: number 
     if (props.w.w.i === 'bin-var') {
         val = state as number | null;
     } else {
-        if (!data) return;
+        if (!data || data.value === '') return;
         if (props.w.w.i === 'pwm-out') {
             val = Math.round(+data.value * 100);
         } else if (props.w.w.i === 'int-var') {
@@ -586,7 +584,7 @@ async function setData(index: number, state: string | number | null, d?: number 
         } else if (props.w.w.i === 'tim-var') {
             val = +data.value;
             if (activeLabel.value?.units === 'ms') {
-                val *= 10;
+                val *= 1;
             } else if (activeLabel.value?.units === 's') {
                 val *= 1000;
             } else if (activeLabel.value?.units === 'min') {
@@ -604,7 +602,7 @@ async function setData(index: number, state: string | number | null, d?: number 
         body.value = d;
     }
     if (props.w.state[index] !== body.value) {
-        setVal(body);
+        await setVal(body);
     }
 }
 
@@ -650,7 +648,7 @@ const { t } = useI18n({
             },
             true: 'ИСТИНА',
             false: 'ЛОЖЬ',
-            '10ms': 'х10 МС',
+            '1ms': 'х1 МС',
             '1s': 'х1 СЕК',
             '1min': 'х1 МИН',
             ms: 'мс',
@@ -665,7 +663,7 @@ const { t } = useI18n({
             },
             true: 'TRUE',
             false: 'FALSE',
-            '10ms': 'х10 MS',
+            '1ms': 'х1 MS',
             '1s': 'х1 SEC',
             '1min': 'х1 MIN',
             ms: 'ms',

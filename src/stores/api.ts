@@ -1,4 +1,3 @@
-
 import type { AxiosRequestConfig } from 'axios';
 
 type Method = 'get' | 'post';
@@ -7,8 +6,7 @@ type Query = { method: Method; url: string; params?: any; axiosParams?: AxiosReq
 export const useApiStore = defineStore('apiStore', () => {
     const indexStore = useIndexStore();
 
-    const { notConnected, rebootingDeviceAddr, extDeviceInInitState, ngcModbusMode } =
-        storeToRefs(indexStore);
+    const { notConnected, rebootingDeviceAddr, extDeviceInInitState, ngcModbusMode } = storeToRefs(indexStore);
 
     const { api: apiInstance } = useApi();
 
@@ -24,9 +22,7 @@ export const useApiStore = defineStore('apiStore', () => {
         const queries: Query[] = [];
         if (
             ngcModbusMode.value === 'ext-devs' &&
-            route.matched.find((r) =>
-                ['devices-settings', 'panel', 'functions'].includes(r.name as string),
-            )
+            route.matched.find((r) => ['devices-settings', 'panel', 'functions'].includes(r.name as string))
         ) {
             queries.push({ method: 'get', url: 'get_ext_devs' });
         }
@@ -34,6 +30,10 @@ export const useApiStore = defineStore('apiStore', () => {
     });
 
     const lastBgQueryIndex = computed(() => bgQueries.value.length - 1);
+
+    function delay(ms: number) {
+        return new Promise((resolve) => setTimeout(resolve, ms));
+    }
 
     async function query<T = any>(
         method: Method,
@@ -43,6 +43,10 @@ export const useApiStore = defineStore('apiStore', () => {
         isQueryBg = false,
     ) {
         let queryId: number | undefined;
+
+        const isDev = import.meta.env.DEV;
+        await delay(isDev ? 50 : 5);
+
         if (!isQueryBg) {
             queryId = Math.random();
             directQueriesIds.add(queryId);
@@ -50,6 +54,7 @@ export const useApiStore = defineStore('apiStore', () => {
                 indexStore.setLongQueryRunning(true);
             }
         }
+
         try {
             const r = await apiInstance[method]<T>(url, params, axiosParams);
             return r;
@@ -81,9 +86,7 @@ export const useApiStore = defineStore('apiStore', () => {
             nextBgQuery = { method: 'get', url: 'get_ext_devs' };
             await new Promise((res) => setTimeout(res, timeout));
         } else {
-            const prevBgQueryIndex = prevBgQuery
-                ? bgQueries.value.findIndex((q) => q.url === prevBgQuery)
-                : -1;
+            const prevBgQueryIndex = prevBgQuery ? bgQueries.value.findIndex((q) => q.url === prevBgQuery) : -1;
             let nextBgQueryIndex = prevBgQueryIndex === -1 ? 0 : prevBgQueryIndex + 1;
             if (nextBgQueryIndex > lastBgQueryIndex.value) {
                 nextBgQueryIndex = 0;

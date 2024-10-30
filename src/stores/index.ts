@@ -75,11 +75,11 @@ export const useIndexStore = defineStore('indexStore', () => {
         | []
     >([]);
 
-    const ip = ref<string>(window.location.host || '192.168.0.30');
+    // const ip = ref<string>(window.location.host || '192.168.0.30');
     // const ip = ref<string>(window.location.host || '192.168.10.51');
     // const ip = ref<string>('192.168.10.51');
     // const ip = ref<string>('10.8.0.1:49163');
-    // const ip = ref<string>('65.21.176.66:49163');
+    const ip = ref<string>('65.21.176.66:49163');
 
     const mbDevs = ref<number[][][]>([]);
 
@@ -115,9 +115,9 @@ export const useIndexStore = defineStore('indexStore', () => {
     ]);
 
     const valuesConstRange = ref<{ interf: string; values: { min: number; max: number } }[]>([
-        { interf: 'constms', values: { min: 0, max: 15000 } },
-        { interf: 'consts', values: { min: 0, max: 15000 } },
-        { interf: 'constmin', values: { min: 0, max: 250 } },
+        { interf: 'tim-constms', values: { min: 0, max: 15000 } },
+        { interf: 'tim-consts', values: { min: 0, max: 15000 } },
+        { interf: 'tim-constmin', values: { min: 0, max: 250 } },
     ]);
 
     const sortedChosenInterfaces = ref<string[]>([]);
@@ -144,14 +144,9 @@ export const useIndexStore = defineStore('indexStore', () => {
     const isAuth = ref(true);
     // const isAuth = ref(!!authToken.value && !!userRole.value);
 
-    const lang = useStorage<Lang>(
-        'lang',
-        /ru-ru/i.test(navigator.language) ? 'ru' : 'en',
-        undefined,
-        {
-            mergeDefaults: (val: any) => (val === 'ru' || val === 'en' ? val : 'en'),
-        },
-    );
+    const lang = useStorage<Lang>('lang', /ru-ru/i.test(navigator.language) ? 'ru' : 'en', undefined, {
+        mergeDefaults: (val: any) => (val === 'ru' || val === 'en' ? val : 'en'),
+    });
 
     const newToast = ref<Toast | undefined>();
 
@@ -181,9 +176,7 @@ export const useIndexStore = defineStore('indexStore', () => {
 
     const chosenInterfaces = ref<string[]>([]);
 
-    const extDeviceInInitState = computed(
-        () => extDevsList.value?.find((d) => d.state === 'init')?.addr,
-    );
+    const extDeviceInInitState = computed(() => extDevsList.value?.find((d) => d.state === 'init')?.addr);
 
     const api = ref();
 
@@ -310,9 +303,7 @@ export const useIndexStore = defineStore('indexStore', () => {
 
     function removeOWInterf(device: number, bus: number) {
         const newArr = [...devices.value];
-        const newInterf = newArr[device].interf.filter(
-            (el) => typeof el === 'string' || el.bus !== bus,
-        );
+        const newInterf = newArr[device].interf.filter((el) => typeof el === 'string' || el.bus !== bus);
         newArr[device].interf = newInterf as [
             | { interf: '1w-gpio'; bus: number }
             | { interf: '1w-rom'; bus: number }
@@ -349,9 +340,7 @@ export const useIndexStore = defineStore('indexStore', () => {
 
     function removeMbInterf(device: number) {
         const newArr = [...devices.value];
-        const newInterf = newArr[device]?.interf.filter(
-            (el) => typeof el === 'string' || el.bus !== 0,
-        );
+        const newInterf = newArr[device]?.interf.filter((el) => typeof el === 'string' || el.bus !== 0);
         if (newInterf) {
             newArr[device].interf = newInterf as [
                 | { interf: '1w-gpio'; bus: number }
@@ -432,10 +421,7 @@ export const useIndexStore = defineStore('indexStore', () => {
         setSortedChosenInterfaces();
     }
 
-    function toggleChooseAllInterfaces(
-        isAllInterfacesChoosen?: Ref<boolean>,
-        isFirstOpen?: boolean,
-    ) {
+    function toggleChooseAllInterfaces(isAllInterfacesChoosen?: Ref<boolean>, isFirstOpen?: boolean) {
         if ((!isAllInterfacesChoosen || !isAllInterfacesChoosen.value) && !isFirstOpen) {
             chosenInterfaces.value = [];
         } else {

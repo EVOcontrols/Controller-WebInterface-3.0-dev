@@ -5,7 +5,7 @@
             :class="props.isActive ? 'h-[4.25rem]' : 'h-[3.625rem]'"
         >
             <div
-                class="flex flex-row h-[2.188rem] w-4 shrink-0 items-center rounded transition-[background-color,padding] select-none cursor-pointer on:bg-[#134d7d] items-center mr-8"
+                class="flex flex-row h-[2.188rem] w-4 shrink-0 items-center rounded transition-[background-color,padding] select-none cursor-pointer on:bg-[#134d7d] mr-8"
                 @click.stop=""
             >
                 <input
@@ -52,7 +52,7 @@
                 :class="[{ on: props.isOpen }]"
                 @click="emit('oneClick')"
             >
-                {{ props.item.label || '&#8212' }}
+                {{ props.item.label || '&#8212;' }}
                 <span
                     v-html="scrollArrow"
                     class="[&>svg]:h-[0.56rem] [&>svg]:w-[0.31rem] [&>svg>path]:!fill-[#8dc5f6] flex items-center cursor-pointer"
@@ -71,7 +71,11 @@
             <OutlinedButton
                 v-else
                 class="group w-[36px] !min-w-[36px]"
-                @click="emit('addAlgoritm')"
+                @click="
+                    (e: Event) => {
+                        emit('addAlgoritm', e);
+                    }
+                "
                 ><span
                     class="[&>svg]:w-4 [&>svg]:h-4 [&>svg>path]:transition-colors [&>svg>path]:duration-500 [&>svg>path]:fill-[#148EF8] group-active:[&>svg>path]:fill-[#ADEBFF]"
                     v-html="add"
@@ -79,8 +83,8 @@
             ></OutlinedButton>
         </div>
         <CollapseTransition :duration="300">
-            <PresetAlgoritmBlocksWrapper
-                v-if="props.isOpen || props.item.isCreating"
+            <PresetAlgoritmBlocksWrapper2
+                v-if="props.isOpen"
                 :type="props.curAction"
                 :device="props.device"
                 :index="index"
@@ -98,7 +102,7 @@ import add from '@/assets/img/add.svg?raw';
 import scrollArrow from '@/assets/img/scroll-arrow.svg?raw';
 import CollapseTransition from '@/components/CollapseTransition.vue';
 import OutlinedButton from '@/components/Ui/OutlinedButton.vue';
-import PresetAlgoritmBlocksWrapper from '@/components/views/customAlgoritms/PresetAlgoritmBlocksWrapper.vue';
+import PresetAlgoritmBlocksWrapper2 from '@/components/views/customAlgoritms/PresetAlgoritmBlocksWrapper/PresetAlgoritmBlocksWrapper2.vue';
 import type { Device } from '@/stores';
 
 const indexStore = useIndexStore();
@@ -125,14 +129,14 @@ const emit = defineEmits<{
     (e: 'selectAlgoritm', value: boolean): void;
     (e: 'deleteAlgoritm'): void;
     (e: 'oneClick'): void;
-    (e: 'addAlgoritm'): void;
+    (e: 'addAlgoritm', event: Event): void;
     (e: 'creatingFinish'): void;
 }>();
 
 async function handleClick() {
     if (props.item.isCreating) return;
     try {
-        const r = await api.post('set_ent_value', {
+        await api.post('set_ent_value', {
             type: props.curAction.val,
             device: props.device ? props.device.addr : 0,
             index: props.index,

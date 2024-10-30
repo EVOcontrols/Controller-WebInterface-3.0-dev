@@ -1,35 +1,37 @@
 export type FuncsNumberPerPage = (typeof funcsNumbersPerPage)[number];
 
 export type Ent = {
-    type:
-        | 'none'
-        | 'error'
-        | 'prev-val'
-        | 'int-const'
-        | 'bin-in'
-        | 'bin-out'
-        | 'adc-in'
-        | 'pwm-out'
-        | 'int-var'
-        | 'bin-var'
-        | 'tim-var'
-        | 'udf-trig'
-        | 'udf-cond'
-        | 'udf-act'
-        | 'udf-trans'
-        | '1w-rom'
-        | '1w-sens'
-        | '1w-gpio'
-        | 'mb-ir'
-        | 'mb-hr'
-        | 'mb-di'
-        | 'mb-co';
+    type: EntType;
     value?: number;
     device?: number;
     index?: number;
     io?: number;
     bus?: number;
 };
+
+export type EntType =
+    | 'none'
+    | 'error'
+    | 'prev-value'
+    | 'int-const'
+    | 'bin-in'
+    | 'bin-out'
+    | 'adc-in'
+    | 'pwm-out'
+    | 'int-var'
+    | 'bin-var'
+    | 'tim-var'
+    | 'udf-trig'
+    | 'udf-cond'
+    | 'udf-act'
+    | 'udf-trans'
+    | '1w-rom'
+    | '1w-sens'
+    | '1w-gpio'
+    | 'mb-ir'
+    | 'mb-hr'
+    | 'mb-di'
+    | 'mb-coil';
 
 export type Time = {
     type: 'tim-const' | 'tim-var';
@@ -38,18 +40,7 @@ export type Time = {
 };
 
 export type Body = {
-    type:
-        | 'none'
-        | 'hold'
-        | 'compare'
-        | 'any'
-        | 'set'
-        | 'invert'
-        | 'modify'
-        | 'change'
-        | 'cycle'
-        | 'stop'
-        | 'save';
+    type: 'none' | 'hold' | 'compare' | 'any' | 'set' | 'invert' | 'modify' | 'change' | 'cycle' | 'stop' | 'save';
     entity?: Ent;
     'act-idx'?: number;
     'act-qty'?: number;
