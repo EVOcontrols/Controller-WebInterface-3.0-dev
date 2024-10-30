@@ -1,4 +1,4 @@
-import type { Config, CurKeyMap } from './types';
+import { Config, CurKeyMap } from './types';
 import type { Device } from '@/stores';
 
 type InterfProp = { interf: string; bus: number };
@@ -22,6 +22,7 @@ function createObjUdfAct(config: Config[], propDevice?: Device) {
     const valInterfType = config.find((el) => el.curKey === CurKeyMap.ValueInterface);
     const valDevice = config.find((el) => el.curKey === CurKeyMap.ValueDevice);
     const valObject = config.find((el) => el.curKey === CurKeyMap.ValueObject);
+    const valBus = config.find((el) => el.curKey === CurKeyMap.ValueBus);
     const select = config.find((el) => el.curKey === CurKeyMap.Select);
     const enter = config.find((el) => el.curKey === CurKeyMap.Enter);
     const stopValConfig = config.find((el) => el.curKey === CurKeyMap.StopValue);
@@ -29,9 +30,7 @@ function createObjUdfAct(config: Config[], propDevice?: Device) {
     const stopValInterfType = config.find((el) => el.curKey === CurKeyMap.StopValueInterface);
     const stopValDevice = config.find((el) => el.curKey === CurKeyMap.StopValueDevice);
     const stopValObject = config.find((el) => el.curKey === CurKeyMap.StopValueObject);
-
-    const c14 = config.find((el) => el.curKey === 14);
-    const c20 = config.find((el) => el.curKey === 20);
+    const stopValBus = config.find((el) => el.curKey === CurKeyMap.StopValueBus);
 
     let ent = {
         type: interfType?.tabs[0].val,
@@ -85,7 +84,7 @@ function createObjUdfAct(config: Config[], propDevice?: Device) {
                     (i) => typeof i === 'object' && i.interf === valInterfType.tabs[0].val,
                 ) as InterfProp;
                 const busProp = interfProp ? interfProp.bus : 0;
-                const busNumber = Number(c14?.tabs[0].val);
+                const busNumber = Number(valBus?.tabs[0].val);
                 const busResult = Number.isNaN(busNumber) ? busProp : busNumber;
                 ent = Object.assign(
                     ent,
@@ -111,7 +110,7 @@ function createObjUdfAct(config: Config[], propDevice?: Device) {
                     (i) => typeof i === 'object' && i.interf === stopValInterfType.tabs[0].val,
                 ) as InterfProp;
                 const busProp = interfProp ? interfProp.bus : 0;
-                const busNumber = Number(c20?.tabs[0].val);
+                const busNumber = Number(stopValBus?.tabs[0].val);
                 const busResult = Number.isNaN(busNumber) ? busProp : busNumber;
                 stopVal = Object.assign(
                     stopVal,
@@ -159,7 +158,7 @@ function createObjUdfAct(config: Config[], propDevice?: Device) {
                     (i) => typeof i === 'object' && i.interf === valInterfType.tabs[0].val,
                 ) as InterfProp;
                 const busProp = interfProp ? interfProp.bus : 0;
-                const busNumber = Number(c14?.tabs[0].val);
+                const busNumber = Number(valBus?.tabs[0].val);
                 const busResult = Number.isNaN(busNumber) ? busProp : busNumber;
                 ent = Object.assign(
                     ent,
@@ -188,7 +187,7 @@ function createObjUdfAct(config: Config[], propDevice?: Device) {
                     (i) => typeof i === 'object' && i.interf === stopValInterfType.tabs[0].val,
                 ) as InterfProp;
                 const busProp = interfProp ? interfProp.bus : 0;
-                const busNumber = Number(c20?.tabs[0].val);
+                const busNumber = Number(stopValBus?.tabs[0].val);
                 const busResult = Number.isNaN(busNumber) ? busProp : busNumber;
                 stopVal = Object.assign(
                     stopVal,
@@ -237,7 +236,7 @@ function createObjUdfAct(config: Config[], propDevice?: Device) {
                     (i) => typeof i === 'object' && i.interf === valInterfType.tabs[0].val,
                 ) as InterfProp;
                 const busProp = interfProp ? interfProp.bus : 0;
-                const busNumber = Number(c14?.tabs[0].val);
+                const busNumber = Number(valBus?.tabs[0].val);
                 const busResult = Number.isNaN(busNumber) ? busProp : busNumber;
                 ent = Object.assign(
                     ent,
@@ -315,10 +314,9 @@ function createObjUdfCond(config: Config[], propDevice?: Device) {
     const valInterfType = config.find((el) => el.curKey === CurKeyMap.ValueInterface);
     const valDevice = config.find((el) => el.curKey === CurKeyMap.ValueDevice);
     const valObject = config.find((el) => el.curKey === CurKeyMap.ValueObject);
+    const valBus = config.find((el) => el.curKey === CurKeyMap.ValueBus);
     const select = config.find((el) => el.curKey === CurKeyMap.Select);
     const enter = config.find((el) => el.curKey === CurKeyMap.Enter);
-
-    const c14 = config.find((el) => el.curKey === 14);
 
     let ent = {
         type: interfType?.tabs[0].val,
@@ -349,7 +347,7 @@ function createObjUdfCond(config: Config[], propDevice?: Device) {
                 (i) => typeof i === 'object' && i.interf === valInterfType.tabs[0].val,
             ) as InterfProp;
             const busProp = interfProp ? interfProp.bus : 0;
-            const busNumber = Number(c14?.tabs[0].val);
+            const busNumber = Number(valBus?.tabs[0].val);
             const busResult = Number.isNaN(busNumber) ? busProp : busNumber;
             val = Object.assign(
                 val,
@@ -491,10 +489,9 @@ function createObjUdfTrig(config: Config[], propDevice?: Device): any {
     const valInterfType = config.find((el) => el.curKey === CurKeyMap.ValueInterface);
     const valDevice = config.find((el) => el.curKey === CurKeyMap.ValueDevice);
     const valObject = config.find((el) => el.curKey === CurKeyMap.ValueObject);
+    const valBus = config.find((el) => el.curKey === CurKeyMap.ValueBus);
     const select = config.find((el) => el.curKey === CurKeyMap.Select);
     const enter = config.find((el) => el.curKey === CurKeyMap.Enter);
-
-    const c14 = config.find((el) => el.curKey === 14);
 
     let ent = {
         type: interfType?.tabs[0].val,
@@ -534,7 +531,7 @@ function createObjUdfTrig(config: Config[], propDevice?: Device): any {
                     (i) => typeof i === 'object' && i.interf === valInterfType.tabs[0].val,
                 ) as InterfProp;
                 const busProp = interfProp ? interfProp.bus : 0;
-                const busNumber = Number(c14?.tabs[0].val);
+                const busNumber = Number(valBus?.tabs[0].val);
                 const busResult = Number.isNaN(busNumber) ? busProp : busNumber;
                 ent = Object.assign(
                     ent,
@@ -585,7 +582,7 @@ function createObjUdfTrig(config: Config[], propDevice?: Device): any {
                     (i) => typeof i === 'object' && i.interf === valInterfType.tabs[0].val,
                 ) as InterfProp;
                 const busProp = interfProp ? interfProp.bus : 0;
-                const busNumber = Number(c14?.tabs[0].val);
+                const busNumber = Number(valBus?.tabs[0].val);
                 const busResult = Number.isNaN(busNumber) ? busProp : busNumber;
                 ent = Object.assign(
                     ent,

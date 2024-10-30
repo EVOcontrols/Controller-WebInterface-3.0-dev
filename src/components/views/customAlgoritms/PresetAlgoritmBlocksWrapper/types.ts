@@ -199,11 +199,13 @@ export const enum CurKeyMap {
     ValueInterface = 11,
     ValueDevice = 12,
     ValueObject = 13,
+    ValueBus = 14,
     StopValue = 15,
     StopValueEnter = 16,
     StopValueInterface = 17,
     StopValueDevice = 18,
     StopValueObject = 19,
+    StopValueBus = 20,
     // EndValue = 21, // лишнее, снёс
     // BinOperation = 22, // лишнее, снёс
     Hysteresis = 27,
