@@ -72,6 +72,7 @@
                     >
                     <input
                         type="text"
+                        ref="activeLabelInput"
                         :placeholder="t('placeholder')"
                         :value="activeLabel.label"
                         :maxlength="32"
@@ -117,6 +118,7 @@ const emit = defineEmits<{
     (e: 'creatingFinish', index: number): void;
 }>();
 
+const activeLabelInput = ref<HTMLInputElement | undefined>();
 const scrollWrapper = ref<HTMLElement | undefined>();
 const activeLabel = ref<{ label: string; i: number }>();
 const activeLabelTop = ref(86);
@@ -175,6 +177,9 @@ function changeLabel(index: number, e: Event, isCreating?: boolean) {
     setActiveLabelTop();
 
     setTimeout(() => {
+        const label = activeLabelInput.value;
+        if (label) label.focus();
+
         window.addEventListener('click', (event: MouseEvent) => {
             saveData(event, isCreating);
         });
