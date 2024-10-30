@@ -381,7 +381,7 @@ const props = defineProps<{
             | 'adc-in'
             | 'bin-out'
             | 'pwm-out'
-            | 'mb-co'
+            | 'mb-coil'
             | 'mb-ir'
             | 'mb-hr'
             | 'mb-di'

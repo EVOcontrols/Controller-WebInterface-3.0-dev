@@ -23,7 +23,7 @@ export type DropDownRealType =
     | 'adc-in'
     | 'bin-out'
     | 'pwm-out'
-    | 'mb-co'
+    | 'mb-coil'
     | 'mb-ir'
     | 'mb-hr'
     | 'mb-di'
@@ -69,7 +69,7 @@ export type Interface =
     | 'adc-in'
     | 'bin-out'
     | 'pwm-out'
-    | 'mb-co'
+    | 'mb-coil'
     | 'mb-ir'
     | 'mb-hr'
     | 'mb-di'
@@ -166,7 +166,7 @@ export const ORDER = [
     'adc-in',
     'bin-out',
     'pwm-out',
-    'mb-co',
+    'mb-coil',
     'mb-ir',
     'mb-hr',
     'mb-di',
@@ -205,5 +205,5 @@ export const enum CurKeyMap {
     CyclicMode = 32,
     MinTime = 33,
     MaxTime = 34,
-    ComparisonOperation = 70,
+    ComparisonOperation = 45,
 }

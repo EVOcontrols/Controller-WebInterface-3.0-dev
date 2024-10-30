@@ -768,7 +768,7 @@ async function parseEntity(ent: Ent) {
         //     await getEntConfig(entNum, ent.device);
         // }
 
-        const mbTypes = ['mb-co', 'mb-ir', 'mb-hr', 'mb-di'];
+        const mbTypes = ['mb-coil', 'mb-ir', 'mb-hr', 'mb-di'];
         const keyCapab = mbTypes.includes(ent.type) ? 'mb-var' : (ent.type as EntType);
         let quant = curDevCapab.value[keyCapab];
 

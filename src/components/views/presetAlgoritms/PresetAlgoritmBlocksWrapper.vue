@@ -5,12 +5,8 @@
     >
         <div class="h-[80px] flex items-center justify-between px-6">
             <div class="flex flex-col gap-2">
-                <div class="text-lg font-semibold leading-[120%] text-[#ADEBFF] select-none">
-                    Название алгоритма
-                </div>
-                <div class="text-sm font-semibold leading-[120%] text-[#6CB5D3] select-none">
-                    Группа / Шаблон
-                </div>
+                <div class="text-lg font-semibold leading-[120%] text-[#ADEBFF] select-none">Название алгоритма</div>
+                <div class="text-sm font-semibold leading-[120%] text-[#6CB5D3] select-none">Группа / Шаблон</div>
             </div>
             <SaveButton
                 :isSaving="isSaving"
@@ -58,12 +54,7 @@
                             }
                         "
                         @handleCheckboxClick="
-                            (
-                                checkboxItemIndex: number,
-                                val: string,
-                                status: boolean,
-                                part: 1 | 2,
-                            ) => {
+                            (checkboxItemIndex: number, val: string, status: boolean, part: 1 | 2) => {
                                 handleCheckboxClick(i, checkboxItemIndex, val, status, part);
                             }
                         "
@@ -207,9 +198,7 @@ function handleCheckboxClick(
             ].sort();
         } else {
             prevConfig[configItemIndex].checkBoxes[checkboxItemIndex][part].valsArr = [
-                ...prevConfig[configItemIndex].checkBoxes[checkboxItemIndex][part].valsArr.filter(
-                    (el) => el !== val,
-                ),
+                ...prevConfig[configItemIndex].checkBoxes[checkboxItemIndex][part].valsArr.filter((el) => el !== val),
             ];
         }
         config.value = prevConfig;
@@ -300,7 +289,7 @@ const { t } = useI18n({
                 'adc-in': 'Analog inputs',
                 'bin-out': 'Discrete outputs',
                 'pwm-out': 'PWM outputs',
-                'mb-co': 'MODBUS CO',
+                'mb-coil': 'MODBUS CO',
                 'mb-ir': 'MODBUS IR',
                 'mb-hr': 'MODBUS HR',
                 'mb-di': 'MODBUS DI',
@@ -399,7 +388,7 @@ const { t } = useI18n({
                 'adc-in': 'Аналоговые входы',
                 'bin-out': 'Дискретные выходы',
                 'pwm-out': 'ШИМ-выходы',
-                'mb-co': 'MODBUS CO',
+                'mb-coil': 'MODBUS CO',
                 'mb-ir': 'MODBUS IR',
                 'mb-hr': 'MODBUS HR',
                 'mb-di': 'MODBUS DI',
@@ -465,8 +454,8 @@ function setConfig() {
             } else {
                 if (interf.interf === 'mb-var') {
                     const co = {
-                        label: t('tabs.mb-co'),
-                        val: 'mb-co',
+                        label: t('tabs.mb-coil'),
+                        val: 'mb-coil',
                     };
                     const ir = {
                         label: t('tabs.mb-ir'),
@@ -480,11 +469,7 @@ function setConfig() {
                         label: t('tabs.mb-di'),
                         val: 'mb-di',
                     };
-                    if (
-                        !interfVals.find(
-                            (elem) => typeof elem.val === 'string' && elem.val.includes('mb'),
-                        )
-                    ) {
+                    if (!interfVals.find((elem) => typeof elem.val === 'string' && elem.val.includes('mb'))) {
                         interfVals.push(co, ir, hr, di);
                     }
                 } else {
@@ -513,7 +498,7 @@ function setConfig() {
                 'adc-in',
                 'bin-out',
                 'pwm-out',
-                'mb-co',
+                'mb-coil',
                 'mb-ir',
                 'mb-hr',
                 'mb-di',
@@ -949,9 +934,7 @@ function setConfig() {
                     {
                         1: {
                             title: t('titles.startMode'),
-                            vals: [
-                                { label: t('checkBoxes.conditionsOccur'), val: 'conditionsOccur' },
-                            ],
+                            vals: [{ label: t('checkBoxes.conditionsOccur'), val: 'conditionsOccur' }],
                             valsArr: ['conditionsOccur'].sort(),
                         },
                         2: {

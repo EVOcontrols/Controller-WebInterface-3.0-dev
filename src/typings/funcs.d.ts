@@ -31,7 +31,7 @@ export type EntType =
     | 'mb-ir'
     | 'mb-hr'
     | 'mb-di'
-    | 'mb-co';
+    | 'mb-coil';
 
 export type Time = {
     type: 'tim-const' | 'tim-var';
@@ -40,18 +40,7 @@ export type Time = {
 };
 
 export type Body = {
-    type:
-        | 'none'
-        | 'hold'
-        | 'compare'
-        | 'any'
-        | 'set'
-        | 'invert'
-        | 'modify'
-        | 'change'
-        | 'cycle'
-        | 'stop'
-        | 'save';
+    type: 'none' | 'hold' | 'compare' | 'any' | 'set' | 'invert' | 'modify' | 'change' | 'cycle' | 'stop' | 'save';
     entity?: Ent;
     'act-idx'?: number;
     'act-qty'?: number;

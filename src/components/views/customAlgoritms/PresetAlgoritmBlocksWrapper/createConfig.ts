@@ -3,6 +3,7 @@ import { Config, CurKeyMap, UDF } from './types';
 import type { Device } from '@/stores';
 
 const readonlyInterfaces = ['1w-rom', '1w-sens', 'bin-in', 'adc-in', 'mb-ir', 'mb-di'];
+const binaryInterfaces = ['bin-in', 'bin-out', 'bin-var', '1w-rom', 'mb-coil', 'mb-di'];
 
 export const createConfig = async (
     curBodyVal: Body,
@@ -431,11 +432,16 @@ function createComparisonValConfig(curBodyVal: Body, typeVal: UDF, t: (key: stri
 }
 
 function createOperationBinConfig(curBodyVal: Body, t: (key: string) => string): Config | null {
-    if (!curBodyVal['value'] || curBodyVal['value']['type'] !== 'int-const') {
+    if (!curBodyVal['value'] || curBodyVal['value']['type'] !== 'int-const' || !curBodyVal.entity) {
         return null;
     }
 
-    return curBodyVal['operation'] === 'bin-equal' || curBodyVal['operation'] === 'bin-not-equal'
+    const isBinary =
+        curBodyVal['operation'] === 'bin-equal' ||
+        curBodyVal['operation'] === 'bin-not-equal' ||
+        binaryInterfaces.includes(curBodyVal.entity.type);
+
+    return isBinary
         ? {
               curKey: CurKeyMap.Select,
               queue: [
