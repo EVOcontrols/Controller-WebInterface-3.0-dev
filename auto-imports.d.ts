@@ -45,11 +45,12 @@ declare global {
   const createApp: typeof import('vue')['createApp']
   const createBodyState: typeof import('./src/components/views/customAlgoritms/PresetAlgoritmBlocksWrapper/createBodyState')['createBodyState']
   const createConfig: typeof import('./src/components/views/customAlgoritms/PresetAlgoritmBlocksWrapper/createConfig')['createConfig']
+  const createEntityConfig: typeof import('./src/components/views/customAlgoritms/PresetAlgoritmBlocksWrapper/createEntityConfig')['createEntityConfig']
   const createEventHook: typeof import('@vueuse/core')['createEventHook']
   const createGlobalState: typeof import('@vueuse/core')['createGlobalState']
   const createInjectionState: typeof import('@vueuse/core')['createInjectionState']
   const createObjByType: typeof import('./src/components/views/customAlgoritms/PresetAlgoritmBlocksWrapper/createUdfObj')['createObjByType']
-  const createParsedConfig: typeof import('./src/components/views/customAlgoritms/PresetAlgoritmBlocksWrapper/createParsedConfig')['createParsedConfig']
+  const createParsedConfig: typeof import('@/components/views/customAlgoritms/PresetAlgoritmBlocksWrapper/createEntityConfig')['createEntityConfig']
   const createPinia: typeof import('pinia')['createPinia']
   const createReactiveFn: typeof import('@vueuse/core')['createReactiveFn']
   const createReusableTemplate: typeof import('@vueuse/core')['createReusableTemplate']
@@ -392,11 +393,11 @@ declare module 'vue' {
     readonly createApp: UnwrapRef<typeof import('vue')['createApp']>
     readonly createBodyState: UnwrapRef<typeof import('./src/components/views/customAlgoritms/PresetAlgoritmBlocksWrapper/createBodyState')['createBodyState']>
     readonly createConfig: UnwrapRef<typeof import('./src/components/views/customAlgoritms/PresetAlgoritmBlocksWrapper/createConfig')['createConfig']>
+    readonly createEntityConfig: UnwrapRef<typeof import('./src/components/views/customAlgoritms/PresetAlgoritmBlocksWrapper/createEntityConfig')['createEntityConfig']>
     readonly createEventHook: UnwrapRef<typeof import('@vueuse/core')['createEventHook']>
     readonly createGlobalState: UnwrapRef<typeof import('@vueuse/core')['createGlobalState']>
     readonly createInjectionState: UnwrapRef<typeof import('@vueuse/core')['createInjectionState']>
     readonly createObjByType: UnwrapRef<typeof import('./src/components/views/customAlgoritms/PresetAlgoritmBlocksWrapper/createUdfObj')['createObjByType']>
-    readonly createParsedConfig: UnwrapRef<typeof import('./src/components/views/customAlgoritms/PresetAlgoritmBlocksWrapper/createParsedConfig')['createParsedConfig']>
     readonly createPinia: UnwrapRef<typeof import('pinia')['createPinia']>
     readonly createReactiveFn: UnwrapRef<typeof import('@vueuse/core')['createReactiveFn']>
     readonly createReusableTemplate: UnwrapRef<typeof import('@vueuse/core')['createReusableTemplate']>
@@ -728,11 +729,11 @@ declare module '@vue/runtime-core' {
     readonly createApp: UnwrapRef<typeof import('vue')['createApp']>
     readonly createBodyState: UnwrapRef<typeof import('./src/components/views/customAlgoritms/PresetAlgoritmBlocksWrapper/createBodyState')['createBodyState']>
     readonly createConfig: UnwrapRef<typeof import('./src/components/views/customAlgoritms/PresetAlgoritmBlocksWrapper/createConfig')['createConfig']>
+    readonly createEntityConfig: UnwrapRef<typeof import('./src/components/views/customAlgoritms/PresetAlgoritmBlocksWrapper/createEntityConfig')['createEntityConfig']>
     readonly createEventHook: UnwrapRef<typeof import('@vueuse/core')['createEventHook']>
     readonly createGlobalState: UnwrapRef<typeof import('@vueuse/core')['createGlobalState']>
     readonly createInjectionState: UnwrapRef<typeof import('@vueuse/core')['createInjectionState']>
     readonly createObjByType: UnwrapRef<typeof import('./src/components/views/customAlgoritms/PresetAlgoritmBlocksWrapper/createUdfObj')['createObjByType']>
-    readonly createParsedConfig: UnwrapRef<typeof import('./src/components/views/customAlgoritms/PresetAlgoritmBlocksWrapper/createParsedConfig')['createParsedConfig']>
     readonly createPinia: UnwrapRef<typeof import('pinia')['createPinia']>
     readonly createReactiveFn: UnwrapRef<typeof import('@vueuse/core')['createReactiveFn']>
     readonly createReusableTemplate: UnwrapRef<typeof import('@vueuse/core')['createReusableTemplate']>

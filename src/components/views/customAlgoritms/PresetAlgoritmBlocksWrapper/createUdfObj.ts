@@ -320,16 +320,6 @@ function configureBus(
     busConfig: Config | undefined,
     propDevice: Device | undefined,
 ) {
-    console.log(
-        'ent',
-        ent,
-        'interfaceTypeConfig',
-        interfaceTypeConfig,
-        'busConfig',
-        busConfig,
-        'propDevice',
-        propDevice,
-    );
     if (interfaceTypeConfig && validValuesWithBus.includes(interfaceTypeConfig.tabs[0].val as string)) {
         const interfaceProp = propDevice?.interf.find(
             (i) => typeof i === 'object' && i.interf === interfaceTypeConfig.tabs[0].val,

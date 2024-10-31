@@ -317,6 +317,7 @@ watch(
     () => props.items,
     (newValue, oldValue) => {
         if (JSON.stringify(newValue) !== JSON.stringify(oldValue)) {
+            console.log('newValue, oldValue', newValue, oldValue);
             const indexCreating = newValue.findIndex((item) => item.isCreating === true);
             openedAlgoritms.value = indexCreating !== -1 ? [indexCreating] : [];
         }

@@ -274,7 +274,7 @@ import {
 } from './api';
 import { getInitCurBody } from './curBody';
 import { createConfig } from './createConfig';
-import { createParsedConfig } from './createParsedConfig';
+import { createEntityConfig } from './createEntityConfig';
 import { createBodyState } from './createBodyState';
 import { createObjByType } from './createUdfObj';
 import { ControllerSettings } from '@/typings/settings';
@@ -815,11 +815,15 @@ async function parseEntity(ent: Ent) {
         await getLabels(entNum, ent.type as UDF);
     }
 
-    const OWConfig = configByAddr.value[ent.device || 0]['1-wire'];
+    const device = ent.device || 0;
+    const mainDevice = props.device?.addr || 0;
+    const isNGC = mainDevice === 0;
+    const deviceId = isNGC ? (device !== mainDevice ? device : mainDevice) : mainDevice;
+    const OWConfig = configByAddr.value[deviceId]['1-wire'];
 
     const entItems = entNum === 1 ? ent1.value : entNum === 2 ? [...ent2.value] : [...ent3.value];
 
-    return createParsedConfig(ent, props.type.val, interfaces[entNum - 1], OWConfig, entItems, t, props.device);
+    return createEntityConfig(ent, props.type.val, interfaces[entNum - 1], OWConfig, entItems, t, props.device);
 }
 
 function getConstBtns(configTime?: Config) {
@@ -1002,6 +1006,7 @@ async function parseMultiSelect(
 async function setConfig() {
     if (!curBody.value) return;
 
+    console.log('curBody.value', JSON.parse(JSON.stringify(curBody.value)));
     const resultConfig = await createConfig(
         curBody.value,
         props.type.val,
@@ -1012,6 +1017,7 @@ async function setConfig() {
         props.device,
     );
 
+    console.log('resultConfig.sort()', JSON.parse(JSON.stringify(resultConfig.sort())));
     config.value = resultConfig.sort();
     microLoading.value = false;
 }

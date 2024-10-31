@@ -14,7 +14,7 @@ type Bus = {
     label: string;
 };
 
-export const createParsedConfig = (
+export const createEntityConfig = (
     ent: Ent,
     typeVal: UDF,
     interfaces: Interface[],
