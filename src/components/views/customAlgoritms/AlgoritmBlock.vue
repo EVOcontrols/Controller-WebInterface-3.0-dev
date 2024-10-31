@@ -33,7 +33,7 @@
             >
                 <IButtonIcon
                     :class="
-                        props.item.val
+                        props.item.val || props.item.isCreating
                             ? '[&>path]:fill-[#00D6AF] [&>rect]:fill-[#00D6AF]'
                             : '[&>path]:fill-[#5891C2] [&>rect]:fill-[#5891C2]'
                     "
