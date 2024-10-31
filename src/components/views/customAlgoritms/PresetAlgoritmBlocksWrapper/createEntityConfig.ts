@@ -205,8 +205,12 @@ function createObjConfig(
     if (entType === 'none' || entType === 'error' || entType === 'int-const' || entType === 'prev-value') {
         return null;
     }
+    const items = entItems.map((item) => {
+        if (entType !== '1w-sens') return item;
+        return { ...item, name: item.name === '0000000000000000' ? '' : item.name };
+    });
 
-    const vals = entIndex !== undefined && entIndex >= 0 && entIndex < entItems.length ? [entIndex] : [];
+    const vals = entIndex !== undefined && entIndex >= 0 && entIndex < items.length ? [entIndex] : [];
     return {
         curKey: CurKeyMap.Object,
         queue: [
@@ -242,7 +246,7 @@ function createObjConfig(
                         ? 'cond'
                         : 'var',
                 realType: entType as DropDownRealType,
-                items: entItems,
+                items,
                 vals,
             },
         ],
