@@ -49,7 +49,6 @@ export const useApiStore = defineStore('apiStore', () => {
 
         if (!isQueryBg) {
             queryId = Math.random();
-            // console.log('directQueriesIds', bgQueries.value);
             directQueriesIds.add(queryId);
             if (longQueries.has(url)) {
                 indexStore.setLongQueryRunning(true);

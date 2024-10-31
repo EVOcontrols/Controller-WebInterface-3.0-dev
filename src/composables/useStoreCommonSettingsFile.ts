@@ -26,8 +26,7 @@ export function useStoreCommonSettingsFile() {
         const init = commonFileSettingsInit === 'notFound' ? undefined : commonFileSettingsInit;
         const commonFileSettings: CommonSettingsFileType = {
             lang: lang || init?.lang || indexStore.lang,
-            funcsNumberPerPage:
-                funcsNumberPerPage || init?.funcsNumberPerPage || funcsStore.funcsNumberPerPage,
+            funcsNumberPerPage: funcsNumberPerPage || init?.funcsNumberPerPage || funcsStore.funcsNumberPerPage,
             tempUnit: tempUnit || init?.tempUnit || indexStore.tempUnit,
             numberingSystem: numberingSystem || init?.numberingSystem || indexStore.numberingSystem,
         };
