@@ -95,8 +95,8 @@
                 "
                 @addAlgoritm="
                     (index: number, label: string | undefined) => {
-                        algoritms1[index] = { val: 0, label: label ?? '', isCreating: true };
-                        algoritms1Copy = algoritms1;
+                        algoritms1Copy = [...algoritms1];
+                        algoritms1Copy[index] = { val: 0, label: label ?? '', isCreating: true };
                         createAlgoritm1 = true;
                     }
                 "
@@ -141,8 +141,8 @@
                 "
                 @addAlgoritm="
                     (index: number, label: string | undefined) => {
-                        algoritms2[index] = { val: 0, label: label ?? '', isCreating: true };
-                        algoritms2Copy = algoritms2;
+                        algoritms2Copy = [...algoritms2];
+                        algoritms2Copy[index] = { val: 0, label: label ?? '', isCreating: true };
                         createAlgoritm2 = true;
                     }
                 "
@@ -498,6 +498,7 @@ const getQuantity = (action: string) => {
 };
 
 function retryGetData(timeout: number) {
+    clearTimeout(getDataTimer);
     getDataTimer = setTimeout(() => {
         getData();
     }, timeout);
@@ -517,6 +518,7 @@ async function getData() {
 
     if (!quantLeft || !quantRight) {
         retryGetData(20);
+        return;
     }
 
     try {
@@ -548,7 +550,7 @@ async function getData() {
         algoritms1.value = mapToAlgoritms(data.entities[0].state, curLabelsLeft);
         algoritms2.value = mapToAlgoritms(data.entities[1].state, curLabelsRight);
 
-        retryGetData(isDev ? timeoutDev : 5000);
+        retryGetData(isDev ? timeoutDev / 2 : 1000);
     } catch (error) {
         if (isAborted.value) return;
 
