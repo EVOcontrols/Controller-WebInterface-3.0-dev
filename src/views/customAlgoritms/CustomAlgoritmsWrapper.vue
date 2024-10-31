@@ -70,6 +70,7 @@
                 :selectedAlgoritms="selectedAlgoritmsLeft"
                 :isAllChecked="isAllCheckedLeft"
                 :curAction="curActionLeft"
+                :curPage="curPage1"
                 :device="curDev"
                 :need-to-add-algoritm="createAlgoritm1"
                 @deleteAlgoritm="
@@ -106,12 +107,16 @@
                         createAlgoritm1 = false;
                     }
                 "
+                @prevPage="() => prevPage('l')"
+                @nextPage="(pages: number) => nextPage('l', pages)"
+                @pageInput="(v: string | number) => changePage('l', v)"
             />
             <FunctionsBlock
                 :items="createAlgoritm2 ? algoritms2Copy : algoritms2"
                 :selectedAlgoritms="selectedAlgoritmsRight"
                 :isAllChecked="isAllCheckedRight"
                 :curAction="curActionRight"
+                :curPage="curPage2"
                 :device="curDev"
                 :need-to-add-algoritm="createAlgoritm2"
                 @deleteAlgoritm="
@@ -148,6 +153,9 @@
                         createAlgoritm2 = false;
                     }
                 "
+                @prevPage="() => prevPage('r')"
+                @nextPage="(pages: number) => nextPage('r', pages)"
+                @pageInput="(v: string | number) => changePage('r', v)"
             />
         </div>
         <DeleteAlgoritmPopUp
@@ -187,7 +195,6 @@ import FunctionsBlock from '@/components/views/customAlgoritms/FunctionsBlock.vu
 import DeleteAlgoritmPopUp from '@/components/views/customAlgoritms/DeleteAlgoritmPopUp.vue';
 import ControlBlock from '@/components/views/customAlgoritms/ControlBlock.vue';
 import type { LabelsType } from '@/typings/files';
-import axios from 'axios';
 import { UDF } from '@/components/views/customAlgoritms/PresetAlgoritmBlocksWrapper/types';
 
 const { readFile, saveToFile } = useReadWriteFiles();
@@ -199,7 +206,7 @@ const { api } = useApiStore();
 const isAborted = indexStore.getApi().isAborted;
 
 const { devices, devCapabs } = storeToRefs(indexStore);
-const { funcLabels } = storeToRefs(funcStore);
+const { funcLabels, funcsNumberPerPage } = storeToRefs(funcStore);
 
 type Action =
     | { label: 'triggers'; val: 'udf-trig' }
@@ -213,6 +220,8 @@ type Algoritm = { val: Val; label: string; isCreating?: boolean };
 const isDev = import.meta.env.DEV;
 const timeoutDev = 10000;
 
+const curPage1 = ref(0);
+const curPage2 = ref(0);
 const curDev = ref<Device>(devices.value[0]);
 let showStatusTimer: ReturnType<typeof setTimeout> | undefined;
 let getDataTimer: ReturnType<typeof setTimeout> | undefined;
@@ -424,13 +433,13 @@ async function getLabels(type: 'udf-act' | 'udf-cond' | 'udf-trans' | 'udf-trig'
         funcStore.setLabels(addr, type, []);
         clearTimeout(getDataTimer);
         getDataTimer = undefined;
-        await getData(dir);
+        await getData();
     } else {
         const { labels } = reqLabels as LabelsType;
         funcStore.setLabels(addr, type, labels);
         clearTimeout(getDataTimer);
         getDataTimer = undefined;
-        await getData(dir);
+        await getData();
     }
 }
 
@@ -475,59 +484,117 @@ async function saveLabel(interf: UDF, addr: number, labels: string[]) {
     }
 }
 
-async function getData(dir: 'l' | 'r') {
-    const addr = curDev.value || devices.value[0] ? (curDev.value || devices.value[0]).addr : 0;
-    const curAct = dir === 'l' ? curActionLeft.value.val : curActionRight.value.val;
-    let curLabelsLeft = funcLabels.value[addr]?.find((el) => el.name === curAct)?.val as string[];
-    let curLabelsRight = funcLabels.value[addr]?.find((el) => el.name === curAct)?.val as string[];
+const getQuantity = (action: string) => {
+    switch (action) {
+        case 'udf-act':
+            return maxAct.value;
+        case 'udf-cond':
+            return maxCond.value;
+        case 'udf-trans':
+            return maxTrans.value;
+        default:
+            return maxTrig.value;
+    }
+};
 
-    const quant =
-        curAct === 'udf-act'
-            ? maxAct.value
-            : curAct === 'udf-cond'
-            ? maxCond.value
-            : curAct === 'udf-trans'
-            ? maxTrans.value
-            : maxTrig.value;
-    if (quant) {
-        try {
-            const { data } = await api.post('get_ent_state', {
-                entities: [
-                    {
-                        type: curAct,
-                        device: curDev.value ? curDev.value.addr : 0,
-                        index: 0,
-                        quantity: quant,
-                    },
-                ],
-            });
-            const { state } = data.entities[0];
-            const resultAlgoritms: Algoritm[] = state.map((val: Val, idx: number) => {
-                const label = dir === 'l' ? curLabelsLeft[idx] || '' : curLabelsRight[idx] || '';
-                return { val, label };
-            });
-            if (dir === 'l') {
-                algoritms1.value = [...resultAlgoritms];
-            } else {
-                algoritms2.value = [...resultAlgoritms];
-            }
-            const timeout = isDev ? timeoutDev : 5000;
-            getDataTimer = setTimeout(() => {
-                getData(dir);
-            }, timeout);
-        } catch (error) {
-            if (isAborted.value) {
-                return;
-            }
-            const timeout = isDev ? timeoutDev / 2 : 20;
-            getDataTimer = setTimeout(() => {
-                getData(dir);
-            }, timeout);
-        }
-    } else {
-        getDataTimer = setTimeout(() => {
-            getData(dir);
-        }, 20);
+function retryGetData(timeout: number) {
+    getDataTimer = setTimeout(() => {
+        getData();
+    }, timeout);
+}
+
+function mapToAlgoritms(state: any, labels: string[]): Algoritm[] {
+    return state.map((val: Val, idx: number) => ({ val, label: labels[idx] || '' }));
+}
+
+async function getData() {
+    const addr = curDev.value || devices.value[0] ? (curDev.value || devices.value[0]).addr : 0;
+    let curLabelsLeft = funcLabels.value[addr]?.find((el) => el.name === curActionLeft.value.val)?.val as string[];
+    let curLabelsRight = funcLabels.value[addr]?.find((el) => el.name === curActionRight.value.val)?.val as string[];
+
+    const quantLeft = getQuantity(curActionLeft.value.val);
+    const quantRight = getQuantity(curActionRight.value.val);
+
+    if (!quantLeft || !quantRight) {
+        retryGetData(20);
+    }
+
+    try {
+        const leftIndex = curPage1.value * funcsNumberPerPage.value;
+        const rightIndex = curPage2.value * funcsNumberPerPage.value;
+        const smallQuantLeft =
+            quantLeft - leftIndex < funcsNumberPerPage.value ? quantLeft - leftIndex : funcsNumberPerPage.value;
+        const smallQuantRight =
+            quantRight - rightIndex < funcsNumberPerPage.value ? quantRight - rightIndex : funcsNumberPerPage.value;
+        const quantityLeft = quantRight > funcsNumberPerPage.value ? smallQuantLeft : quantRight;
+        const quantityRight = quantRight > funcsNumberPerPage.value ? smallQuantRight : quantRight;
+
+        const { data } = await api.post('get_ent_state', {
+            entities: [
+                {
+                    type: curActionLeft.value.val,
+                    device: curDev.value ? curDev.value.addr : 0,
+                    index: leftIndex,
+                    quantity: quantityLeft,
+                },
+                {
+                    type: curActionRight.value.val,
+                    device: curDev.value ? curDev.value.addr : 0,
+                    index: rightIndex,
+                    quantity: quantityRight,
+                },
+            ],
+        });
+        algoritms1.value = mapToAlgoritms(data.entities[0].state, curLabelsLeft);
+        algoritms2.value = mapToAlgoritms(data.entities[1].state, curLabelsRight);
+
+        retryGetData(isDev ? timeoutDev : 5000);
+    } catch (error) {
+        if (isAborted.value) return;
+
+        retryGetData(isDev ? timeoutDev / 2 : 20);
+    }
+}
+
+function prevPage(dir: 'l' | 'r') {
+    const curPage = dir === 'l' ? curPage1 : curPage2;
+    const algoritms = dir === 'l' ? algoritms1 : algoritms2;
+    const algoritmsCopy = dir === 'l' ? algoritms1Copy : algoritms2Copy;
+    const createAlgoritm = dir === 'l' ? createAlgoritm1 : createAlgoritm2;
+
+    if (curPage.value !== 0) {
+        curPage.value--;
+        algoritms.value = [];
+        algoritmsCopy.value = [];
+        createAlgoritm.value = false;
+    }
+}
+
+function nextPage(dir: 'l' | 'r', pages: number) {
+    const curPage = dir === 'l' ? curPage1 : curPage2;
+    const algoritms = dir === 'l' ? algoritms1 : algoritms2;
+    const algoritmsCopy = dir === 'l' ? algoritms1Copy : algoritms2Copy;
+    const createAlgoritm = dir === 'l' ? createAlgoritm1 : createAlgoritm2;
+
+    if (curPage.value !== pages - 1) {
+        curPage.value++;
+        algoritms.value = [];
+        algoritmsCopy.value = [];
+        createAlgoritm.value = false;
+    }
+}
+
+function changePage(dir: 'l' | 'r', v: string | number) {
+    const curPage = dir === 'l' ? curPage1 : curPage2;
+    const algoritms = dir === 'l' ? algoritms1 : algoritms2;
+    const algoritmsCopy = dir === 'l' ? algoritms1Copy : algoritms2Copy;
+    const createAlgoritm = dir === 'l' ? createAlgoritm1 : createAlgoritm2;
+
+    if (v !== '') {
+        curPage.value = Number(v);
+        algoritms.value = [];
+        algoritmsCopy.value = [];
+        createAlgoritm.value = false;
     }
 }
 
@@ -550,14 +617,12 @@ onBeforeMount(async () => {
     let curLabelsRight = funcLabels.value[addr]?.find((el) => el.name === curActionRight.value.val);
     if (!curLabelsLeft) {
         await getLabels(curActionLeft.value.val, 'l');
-    } else {
-        await getData('l');
     }
     if (!curLabelsRight) {
         await getLabels(curActionRight.value.val, 'r');
-    } else {
-        await getData('r');
     }
+
+    await getData();
 });
 
 onBeforeUnmount(() => {
@@ -574,8 +639,7 @@ watch(devices, () => {
 watch(funcLabels, () => {
     clearTimeout(getDataTimer);
     getDataTimer = undefined;
-    getData('l');
-    getData('r');
+    getData();
 });
 
 watch(curDev, async () => {
@@ -595,14 +659,13 @@ watch(curDev, async () => {
     let curLabelsRight = funcLabels.value[addr]?.find((el) => el.name === curActionRight.value.val);
     if (!curLabelsLeft) {
         await getLabels(curActionLeft.value.val, 'l');
-    } else {
-        await getData('l');
     }
+
     if (!curLabelsRight) {
         await getLabels(curActionRight.value.val, 'r');
-    } else {
-        await getData('r');
     }
+
+    await getData();
 });
 
 watch(curActionLeft, () => {
@@ -614,7 +677,7 @@ watch(curActionLeft, () => {
     if (!curLabelsLeft) {
         getLabels(curActionLeft.value.val, 'l');
     } else {
-        getData('l');
+        getData();
     }
 });
 
@@ -627,7 +690,7 @@ watch(curActionRight, () => {
     if (!curLabelsRight) {
         getLabels(curActionRight.value.val, 'r');
     } else {
-        getData('r');
+        getData();
     }
 });
 

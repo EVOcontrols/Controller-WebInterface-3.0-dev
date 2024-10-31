@@ -50,6 +50,7 @@
             <div
                 v-else
                 class="bg-[#092740] rounded-[6px] h-full flex items-center justify-center"
+                :style="{ 'max-height': 'calc(100% - 32px)' }"
             >
                 <span
                     v-html="spinner"

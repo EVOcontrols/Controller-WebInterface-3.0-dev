@@ -93,7 +93,7 @@
         </div>
         <AlgoritmsWrapper
             ref="algoritmsWrapperRef"
-            :items="pages[curPage] || []"
+            :items="props.items || []"
             :checkedArr="props.selectedAlgoritms"
             :page="curPage"
             :device="props.device"
@@ -112,49 +112,39 @@
             @creatingFinish="(index: number) => emit('creatingFinish', index)"
         />
         <div
-            v-if="pages.length"
+            v-if="pages"
             class="absolute bottom-0 left-[50%] translate-x-[-50%] w-[5.625rem] h-[2.875rem] rounded-t-[8px] bg-[#113351] shadow-[0_0_7px_0_#07243D] flex items-center justify-center gap-1 py-[10px]"
         >
             <ArrowIcon
                 class="rotate-180"
-                :class="[
-                    { disabled: pages.length <= 1 || curPage === 0 },
-                    { 'cursor-pointer': pages.length > 1 && curPage },
-                ]"
-                @click="
-                    () => {
-                        if (curPage !== 0) {
-                            curPage--;
-                        }
-                    }
-                "
+                :class="[{ disabled: pages <= 1 || curPage === 0 }, { 'cursor-pointer': pages > 1 && curPage }]"
+                @click="emit('prevPage')"
             />
             <UiInput
                 :init-value="curPage + 1"
                 :name="'page'"
                 initType="number"
                 class="table-cell w-9 !h-[1.625rem] text-center !px-2"
-                :min-max="[1, pages.length]"
+                :min-max="[1, pages]"
                 :status="pageError ? 'invalid' : 'valid'"
                 :input-type="['int']"
                 :nullable="false"
                 :required="true"
                 @status-changed="pageError = $event === 'invalid' || $event === 'empty'"
-                @value-changed="$event === undefined ? '' : (curPage = $event - 1)"
+                @value-changed="
+                    (v) => {
+                        const value = v === undefined ? '' : v - 1;
+                        emit('pageInput', value);
+                    }
+                "
             />
             <ArrowIcon
                 class=""
                 :class="[
-                    { disabled: pages.length <= 1 || curPage === pages.length - 1 },
-                    { 'cursor-pointer': pages.length > 1 && curPage !== pages.length - 1 },
+                    { disabled: pages <= 1 || curPage === pages - 1 },
+                    { 'cursor-pointer': pages > 1 && curPage !== pages - 1 },
                 ]"
-                @click="
-                    () => {
-                        if (curPage !== pages.length - 1) {
-                            curPage++;
-                        }
-                    }
-                "
+                @click="emit('nextPage', pages)"
             />
         </div>
     </div>
@@ -170,8 +160,10 @@ import AlgoritmsWrapper from '@/components/views/customAlgoritms/AlgoritmsWrappe
 import ArrowIcon from '@/assets/ArrowIcon.vue';
 import type { Device } from '@/stores';
 
+const indexStore = useIndexStore();
 const funcsStore = useFuncsStore();
 
+const { devCapabs } = storeToRefs(indexStore);
 const { funcsNumberPerPage } = storeToRefs(funcsStore);
 
 const props = defineProps<{
@@ -183,6 +175,7 @@ const props = defineProps<{
         | { label: 'conditions'; val: 'udf-cond' }
         | { label: 'actions'; val: 'udf-act' }
         | { label: 'transformations'; val: 'udf-trans' };
+    curPage: number;
     device?: Device;
     needToAddAlgoritm: Boolean;
 }>();
@@ -202,6 +195,9 @@ const emit = defineEmits<{
             | { label: 'actions'; val: 'udf-act' }
             | { label: 'transformations'; val: 'udf-trans' },
     ): void;
+    (e: 'prevPage'): void;
+    (e: 'nextPage', pages: number): void;
+    (e: 'pageInput', page: string | number): void;
 }>();
 
 type Algoritm = { val: 0 | 1 | null; label: string; isCreating?: boolean };
@@ -211,7 +207,6 @@ interface AlgoritmsWrapperInstance {
 }
 const algoritmsWrapperRef = ref<AlgoritmsWrapperInstance | null>(null);
 
-const curPage = ref(0);
 const headerInput = ref('');
 const pageError = ref(false);
 const actions: (
@@ -226,18 +221,11 @@ const actions: (
     { label: 'transformations', val: 'udf-trans' },
 ];
 
-const pages = computed<Algoritm[][]>(() => {
-    const arr: Algoritm[][] = [];
-    for (let i = 0; i < props.items.length; i += funcsNumberPerPage.value) {
-        let end;
-        if (i + funcsNumberPerPage.value < props.items.length) {
-            end = i + funcsNumberPerPage.value;
-        } else {
-            end = props.items.length;
-        }
-        arr.push(props.items.filter((el) => el.label.includes(headerInput.value)).slice(i, end));
-    }
-    return arr;
+const pages = computed<number>(() => {
+    const capabs = devCapabs.value[props.device ? props.device.addr : 0];
+    if (!capabs) return 0;
+
+    return Math.ceil(capabs[props.curAction.val] / funcsNumberPerPage.value);
 });
 
 function deleteAlgoritm(indexes: Algoritm[], index: number) {
