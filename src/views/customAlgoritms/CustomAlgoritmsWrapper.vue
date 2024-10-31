@@ -337,7 +337,7 @@ async function deleteAlgoritms() {
         await api.post('set_udf_cfg', body);
         if (algoritmsForDeletion.value[0].type == curActionLeft.value.val) {
             const prev = [...algoritms1.value];
-            prev[algoritmsForDeletion.value[0].index] = { val: null, label: '' };
+            prev[index] = { val: null, label: '' };
             algoritms1.value = [...prev];
             if (algoritms1Copy.value[index]?.isCreating === true) {
                 algoritms1.value[index].isCreating = undefined;
@@ -346,7 +346,7 @@ async function deleteAlgoritms() {
             }
         } else {
             const prev = [...algoritms2.value];
-            prev[algoritmsForDeletion.value[0].index] = { val: null, label: '' };
+            prev[index] = { val: null, label: '' };
             algoritms2.value = [...prev];
             if (algoritms2Copy.value[index]?.isCreating === true) {
                 algoritms2.value[index].isCreating = undefined;
