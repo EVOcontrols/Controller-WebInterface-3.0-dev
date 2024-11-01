@@ -33,7 +33,7 @@ export const createConfig = async (
         (curBody: Body) => createOperationBinConfig(curBody, t),
         (curBody: Body) => createValueConfig(curBody, cbParseEntity),
         (curBody: Body) => createStopValueConfig(curBody, typeVal, t),
-        (curBody: Body) => createIntConstConfig(curBody, typeVal, t),
+        (curBody: Body) => createIntConstStopValConfig(curBody, typeVal, t),
         (curBody: Body) => createStopValConfig(curBody, typeVal, cbParseEntity),
         (curBody: Body) => createHysteresisConfig(curBody, typeVal, t),
         (curBody: Body) => createTimeConfig(curBody, cbParseTime, t),
@@ -554,7 +554,7 @@ function createStopValueConfig(curBodyVal: Body, typeVal: UDF, t: (key: string) 
     };
 }
 
-function createIntConstConfig(curBodyVal: Body, typeVal: UDF, t: (key: string) => string): Config | null {
+function createIntConstStopValConfig(curBodyVal: Body, typeVal: UDF, t: (key: string) => string): Config | null {
     if (typeVal !== 'udf-act' || !curBodyVal['stop-val'] || curBodyVal['stop-val']['type'] !== 'int-const') {
         return null;
     }

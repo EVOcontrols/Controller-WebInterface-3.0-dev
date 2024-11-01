@@ -548,9 +548,7 @@ async function getData() {
             ],
         });
         algoritms1.value = mapToAlgoritms(data.entities[0].state, curLabelsLeft);
-        console.log('algoritms2.value1', JSON.parse(JSON.stringify(algoritms2.value)));
         algoritms2.value = mapToAlgoritms(data.entities[1].state, curLabelsRight);
-        console.log('algoritms2.value2', JSON.parse(JSON.stringify(algoritms2.value)));
 
         retryGetData(isDev ? timeoutDev / 2 : 1000);
     } catch (error) {

@@ -364,13 +364,13 @@ function modifyTime<T extends Record<string, any>>(
     };
 }
 
-function modifyAnalogyValue<T extends Record<string, any>>(obj: T): T | undefined {
-    if (!obj.value || obj.value.type !== 'int-const' || !obj.entity || !analogyInterfaces.includes(obj.entity.type))
+function modifyAnalogyValue<T extends Record<string, any>>(obj: T, prop: string): T | undefined {
+    if (!obj[prop] || obj[prop].type !== 'int-const' || !obj.entity || !analogyInterfaces.includes(obj.entity.type))
         return undefined;
 
     return {
-        ...obj.value,
-        value: obj.value.value * 100,
+        ...obj[prop],
+        value: obj[prop].value * 100,
     };
 }
 
@@ -404,8 +404,11 @@ async function saveData() {
         ...(modifyTime(obj, pauseConfig, 'pause') && {
             pause: modifyTime(obj, pauseConfig, 'pause'),
         }),
-        ...(modifyAnalogyValue(obj) && {
-            value: modifyAnalogyValue(obj),
+        ...(modifyAnalogyValue(obj, 'value') && {
+            value: modifyAnalogyValue(obj, 'value'),
+        }),
+        ...(modifyAnalogyValue(obj, 'stop-val') && {
+            'stop-val': modifyAnalogyValue(obj, 'stop-val'),
         }),
     };
 
@@ -419,6 +422,7 @@ async function saveData() {
         body = { ...body, trigger: modified };
     }
 
+    console.warn('save body', body);
     await $apiSaveUdfConfig(body);
     isSaving.value = false;
     initConfig.value = JSON.stringify(config.value);
@@ -1063,6 +1067,22 @@ async function configEditing() {
             },
         };
     }
+    if (
+        curBody.value?.['stop-val'] &&
+        curBody.value['stop-val'].type === 'int-const' &&
+        curBody.value?.entity &&
+        analogyInterfaces.includes(curBody.value.entity.type) &&
+        curBody.value['stop-val'].value
+    ) {
+        curBody.value = {
+            ...curBody.value,
+            'stop-val': {
+                ...curBody.value['stop-val'],
+                value: curBody.value['stop-val'].value / 100,
+            },
+        };
+    }
+
     initConfig.value = JSON.stringify(config.value);
 }
 

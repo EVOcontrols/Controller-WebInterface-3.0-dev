@@ -68,8 +68,8 @@
             />
             <span
                 v-html="search"
-                class="[&>svg]:h-[20px] [&>svg]:w-[20px] absolute top-[25px] left-[15.5rem]"
-                :class="{ 'left-[13rem]': !showCheckboxControlPanel }"
+                class="[&>svg]:h-[20px] [&>svg]:w-[20px] absolute top-[25px]"
+                :class="{ 'left-[13rem]': !showCheckboxControlPanel, 'left-[15.5rem]': showCheckboxControlPanel }"
             ></span>
             <PrimaryButton
                 class="w-[3.25rem] h-[2.5rem] flex items-center justify-center relative group"
