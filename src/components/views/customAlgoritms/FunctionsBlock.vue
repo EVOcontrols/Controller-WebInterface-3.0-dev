@@ -5,6 +5,7 @@
     >
         <div class="bg-[#092740] rounded-[6px] py-[15px] px-6 flex items-center gap-2 relative mb-4">
             <input
+                v-if="showCheckboxControlPanel"
                 type="checkbox"
                 class="cursor-pointer"
                 :id="'all'"
@@ -15,7 +16,10 @@
                     }
                 "
             />
-            <DropDown class="table-cell text-[0.813rem] [&>div>div]:!w-[10.375rem] ml-4">
+            <DropDown
+                class="table-cell text-[0.813rem] [&>div>div]:!w-[10.375rem]"
+                :class="{ 'ml-4': showCheckboxControlPanel }"
+            >
                 <template #trigger-element="{ onClick }">
                     <button
                         class="rounded-lg h-10 w-[326px] bg-[#0f304b] flex flex-row items-center gap-2 p-2"
@@ -35,7 +39,7 @@
                             <div
                                 v-for="action in actions"
                                 :key="action.val"
-                                class="flex flex-row h-[2.188rem] hover:bg-[#134d7d] shrink-0 items-center pl-2 pr-3 rounded hover:pl-3 transition-[background-color,padding] select-none cursor-pointer on:bg-[#134d7d] items-center gap-2"
+                                class="flex flex-row h-[2.188rem] hover:bg-[#134d7d] shrink-0 items-center pl-2 pr-3 rounded hover:pl-3 transition-[background-color,padding] select-none cursor-pointer on:bg-[#134d7d] gap-2"
                                 :class="{
                                     on: JSON.stringify(action) === JSON.stringify(curAction),
                                 }"
@@ -65,6 +69,7 @@
             <span
                 v-html="search"
                 class="[&>svg]:h-[20px] [&>svg]:w-[20px] absolute top-[25px] left-[15.5rem]"
+                :class="{ 'left-[13rem]': !showCheckboxControlPanel }"
             ></span>
             <PrimaryButton
                 class="w-[3.25rem] h-[2.5rem] flex items-center justify-center relative group"
@@ -207,6 +212,7 @@ interface AlgoritmsWrapperInstance {
 }
 const algoritmsWrapperRef = ref<AlgoritmsWrapperInstance | null>(null);
 
+const showCheckboxControlPanel = ref(false);
 const headerInput = ref('');
 const pageError = ref(false);
 const actions: (

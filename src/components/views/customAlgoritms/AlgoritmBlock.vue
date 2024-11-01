@@ -5,6 +5,7 @@
             :class="props.isActive ? 'h-[4.25rem]' : 'h-[3.625rem]'"
         >
             <div
+                v-if="false"
                 class="flex flex-row h-[2.188rem] w-4 shrink-0 items-center rounded transition-[background-color,padding] select-none cursor-pointer on:bg-[#134d7d] mr-8"
                 @click.stop=""
             >
