@@ -52,6 +52,11 @@
                 class="group flex-1 flex text-sm text-[#ADEBFF] h-full cursor-pointer items-center justify-between select-none pr-4"
                 :class="[{ on: props.isOpen }]"
                 @click="emit('oneClick')"
+                @dblclick.stop="
+                    (e: Event) => {
+                        emit('doubleClick', e);
+                    }
+                "
             >
                 {{ props.item.label || '&#8212;' }}
                 <span
@@ -130,6 +135,7 @@ const emit = defineEmits<{
     (e: 'selectAlgoritm', value: boolean): void;
     (e: 'deleteAlgoritm'): void;
     (e: 'oneClick'): void;
+    (e: 'doubleClick', event: Event): void;
     (e: 'addAlgoritm', event: Event): void;
     (e: 'creatingFinish'): void;
 }>();
