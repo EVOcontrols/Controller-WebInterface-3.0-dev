@@ -161,7 +161,7 @@
                                 <div
                                     class="w-full h-full px-[10px] flex items-center transition-colors duration-300 hover:bg-[#163E61]"
                                     :class="shownDropDown.vals.includes(i) ? 'bg-[#163E61]' : ''"
-                                    @click="handleClickSelect(item)"
+                                    @click="handleClickMultiSelect(item)"
                                 >
                                     <div class="w-5 mr-4">
                                         {{ i + 1 }}
@@ -638,19 +638,23 @@ function setInputError(configItemIndex: number, inputItemIndex: number, res: boo
     // reRenderLayout();
 }
 
-function handleClickSelect(item: DropDownItem) {
+function handleClickMultiSelect(item: DropDownItem) {
     if (!shownDropDown.value) return;
 
+    const { type, vals } = shownDropDown.value;
+
     const canSelect =
-        (shownDropDown.value.type === 'act' || shownDropDown.value.type === 'cond') &&
-        (shownDropDown.value.vals.length === 0 ||
-            shownDropDown.value.vals.includes(item.i - 1) ||
-            shownDropDown.value.vals.includes(item.i + 1));
+        (type === 'act' || type === 'cond') &&
+        (vals.length === 0 || vals.includes(item.i - 1) || vals.includes(item.i + 1));
+    const isSelected = vals.includes(item.i);
+    const isMiddleElement = isSelected && vals.includes(item.i - 1) && vals.includes(item.i + 1);
 
     if (canSelect) {
-        shownDropDown.value.vals = shownDropDown.value.vals.includes(item.i)
-            ? shownDropDown.value.vals.filter((num) => num !== item.i).sort()
-            : [...shownDropDown.value.vals, item.i].sort();
+        if (isSelected && !isMiddleElement) {
+            shownDropDown.value.vals = vals.filter((num) => num !== item.i).sort();
+        } else if (!isSelected) {
+            shownDropDown.value.vals = [...vals, item.i].sort();
+        }
     } else {
         shownDropDown.value.vals = [item.i];
     }

@@ -82,13 +82,10 @@
                         ]"
                         @dblclick="handleDblClick(element.val[0], index)"
                     >
-                        <span
-                            :class="element.val[0] === null ? 'text-[#194F76]' : 'text-[#6CB5D3]'"
-                            >{{ index + 1 }}</span
-                        >
-                        <span class="flex-1 text-[#6CB5D3]">{{
-                            element.val[0] !== null ? element.id : ''
+                        <span :class="element.val[0] === null ? 'text-[#194F76]' : 'text-[#6CB5D3]'">{{
+                            index + 1
                         }}</span>
+                        <span class="flex-1 text-[#6CB5D3]">{{ element.val[0] !== null ? element.id : '' }}</span>
                         <span
                             v-if="element.val[0] !== null"
                             :class="element.val[0] > 0 ? 'text-[#EB8246]' : 'text-[#35A1FF]'"
@@ -115,12 +112,8 @@
                         ]"
                         @dblclick="handleDblClick(element.val, index)"
                     >
-                        <span :class="element.val === null ? 'text-[#194F76]' : 'text-[#6CB5D3]'">{{
-                            index + 1
-                        }}</span>
-                        <span class="flex-1 text-[#6CB5D3]">{{
-                            element.val !== null ? element.label : ''
-                        }}</span>
+                        <span :class="element.val === null ? 'text-[#194F76]' : 'text-[#6CB5D3]'">{{ index + 1 }}</span>
+                        <span class="flex-1 text-[#6CB5D3]">{{ element.val !== null ? element.label : '' }}</span>
                         <CloseIcon
                             v-if="element.val !== null"
                             class="label-close cursor-pointer"
@@ -133,10 +126,7 @@
         <div
             class="absolute w-full h-full flex items-center justify-center transition-all duration-500"
             :class="props.isLoading ? 'opacity-100' : 'opacity-0'"
-            :style="[
-                { background: 'rgba(9, 39, 64, 0.75)' },
-                { 'z-index': props.isLoading ? '2' : -1 },
-            ]"
+            :style="[{ background: 'rgba(9, 39, 64, 0.75)' }, { 'z-index': props.isLoading ? '2' : -1 }]"
         >
             <span class="loader"></span>
         </div>
@@ -176,12 +166,8 @@ const emit = defineEmits<{
     (e: 'toggleScan', arr: string[], labelsArr: string[]): void;
 }>();
 
-const idsList = ref<
-    { id: string; val: number | null | (number | null)[]; label: string | undefined }[]
->([]);
-const valsList = ref<
-    { id: string; val: number | null | (number | null)[]; label: string | undefined }[]
->([]);
+const idsList = ref<{ id: string; val: number | null | (number | null)[]; label: string | undefined }[]>([]);
+const valsList = ref<{ id: string; val: number | null | (number | null)[]; label: string | undefined }[]>([]);
 let idsTimer: ReturnType<typeof setTimeout> | undefined;
 let valsTimer: ReturnType<typeof setTimeout> | undefined;
 const activeLabel = ref<{ i: number; state: number; label: string | undefined } | null>(null);
@@ -236,9 +222,7 @@ function handleDragEndItem() {
             valsList.value = _listTo;
         }
     }
-    document
-        .querySelectorAll('.list-group-item')
-        .forEach((el) => el.classList.remove('bg-[#0C2F4D]'));
+    document.querySelectorAll('.list-group-item').forEach((el) => el.classList.remove('bg-[#0C2F4D]'));
     if (!(originalList.value === futureList.value && originalList.value === 'idsList')) {
         clearTimeout(idsTimer);
         clearTimeout(valsTimer);
@@ -252,9 +236,7 @@ function handleDragEndItem() {
     }
 }
 function handleMoveItem(event: DragEvent) {
-    document
-        .querySelectorAll('.list-group-item')
-        .forEach((el) => el.classList.remove('bg-[#0C2F4D]'));
+    document.querySelectorAll('.list-group-item').forEach((el) => el.classList.remove('bg-[#0C2F4D]'));
     const { index } = event.draggedContext;
     const futIndex = event.relatedContext.index;
     originalIndex.value = index;
@@ -291,11 +273,7 @@ function addId(id: string, index: number) {
     const place =
         props.w.w.i === '1w-sens'
             ? valsList.value.findIndex(
-                  (el) =>
-                      el.val &&
-                      typeof el.val !== 'number' &&
-                      el.val[0] === null &&
-                      el.id === '0000000000000000',
+                  (el) => el.val && typeof el.val !== 'number' && el.val[0] === null && el.id === '0000000000000000',
               )
             : valsList.value.findIndex((el) => el.val === null);
     const values = [...valsList.value];
