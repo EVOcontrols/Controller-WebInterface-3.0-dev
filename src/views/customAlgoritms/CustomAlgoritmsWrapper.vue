@@ -339,9 +339,9 @@ async function deleteAlgoritms() {
         device: curDev.value.addr,
         index,
         ...(algoritmsForDeletion.value[0].type === 'udf-act' && { action: { type: 'none' } }),
-        ...(algoritmsForDeletion.value[0].type === 'udf-cond' && { condition: { type: 'none' } }),
+        ...(algoritmsForDeletion.value[0].type === 'udf-cond' && { condition: { operation: 'none' } }),
         ...(algoritmsForDeletion.value[0].type === 'udf-trig' && { trigger: { type: 'none' } }),
-        ...(algoritmsForDeletion.value[0].type === 'udf-trans' && { transform: { type: 'none' } }),
+        ...(algoritmsForDeletion.value[0].type === 'udf-trans' && { transform: { operation: 'none' } }),
     };
 
     try {

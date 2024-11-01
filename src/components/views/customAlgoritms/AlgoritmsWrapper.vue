@@ -154,15 +154,7 @@ function handleClick(i: number) {
         clickTimeout.value = null;
     } else {
         clickTimeout.value = setTimeout(() => {
-            if (openedAlgoritms.value.includes(i)) {
-                openedAlgoritms.value = openedAlgoritms.value.filter((el) => el !== i);
-
-                if (props.items[i].isCreating === true) {
-                    emit('creatingFinish', i);
-                }
-            } else {
-                openedAlgoritms.value.push(i);
-            }
+            toggleOpenedAlgoritms(i);
             clickTimeout.value = null;
         }, 300);
     }
@@ -170,7 +162,20 @@ function handleClick(i: number) {
 
 function handleCreatingFinish(i: number) {
     emit('creatingFinish', i);
-    handleClick(i);
+
+    toggleOpenedAlgoritms(i);
+}
+
+function toggleOpenedAlgoritms(i: number) {
+    if (openedAlgoritms.value.includes(i)) {
+        openedAlgoritms.value = openedAlgoritms.value.filter((el) => el !== i);
+
+        if (props.items[i].isCreating === true) {
+            emit('creatingFinish', i);
+        }
+    } else {
+        openedAlgoritms.value.push(i);
+    }
 }
 
 function changeLabel(index: number, e: Event, isCreating?: boolean) {
