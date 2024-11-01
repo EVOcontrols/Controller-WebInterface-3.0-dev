@@ -1,4 +1,4 @@
-import { type Config, CurKeyMap } from './types';
+import { type Config, CurKeyMap, binaryInterfaces } from './types';
 import type { Device } from '@/stores';
 
 type InterfProp = { interf: string; bus: number };
@@ -74,11 +74,11 @@ function createObjUdfAct(config: Config[], propDevice?: Device) {
         if (objectRight?.btns[0].val === 'obj') {
             ent = createEntity(valInterfType, valDevice, valObject, valBus, propDevice);
         } else {
-            ent = createIntConstWithCondition(comparisonOperation, select, enter);
+            ent = createIntConstWithCondition(comparisonOperation, select, enter, interfType);
         }
         let stopVal = {};
         if (stopValConfig?.btns[0].val === 'obj') {
-            ent = createEntity(stopValInterfType, stopValDevice, stopValObject, stopValBus, propDevice);
+            stopVal = createEntity(stopValInterfType, stopValDevice, stopValObject, stopValBus, propDevice);
         } else if (stopValConfig?.btns[0].val === 'const') {
             stopVal = createIntConst(stopValEnter);
         } else {
@@ -99,7 +99,7 @@ function createObjUdfAct(config: Config[], propDevice?: Device) {
         if (objectRight?.btns[0].val === 'obj') {
             ent = createEntity(valInterfType, valDevice, valObject, valBus, propDevice);
         } else {
-            ent = createIntConstWithCondition(comparisonOperation, select, enter);
+            ent = createIntConstWithCondition(comparisonOperation, select, enter, interfType);
         }
         const curObj = {
             value: ent,
@@ -144,7 +144,7 @@ function createObjUdfCond(config: Config[], propDevice?: Device) {
     if (objectRight?.btns[0].val === 'obj') {
         val = createEntity(valInterfType, valDevice, valObject, valBus, propDevice);
     } else {
-        val = createIntConstWithCondition(comparisonOperation, select, enter);
+        val = createIntConstWithCondition(comparisonOperation, select, enter, interfType);
     }
     let obj = {
         operation: comparisonOperation?.radioBtns[0].val,
@@ -244,7 +244,7 @@ function createObjUdfTrig(config: Config[], propDevice?: Device): any {
         if (objectRight?.btns[0].val === 'obj') {
             ent = createEntity(valInterfType, valDevice, valObject, valBus, propDevice);
         } else {
-            ent = createIntConstWithCondition(comparisonOperation, select, enter);
+            ent = createIntConstWithCondition(comparisonOperation, select, enter, interfType);
         }
         const curObj = {
             value: ent,
@@ -299,12 +299,15 @@ function createIntConstWithCondition(
     comparisonOperation: Config | undefined,
     select: Config | undefined,
     enter: Config | undefined,
+    interfaceTypeConfig: Config | undefined,
 ) {
+    const entityInterface = interfaceTypeConfig?.tabs[0].val as string;
     return {
         type: 'int-const',
         value:
             comparisonOperation?.radioBtns[0].val === 'bin-equal' ||
-            comparisonOperation?.radioBtns[0].val === 'bin-not-equal'
+            comparisonOperation?.radioBtns[0].val === 'bin-not-equal' ||
+            binaryInterfaces.includes(entityInterface)
                 ? select?.btns[0].val
                 : enter?.inputs[0].val,
     };

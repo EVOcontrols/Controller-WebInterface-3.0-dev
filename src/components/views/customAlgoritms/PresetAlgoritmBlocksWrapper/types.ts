@@ -169,6 +169,8 @@ export type BodySave = {
     trigger?: any;
 };
 
+export const binaryInterfaces = ['bin-in', 'bin-out', 'bin-var', '1w-rom', 'mb-coil', 'mb-di'];
+
 export const ORDER = [
     '1w-rom',
     '1w-sens',

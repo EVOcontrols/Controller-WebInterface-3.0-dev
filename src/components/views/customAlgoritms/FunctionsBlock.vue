@@ -93,7 +93,7 @@
         </div>
         <AlgoritmsWrapper
             ref="algoritmsWrapperRef"
-            :items="props.items || []"
+            :items="props.items"
             :checkedArr="props.selectedAlgoritms"
             :page="curPage"
             :device="props.device"
