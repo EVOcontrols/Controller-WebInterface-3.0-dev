@@ -31,6 +31,7 @@ declare global {
   const WidgetsPage: (typeof import('./src/views/panel/WidgetsPage.vue'))['default']
   const _: typeof import('./src/plugins/lodash')['_']
   const acceptHMRUpdate: typeof import('pinia')['acceptHMRUpdate']
+  const analogyInterfaces: typeof import('./src/components/views/customAlgoritms/PresetAlgoritmBlocksWrapper/types')['analogyInterfaces']
   const asyncComputed: typeof import('@vueuse/core')['asyncComputed']
   const autoResetRef: typeof import('@vueuse/core')['autoResetRef']
   const binaryInterfaces: typeof import('./src/components/views/customAlgoritms/PresetAlgoritmBlocksWrapper/types')['binaryInterfaces']
@@ -380,6 +381,7 @@ declare module 'vue' {
     readonly ORDER: UnwrapRef<typeof import('./src/components/views/customAlgoritms/PresetAlgoritmBlocksWrapper/types')['ORDER']>
     readonly _: UnwrapRef<typeof import('./src/plugins/lodash')['_']>
     readonly acceptHMRUpdate: UnwrapRef<typeof import('pinia')['acceptHMRUpdate']>
+    readonly analogyInterfaces: UnwrapRef<typeof import('./src/components/views/customAlgoritms/PresetAlgoritmBlocksWrapper/types')['analogyInterfaces']>
     readonly asyncComputed: UnwrapRef<typeof import('@vueuse/core')['asyncComputed']>
     readonly autoResetRef: UnwrapRef<typeof import('@vueuse/core')['autoResetRef']>
     readonly binaryInterfaces: UnwrapRef<typeof import('./src/components/views/customAlgoritms/PresetAlgoritmBlocksWrapper/types')['binaryInterfaces']>
@@ -717,6 +719,7 @@ declare module '@vue/runtime-core' {
     readonly ORDER: UnwrapRef<typeof import('./src/components/views/customAlgoritms/PresetAlgoritmBlocksWrapper/types')['ORDER']>
     readonly _: UnwrapRef<typeof import('./src/plugins/lodash')['_']>
     readonly acceptHMRUpdate: UnwrapRef<typeof import('pinia')['acceptHMRUpdate']>
+    readonly analogyInterfaces: UnwrapRef<typeof import('./src/components/views/customAlgoritms/PresetAlgoritmBlocksWrapper/types')['analogyInterfaces']>
     readonly asyncComputed: UnwrapRef<typeof import('@vueuse/core')['asyncComputed']>
     readonly autoResetRef: UnwrapRef<typeof import('@vueuse/core')['autoResetRef']>
     readonly binaryInterfaces: UnwrapRef<typeof import('./src/components/views/customAlgoritms/PresetAlgoritmBlocksWrapper/types')['binaryInterfaces']>

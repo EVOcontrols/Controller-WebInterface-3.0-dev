@@ -263,6 +263,7 @@ import {
     DropDownItem,
     CurKeyMap,
     BodySave,
+    analogyInterfaces,
 } from './types';
 import {
     $apiGetConfig,
@@ -331,8 +332,6 @@ const config = ref<Config[]>([]);
 const curConfigByAddr = ref<ControllerSettings>();
 const configByAddr = ref<Record<string, ControllerSettings>>({});
 
-let initBody = null;
-
 const curBody = ref<Body>();
 
 const ent1 = ref<EntBind[]>([]);
@@ -351,16 +350,28 @@ const ent1WConfig3 = ref<Mode1W[]>([]);
 
 const isUpdating = ref(false);
 
-function modifyTime(obj: any, timeConfig: any, prop: string) {
-    if (obj[prop] && obj[prop].type === 'tim-const' && timeConfig) {
-        const multiplier = timeConfig.btns[1].val === 'ms' ? 1 : timeConfig.btns[1].val === 's' ? 1000 : 60000;
+function modifyTime<T extends Record<string, any>>(
+    obj: T,
+    timeConfig: Config | undefined,
+    prop: string,
+): T | undefined {
+    if (!obj[prop] || obj[prop].type !== 'tim-const' || !timeConfig) return undefined;
 
-        return {
-            ...obj[prop],
-            value: obj[prop].value * multiplier,
-        };
-    }
-    return undefined;
+    const multiplier = timeConfig.btns[1].val === 'ms' ? 1 : timeConfig.btns[1].val === 's' ? 1000 : 60000;
+    return {
+        ...obj[prop],
+        value: obj[prop].value * multiplier,
+    };
+}
+
+function modifyAnalogyValue<T extends Record<string, any>>(obj: T): T | undefined {
+    if (!obj.value || obj.value.type !== 'int-const' || !obj.entity || !analogyInterfaces.includes(obj.entity.type))
+        return undefined;
+
+    return {
+        ...obj.value,
+        value: obj.value.value * 100,
+    };
 }
 
 async function saveData() {
@@ -378,7 +389,7 @@ async function saveData() {
     const maxTimeConfig = config.value.find((el) => el.curKey === CurKeyMap.MaxTime);
     const delayConfig = config.value.find((el) => el.curKey === CurKeyMap.Delay);
     const pauseConfig = config.value.find((el) => el.curKey === CurKeyMap.Pause);
-    const modifiedTime = {
+    const modified = {
         ...obj,
         ...(modifyTime(obj, timeConfig, 'time') && { time: modifyTime(obj, timeConfig, 'time') }),
         ...(modifyTime(obj, minTimeConfig, 'min-time') && {
@@ -393,16 +404,19 @@ async function saveData() {
         ...(modifyTime(obj, pauseConfig, 'pause') && {
             pause: modifyTime(obj, pauseConfig, 'pause'),
         }),
+        ...(modifyAnalogyValue(obj) && {
+            value: modifyAnalogyValue(obj),
+        }),
     };
 
     if (props.type.val === 'udf-act') {
-        body = { ...body, action: modifiedTime };
+        body = { ...body, action: modified };
     } else if (props.type.val === 'udf-cond') {
-        body = { ...body, condition: modifiedTime };
+        body = { ...body, condition: modified };
     } else if (props.type.val === 'udf-trans') {
-        body = { ...body, transform: modifiedTime };
+        body = { ...body, transform: modified };
     } else {
-        body = { ...body, trigger: modifiedTime };
+        body = { ...body, trigger: modified };
     }
 
     await $apiSaveUdfConfig(body);
@@ -1025,7 +1039,6 @@ async function setConfig() {
 function configCreating() {
     const device = props.device?.addr || 0;
     curBody.value = getInitCurBody(props.type.val, device);
-    initBody = curBody.value;
 }
 
 async function configEditing() {
@@ -1034,7 +1047,22 @@ async function configEditing() {
     if (!curBody.value) {
         curBody.value = data.trigger || data.condition || data.action || data.transform;
     }
-    initBody = curBody.value;
+
+    if (
+        curBody.value?.value &&
+        curBody.value.value.type === 'int-const' &&
+        curBody.value?.entity &&
+        analogyInterfaces.includes(curBody.value.entity.type) &&
+        curBody.value.value.value
+    ) {
+        curBody.value = {
+            ...curBody.value,
+            value: {
+                ...curBody.value.value,
+                value: curBody.value.value.value / 100,
+            },
+        };
+    }
     initConfig.value = JSON.stringify(config.value);
 }
 

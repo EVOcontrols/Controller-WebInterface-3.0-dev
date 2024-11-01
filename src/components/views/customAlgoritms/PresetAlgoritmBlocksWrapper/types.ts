@@ -170,6 +170,7 @@ export type BodySave = {
 };
 
 export const binaryInterfaces = ['bin-in', 'bin-out', 'bin-var', '1w-rom', 'mb-coil', 'mb-di'];
+export const analogyInterfaces = ['pwm-out', 'adc-in'];
 
 export const ORDER = [
     '1w-rom',

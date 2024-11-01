@@ -57,9 +57,7 @@
                             {{ t('parity') }}
                         </div>
                         <ButtonGroup
-                            :buttons="
-                                modbusParities.map((v) => ({ text: t(`parities.${v}`), value: v }))
-                            "
+                            :buttons="modbusParities.map((v) => ({ text: t(`parities.${v}`), value: v }))"
                             :value="devSettings.slave.parity"
                             additional-classes="px-4"
                             @change="devSettings.slave.parity = $event"
@@ -70,9 +68,7 @@
                             {{ t('stop') }}
                         </div>
                         <ButtonGroup
-                            :buttons="
-                                ([1, 2] as const).map((v) => ({ text: v.toString(), value: v }))
-                            "
+                            :buttons="([1, 2] as const).map((v) => ({ text: v.toString(), value: v }))"
                             :value="devSettings.slave.stop"
                             additional-classes="px-4"
                             @change="devSettings.slave.stop = $event"
@@ -109,9 +105,7 @@
                                         if (devSettings['rs-485'][0].mode === 'off') {
                                             if (!isAdvancedSettingsExpanded) {
                                                 rsAdvancedParams.forEach((el) => {
-                                                    fieldsInvalidStatuses.delete(
-                                                        `modbus-${el.param}`,
-                                                    );
+                                                    fieldsInvalidStatuses.delete(`modbus-${el.param}`);
                                                 });
                                             }
                                         }
@@ -140,9 +134,7 @@
                             {{ t('parity') }}
                         </div>
                         <ButtonGroup
-                            :buttons="
-                                modbusParities.map((v) => ({ text: t(`parities.${v}`), value: v }))
-                            "
+                            :buttons="modbusParities.map((v) => ({ text: t(`parities.${v}`), value: v }))"
                             :value="devSettings['rs-485'][0].parity"
                             additional-classes="px-4"
                             @change="devSettings['rs-485'][0].parity = $event"
@@ -156,9 +148,7 @@
                             {{ t('stop') }}
                         </div>
                         <ButtonGroup
-                            :buttons="
-                                ([1, 2] as const).map((v) => ({ text: v.toString(), value: v }))
-                            "
+                            :buttons="([1, 2] as const).map((v) => ({ text: v.toString(), value: v }))"
                             :value="devSettings['rs-485'][0].stop"
                             additional-classes="px-4"
                             @change="devSettings['rs-485'][0].stop = $event"
@@ -172,26 +162,16 @@
                             {{ t('numberingSystem') }}
                         </div>
                         <ButtonGroup
-                            :buttons="
-                                numberingSystems.map((v) => ({ text: v.toUpperCase(), value: v }))
-                            "
+                            :buttons="numberingSystems.map((v) => ({ text: v.toUpperCase(), value: v }))"
                             :value="curNumberingSystem"
                             additional-classes="px-4"
                             @change="curNumberingSystem = $event"
                         />
                     </div>
                     <AdvancedSettingsButton
-                        v-if="
-                            devSettings &&
-                            deviceState === 'on' &&
-                            devSettings['rs-485'][0].mode === 'variables'
-                        "
+                        v-if="devSettings && deviceState === 'on' && devSettings['rs-485'][0].mode === 'variables'"
                         :is-expanded="!!isAdvancedSettingsExpanded"
-                        :is-error="
-                            !!new Set(
-                                [...fieldsInvalidStatuses].filter((s) => s.startsWith('modbus')),
-                            ).size
-                        "
+                        :is-error="!!new Set([...fieldsInvalidStatuses].filter((s) => s.startsWith('modbus'))).size"
                         @click="isAdvancedSettingsExpanded = !isAdvancedSettingsExpanded"
                     />
                     <CollapseTransition :duration="300">
@@ -200,14 +180,18 @@
                             v-if="devSettings['rs-485'][0].mode === 'variables'"
                         >
                             <div class="table w-max mt-5">
+                                <!--                                <pre>-->
+                                <!--                                    {{ rsAdvancedParams }}-->
+                                <!--                                </pre>-->
+                                <!--                                <pre>-->
+                                <!--                                    {{ devSettings['rs-485'][0] }}-->
+                                <!--                                </pre>-->
                                 <div
                                     v-for="p in rsAdvancedParams"
                                     :key="p.param"
                                     class="table-row h-[3.43rem] align-top last:h-10"
                                 >
-                                    <div
-                                        class="text-[#6d9cc5] text-sm leading-[1.143] table-cell pr-4"
-                                    >
+                                    <div class="text-[#6d9cc5] text-sm leading-[1.143] table-cell pr-4">
                                         {{ `${p.param}:` }}
                                     </div>
                                     <UiInput
@@ -220,35 +204,22 @@
                                         initType="number"
                                         class="table-cell w-16 text-center !px-2"
                                         :min-max="[p.min, p.max]"
-                                        :status="
-                                            fieldsInvalidStatuses.has(`modbus-${p.param}`)
-                                                ? 'invalid'
-                                                : 'valid'
-                                        "
+                                        :status="fieldsInvalidStatuses.has(`modbus-${p.param}`) ? 'invalid' : 'valid'"
                                         :input-type="['int']"
                                         @status-changed="
                                             (event: InputFieldStatus) => {
-                                                if (
-                                                    devSettings?.['rs-485'][0].mode === 'variables'
-                                                ) {
+                                                if (devSettings?.['rs-485'][0].mode === 'variables') {
                                                     if (event !== 'valid') {
-                                                        fieldsInvalidStatuses.add(
-                                                            `modbus-${p.param}`,
-                                                        );
+                                                        fieldsInvalidStatuses.add(`modbus-${p.param}`);
                                                     } else {
-                                                        fieldsInvalidStatuses.delete(
-                                                            `modbus-${p.param}`,
-                                                        );
+                                                        fieldsInvalidStatuses.delete(`modbus-${p.param}`);
                                                     }
                                                 }
                                             }
                                         "
                                         @value-changed="
                                             (e?: number) => {
-                                                if (
-                                                    !devSettings ||
-                                                    devSettings['rs-485'][0].mode !== 'variables'
-                                                )
+                                                if (!devSettings || devSettings['rs-485'][0].mode !== 'variables')
                                                     return;
                                                 devSettings['rs-485'][0][p.param] = e || 0;
                                             }
@@ -299,10 +270,7 @@
                             .filter((elem) => Object.entries(elem).length > 1).length
                     "
                     :is-expanded="isAdvancedSettingsExpanded1Wire"
-                    :is-error="
-                        !!new Set([...fieldsInvalidStatuses].filter((s) => s.startsWith('1-wire')))
-                            .size
-                    "
+                    :is-error="!!new Set([...fieldsInvalidStatuses].filter((s) => s.startsWith('1-wire'))).size"
                     @click="isAdvancedSettingsExpanded1Wire = !isAdvancedSettingsExpanded1Wire"
                 />
                 <CollapseTransition :duration="300">
@@ -324,21 +292,15 @@
                                     v-if="w.mode !== 'off' && Object.entries(w).length > 1"
                                     class="table-row [&:last-child]:!h-10"
                                 >
-                                    <div
-                                        class="text-[#6d9cc5] text-sm leading-[1.143] table-cell pr-9"
-                                    >
+                                    <div class="text-[#6d9cc5] text-sm leading-[1.143] table-cell pr-9">
                                         {{ `${t('bus')} ${i + 1}` }}
                                     </div>
                                     <div
-                                        v-for="(p, y) in Object.entries(w).filter(
-                                            (el) => el[0] !== 'mode',
-                                        )"
+                                        v-for="(p, y) in Object.entries(w).filter((el) => el[0] !== 'mode')"
                                         :key="y"
                                         class="table-row h-[3.43rem] align-top"
                                     >
-                                        <div
-                                            class="text-[#6d9cc5] text-sm leading-[1.143] table-cell pr-2.5 !w-[7rem]"
-                                        >
+                                        <div class="text-[#6d9cc5] text-sm leading-[1.143] table-cell pr-2.5 !w-[7rem]">
                                             {{ p[0] }}
                                         </div>
                                         <UiInput
@@ -348,23 +310,15 @@
                                             class="table-cell w-16 text-center !px-2"
                                             :min-max="[0, 65535]"
                                             :status="
-                                                fieldsInvalidStatuses.has(`1-wire-${i}-${p[0]}`)
-                                                    ? 'invalid'
-                                                    : 'valid'
+                                                fieldsInvalidStatuses.has(`1-wire-${i}-${p[0]}`) ? 'invalid' : 'valid'
                                             "
                                             :input-type="['int']"
                                             @status-changed="
                                                 $event !== 'valid'
-                                                    ? fieldsInvalidStatuses.add(
-                                                          `1-wire-${i}-${p[0]}`,
-                                                      )
-                                                    : fieldsInvalidStatuses.delete(
-                                                          `1-wire-${i}-${p[0]}`,
-                                                      )
+                                                    ? fieldsInvalidStatuses.add(`1-wire-${i}-${p[0]}`)
+                                                    : fieldsInvalidStatuses.delete(`1-wire-${i}-${p[0]}`)
                                             "
-                                            @value-changed="
-                                                $event === undefined ? '' : (w[p[0]] = $event)
-                                            "
+                                            @value-changed="$event === undefined ? '' : (w[p[0]] = $event)"
                                         />
                                     </div>
                                 </div>
@@ -591,22 +545,14 @@ async function save(count: number = 0) {
                 }
                 if (curNumberingSystem.value !== initNumberingSystem.value) {
                     isOptionsSaving.value = true;
-                    const r = await storeCommonSettingsFile(
-                        undefined,
-                        undefined,
-                        undefined,
-                        curNumberingSystem.value,
-                    );
+                    const r = await storeCommonSettingsFile(undefined, undefined, undefined, curNumberingSystem.value);
                     if (r === 'error') throw '';
                     indexStore.setNumberingSystem(curNumberingSystem.value);
                     if (isEmpty(settingsToSave)) isOptionsSaving.value = false;
                 }
                 if (settingsToSave['1-wire']) {
                     for (let i = 0; i < settingsToSave['1-wire'].length; i++) {
-                        if (
-                            JSON.stringify(current['1-wire'][i]) !==
-                            JSON.stringify(init['1-wire'][i])
-                        ) {
+                        if (JSON.stringify(current['1-wire'][i]) !== JSON.stringify(init['1-wire'][i])) {
                             indexStore.setOWIds(props.deviceIndex, i, []);
                             indexStore.removeOWInterf(props.deviceIndex, i);
                         }
@@ -614,10 +560,7 @@ async function save(count: number = 0) {
                 }
                 if (settingsToSave['1-wire']) {
                     for (let i = 0; i < settingsToSave['1-wire'].length; i++) {
-                        if (
-                            JSON.stringify(current['1-wire'][i]) !==
-                            JSON.stringify(init['1-wire'][i])
-                        ) {
+                        if (JSON.stringify(current['1-wire'][i]) !== JSON.stringify(init['1-wire'][i])) {
                             indexStore.setOWIds(props.deviceIndex, i, []);
                             indexStore.removeOWInterf(props.deviceIndex, i);
                         }
@@ -625,10 +568,7 @@ async function save(count: number = 0) {
                 }
                 if (settingsToSave['rs-485']) {
                     for (let i = 0; i < settingsToSave['rs-485'].length; i++) {
-                        if (
-                            JSON.stringify(current['rs-485'][i]) !==
-                            JSON.stringify(init['rs-485'][i])
-                        ) {
+                        if (JSON.stringify(current['rs-485'][i]) !== JSON.stringify(init['rs-485'][i])) {
                             indexStore.removeMbInterf(props.deviceIndex);
                             if (current['rs-485'][i].mode === 'variables') {
                                 // const curDevices = devices.value;
@@ -658,20 +598,14 @@ async function save(count: number = 0) {
     }
     if (
         curDevState.value !== props.deviceState ||
-        (init &&
-            settingsToSave.slave?.addr !== undefined &&
-            settingsToSave.slave.addr !== init.slave.addr)
+        (init && settingsToSave.slave?.addr !== undefined && settingsToSave.slave.addr !== init.slave.addr)
     ) {
         await setDevState();
     }
 }
 
 function waitForInitStatus() {
-    if (
-        props.deviceState === 'init' ||
-        props.deviceState === 'no-conn' ||
-        props.deviceState === 'on'
-    ) {
+    if (props.deviceState === 'init' || props.deviceState === 'no-conn' || props.deviceState === 'on') {
         isInit.value = false;
         waitForOnStatus();
     } else {
