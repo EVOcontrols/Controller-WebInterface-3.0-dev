@@ -138,7 +138,7 @@
                 :required="true"
                 @status-changed="pageError = $event === 'invalid' || $event === 'empty'"
                 @value-changed="
-                    (v) => {
+                    (v: number | undefined) => {
                         const value = v === undefined ? '' : v - 1;
                         emit('pageInput', value);
                     }
