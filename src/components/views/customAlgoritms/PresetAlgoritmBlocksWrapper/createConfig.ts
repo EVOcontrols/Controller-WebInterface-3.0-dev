@@ -30,7 +30,7 @@ export const createConfig = async (
         (curBody: Body) => createBitOperationConfig(curBody, typeVal, t),
         (curBody: Body) => createActionConfig(curBody, typeVal, t, propDevice),
         (curBody: Body) => createComparisonValConfig(curBody, typeVal, t),
-        (curBody: Body) => createOperationBinConfig(curBody, t),
+        (curBody: Body) => createOperationBinConfig(curBody, typeVal, t),
         (curBody: Body) => createValueConfig(curBody, cbParseEntity),
         (curBody: Body) => createStopValueConfig(curBody, typeVal, t),
         (curBody: Body) => createIntConstStopValConfig(curBody, typeVal, t),
@@ -404,6 +404,9 @@ function createComparisonValConfig(curBodyVal: Body, typeVal: UDF, t: (key: stri
     if (!curBodyVal['value']) {
         return null;
     }
+    if (shouldHideValue(curBodyVal, typeVal)) {
+        return null;
+    }
 
     return {
         curKey: CurKeyMap.ObjectRight,
@@ -430,8 +433,11 @@ function createComparisonValConfig(curBodyVal: Body, typeVal: UDF, t: (key: stri
     };
 }
 
-function createOperationBinConfig(curBodyVal: Body, t: (key: string) => string): Config | null {
+function createOperationBinConfig(curBodyVal: Body, typeVal: UDF, t: (key: string) => string): Config | null {
     if (!curBodyVal['value'] || curBodyVal['value']['type'] !== 'int-const' || !curBodyVal.entity) {
+        return null;
+    }
+    if (shouldHideValue(curBodyVal, typeVal)) {
         return null;
     }
 
@@ -887,4 +893,12 @@ function replaceTitlesRight(titles: string[]): string[] {
 
 function replaceTitlesResult(titles: string[]): string[] {
     return titles.map((title) => title.replace(/преобразования/i, 'результата').replace(/transform/i, 'result'));
+}
+
+function shouldHideValue(curBodyVal: Body, typeVal: UDF): boolean {
+    return !!(
+        (typeVal === 'udf-cond' || typeVal === 'udf-trig') &&
+        curBodyVal['operation'] &&
+        (curBodyVal['operation'] === 'error' || curBodyVal['operation'] === 'non-error')
+    );
 }

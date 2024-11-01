@@ -376,6 +376,15 @@ function modifyAnalogyValue<T extends Record<string, any>>(obj: T, prop: string)
     };
 }
 
+function modifyValueWithErrorOperation<T extends Record<string, any>>(obj: T, prop: string): T | undefined {
+    if (!obj[prop] || (obj.operation !== 'error' && obj.operation !== 'non-error')) return undefined;
+
+    return {
+        ...obj[prop],
+        value: 0,
+    };
+}
+
 async function saveData() {
     isSaving.value = true;
 
@@ -411,6 +420,9 @@ async function saveData() {
         }),
         ...(modifyAnalogyValue(obj, 'stop-val') && {
             'stop-val': modifyAnalogyValue(obj, 'stop-val'),
+        }),
+        ...(modifyValueWithErrorOperation(obj, 'value') && {
+            value: modifyValueWithErrorOperation(obj, 'value'),
         }),
     };
 
