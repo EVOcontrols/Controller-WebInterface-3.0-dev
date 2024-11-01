@@ -123,6 +123,7 @@ export type Config = {
         subtitle?: string;
         isError: boolean;
         inline?: boolean;
+        disabled?: boolean;
     }[];
     dropDowns: {
         type: DropDownTypes;

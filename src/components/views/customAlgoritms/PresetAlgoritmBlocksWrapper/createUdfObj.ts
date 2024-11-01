@@ -250,7 +250,7 @@ function createObjUdfTrig(config: Config[], propDevice?: Device): any {
             value: ent,
             unsigned: false,
             operation: comparisonOperation?.radioBtns[0].val,
-            histeresis: 0,
+            hysteresis: 0,
             time: configureTime(time),
         };
         obj = { ...obj, ...curObj };

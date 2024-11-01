@@ -641,7 +641,7 @@ function createHysteresisConfig(curBodyVal: Body, typeVal: UDF, t: (key: string)
         tabs: [],
         radioBtns: [],
         checkBoxes: [],
-        inputs: [{ val: curBodyVal['hysteresis'], min: -32768, max: 32767, isError: false }],
+        inputs: [{ val: curBodyVal['hysteresis'], min: -32768, max: 32767, isError: false, disabled: true }],
         dropDowns: [],
     };
 }
