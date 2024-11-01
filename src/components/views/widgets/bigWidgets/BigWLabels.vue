@@ -205,9 +205,9 @@
                             {{
                                 s === null
                                     ? '\u2013'
-                                    : s <= 15000
+                                    : s <= 1000
                                     ? `${s} ${t('ms')}`
-                                    : s > 15000 && s % 60000 === 0
+                                    : s > 1000 && s % 60000 === 0
                                     ? `${s / 60000} ${t('min')}`
                                     : `${s / 1000} ${t('s')}`
                             }}
@@ -401,10 +401,10 @@ function handleDblClick(s: number | null, index: number, field: 'label' | 'value
         let newS = s;
         let units: 'ms' | 's' | 'min' | undefined = undefined;
         if (s) {
-            if (s <= 15000) {
+            if (s <= 1000) {
                 units = 'ms';
                 newS = s;
-            } else if (s > 15000 && s % 60000 === 0) {
+            } else if (s > 1000 && s % 60000 === 0) {
                 units = 'min';
                 newS = s / 60000;
             } else {
