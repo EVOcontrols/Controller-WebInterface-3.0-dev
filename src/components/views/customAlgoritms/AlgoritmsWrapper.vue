@@ -18,6 +18,7 @@
                     v-for="(item, i) in props.items"
                     :key="i"
                     :item="item"
+                    :side="props.side"
                     :checked="props.checkedArr.includes(props.items[i + props.page * funcsNumberPerPage])"
                     :index="i + props.page * funcsNumberPerPage"
                     :isActive="!!(activeLabel && activeLabel.i === i + props.page * funcsNumberPerPage)"
@@ -101,6 +102,7 @@ const isAborted = indexStore.getApi().isAborted;
 const { funcsNumberPerPage, funcLabels } = storeToRefs(funcsStore);
 
 const props = defineProps<{
+    side: 'l' | 'r';
     items: Algoritm[];
     checkedArr: Algoritm[];
     page: number;

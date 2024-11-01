@@ -94,6 +94,7 @@
                 :type="props.curAction"
                 :device="props.device"
                 :index="index"
+                :side="props.side"
                 :isCreating="!!props.item.isCreating"
                 @creatingFinish="emit('creatingFinish')"
             />
@@ -118,6 +119,7 @@ const api = indexStore.getApi().api;
 const isAborted = indexStore.getApi().isAborted;
 
 const props = defineProps<{
+    side: 'l' | 'r';
     checked: boolean;
     item: { val: 0 | 1 | null; label: string; isCreating?: boolean };
     index: number;

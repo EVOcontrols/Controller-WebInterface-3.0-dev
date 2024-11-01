@@ -6,7 +6,8 @@
     >
         <div
             v-if="microLoading"
-            class="p-2 flex items-center justify-center absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"
+            class="p-2 flex items-center justify-center fixed top-[22rem]"
+            :class="{ 'left-1/2 -translate-x-1/2 -ml-[4rem]': props.side === 'l', 'right-[3rem]': props.side === 'r' }"
         >
             <span
                 v-html="spinner"
@@ -286,6 +287,7 @@ const timeoutDev = 10000;
 const funcStore = useFuncsStore();
 
 const props = defineProps<{
+    side: 'l' | 'r';
     type: PropsTypes;
     device?: Device;
     index: number;

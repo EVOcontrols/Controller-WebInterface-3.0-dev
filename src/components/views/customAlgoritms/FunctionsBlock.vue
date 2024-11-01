@@ -103,6 +103,7 @@
             :page="curPage"
             :device="props.device"
             :curAction="props.curAction"
+            :side="props.side"
             @selectAlgoritm="
                 (value: boolean, index: Algoritm) => {
                     emit('selectAlgoritm', value, index);
@@ -172,6 +173,7 @@ const { devCapabs } = storeToRefs(indexStore);
 const { funcsNumberPerPage } = storeToRefs(funcsStore);
 
 const props = defineProps<{
+    side: 'l' | 'r';
     items: Algoritm[];
     selectedAlgoritms: Algoritm[];
     isAllChecked: boolean;

@@ -66,6 +66,7 @@
         </div>
         <div class="flex mt-6 gap-3 flex-1">
             <FunctionsBlock
+                :side="'l'"
                 :items="createAlgoritm1 ? algoritms1Copy : algoritms1"
                 :selectedAlgoritms="selectedAlgoritmsLeft"
                 :isAllChecked="isAllCheckedLeft"
@@ -112,6 +113,7 @@
                 @pageInput="(v: string | number) => changePage('l', v)"
             />
             <FunctionsBlock
+                :side="'r'"
                 :items="createAlgoritm2 ? algoritms2Copy : algoritms2"
                 :selectedAlgoritms="selectedAlgoritmsRight"
                 :isAllChecked="isAllCheckedRight"
