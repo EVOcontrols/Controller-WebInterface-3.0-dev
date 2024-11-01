@@ -49,7 +49,7 @@ function createObjUdfAct(config: Config[], propDevice?: Device) {
         if (objectRight?.btns[0].val === 'obj') {
             ent = createEntity(valInterfType, valDevice, valObject, valBus, propDevice);
         } else {
-            ent = createIntConst(enter);
+            ent = createIntConstWithBinary(select, enter, interfType);
         }
 
         let stopVal = {};
@@ -230,7 +230,7 @@ function createObjUdfTrig(config: Config[], propDevice?: Device): any {
         if (objectRight?.btns[0].val === 'obj') {
             ent = createEntity(valInterfType, valDevice, valObject, valBus, propDevice);
         } else {
-            ent = createIntConst(enter);
+            ent = createIntConstWithBinary(select, enter, interfType);
         }
         const curObj = {
             value: ent,
@@ -292,6 +292,18 @@ function createIntConst(config: Config | undefined) {
     return {
         type: 'int-const',
         value: config?.inputs[0].val,
+    };
+}
+
+function createIntConstWithBinary(
+    select: Config | undefined,
+    enter: Config | undefined,
+    interfaceTypeConfig: Config | undefined,
+) {
+    const entityInterface = interfaceTypeConfig?.tabs[0].val as string;
+    return {
+        type: 'int-const',
+        value: binaryInterfaces.includes(entityInterface) ? select?.btns[0].val : enter?.inputs[0].val,
     };
 }
 
