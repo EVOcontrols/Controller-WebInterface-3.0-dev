@@ -18,6 +18,13 @@ jobs:
         run: |
           npm ci
 
+      - name: Load .env variables
+        run: |
+          set -o allexport
+          source .env
+          set +o allexport
+        shell: bash
+
       - name: Build project
         run: |
           npm run build
@@ -25,7 +32,8 @@ jobs:
       - name: Create zip archive
         run: |
           mkdir -p artifacts
-          zip -r "artifacts/dist_${GITHUB_REF##*/}.zip" ./dist
+          TIMESTAMP=$(date +%s%3N)
+          zip -r "artifacts/dist_${VITE_INTERFACE_VERSION}_${VITE_IP}_${TIMESTAMP}.zip" ./dist
 
       - name: Upload zip as artifact
         uses: actions/upload-artifact@v3
