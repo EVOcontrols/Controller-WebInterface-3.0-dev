@@ -19,10 +19,13 @@ jobs:
           npm ci
 
       - name: Load .env variables
+        id: load_env
         run: |
           set -o allexport
           source .env
           set +o allexport
+          echo "VITE_INTERFACE_VERSION=${VITE_INTERFACE_VERSION}" >> $GITHUB_ENV
+          echo "VITE_IP=${VITE_IP}" >> $GITHUB_ENV
           echo "Loaded VITE_INTERFACE_VERSION=$VITE_INTERFACE_VERSION"
           echo "Loaded VITE_IP=$VITE_IP"
         shell: bash
@@ -34,7 +37,7 @@ jobs:
       - name: Create zip archive
         run: |
           TIMESTAMP=$(date +%s%3N)
-          ZIP_NAME="dist_${VITE_INTERFACE_VERSION}_${VITE_IP}_${TIMESTAMP}.zip"
+          ZIP_NAME="dist_${{ env.VITE_INTERFACE_VERSION }}_${{ env.VITE_IP }}_${TIMESTAMP}.zip"
           echo "zip name: $ZIP_NAME"
           zip -r "$ZIP_NAME" ./dist
 
