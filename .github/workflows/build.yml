@@ -24,10 +24,10 @@ jobs:
           set -o allexport
           source .env
           set +o allexport
-          echo "VITE_INTERFACE_VERSION=${VITE_INTERFACE_VERSION}" >> $GITHUB_ENV
-          echo "VITE_IP=${VITE_IP}" >> $GITHUB_ENV
-          echo "Loaded VITE_INTERFACE_VERSION=$VITE_INTERFACE_VERSION"
-          echo "Loaded VITE_IP=$VITE_IP"
+          echo "VITE_INTERFACE_VERSION=$(echo $VITE_INTERFACE_VERSION | tr -d '\r')" >> $GITHUB_ENV
+          echo "VITE_IP=$(echo $VITE_IP | tr -d '\r')" >> $GITHUB_ENV
+          echo "Loaded VITE_INTERFACE_VERSION=${VITE_INTERFACE_VERSION}"
+          echo "Loaded VITE_IP=${VITE_IP}"
         shell: bash
 
       - name: Build project
@@ -45,4 +45,4 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: build-zip
-          path: "*.zip"
+          path: "$ZIP_NAME"
