@@ -23,6 +23,8 @@ jobs:
           set -o allexport
           source .env
           set +o allexport
+          echo "Loaded VITE_INTERFACE_VERSION=$VITE_INTERFACE_VERSION"
+          echo "Loaded VITE_IP=$VITE_IP"
         shell: bash
 
       - name: Build project
@@ -31,12 +33,13 @@ jobs:
 
       - name: Create zip archive
         run: |
-          mkdir -p artifacts
           TIMESTAMP=$(date +%s%3N)
-          zip -r "artifacts/dist_${VITE_INTERFACE_VERSION}_${VITE_IP}_${TIMESTAMP}.zip" ./dist
+          ZIP_NAME="dist_${VITE_INTERFACE_VERSION}_${VITE_IP}_${TIMESTAMP}.zip"
+          echo "zip name: $ZIP_NAME"
+          zip -r "$ZIP_NAME" ./dist
 
       - name: Upload zip as artifact
         uses: actions/upload-artifact@v3
         with:
           name: build-zip
-          path: artifacts/
+          path: "*.zip"
