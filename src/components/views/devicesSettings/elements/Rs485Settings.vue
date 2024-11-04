@@ -71,7 +71,6 @@
                         v-show="isAdvancedSettingsExpanded"
                         class=""
                     >
-                        {{ props.settings.advanced }}
                         <div class="table w-max mt-5">
                             <div
                                 v-for="p in rsAdvancedParams[props.settings.mode as 'variables' | 'ext-devs']"

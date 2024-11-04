@@ -1042,7 +1042,6 @@ async function parseMultiSelect(
 async function setConfig() {
     if (!curBody.value) return;
 
-    console.log('curBody.value', JSON.parse(JSON.stringify(curBody.value)));
     const resultConfig = await createConfig(
         curBody.value,
         props.type.val,
@@ -1053,7 +1052,6 @@ async function setConfig() {
         props.device,
     );
 
-    console.log('resultConfig.sort()', JSON.parse(JSON.stringify(resultConfig.sort())));
     config.value = resultConfig.sort();
     microLoading.value = false;
 }
