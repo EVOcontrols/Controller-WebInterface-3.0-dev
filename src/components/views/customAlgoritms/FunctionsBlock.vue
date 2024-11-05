@@ -188,7 +188,7 @@ const props = defineProps<{
 }>();
 
 const emit = defineEmits<{
-    (e: 'deleteAlgoritm', indexes: Algoritm[], index: number): void;
+    (e: 'deleteAlgoritm', indexes: Algoritm[], index: number, smallIndex: number): void;
     (e: 'addAlgoritm', index: number, label: string | undefined): void;
     (e: 'selectAlgoritm', value: boolean, index: Algoritm): void;
     (e: 'selectAllAlgoritms', value: boolean): void;
@@ -236,8 +236,8 @@ const pages = computed<number>(() => {
     return Math.ceil(capabs[props.curAction.val] / funcsNumberPerPage.value);
 });
 
-function deleteAlgoritm(indexes: Algoritm[], index: number) {
-    emit('deleteAlgoritm', indexes, index);
+function deleteAlgoritm(indexes: Algoritm[], index: number, smallIndex: number) {
+    emit('deleteAlgoritm', indexes, index, smallIndex);
 }
 
 function addNewAlgoritm(event: Event) {

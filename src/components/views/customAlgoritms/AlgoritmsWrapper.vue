@@ -32,10 +32,7 @@
                     "
                     @deleteAlgoritm="
                         () => {
-                            deleteAlgoritm(
-                                [props.items[i + props.page * funcsNumberPerPage]],
-                                i + props.page * funcsNumberPerPage,
-                            );
+                            deleteAlgoritm([props.items[i]], i + props.page * funcsNumberPerPage, i);
                         }
                     "
                     @oneClick="handleClick(i)"
@@ -116,7 +113,7 @@ const props = defineProps<{
 
 const emit = defineEmits<{
     (e: 'selectAlgoritm', value: boolean, index: Algoritm): void;
-    (e: 'deleteAlgoritm', indexes: Algoritm[], index: number): void;
+    (e: 'deleteAlgoritm', indexes: Algoritm[], index: number, smallIndex: number): void;
     (e: 'addAlgoritm', index: number, label: string | undefined): void;
     (e: 'creatingFinish', index: number): void;
 }>();
@@ -140,8 +137,8 @@ function selectAlgoritm(value: boolean, index: Algoritm) {
     emit('selectAlgoritm', value, index);
 }
 
-function deleteAlgoritm(indexes: Algoritm[], index: number) {
-    emit('deleteAlgoritm', indexes, index);
+function deleteAlgoritm(indexes: Algoritm[], index: number, smallIndex: number) {
+    emit('deleteAlgoritm', indexes, index, smallIndex);
 }
 
 function handleDblClick(index: number, event: Event) {
