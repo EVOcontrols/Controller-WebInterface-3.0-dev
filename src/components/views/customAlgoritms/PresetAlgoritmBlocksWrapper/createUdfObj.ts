@@ -147,13 +147,13 @@ function createObjUdfCond(config: Config[], propDevice?: Device) {
         val = createIntConstWithCondition(comparisonOperation, select, enter, interfType);
     }
     let obj = {
-        operation: comparisonOperation?.radioBtns[0].val,
+        operation: comparisonOperation?.radioBtns[0].val || 'bin-equal',
         'init-state': statusStart?.btns[0].val === 'on' ? 1 : 0,
         entity: ent,
         value: val,
         time: configureTime(time),
     };
-    const operation = comparisonOperation?.radioBtns[0].val;
+    const operation = comparisonOperation?.radioBtns[0].val || 'bin-equal';
     if (
         operation === 'less' ||
         operation === 'less-eq' ||
@@ -249,7 +249,7 @@ function createObjUdfTrig(config: Config[], propDevice?: Device): any {
         const curObj = {
             value: ent,
             unsigned: false,
-            operation: comparisonOperation?.radioBtns[0].val,
+            operation: comparisonOperation?.radioBtns[0].val || 'bin-equal',
             hysteresis: 0,
             time: configureTime(time),
         };
