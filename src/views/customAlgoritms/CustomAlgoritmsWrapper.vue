@@ -506,8 +506,8 @@ function retryGetData(timeout: number) {
     }, timeout);
 }
 
-function mapToAlgoritms(state: any, labels: string[]): Algoritm[] {
-    return state.map((val: Val, idx: number) => ({ val, label: labels[idx] || '' }));
+function mapToAlgoritms(state: any, labels: string[], correctiveIndex: number): Algoritm[] {
+    return state.map((val: Val, idx: number) => ({ val, label: labels[idx + correctiveIndex] || '' }));
 }
 
 async function getData() {
@@ -549,8 +549,8 @@ async function getData() {
                 },
             ],
         });
-        algoritms1.value = mapToAlgoritms(data.entities[0].state, curLabelsLeft);
-        algoritms2.value = mapToAlgoritms(data.entities[1].state, curLabelsRight);
+        algoritms1.value = mapToAlgoritms(data.entities[0].state, curLabelsLeft, leftIndex);
+        algoritms2.value = mapToAlgoritms(data.entities[1].state, curLabelsRight, rightIndex);
 
         retryGetData(isDev ? timeoutDev / 2 : 1000);
     } catch (error) {
