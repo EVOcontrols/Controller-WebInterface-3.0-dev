@@ -182,9 +182,23 @@ function createObjUdfTrans(config: Config[], propDevice?: Device) {
     const valObject = config.find((el) => el.curKey === CurKeyMap.ValueObject);
     const select = config.find((el) => el.curKey === CurKeyMap.Select);
     const enter = config.find((el) => el.curKey === CurKeyMap.Enter);
+    const valLeft = config.find((el) => el.curKey === CurKeyMap.ComparisonValueLeft);
+    const valRight = config.find((el) => el.curKey === CurKeyMap.ComparisonValueRight);
+    const enterLeft = config.find((el) => el.curKey === CurKeyMap.EnterLeft);
+    const enterRight = config.find((el) => el.curKey === CurKeyMap.EnterRight);
 
-    const left = createEntity(interfType, device, object, bus, propDevice);
-    const right = createEntity(interfaceRight, deviceRight, objectRight, select, propDevice);
+    let left = {};
+    if (valLeft?.btns[0].val === 'obj') {
+        left = createEntity(interfType, device, object, bus, propDevice);
+    } else {
+        left = createIntConstEnter(enterLeft);
+    }
+    let right = {};
+    if (valRight?.btns[0].val === 'obj') {
+        right = createEntity(interfaceRight, deviceRight, objectRight, select, propDevice);
+    } else {
+        right = createIntConstEnter(enterRight);
+    }
     const result = createEntity(enter, valInterfType, valDevice, valObject, propDevice);
 
     return {
@@ -322,6 +336,13 @@ function createIntConstWithCondition(
             binaryInterfaces.includes(entityInterface)
                 ? select?.btns[0].val
                 : enter?.inputs[0].val,
+    };
+}
+
+function createIntConstEnter(enter: Config | undefined) {
+    return {
+        type: 'int-const',
+        value: enter?.inputs[0].val || 1,
     };
 }
 

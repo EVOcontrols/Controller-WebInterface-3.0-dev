@@ -222,4 +222,8 @@ export const enum CurKeyMap {
     MinTime = 33,
     MaxTime = 34,
     ComparisonOperation = 45,
+    ComparisonValueLeft = 46,
+    ComparisonValueRight = 47,
+    EnterLeft = 48,
+    EnterRight = 49,
 }

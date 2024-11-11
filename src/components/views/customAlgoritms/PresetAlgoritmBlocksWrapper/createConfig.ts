@@ -21,8 +21,12 @@ export const createConfig = async (
     const generators = [
         (curBody: Body) => createInitStateConfig(curBody, t),
         (curBody: Body) => createEntityConfig(curBody, typeVal, cbParseEntity),
+        (curBody: Body) => createLeftConfigChoose(curBody, typeVal, t),
         (curBody: Body) => createLeftConfig(curBody, typeVal, cbParseEntity),
+        (curBody: Body) => createLeftConfigEnter(curBody, typeVal, t),
+        (curBody: Body) => createRightConfigChoose(curBody, typeVal, t),
         (curBody: Body) => createRightConfig(curBody, typeVal, cbParseEntity),
+        (curBody: Body) => createRightConfigEnter(curBody, typeVal, t),
         (curBody: Body) => createResultConfig(curBody, typeVal, cbParseEntity),
         (curBody: Body) => createCompareConfig(curBody, typeVal, t),
         (curBody: Body) => createComparisonOperationConfig(curBody, typeVal, t),
@@ -122,6 +126,36 @@ async function createEntityConfig(
     return configs;
 }
 
+function createLeftConfigChoose(curBodyVal: Body, typeVal: UDF, t: (key: string) => string): Config | null {
+    if (typeVal !== 'udf-trans' || !curBodyVal.left || curBodyVal.left.type === 'prev-value') {
+        return null;
+    }
+
+    return {
+        curKey: CurKeyMap.ComparisonValueLeft,
+        queue: [
+            { name: 'title', index: 0 },
+            { name: 'btns', index: 0 },
+        ],
+        titles: [t('titles.comparisonValLeft')],
+        btns: [
+            {
+                vals: [
+                    { label: t('btns.const'), val: 'const', class: 'w-[109px]' },
+                    { label: t('btns.obj'), val: 'obj', class: 'w-[109px]' },
+                ],
+                val: curBodyVal['left'].type === 'int-const' ? 'const' : 'obj',
+                disabled: false,
+            },
+        ],
+        tabs: [],
+        radioBtns: [],
+        checkBoxes: [],
+        inputs: [],
+        dropDowns: [],
+    };
+}
+
 async function createLeftConfig(
     curBodyVal: Body,
     typeVal: UDF,
@@ -137,6 +171,65 @@ async function createLeftConfig(
     return configs.map((el) => ({ ...el, titles: replaceTitlesLeft(el.titles) }));
 }
 
+function createLeftConfigEnter(curBodyVal: Body, typeVal: UDF, t: (key: string) => string): Config | null {
+    if (typeVal !== 'udf-trans' || !curBodyVal.left || curBodyVal.left.type !== 'int-const') {
+        return null;
+    }
+
+    return {
+        curKey: CurKeyMap.EnterLeft,
+        queue: [
+            { name: 'title', index: 0 },
+            { name: 'input', index: 0 },
+        ],
+        titles: [t('titles.enter')],
+        btns: [],
+        tabs: [],
+        radioBtns: [],
+        checkBoxes: [],
+        inputs: [
+            {
+                subtitle: t('titles.value'),
+                val: curBodyVal['left'].value || 0,
+                min: -32768,
+                max: 32767,
+                isError: false,
+            },
+        ],
+        dropDowns: [],
+    };
+}
+
+function createRightConfigChoose(curBodyVal: Body, typeVal: UDF, t: (key: string) => string): Config | null {
+    if (typeVal !== 'udf-trans' || !curBodyVal.right || curBodyVal.right.type === 'prev-value') {
+        return null;
+    }
+
+    return {
+        curKey: CurKeyMap.ComparisonValueRight,
+        queue: [
+            { name: 'title', index: 0 },
+            { name: 'btns', index: 0 },
+        ],
+        titles: [t('titles.comparisonValRight')],
+        btns: [
+            {
+                vals: [
+                    { label: t('btns.const'), val: 'const', class: 'w-[109px]' },
+                    { label: t('btns.obj'), val: 'obj', class: 'w-[109px]' },
+                ],
+                val: curBodyVal['right'].type === 'int-const' ? 'const' : 'obj',
+                disabled: false,
+            },
+        ],
+        tabs: [],
+        radioBtns: [],
+        checkBoxes: [],
+        inputs: [],
+        dropDowns: [],
+    };
+}
+
 async function createRightConfig(
     curBodyVal: Body,
     typeVal: UDF,
@@ -150,6 +243,35 @@ async function createRightConfig(
     if (!configs || !configs.length) return null;
 
     return configs.map((el) => ({ ...el, curKey: el.curKey + 4, titles: replaceTitlesRight(el.titles) }));
+}
+
+function createRightConfigEnter(curBodyVal: Body, typeVal: UDF, t: (key: string) => string): Config | null {
+    if (typeVal !== 'udf-trans' || !curBodyVal.right || curBodyVal.right.type !== 'int-const') {
+        return null;
+    }
+
+    return {
+        curKey: CurKeyMap.EnterRight,
+        queue: [
+            { name: 'title', index: 0 },
+            { name: 'input', index: 0 },
+        ],
+        titles: [t('titles.enter')],
+        btns: [],
+        tabs: [],
+        radioBtns: [],
+        checkBoxes: [],
+        inputs: [
+            {
+                subtitle: t('titles.value'),
+                val: curBodyVal['right'].value || 0,
+                min: -32768,
+                max: 32767,
+                isError: false,
+            },
+        ],
+        dropDowns: [],
+    };
 }
 
 async function createResultConfig(
