@@ -605,58 +605,41 @@ export const useIndexStore = defineStore('indexStore', () => {
         bus?: number,
     ) {
         const newArr = [...labels.value];
-        const arr = [];
-        for (let i = 0; i < labelsFileLength; i++) {
-            arr.push('');
+        const emptyArr = Array(labelsFileLength).fill('');
+
+        if (!newArr[d]) {
+            newArr[d] = [];
         }
-        if (!newArr.length || !newArr[d]) {
-            if (d) {
-                for (let i = newArr.length; i < d; i++) {
-                    newArr.push(null);
-                }
+
+        const labelsVal = labelsArr && labelsArr.length > 0 ? labelsArr : emptyArr;
+        const obj = { interf, val: [labelsVal] as [string[] | []] };
+
+        const interfObj = newArr[d]!.find((el) => el.interf === interf);
+
+        if (interfObj) {
+            const val = [...interfObj.val];
+
+            const targetBusIndex = bus ?? 0;
+            while (val.length <= targetBusIndex) {
+                val.push([]);
             }
-            const val = [];
-            if (bus) {
-                for (let i = 0; i < bus; i++) {
-                    val.push([]);
-                }
-            }
-            const labelsVal = [];
-            labelsVal.push(...(labelsArr?.length ? labelsArr : arr));
-            val.push(labelsVal);
-            const obj = { interf: interf as string, val: val as [[] | string[]] };
-            if (!newArr.length) {
-                newArr.push([obj]);
-            } else {
-                newArr[d] = [obj];
-            }
+
+            val[targetBusIndex] = labelsVal;
+            interfObj.val = val as [string[] | []];
         } else {
-            const interfObj = newArr[d]?.find((el) => el.interf === interf);
-            if (interfObj) {
-                const val = [...interfObj.val];
-                if (bus && val.length < bus) {
-                    for (let i = val.length; i < bus; i++) {
-                        val.push([]);
-                    }
-                }
-                const labelsVal = bus ? val[bus] : val[0];
-                val[bus || 0] = labelsVal;
-                interfObj.val = val as [string[] | []];
-            } else {
-                const val = [];
-                if (bus) {
-                    for (let i = 0; i < bus; i++) {
-                        val.push([]);
-                    }
-                }
-                const labelsVal = [];
-                labelsVal.push(...(labelsArr ? labelsArr : arr));
-                val.push(labelsVal);
-                const obj = { interf: interf as string, val: val as [[] | string[]] };
-                newArr[d] ? newArr[d]?.push(obj) : (newArr[d] = [obj]);
+            const val = [];
+            const targetBusIndex = bus ?? 0;
+
+            for (let i = 0; i < targetBusIndex; i++) {
+                val.push([]);
             }
+            val[targetBusIndex] = labelsVal;
+            obj.val = val as [string[] | []];
+
+            newArr[d]!.push(obj);
         }
-        labels.value = [...newArr] as [
+
+        labels.value = newArr as [
             | {
                   interf: string;
                   val: [string[] | []];
