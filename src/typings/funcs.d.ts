@@ -84,7 +84,11 @@ export type Body = {
         | '/'
         | '%'
         | '<<'
-        | '>>';
+        | '>>'
+        | '>'
+        | '<'
+        | '>='
+        | '<=';
     time?: Time;
     hysteresis?: 0;
     delay?: Time;
