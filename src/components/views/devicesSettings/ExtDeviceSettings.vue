@@ -314,7 +314,7 @@
                                             "
                                             :input-type="['int']"
                                             @status-changed="
-                                                ($event) => {
+                                                ($event: InputFieldStatus) => {
                                                     if (devSettings?.['1-wire'][i].mode === 'off') return;
                                                     $event !== 'valid' && w.mode !== 'off'
                                                         ? fieldsInvalidStatuses.add(`1-wire-${i}-${p[0]}`)
