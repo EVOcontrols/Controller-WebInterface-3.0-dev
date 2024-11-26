@@ -46,5 +46,5 @@ jobs:
       - name: Upload zip as artifact
         uses: actions/upload-artifact@v3
         with:
-          name: build-zip
+          name: ${{ env.ZIP_NAME }}
           path: ${{ env.ZIP_NAME }}
