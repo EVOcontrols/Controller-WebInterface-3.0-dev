@@ -34,9 +34,16 @@ jobs:
         run: |
           npm run build
 
-      - name: Create and upload zip archive
+      - name: Add timestamp and create zip name
+        id: set_zip_name
+        run: |
+          TIMESTAMP=$(date +%s%3N)
+          ZIP_NAME="dist_${{ env.VITE_INTERFACE_VERSION }}_${{ env.VITE_IP }}_${TIMESTAMP}.zip"
+          echo "ZIP_NAME=$ZIP_NAME" >> $GITHUB_ENV
+          echo "::set-output name=zip_name::$ZIP_NAME"
+
+      - name: Upload zip archive
         uses: actions/upload-artifact@v3
         with:
-          name: dist_${{ env.VITE_INTERFACE_VERSION }}_${{ env.VITE_IP }}_$(date +%s%3N).zip
-          path: |
-            dist
+          name: ${{ steps.set_zip_name.outputs.zip_name }}
+          path: dist
