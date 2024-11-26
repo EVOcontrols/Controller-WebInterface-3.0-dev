@@ -31,7 +31,7 @@ export default defineConfig({
         host: true,
         proxy: {
             '^/(api|user/)': {
-                target: 'http://192.168.0.30',
+                target: 'http://65.21.176.66:49163',
                 configure: (proxy) => {
                     proxy.on('proxyReq', (proxyReq) => {
                         if (proxyReq.method === 'POST') {

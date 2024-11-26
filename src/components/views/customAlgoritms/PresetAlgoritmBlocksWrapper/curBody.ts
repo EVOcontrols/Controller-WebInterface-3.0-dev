@@ -17,7 +17,7 @@ export const getInitCurBody = (val: UDF, device: number): Body => {
                 },
                 'cond-idx': 0,
                 'cond-qty': 0,
-                'start-on-cond': true,
+                'start-on-cond': false,
                 'cond-logic': 'or',
                 'init-state': 1,
                 value: {
@@ -29,12 +29,10 @@ export const getInitCurBody = (val: UDF, device: number): Body => {
                     value: 0,
                 },
                 'stop-val': {
-                    type: 'pwm-out',
-                    device,
-                    index: 0,
+                    type: 'prev-value',
                 },
-                'stop-on-trig': true,
-                'stop-on-cond': true,
+                'stop-on-trig': false,
+                'stop-on-cond': false,
             };
         case 'udf-cond':
             return {

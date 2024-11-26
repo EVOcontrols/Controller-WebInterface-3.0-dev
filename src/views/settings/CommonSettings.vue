@@ -6,29 +6,19 @@
                     v-for="(rows, topic) in fields"
                     :key="topic"
                     class="mt-8 mx-8 flex flex-col gap-y-6 border-b border-[#0b3d68] last:border-none"
-                    :class="[
-                        topic === 'rtc' ? 'pb-4' : 'pb-10',
-                        { hidden: topic === 'gsm' && cloudMode !== 'gsm' },
-                    ]"
+                    :class="[topic === 'rtc' ? 'pb-4' : 'pb-10', { hidden: topic === 'gsm' && cloudMode !== 'gsm' }]"
                 >
                     <h2 class="font-semibold text-xl leading-[1.2] whitespace-pre">
                         {{ t(`${topic}.param`) }}
                     </h2>
-                    <div
-                        :class="[
-                            topic === 'rtc'
-                                ? 'table w-max border-spacing-y-6'
-                                : 'flex flex-col gap-y-6',
-                        ]"
-                    >
+                    <div :class="[topic === 'rtc' ? 'table w-max border-spacing-y-6' : 'flex flex-col gap-y-6']">
                         <div
                             v-for="(params, rowIndex) in rows"
                             :key="rowIndex"
                             :class="[
                                 topic === 'rtc' ? 'table-row-group' : 'flex flex-row gap-x-3',
                                 {
-                                    hidden:
-                                        topic === 'lan' && params.length > 1 && addrMode === 'dhcp',
+                                    hidden: topic === 'lan' && params.length > 1 && addrMode === 'dhcp',
                                 },
                             ]"
                         >
@@ -81,16 +71,11 @@
                                     @change="
                                         ($event) => {
                                             field.value = $event;
-                                            if (
-                                                topic === 'lan' &&
-                                                ($event === 'dhcp' || $event === 'static')
-                                            ) {
+                                            if (topic === 'lan' && ($event === 'dhcp' || $event === 'static')) {
                                                 addrMode = $event;
                                             } else if (
                                                 topic === 'cloud' &&
-                                                ($event === 'none' ||
-                                                    $event === 'ethernet' ||
-                                                    $event === 'gsm')
+                                                ($event === 'none' || $event === 'ethernet' || $event === 'gsm')
                                             ) {
                                                 cloudMode = $event;
                                             }
@@ -119,9 +104,7 @@
                                             class="w-full rounded-lg bg-[#0f304b] flex flex-col py-[0.31rem]"
                                             v-if="isOpen"
                                         >
-                                            <div
-                                                class="max-h-[11.563rem] overflow-auto scrollbar-3 px-1.5"
-                                            >
+                                            <div class="max-h-[11.563rem] overflow-auto scrollbar-3 px-1.5">
                                                 <div
                                                     v-for="t in timeZones"
                                                     :key="t.tz"
@@ -137,9 +120,7 @@
                                                     <span class="font-roboto text-[#8dc5f6]">
                                                         {{ t.tz }}
                                                     </span>
-                                                    <span
-                                                        class="font-roboto text-[#2b9bff] lowercase"
-                                                    >
+                                                    <span class="font-roboto text-[#2b9bff] lowercase">
                                                         {{ t.time }}
                                                     </span>
                                                 </div>
@@ -182,8 +163,7 @@
                                         class="absolute bottom-0 right-3 top-0 my-auto z-[3] w-[1.125rem] h-[1.125rem]"
                                         @click="
                                             () => {
-                                                isPasswordVisible[field.param] =
-                                                    !isPasswordVisible[field.param];
+                                                isPasswordVisible[field.param] = !isPasswordVisible[field.param];
                                             }
                                         "
                                     >
@@ -192,16 +172,8 @@
                                             name="scale-y-150"
                                         >
                                             <span
-                                                v-html="
-                                                    isPasswordVisible[field.param]
-                                                        ? openEye
-                                                        : closedEye
-                                                "
-                                                :key="
-                                                    isPasswordVisible[field.param]
-                                                        ? 'openEye'
-                                                        : 'closedEye'
-                                                "
+                                                v-html="isPasswordVisible[field.param] ? openEye : closedEye"
+                                                :key="isPasswordVisible[field.param] ? 'openEye' : 'closedEye'"
                                                 class="w-[1.125rem] h-[1.125rem] block group/icon"
                                                 :class="{
                                                     on:
@@ -226,8 +198,7 @@
                                     <div
                                         class="absolute top-full mt-[0.375rem] ml-[0.375rem] left-0 whitespace-nowrap flex items-center gap-[0.375rem] text-[#f83068] opacity-0 invisible transition-[opacity,visibility]"
                                         :class="{
-                                            '!opacity-100 !visible':
-                                                isPasswordMismatch[field.param],
+                                            '!opacity-100 !visible': isPasswordMismatch[field.param],
                                         }"
                                     >
                                         <span v-html="stop"></span>
@@ -265,28 +236,20 @@
                                         :init-type="field.type"
                                         :init-value="field.value"
                                         :name="field.param"
-                                        :placeholder="
-                                            topic === 'gsm'
-                                                ? t(`${topic}.fields.${field.param}.param`)
-                                                : ''
-                                        "
+                                        :placeholder="topic === 'gsm' ? t(`${topic}.fields.${field.param}.param`) : ''"
                                         class="table-cell"
                                         :class="[field.widthClass]"
                                         :input-type="field.validationType"
                                         :status="field.status"
                                         :minMax="
-                                            topic === 'rtc' && field.param === 'interval'
-                                                ? [3, undefined]
-                                                : undefined
+                                            topic === 'rtc' && field.param === 'interval' ? [3, undefined] : undefined
                                         "
                                         :required="
                                             field.isRequired ||
                                             (field.param === 'root-name' &&
-                                                !!changesAndErrors.changes.settings?.['root-acc']
-                                                    ?.password) ||
+                                                !!changesAndErrors.changes.settings?.['root-acc']?.password) ||
                                             (field.param === 'user-name' &&
-                                                !!changesAndErrors.changes.settings?.['user-acc']
-                                                    ?.password)
+                                                !!changesAndErrors.changes.settings?.['user-acc']?.password)
                                         "
                                         @valueChanged="field.value = $event"
                                         @statusChanged="field.status = $event"
@@ -335,9 +298,7 @@
                 ></div>
             </div>
         </div>
-        <div
-            class="h-[3.625rem] flex flex-row justify-end items-center border-t-2 border-[#0b3d68] pr-8"
-        >
+        <div class="h-[3.625rem] flex flex-row justify-end items-center border-t-2 border-[#0b3d68] pr-8">
             <SaveButton
                 :isSaving="isSaving"
                 :is-disabled="isSaveButtonDisabled"
@@ -394,10 +355,8 @@ const isPasswordVisible = ref<Record<string, boolean>>({});
 const isPasswordFocus = ref<Record<string, boolean>>({});
 
 const isPasswordMismatch = computed<Partial<Record<PasswordFieldName, boolean>>>(() => ({
-    'root-pass-repeat':
-        fields.value?.['root-login'][2][0].value !== fields.value?.['root-login'][1][0].value,
-    'user-pass-repeat':
-        fields.value?.['user-login'][2][0].value !== fields.value?.['user-login'][1][0].value,
+    'root-pass-repeat': fields.value?.['root-login'][2][0].value !== fields.value?.['root-login'][1][0].value,
+    'user-pass-repeat': fields.value?.['user-login'][2][0].value !== fields.value?.['user-login'][1][0].value,
 }));
 
 const isPassworValid = computed<Partial<Record<PasswordFieldName, boolean>>>(() => {
@@ -463,8 +422,7 @@ const isPasswordMissed = computed<Partial<Record<PasswordFieldName, boolean>>>((
 
 const isSaveButtonDisabled = computed(() => {
     return (
-        (isEmpty(changesAndErrors.value.changes.settings) &&
-            isEmpty(changesAndErrors.value.changes.files)) ||
+        (isEmpty(changesAndErrors.value.changes.settings) && isEmpty(changesAndErrors.value.changes.files)) ||
         changesAndErrors.value.isErrors ||
         isPasswordMismatch.value['root-pass-repeat'] ||
         isPasswordMismatch.value['user-pass-repeat'] ||
@@ -532,25 +490,16 @@ const changesAndErrors = computed(() => {
                             if (param.value) {
                                 set(changes, ['settings', 'login', param.param], param.value);
                             }
-                        } else if (
-                            param.type === 'btn-group' ||
-                            param.type !== 'number' ||
-                            param.status !== 'empty'
-                        ) {
+                        } else if (param.type === 'btn-group' || param.type !== 'number' || param.status !== 'empty') {
                             if (
                                 (
-                                    [
-                                        'funcsNumberPerPage',
-                                        'tempUnit',
-                                        'lang',
-                                    ] as (keyof CommonControllerSettings)[]
+                                    ['funcsNumberPerPage', 'tempUnit', 'lang'] as (keyof CommonControllerSettings)[]
                                 ).includes(topic)
                             ) {
                                 set(changes, ['files', param.param], param.value);
                             } else {
                                 // TODO
-                                if (topic !== 'gsm')
-                                    set(changes, ['settings', topic, param.param], param.value);
+                                if (topic !== 'gsm') set(changes, ['settings', topic, param.param], param.value);
                             }
                         }
                     }
@@ -568,22 +517,14 @@ const changesAndErrors = computed(() => {
             !changes.settings['root-acc'].login &&
             fields.value?.['root-login'][0][0].value
         ) {
-            set(
-                changes,
-                ['settings', 'login', 'root-name'],
-                fields.value?.['root-login'][0][0].value,
-            );
+            set(changes, ['settings', 'login', 'root-name'], fields.value?.['root-login'][0][0].value);
         }
         if (
             changes.settings?.['user-acc']?.password &&
             !changes.settings['user-acc'].login &&
             fields.value?.['user-login'][0][0].value
         ) {
-            set(
-                changes,
-                ['settings', 'login', 'user-name'],
-                fields.value?.['user-login'][0][0].value,
-            );
+            set(changes, ['settings', 'login', 'user-name'], fields.value?.['user-login'][0][0].value);
         }
     }
     return { changes, isErrors };

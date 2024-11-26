@@ -314,9 +314,12 @@
                                             "
                                             :input-type="['int']"
                                             @status-changed="
-                                                $event !== 'valid'
-                                                    ? fieldsInvalidStatuses.add(`1-wire-${i}-${p[0]}`)
-                                                    : fieldsInvalidStatuses.delete(`1-wire-${i}-${p[0]}`)
+                                                ($event) => {
+                                                    if (devSettings?.['1-wire'][i].mode === 'off') return;
+                                                    $event !== 'valid' && w.mode !== 'off'
+                                                        ? fieldsInvalidStatuses.add(`1-wire-${i}-${p[0]}`)
+                                                        : fieldsInvalidStatuses.delete(`1-wire-${i}-${p[0]}`);
+                                                }
                                             "
                                             @value-changed="$event === undefined ? '' : (w[p[0]] = $event)"
                                         />

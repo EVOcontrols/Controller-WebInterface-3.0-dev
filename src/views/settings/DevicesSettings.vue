@@ -7,9 +7,7 @@
             <template v-if="controllerSettings">
                 <div class="flex flex-col px-8">
                     <div class="mt-8 flex flex-col border-b border-[#0b3d68] pb-9 w-full">
-                        <h2
-                            class="font-semibold text-xl leading-[1.2] whitespace-pre mb-[1.125rem]"
-                        >
+                        <h2 class="font-semibold text-xl leading-[1.2] whitespace-pre mb-[1.125rem]">
                             {{ t('selectDevice') }}
                         </h2>
                         <div class="flex flex-row items-center overflow-hidden">
@@ -28,23 +26,18 @@
                                             :key="i"
                                             class="h-[1.563rem] w-[3.188rem] bg-[#1b4569] hover:bg-[#214e76] on:bg-[#148ef8] font-roboto rounded flex items-center justify-center relative"
                                             :class="{
-                                                on:
-                                                    device.addr === activeIndex ||
-                                                    device.index === activeIndex,
+                                                on: device.addr === activeIndex || device.index === activeIndex,
                                             }"
                                             @click="
                                                 () => {
                                                     if (!extDevsList) return;
-                                                    activeDeviceAddr =
-                                                        i === 0 ? 0 : extDevsList[i - 1]?.addr;
+                                                    activeDeviceAddr = i === 0 ? 0 : extDevsList[i - 1]?.addr;
                                                 }
                                             "
                                         >
                                             <div
                                                 v-if="
-                                                    device.addr !== 0 &&
-                                                    device.state !== 'on' &&
-                                                    device.state !== 'off'
+                                                    device.addr !== 0 && device.state !== 'on' && device.state !== 'off'
                                                 "
                                                 class="w-[5px] h-[5px] rounded-[50%] mr-[6px]"
                                                 :class="[
@@ -55,18 +48,12 @@
                                             ></div>
                                             {{
                                                 device.addr > 0
-                                                    ? fullDevs.findIndex(
-                                                          (el) => el.serial === device.serial,
-                                                      ) !== -1
+                                                    ? fullDevs.findIndex((el) => el.serial === device.serial) !== -1
                                                         ? `IO ${
-                                                              fullDevs.find(
-                                                                  (el) =>
-                                                                      el.serial === device.serial,
-                                                              )?.index ||
-                                                              fullDevs.find(
-                                                                  (el) =>
-                                                                      el.serial === device.serial,
-                                                              )?.addr ||
+                                                              fullDevs.find((el) => el.serial === device.serial)
+                                                                  ?.index ||
+                                                              fullDevs.find((el) => el.serial === device.serial)
+                                                                  ?.addr ||
                                                               ''
                                                           }`
                                                         : 'IO'
@@ -79,13 +66,10 @@
                             <span
                                 v-html="edit"
                                 class="group ml-3"
-                                :class="
-                                    ngcModbusMode === 'ext-devs' ? 'cursor-pointer' : 'cursor-auto'
-                                "
+                                :class="ngcModbusMode === 'ext-devs' ? 'cursor-pointer' : 'cursor-auto'"
                                 @mouseenter="
                                     () => {
-                                        if (ngcModbusMode !== 'ext-devs')
-                                            indexStore.toggleIsEditPopUpShown(true);
+                                        if (ngcModbusMode !== 'ext-devs') indexStore.toggleIsEditPopUpShown(true);
                                     }
                                 "
                                 @click="isModalOpen = true"
@@ -117,9 +101,7 @@
                 </div>
             </template>
         </div>
-        <div
-            class="h-[3.625rem] flex flex-row justify-end items-center border-t-2 border-[#0b3d68] pr-8"
-        >
+        <div class="h-[3.625rem] flex flex-row justify-end items-center border-t-2 border-[#0b3d68] pr-8">
             <SaveButton
                 :isSaving="isSaving"
                 :is-disabled="isSaveButtonDisabled"
@@ -174,15 +156,9 @@
                         {{ t('scanning') }}
                         <div class="spinner-box">
                             <div class="flex items-center justify-center gap-1">
-                                <div
-                                    class="pulse-bubble-1 w-[5px] h-[5px] rounded-[50%] bg-[#4799E2]"
-                                ></div>
-                                <div
-                                    class="pulse-bubble-2 w-[5px] h-[5px] rounded-[50%] bg-[#4799E2]"
-                                ></div>
-                                <div
-                                    class="pulse-bubble-3 w-[5px] h-[5px] rounded-[50%] bg-[#4799E2]"
-                                ></div>
+                                <div class="pulse-bubble-1 w-[5px] h-[5px] rounded-[50%] bg-[#4799E2]"></div>
+                                <div class="pulse-bubble-2 w-[5px] h-[5px] rounded-[50%] bg-[#4799E2]"></div>
+                                <div class="pulse-bubble-3 w-[5px] h-[5px] rounded-[50%] bg-[#4799E2]"></div>
                             </div>
                         </div>
                     </div>
@@ -192,9 +168,7 @@
                         :style="{ width: 'calc(50% - 6px)' }"
                     >
                         <div class="flex overflow-y-hidden h-full rounded-l-lg w-full">
-                            <div
-                                class="flex overflow-y-auto w-full scrollbar-4 flex-1 flex-col relative"
-                            >
+                            <div class="flex overflow-y-auto w-full scrollbar-4 flex-1 flex-col relative">
                                 <div class="flex flex-col items-center flex-none w-full">
                                     <div
                                         class="w-full h-[36px] text-sm text-[#9ADBF6] pt-[10px] z-[1] sticky top-0 bg-[#113351] flex gap-5"
@@ -227,10 +201,7 @@
                                                 :class="{
                                                     'exclude-this-item':
                                                         extDevsList &&
-                                                        extDevsList.find(
-                                                            (el: ExtDev) =>
-                                                                el.serial === element.serial,
-                                                        ),
+                                                        extDevsList.find((el: ExtDev) => el.serial === element.serial),
                                                 }"
                                             >
                                                 <div class="w-7 text-end mr-3">
@@ -250,10 +221,7 @@
                                                 <div
                                                     v-if="
                                                         extDevsList &&
-                                                        extDevsList.find(
-                                                            (el: ExtDev) =>
-                                                                el.serial === element.serial,
-                                                        )
+                                                        extDevsList.find((el: ExtDev) => el.serial === element.serial)
                                                     "
                                                     class="flex-1 pr-2 text-end select-none"
                                                 >
@@ -266,19 +234,14 @@
                                                     <span
                                                         class="[&>svg]:w-4 [&>svg]:h-4 [&>svg>path]:transition-colors [&>svg>path]:duration-500"
                                                         :class="
-                                                            !extDevs.filter((el) => el.type === '')
-                                                                .length
+                                                            !extDevs.filter((el) => el.type === '').length
                                                                 ? '[&>svg>path]:fill-[#3E688E] group-hover:[&>svg>path]:fill-[#3E688E] cursor-auto'
                                                                 : 'cursor-pointer [&>svg>path]:fill-[#194F76] group-hover:[&>svg>path]:fill-[#58B1FF]'
                                                         "
                                                         v-html="add"
                                                         @click="
                                                             () => {
-                                                                if (
-                                                                    extDevs.filter(
-                                                                        (el) => el.type === '',
-                                                                    ).length
-                                                                ) {
+                                                                if (extDevs.filter((el) => el.type === '').length) {
                                                                     curAddingDev = {
                                                                         addr: element.addr,
                                                                         initAddr: element.addr,
@@ -315,9 +278,7 @@
                         <div>
                             <div class="flex items-start gap-5 mb-[14px]">
                                 <div class="flex w-[200px] justify-between items-center">
-                                    <div
-                                        class="text-[#6d9cc5] text-sm leading-[1.143] table-cell pr-2.5"
-                                    >
+                                    <div class="text-[#6d9cc5] text-sm leading-[1.143] table-cell pr-2.5">
                                         {{ t('startAddr') }}
                                     </div>
                                     <UiInput
@@ -327,17 +288,14 @@
                                         :init-type="'string'"
                                         class="table-cell w-16 text-center !px-2"
                                         :status="
-                                            (startAddr && +startAddr >= 1 && +startAddr <= 247) ||
-                                            startAddr === ''
+                                            (startAddr && +startAddr >= 1 && +startAddr <= 247) || startAddr === ''
                                                 ? 'valid'
                                                 : 'invalid'
                                         "
                                         :input-type="['string']"
                                         @value-changed="
                                             ($event: string | undefined) => {
-                                                $event === undefined
-                                                    ? (startAddr = '')
-                                                    : (startAddr = $event);
+                                                $event === undefined ? (startAddr = '') : (startAddr = $event);
                                             }
                                         "
                                     />
@@ -355,9 +313,7 @@
                             </div>
                             <div class="flex items-start gap-5">
                                 <div class="flex w-[200px] justify-between items-center">
-                                    <div
-                                        class="text-[#6d9cc5] text-sm leading-[1.143] table-cell pr-2.5"
-                                    >
+                                    <div class="text-[#6d9cc5] text-sm leading-[1.143] table-cell pr-2.5">
                                         {{ t('endAddr') }}
                                     </div>
                                     <UiInput
@@ -376,11 +332,7 @@
                                                 : 'invalid'
                                         "
                                         :input-type="['string']"
-                                        @value-changed="
-                                            $event === undefined
-                                                ? (endAddr = '')
-                                                : (endAddr = $event)
-                                        "
+                                        @value-changed="$event === undefined ? (endAddr = '') : (endAddr = $event)"
                                     />
                                 </div>
                                 <div
@@ -424,9 +376,7 @@
                         :style="{ width: 'calc(50% - 6px)' }"
                     >
                         <div class="flex overflow-y-hidden rounded-l-lg w-full">
-                            <div
-                                class="flex overflow-y-auto w-full scrollbar-4 flex-1 flex-col relative"
-                            >
+                            <div class="flex overflow-y-auto w-full scrollbar-4 flex-1 flex-col relative">
                                 <div class="flex flex-col items-center flex-none w-full">
                                     <div
                                         class="w-full h-[36px] text-sm text-[#9ADBF6] pt-[10px] z-[1] sticky top-0 bg-[#113351] flex gap-3"
@@ -481,12 +431,7 @@
                                                         @mouseenter="handleMouseEnter(index)"
                                                         @mouseleave="handleMouseLeave"
                                                         class="cursor-pointer"
-                                                        @click="
-                                                            changeDevStatus(
-                                                                element.addr,
-                                                                element.state,
-                                                            )
-                                                        "
+                                                        @click="changeDevStatus(element.addr, element.state)"
                                                     />
                                                 </div>
                                                 <div
@@ -515,8 +460,7 @@
                                                         scanDevs.find((el) => {
                                                             if (!extDevsList) return false;
                                                             return !extDevsList.find(
-                                                                (elem: ExtDev) =>
-                                                                    elem.serial === el.serial,
+                                                                (elem: ExtDev) => elem.serial === el.serial,
                                                             );
                                                         })
                                                             ? 'cursor-pointer hover:border-[#3e7df9] hover:text-[#3e7df9] active:border-[#3e7df9] active:bg-[#3e7df9] active:text-[#adebff]'
@@ -527,8 +471,7 @@
                                                             const el = scanDevs?.find((el) => {
                                                                 if (!extDevsList) return false;
                                                                 return !extDevsList.find(
-                                                                    (elem: ExtDev) =>
-                                                                        elem.serial === el.serial,
+                                                                    (elem: ExtDev) => elem.serial === el.serial,
                                                                 );
                                                             });
                                                             if (el) {
@@ -620,9 +563,7 @@
                             <div>{{ t('confirm.firmWare') }} {{ deletingDev.version }}</div>
                         </div>
                     </div>
-                    <div
-                        class="rounded-[6px] px-[14px] py-2 bg-[#7D183C85] flex gap-2 items-center"
-                    >
+                    <div class="rounded-[6px] px-[14px] py-2 bg-[#7D183C85] flex gap-2 items-center">
                         <span
                             v-html="info"
                             class="[&>svg>path]:fill-[#F83068] [&>svg>rect]:fill-[#F83068]"
@@ -691,9 +632,7 @@
                                 : 'invalid'
                         "
                         :input-type="['string']"
-                        @value-changed="
-                            $event === undefined ? (addingDev.addr = 0) : (addingDev.addr = +$event)
-                        "
+                        @value-changed="$event === undefined ? (addingDev.addr = 0) : (addingDev.addr = +$event)"
                     />
                     <div
                         v-if="
@@ -800,11 +739,7 @@
                                 : 'invalid'
                         "
                         :input-type="['string']"
-                        @value-changed="
-                            $event === undefined
-                                ? (curAddingDev.addr = 0)
-                                : (curAddingDev.addr = +$event)
-                        "
+                        @value-changed="$event === undefined ? (curAddingDev.addr = 0) : (curAddingDev.addr = +$event)"
                     />
                     <div class="text-sm">{{ t('newDevAddr') }}</div>
                 </div>
@@ -935,8 +870,7 @@ const api = indexStore.getApi().api as axios.AxiosInstance;
 
 const isAborted = indexStore.getApi().isAborted;
 
-const { extDevsList, ngcModbusMode, devices, isAddingDev, extDeviceInInitState } =
-    storeToRefs(indexStore);
+const { extDevsList, ngcModbusMode, devices, isAddingDev, extDeviceInInitState } = storeToRefs(indexStore);
 
 const fullDevs = computed<
     {
@@ -1075,8 +1009,7 @@ const activeDeviceAddr = useStorage<DeviceAddr>('devicesSettings.activeDeviceAdd
 });
 
 const activeIndex = computed(() => {
-    const index = extDevsList.value?.find((el: ExtDev) => el.addr === activeDeviceAddr.value)
-        ?.index;
+    const index = extDevsList.value?.find((el: ExtDev) => el.addr === activeDeviceAddr.value)?.index;
     return index || 0;
 });
 
@@ -1234,15 +1167,11 @@ function handleDragEndItem() {
             };
         }
     }
-    document
-        .querySelectorAll('.list-group-item')
-        .forEach((el) => el.classList.remove('bg-[#0C2F4D]'));
+    document.querySelectorAll('.list-group-item').forEach((el) => el.classList.remove('bg-[#0C2F4D]'));
 }
 
 function handleMoveItem(event: DragEvent) {
-    document
-        .querySelectorAll('.list-group-item')
-        .forEach((el) => el.classList.remove('bg-[#0C2F4D]'));
+    document.querySelectorAll('.list-group-item').forEach((el) => el.classList.remove('bg-[#0C2F4D]'));
     const { index } = event.draggedContext;
     const futIndex = event.relatedContext.index;
     originalIndex.value = index;
@@ -1256,9 +1185,7 @@ function handleMoveItem(event: DragEvent) {
 }
 
 function handleDregStartItem() {
-    document
-        .querySelectorAll('.list-group-item')
-        .forEach((el) => el.classList.remove('exclude-this-item'));
+    document.querySelectorAll('.list-group-item').forEach((el) => el.classList.remove('exclude-this-item'));
 }
 
 const { t } = useI18n({
@@ -1588,9 +1515,7 @@ function addNewExtDev() {
             ? curAddingDev.value.state
             : (addingDev.value?.state as 'on' | 'off' | 'init' | 'no-conn' | 'error'),
         index: curAddingDev.value ? curAddingDev.value.index : (addingDev.value?.index as number),
-        initAddr: curAddingDev.value
-            ? curAddingDev.value.initAddr
-            : (addingDev.value?.initAddr as number),
+        initAddr: curAddingDev.value ? curAddingDev.value.initAddr : (addingDev.value?.initAddr as number),
     };
     if (!fullAddingDev.value) return;
     if (fullAddingDev.value.addr === fullAddingDev.value.initAddr) {
@@ -1628,12 +1553,7 @@ async function getExtConfig() {
     }
 }
 
-async function setExtConfig(obj: {
-    addr: number;
-    rate: number;
-    parity: 'none' | 'even' | 'odd';
-    stop: 1 | 2;
-}) {
+async function setExtConfig(obj: { addr: number; rate: number; parity: 'none' | 'even' | 'odd'; stop: 1 | 2 }) {
     if (!fullAddingDev.value) return;
     try {
         const r = await api.post(
