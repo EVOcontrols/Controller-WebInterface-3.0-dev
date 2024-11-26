@@ -34,19 +34,9 @@ jobs:
         run: |
           npm run build
 
-      - name: Create zip archive
-        id: create_zip
-        run: |
-          TIMESTAMP=$(date +%s%3N)
-          ZIP_NAME="dist_${{ env.VITE_INTERFACE_VERSION }}_${{ env.VITE_IP }}_${TIMESTAMP}.zip"
-          echo "zip name: $ZIP_NAME"
-          cd dist
-          zip -r "../$ZIP_NAME" ./*
-          cd ..
-          echo "ZIP_NAME=$ZIP_NAME" >> $GITHUB_ENV
-
-      - name: Upload zip as artifact
+      - name: Create and upload zip archive
         uses: actions/upload-artifact@v3
         with:
-          name: ${{ env.ZIP_NAME }}
-          path: ${{ env.ZIP_NAME }}
+          name: dist_${{ env.VITE_INTERFACE_VERSION }}_${{ env.VITE_IP }}_$(date +%s%3N).zip
+          path: |
+            dist
