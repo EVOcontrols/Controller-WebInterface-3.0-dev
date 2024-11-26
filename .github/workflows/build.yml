@@ -40,7 +40,9 @@ jobs:
           TIMESTAMP=$(date +%s%3N)
           ZIP_NAME="dist_${{ env.VITE_INTERFACE_VERSION }}_${{ env.VITE_IP }}_${TIMESTAMP}.zip"
           echo "zip name: $ZIP_NAME"
-          zip -r "$ZIP_NAME" ./dist
+          cd dist
+          zip -r "../$ZIP_NAME" ./*
+          cd ..
           echo "ZIP_NAME=$ZIP_NAME" >> $GITHUB_ENV
 
       - name: Upload zip as artifact
