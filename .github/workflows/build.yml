@@ -18,14 +18,11 @@ jobs:
         run: |
           npm ci
 
-      - name: Load .env variables
-        id: load_env
+      - name: Load version from package.json
+        id: load_version
         run: |
-          set -o allexport
-          source .env
-          set +o allexport
-          echo "VITE_INTERFACE_VERSION=$(echo $VITE_INTERFACE_VERSION | tr -d '\r')" >> $GITHUB_ENV
-          echo "Loaded VITE_INTERFACE_VERSION=${VITE_INTERFACE_VERSION}"
+          VERSION=$(node -p "require('./package.json').version")
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
         shell: bash
 
       - name: Build project
@@ -36,7 +33,7 @@ jobs:
         id: set_zip_name
         run: |
           TIMESTAMP=$(date +%s%3N)
-          ZIP_NAME="dist_${{ env.VITE_INTERFACE_VERSION }}_${TIMESTAMP}"
+          ZIP_NAME="dist_${VERSION}_${TIMESTAMP}"
           echo "ZIP_NAME=$ZIP_NAME" >> $GITHUB_ENV
           echo "::set-output name=zip_name::$ZIP_NAME"
 

@@ -11,11 +11,7 @@
                 v-for="m in ['AM', 'PM']"
                 :key="m"
                 class="text-xs"
-                :class="[
-                    m === formattedTime.meridiem
-                        ? 'text-[#158ef8] font-semibold'
-                        : 'text-[#1c4972]',
-                ]"
+                :class="[m === formattedTime.meridiem ? 'text-[#158ef8] font-semibold' : 'text-[#1c4972]']"
             >
                 {{ m }}
             </div>
@@ -46,9 +42,7 @@
                             class="text-[#a0d5ff] text-sm"
                             :class="{ 'cursor-pointer': p === 'id' && isSupported }"
                             :title="p === 'id' && isSupported ? 'Copy' : ''"
-                            @click="
-                                p === 'id' && infoData.id && isSupported ? copy(infoData.id) : ''
-                            "
+                            @click="p === 'id' && infoData.id && isSupported ? copy(infoData.id) : ''"
                         >
                             {{ infoData[p] }}
                         </span>
@@ -66,8 +60,7 @@ import { DateTime } from 'luxon';
 
 const indexStore = useIndexStore();
 
-const { lang, notConnected, rebootingDeviceAddr, isLongQueryRunning, controllerDateTime } =
-    storeToRefs(indexStore);
+const { lang, notConnected, rebootingDeviceAddr, isLongQueryRunning, controllerDateTime } = storeToRefs(indexStore);
 
 const { api } = useApiStore();
 
@@ -78,7 +71,7 @@ const abort = indexStore.getApi().abort;
 const { copy, isSupported } = useClipboard();
 
 const infoData = ref<{ id?: string; 'wi-ver': string; 'fw-ver'?: string }>({
-    'wi-ver': import.meta.env.VITE_INTERFACE_VERSION,
+    'wi-ver': __APP_VERSION__,
 });
 
 const formattedTime = ref({ time: '', meridiem: '' });
