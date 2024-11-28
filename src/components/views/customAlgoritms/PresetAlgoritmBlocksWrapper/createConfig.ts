@@ -2,7 +2,7 @@ import type { Body, Ent, Time } from '@/typings/funcs';
 import { type Config, CurKeyMap, binaryInterfaces, type UDF } from './types';
 import type { Device } from '@/stores';
 
-const readonlyInterfaces = ['1w-rom', '1w-sens', 'bin-in', 'adc-in', 'mb-ir', 'mb-di'];
+const readonlyInterfaces = ['1w-rom', '1w-sens', 'bin-in', 'adc-in', 'mb-var'];
 
 export const createConfig = async (
     curBodyVal: Body,

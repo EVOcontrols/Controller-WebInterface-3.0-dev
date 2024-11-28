@@ -264,6 +264,7 @@ import {
     DropDownItem,
     CurKeyMap,
     BodySave,
+    MBTypes,
     analogyInterfaces,
 } from './types';
 import {
@@ -322,6 +323,7 @@ const curDevCapab = ref<Capab>();
 
 const order = ORDER;
 
+const mbVarTypes = ref<MBTypes[]>([]);
 const cur1WConfig = ref<Mode1W[]>([]);
 const curMbConfig = ref<ModeMb[]>([]);
 
@@ -676,12 +678,16 @@ async function getMb(ent: EntNum, device: number) {
     const data = await $apiGetMbInfo(device);
     const interfaces = ent === 1 ? interfaces1.value : ent === 2 ? interfaces2.value : interfaces3.value;
 
-    const mbTypes = ['co', 'ir', 'hr', 'di']; // todo coil or co?
+    const mbTypes = ['coil', 'ir', 'hr', 'di'];
     mbTypes.forEach((mbType) => {
         if (data.type.includes(mbType)) {
-            interfaces.push(`mb-${mbType}` as Interface);
+            interfaces.push('mb-var');
         }
     });
+
+    if (interfaces.includes('mb-var')) {
+        mbVarTypes.value = data.type;
+    }
 }
 
 async function getDevConfig() {
@@ -767,6 +773,10 @@ async function getData(
         const addr = props.device ? (props.device.addr === 0 ? device || 0 : props.device.addr) : 0;
         const labelsVar = labels.value[addr]?.find((el) => el.interf === type)?.val[bus || 0]; //0-bus
         curLabels = (Array.isArray(labelsVar) ? labelsVar : []) as string[];
+        if (type === 'mb-var') {
+            const labelsWithMbType = labelsVar?.map((label, index) => `${mbVarTypes.value[index]} : ${label}`);
+            curLabels = (Array.isArray(labelsWithMbType) ? labelsWithMbType : []) as string[];
+        }
     }
 
     data.entities[0].state !== 'err' &&
@@ -812,30 +822,18 @@ async function parseEntity(ent: Ent) {
         await getInterfaces(entNum, ent.device);
     }
 
-    // const ent1WConfigs = [ent1WConfig1.value, ent1WConfig2.value, ent1WConfig3.value];
     const interfaces = [interfaces1.value, interfaces2.value, interfaces3.value];
 
     const invalidTypes = ['none', 'error', 'int-const'];
     if (!invalidTypes.includes(ent.type) && curDevCapab.value) {
-        // const ent1WConfigLength = ent1WConfigs[entNum - 1].length;
-
-        // if (!ent1WConfigLength && ent.device !== undefined) {
-        //     await getEntConfig(entNum, ent.device);
-        // }
-
-        const mbTypes = ['mb-coil', 'mb-ir', 'mb-hr', 'mb-di'];
-        const keyCapab = mbTypes.includes(ent.type) ? 'mb-var' : (ent.type as EntType);
-        let quant = curDevCapab.value[keyCapab];
-
+        let quant = curDevCapab.value[ent.type as EntType];
         const addr = props.device && props.device.addr;
         const isValidUdfType = props.type.val === 'udf-act' || props.type.val === 'udf-cond';
         if (ent.device !== undefined && (addr || (!addr && isValidUdfType))) {
             const deviceId = addr === 0 ? ent.device : addr || ent.device;
             const capabs = devCapabs.value[deviceId];
             if (capabs) {
-                const isMb = mbTypes.includes(ent.type);
-                const indexDevCapab = isMb ? 'mb-var' : (ent.type as EntType);
-                quant = capabs[indexDevCapab] || quant;
+                quant = capabs[ent.type as EntType] || quant;
             }
         }
 

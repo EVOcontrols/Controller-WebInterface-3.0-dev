@@ -23,10 +23,7 @@ export type DropDownRealType =
     | 'adc-in'
     | 'bin-out'
     | 'pwm-out'
-    | 'mb-coil'
-    | 'mb-ir'
-    | 'mb-hr'
-    | 'mb-di'
+    | 'mb-var'
     | 'bin-var'
     | 'int-var'
     | 'tim-var'
@@ -58,6 +55,7 @@ export type Capab = {
     'udf-trig': number;
 };
 
+export type MBTypes = 'coil' | 'ir' | 'hr' | 'di';
 export type Mode1W = { mode: 'off' | 'sens' | 'rom' | 'gpio' };
 export type ModeMb = { mode: 'off' | 'variables' | 'ext-devs' };
 
@@ -69,10 +67,6 @@ export type Interface =
     | 'adc-in'
     | 'bin-out'
     | 'pwm-out'
-    | 'mb-coil'
-    | 'mb-ir'
-    | 'mb-hr'
-    | 'mb-di'
     | 'mb-var'
     | 'bin-var'
     | 'int-var'
@@ -170,7 +164,7 @@ export type BodySave = {
     trigger?: any;
 };
 
-export const binaryInterfaces = ['bin-in', 'bin-out', 'bin-var', '1w-rom', 'mb-coil', 'mb-di'];
+export const binaryInterfaces = ['bin-in', 'bin-out', 'bin-var', '1w-rom', 'mb-var'];
 export const analogyInterfaces = ['pwm-out', 'adc-in', '1w-sens'];
 
 export const ORDER = [
@@ -180,10 +174,7 @@ export const ORDER = [
     'adc-in',
     'bin-out',
     'pwm-out',
-    'mb-coil',
-    'mb-ir',
-    'mb-hr',
-    'mb-di',
+    'mb-var',
     'bin-var',
     'int-var',
     'tim-var',
