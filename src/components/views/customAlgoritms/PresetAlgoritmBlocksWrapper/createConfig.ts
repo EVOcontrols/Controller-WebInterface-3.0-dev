@@ -1,9 +1,8 @@
 import type { Body, Ent, Time } from '@/typings/funcs';
-import { type Config, CurKeyMap, type UDF } from './types';
+import { type Config, CurKeyMap, binaryInterfaces, type UDF } from './types';
 import type { Device } from '@/stores';
 
 const readonlyInterfaces = ['1w-rom', '1w-sens', 'bin-in', 'adc-in', 'mb-ir', 'mb-di'];
-const binaryInterfaces = ['bin-in', 'bin-out', 'bin-var', '1w-rom', 'mb-coil', 'mb-di'];
 
 export const createConfig = async (
     curBodyVal: Body,
@@ -22,8 +21,12 @@ export const createConfig = async (
     const generators = [
         (curBody: Body) => createInitStateConfig(curBody, t),
         (curBody: Body) => createEntityConfig(curBody, typeVal, cbParseEntity),
+        (curBody: Body) => createLeftConfigChoose(curBody, typeVal, t),
         (curBody: Body) => createLeftConfig(curBody, typeVal, cbParseEntity),
+        (curBody: Body) => createLeftConfigEnter(curBody, typeVal, t),
+        (curBody: Body) => createRightConfigChoose(curBody, typeVal, t),
         (curBody: Body) => createRightConfig(curBody, typeVal, cbParseEntity),
+        (curBody: Body) => createRightConfigEnter(curBody, typeVal, t),
         (curBody: Body) => createResultConfig(curBody, typeVal, cbParseEntity),
         (curBody: Body) => createCompareConfig(curBody, typeVal, t),
         (curBody: Body) => createComparisonOperationConfig(curBody, typeVal, t),
@@ -31,10 +34,10 @@ export const createConfig = async (
         (curBody: Body) => createBitOperationConfig(curBody, typeVal, t),
         (curBody: Body) => createActionConfig(curBody, typeVal, t, propDevice),
         (curBody: Body) => createComparisonValConfig(curBody, typeVal, t),
-        (curBody: Body) => createOperationBinConfig(curBody, t),
+        (curBody: Body) => createOperationBinConfig(curBody, typeVal, t),
         (curBody: Body) => createValueConfig(curBody, cbParseEntity),
         (curBody: Body) => createStopValueConfig(curBody, typeVal, t),
-        (curBody: Body) => createIntConstConfig(curBody, typeVal, t),
+        (curBody: Body) => createIntConstStopValConfig(curBody, typeVal, t),
         (curBody: Body) => createStopValConfig(curBody, typeVal, cbParseEntity),
         (curBody: Body) => createHysteresisConfig(curBody, typeVal, t),
         (curBody: Body) => createTimeConfig(curBody, cbParseTime, t),
@@ -123,6 +126,36 @@ async function createEntityConfig(
     return configs;
 }
 
+function createLeftConfigChoose(curBodyVal: Body, typeVal: UDF, t: (key: string) => string): Config | null {
+    if (typeVal !== 'udf-trans' || !curBodyVal.left || curBodyVal.left.type === 'prev-value') {
+        return null;
+    }
+
+    return {
+        curKey: CurKeyMap.ComparisonValueLeft,
+        queue: [
+            { name: 'title', index: 0 },
+            { name: 'btns', index: 0 },
+        ],
+        titles: [t('titles.comparisonValLeft')],
+        btns: [
+            {
+                vals: [
+                    { label: t('btns.const'), val: 'const', class: 'w-[109px]' },
+                    { label: t('btns.obj'), val: 'obj', class: 'w-[109px]' },
+                ],
+                val: curBodyVal['left'].type === 'int-const' ? 'const' : 'obj',
+                disabled: false,
+            },
+        ],
+        tabs: [],
+        radioBtns: [],
+        checkBoxes: [],
+        inputs: [],
+        dropDowns: [],
+    };
+}
+
 async function createLeftConfig(
     curBodyVal: Body,
     typeVal: UDF,
@@ -138,6 +171,65 @@ async function createLeftConfig(
     return configs.map((el) => ({ ...el, titles: replaceTitlesLeft(el.titles) }));
 }
 
+function createLeftConfigEnter(curBodyVal: Body, typeVal: UDF, t: (key: string) => string): Config | null {
+    if (typeVal !== 'udf-trans' || !curBodyVal.left || curBodyVal.left.type !== 'int-const') {
+        return null;
+    }
+
+    return {
+        curKey: CurKeyMap.EnterLeft,
+        queue: [
+            { name: 'title', index: 0 },
+            { name: 'input', index: 0 },
+        ],
+        titles: [t('titles.enter')],
+        btns: [],
+        tabs: [],
+        radioBtns: [],
+        checkBoxes: [],
+        inputs: [
+            {
+                subtitle: t('titles.value'),
+                val: curBodyVal['left'].value || 0,
+                min: -32768,
+                max: 32767,
+                isError: false,
+            },
+        ],
+        dropDowns: [],
+    };
+}
+
+function createRightConfigChoose(curBodyVal: Body, typeVal: UDF, t: (key: string) => string): Config | null {
+    if (typeVal !== 'udf-trans' || !curBodyVal.right || curBodyVal.right.type === 'prev-value') {
+        return null;
+    }
+
+    return {
+        curKey: CurKeyMap.ComparisonValueRight,
+        queue: [
+            { name: 'title', index: 0 },
+            { name: 'btns', index: 0 },
+        ],
+        titles: [t('titles.comparisonValRight')],
+        btns: [
+            {
+                vals: [
+                    { label: t('btns.const'), val: 'const', class: 'w-[109px]' },
+                    { label: t('btns.obj'), val: 'obj', class: 'w-[109px]' },
+                ],
+                val: curBodyVal['right'].type === 'int-const' ? 'const' : 'obj',
+                disabled: false,
+            },
+        ],
+        tabs: [],
+        radioBtns: [],
+        checkBoxes: [],
+        inputs: [],
+        dropDowns: [],
+    };
+}
+
 async function createRightConfig(
     curBodyVal: Body,
     typeVal: UDF,
@@ -151,6 +243,35 @@ async function createRightConfig(
     if (!configs || !configs.length) return null;
 
     return configs.map((el) => ({ ...el, curKey: el.curKey + 4, titles: replaceTitlesRight(el.titles) }));
+}
+
+function createRightConfigEnter(curBodyVal: Body, typeVal: UDF, t: (key: string) => string): Config | null {
+    if (typeVal !== 'udf-trans' || !curBodyVal.right || curBodyVal.right.type !== 'int-const') {
+        return null;
+    }
+
+    return {
+        curKey: CurKeyMap.EnterRight,
+        queue: [
+            { name: 'title', index: 0 },
+            { name: 'input', index: 0 },
+        ],
+        titles: [t('titles.enter')],
+        btns: [],
+        tabs: [],
+        radioBtns: [],
+        checkBoxes: [],
+        inputs: [
+            {
+                subtitle: t('titles.value'),
+                val: curBodyVal['right'].value || 0,
+                min: -32768,
+                max: 32767,
+                isError: false,
+            },
+        ],
+        dropDowns: [],
+    };
 }
 
 async function createResultConfig(
@@ -299,6 +420,10 @@ function createMathOperationConfig(curBodyVal: Body, typeVal: UDF, t: (key: stri
                     { label: '||', val: '||' },
                     { label: '*=', val: '*=' },
                     { label: '>>=', val: '>>=' },
+                    { label: '>', val: '>' },
+                    { label: '<', val: '<' },
+                    { label: '>=', val: '>=' },
+                    { label: '<=', val: '<=' },
                 ],
                 val: curBodyVal['operation'],
                 groupName: 'less',
@@ -405,6 +530,9 @@ function createComparisonValConfig(curBodyVal: Body, typeVal: UDF, t: (key: stri
     if (!curBodyVal['value']) {
         return null;
     }
+    if (shouldHideValue(curBodyVal, typeVal)) {
+        return null;
+    }
 
     return {
         curKey: CurKeyMap.ObjectRight,
@@ -431,8 +559,11 @@ function createComparisonValConfig(curBodyVal: Body, typeVal: UDF, t: (key: stri
     };
 }
 
-function createOperationBinConfig(curBodyVal: Body, t: (key: string) => string): Config | null {
+function createOperationBinConfig(curBodyVal: Body, typeVal: UDF, t: (key: string) => string): Config | null {
     if (!curBodyVal['value'] || curBodyVal['value']['type'] !== 'int-const' || !curBodyVal.entity) {
+        return null;
+    }
+    if (shouldHideValue(curBodyVal, typeVal)) {
         return null;
     }
 
@@ -555,7 +686,7 @@ function createStopValueConfig(curBodyVal: Body, typeVal: UDF, t: (key: string) 
     };
 }
 
-function createIntConstConfig(curBodyVal: Body, typeVal: UDF, t: (key: string) => string): Config | null {
+function createIntConstStopValConfig(curBodyVal: Body, typeVal: UDF, t: (key: string) => string): Config | null {
     if (typeVal !== 'udf-act' || !curBodyVal['stop-val'] || curBodyVal['stop-val']['type'] !== 'int-const') {
         return null;
     }
@@ -636,7 +767,7 @@ function createHysteresisConfig(curBodyVal: Body, typeVal: UDF, t: (key: string)
         tabs: [],
         radioBtns: [],
         checkBoxes: [],
-        inputs: [{ val: curBodyVal['hysteresis'], min: -32768, max: 32767, isError: false }],
+        inputs: [{ val: curBodyVal['hysteresis'], min: -32768, max: 32767, isError: false, disabled: true }],
         dropDowns: [],
     };
 }
@@ -888,4 +1019,12 @@ function replaceTitlesRight(titles: string[]): string[] {
 
 function replaceTitlesResult(titles: string[]): string[] {
     return titles.map((title) => title.replace(/преобразования/i, 'результата').replace(/transform/i, 'result'));
+}
+
+function shouldHideValue(curBodyVal: Body, typeVal: UDF): boolean {
+    return !!(
+        (typeVal === 'udf-cond' || typeVal === 'udf-trig') &&
+        curBodyVal['operation'] &&
+        (curBodyVal['operation'] === 'error' || curBodyVal['operation'] === 'non-error')
+    );
 }

@@ -1,0 +1,44 @@
+name: Build and Zip on Feature/Fix Branches
+
+on:
+  push:
+    branches:
+      - 'feat/*'
+      - 'fix/*'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Install dependencies
+        run: |
+          npm ci
+
+      - name: Load version from package.json
+        id: load_version
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+        shell: bash
+
+      - name: Build project
+        run: |
+          npm run build
+
+      - name: Add timestamp and create zip name
+        id: set_zip_name
+        run: |
+          TIMESTAMP=$(date +%s%3N)
+          ZIP_NAME="dist_${VERSION}_${TIMESTAMP}"
+          echo "ZIP_NAME=$ZIP_NAME" >> $GITHUB_ENV
+          echo "::set-output name=zip_name::$ZIP_NAME"
+
+      - name: Upload zip archive
+        uses: actions/upload-artifact@v3
+        with:
+          name: ${{ steps.set_zip_name.outputs.zip_name }}
+          path: dist

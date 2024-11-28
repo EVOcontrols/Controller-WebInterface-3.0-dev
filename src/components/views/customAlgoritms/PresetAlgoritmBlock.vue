@@ -238,6 +238,7 @@
                     :nullable="false"
                     :required="true"
                     :debounce-delay="1000"
+                    :disabled="props.inputs[item.index].disabled"
                     @status-changed="emit('setInputError', item.index, $event === 'invalid' || $event === 'empty')"
                     @value-changed="
                         $event === undefined
@@ -370,6 +371,7 @@ const props = defineProps<{
         subtitle?: string;
         isError: boolean;
         inline?: boolean;
+        disabled?: boolean;
     }[];
     dropDowns: {
         type: 'bin' | 'obj' | '1w-sens' | 'var' | 'act' | 'cond';

@@ -62,7 +62,7 @@ export type ControllerSettings = {
               'wr-tmo'?: number;
               'rd-pause'?: number;
               'wr-pause'?: number;
-              'cycle-pause'?: number;
+              'cycle-delay'?: number;
           }
         | {
               mode: 'ext-devs';
@@ -70,7 +70,7 @@ export type ControllerSettings = {
               'set-tmo'?: number;
               '1w-scan-tmo'?: number;
               'set-cfg-tmo'?: number;
-              'cycle-pause'?: number;
+              'cycle-delay'?: number;
           }
         | {
               mode: 'off';
@@ -92,10 +92,7 @@ export type ControllerSettings = {
     'reboot-req': boolean;
 };
 
-export type CommonControllerSettings = Pick<
-    ControllerSettings,
-    'lan' | 'cloud' | 'gsm' | 'rtc' | 'gnss'
-> & {
+export type CommonControllerSettings = Pick<ControllerSettings, 'lan' | 'cloud' | 'gsm' | 'rtc' | 'gnss'> & {
     'root-login': Pick<ControllerSettings['login'], 'root-name' | 'root-pass'> & {
         'root-pass-repeat': string;
     };
@@ -131,12 +128,7 @@ export type CommonSettingsFields = {
                     }) & {
                   widthClass: string;
                   status: InputFieldStatus;
-                  validationType?:
-                      | ('ip' | 'url')[]
-                      | ['int']
-                      | ['latitude']
-                      | ['longitude']
-                      | ['string'];
+                  validationType?: ('ip' | 'url')[] | ['int'] | ['latitude'] | ['longitude'] | ['string'];
                   isRequired?: boolean;
               }
             : {

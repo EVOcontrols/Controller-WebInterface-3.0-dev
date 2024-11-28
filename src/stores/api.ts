@@ -45,7 +45,7 @@ export const useApiStore = defineStore('apiStore', () => {
         let queryId: number | undefined;
 
         const isDev = import.meta.env.DEV;
-        await delay(isDev ? 50 : 5);
+        await delay(isDev ? 50 : 20);
 
         if (!isQueryBg) {
             queryId = Math.random();

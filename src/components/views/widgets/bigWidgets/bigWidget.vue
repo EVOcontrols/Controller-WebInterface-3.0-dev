@@ -95,6 +95,7 @@ const { saveToFile } = useReadWriteFiles();
 const api = indexStore.getApi().api as axios.AxiosInstance;
 
 const isAborted = indexStore.getApi().isAborted;
+let isUnmount = false;
 
 const idsArr = ref<string[]>([]);
 
@@ -152,6 +153,8 @@ const widget = computed<Widget>(() => {
 });
 
 async function getIndexes(labelsArr?: string[]) {
+    clearTimeout(scanTimer);
+    if (isUnmount) return;
     try {
         if (props.w.w.bus !== undefined) {
             const r = await api.post('scan_ow_ids', {
@@ -164,6 +167,7 @@ async function getIndexes(labelsArr?: string[]) {
             if (JSON.stringify(idsArr.value.sort()) !== JSON.stringify(newIds.sort())) {
                 idsArr.value = [...newIds];
             }
+            if (labelsArr) saveLabel(labelsArr);
             if (isLoading.value) {
                 await getEntState(props.w.w.d, [
                     {
@@ -174,7 +178,6 @@ async function getIndexes(labelsArr?: string[]) {
                         quantity: OWIds.value[props.w.w.d][props.w.w.bus].length,
                     },
                 ]);
-                if (labelsArr) saveLabel(labelsArr);
             }
             isLoading.value = false;
         }
@@ -183,7 +186,9 @@ async function getIndexes(labelsArr?: string[]) {
             return;
         }
     }
-    scanTimer = setTimeout(getIndexes, 500);
+    if (!isUnmount) {
+        scanTimer = setTimeout(getIndexes, 500);
+    }
 }
 
 async function getOWIds(labelsArr: string[]) {
@@ -354,6 +359,7 @@ onMounted(() => {
 });
 
 onBeforeUnmount(() => {
+    isUnmount = true;
     clearTimeout(scanTimer);
     scanTimer = undefined;
 });

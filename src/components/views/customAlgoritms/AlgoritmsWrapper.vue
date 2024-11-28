@@ -18,6 +18,7 @@
                     v-for="(item, i) in props.items"
                     :key="i"
                     :item="item"
+                    :side="props.side"
                     :checked="props.checkedArr.includes(props.items[i + props.page * funcsNumberPerPage])"
                     :index="i + props.page * funcsNumberPerPage"
                     :isActive="!!(activeLabel && activeLabel.i === i + props.page * funcsNumberPerPage)"
@@ -31,18 +32,15 @@
                     "
                     @deleteAlgoritm="
                         () => {
-                            deleteAlgoritm(
-                                [props.items[i + props.page * funcsNumberPerPage]],
-                                i + props.page * funcsNumberPerPage,
-                            );
+                            deleteAlgoritm([props.items[i]], i + props.page * funcsNumberPerPage, i);
                         }
                     "
-                    @dblclick.stop="
+                    @oneClick="handleClick(i)"
+                    @doubleClick="
                         (e: Event) => {
                             handleDblClick(i, e);
                         }
                     "
-                    @oneClick="handleClick(i)"
                     @addAlgoritm="(event) => addAlgoritm(i, event)"
                     @creatingFinish="handleCreatingFinish(i)"
                 />
@@ -50,6 +48,7 @@
             <div
                 v-else
                 class="bg-[#092740] rounded-[6px] h-full flex items-center justify-center"
+                :style="{ 'max-height': 'calc(100% - 32px)' }"
             >
                 <span
                     v-html="spinner"
@@ -100,6 +99,7 @@ const isAborted = indexStore.getApi().isAborted;
 const { funcsNumberPerPage, funcLabels } = storeToRefs(funcsStore);
 
 const props = defineProps<{
+    side: 'l' | 'r';
     items: Algoritm[];
     checkedArr: Algoritm[];
     page: number;
@@ -113,7 +113,7 @@ const props = defineProps<{
 
 const emit = defineEmits<{
     (e: 'selectAlgoritm', value: boolean, index: Algoritm): void;
-    (e: 'deleteAlgoritm', indexes: Algoritm[], index: number): void;
+    (e: 'deleteAlgoritm', indexes: Algoritm[], index: number, smallIndex: number): void;
     (e: 'addAlgoritm', index: number, label: string | undefined): void;
     (e: 'creatingFinish', index: number): void;
 }>();
@@ -137,8 +137,8 @@ function selectAlgoritm(value: boolean, index: Algoritm) {
     emit('selectAlgoritm', value, index);
 }
 
-function deleteAlgoritm(indexes: Algoritm[], index: number) {
-    emit('deleteAlgoritm', indexes, index);
+function deleteAlgoritm(indexes: Algoritm[], index: number, smallIndex: number) {
+    emit('deleteAlgoritm', indexes, index, smallIndex);
 }
 
 function handleDblClick(index: number, event: Event) {
@@ -151,15 +151,7 @@ function handleClick(i: number) {
         clickTimeout.value = null;
     } else {
         clickTimeout.value = setTimeout(() => {
-            if (openedAlgoritms.value.includes(i)) {
-                openedAlgoritms.value = openedAlgoritms.value.filter((el) => el !== i);
-
-                if (props.items[i].isCreating === true) {
-                    emit('creatingFinish', i);
-                }
-            } else {
-                openedAlgoritms.value.push(i);
-            }
+            toggleOpenedAlgoritms(i);
             clickTimeout.value = null;
         }, 300);
     }
@@ -167,7 +159,20 @@ function handleClick(i: number) {
 
 function handleCreatingFinish(i: number) {
     emit('creatingFinish', i);
-    handleClick(i);
+
+    toggleOpenedAlgoritms(i);
+}
+
+function toggleOpenedAlgoritms(i: number) {
+    if (openedAlgoritms.value.includes(i)) {
+        openedAlgoritms.value = openedAlgoritms.value.filter((el) => el !== i);
+
+        if (props.items[i].isCreating === true) {
+            emit('creatingFinish', i);
+        }
+    } else {
+        openedAlgoritms.value.push(i);
+    }
 }
 
 function changeLabel(index: number, e: Event, isCreating?: boolean) {
@@ -180,7 +185,7 @@ function changeLabel(index: number, e: Event, isCreating?: boolean) {
         window.removeEventListener('click', handleSave);
         window.removeEventListener('keypress', handleSave);
     };
-    const handleSave = (event: MouseEvent | KeyboardEvent) => saveData(event, isCreating, removeHandlers);
+    const handleSave = (event: MouseEvent | KeyboardEvent) => saveData(index, event, isCreating, removeHandlers);
 
     setTimeout(() => {
         const label = activeLabelInput.value;
@@ -247,25 +252,36 @@ function handleScroll() {
     scrollTop.value = el.scrollTop;
 }
 
-async function saveData(e: KeyboardEvent | MouseEvent, isCreating?: boolean, removeHandlers?: () => void) {
+async function saveData(
+    index: number,
+    e: KeyboardEvent | MouseEvent,
+    isCreating?: boolean,
+    removeHandlers?: () => void,
+) {
     if (!activeLabel.value) return;
     if (e.type === 'keypress') {
         const event: KeyboardEvent = e as KeyboardEvent;
         if (event.key === 'Enter') {
-            await sendLabel(activeLabel.value.i, activeLabel.value.label, isCreating, removeHandlers);
+            await sendLabel(index, activeLabel.value.i, activeLabel.value.label, isCreating, removeHandlers);
         }
     } else if (e.type === 'click') {
-        await sendLabel(activeLabel.value.i, activeLabel.value.label, isCreating, removeHandlers);
+        await sendLabel(index, activeLabel.value.i, activeLabel.value.label, isCreating, removeHandlers);
     }
 }
 
-async function sendLabel(index: number, label: string | undefined, isCreating?: boolean, removeHandlers?: () => void) {
+async function sendLabel(
+    smallIndex: number,
+    index: number,
+    label: string | undefined,
+    isCreating?: boolean,
+    removeHandlers?: () => void,
+) {
     await setLabel(index, label);
     activeLabel.value = undefined;
 
     if (removeHandlers) removeHandlers();
 
-    if (isCreating) emit('addAlgoritm', index, label);
+    if (isCreating) emit('addAlgoritm', smallIndex, label);
 }
 
 async function setLabel(index: number, label: string | undefined) {

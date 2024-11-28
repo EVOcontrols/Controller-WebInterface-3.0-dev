@@ -5,6 +5,7 @@
     >
         <div class="bg-[#092740] rounded-[6px] py-[15px] px-6 flex items-center gap-2 relative mb-4">
             <input
+                v-if="showCheckboxControlPanel"
                 type="checkbox"
                 class="cursor-pointer"
                 :id="'all'"
@@ -15,7 +16,10 @@
                     }
                 "
             />
-            <DropDown class="table-cell text-[0.813rem] [&>div>div]:!w-[10.375rem] ml-4">
+            <DropDown
+                class="table-cell text-[0.813rem] [&>div>div]:!w-[10.375rem]"
+                :class="{ 'ml-4': showCheckboxControlPanel }"
+            >
                 <template #trigger-element="{ onClick }">
                     <button
                         class="rounded-lg h-10 w-[326px] bg-[#0f304b] flex flex-row items-center gap-2 p-2"
@@ -35,7 +39,7 @@
                             <div
                                 v-for="action in actions"
                                 :key="action.val"
-                                class="flex flex-row h-[2.188rem] hover:bg-[#134d7d] shrink-0 items-center pl-2 pr-3 rounded hover:pl-3 transition-[background-color,padding] select-none cursor-pointer on:bg-[#134d7d] items-center gap-2"
+                                class="flex flex-row h-[2.188rem] hover:bg-[#134d7d] shrink-0 items-center pl-2 pr-3 rounded hover:pl-3 transition-[background-color,padding] select-none cursor-pointer on:bg-[#134d7d] gap-2"
                                 :class="{
                                     on: JSON.stringify(action) === JSON.stringify(curAction),
                                 }"
@@ -64,7 +68,8 @@
             />
             <span
                 v-html="search"
-                class="[&>svg]:h-[20px] [&>svg]:w-[20px] absolute top-[25px] left-[15.5rem]"
+                class="[&>svg]:h-[20px] [&>svg]:w-[20px] absolute top-[25px]"
+                :class="{ 'left-[13rem]': !showCheckboxControlPanel, 'left-[15.5rem]': showCheckboxControlPanel }"
             ></span>
             <PrimaryButton
                 class="w-[3.25rem] h-[2.5rem] flex items-center justify-center relative group"
@@ -93,11 +98,12 @@
         </div>
         <AlgoritmsWrapper
             ref="algoritmsWrapperRef"
-            :items="pages[curPage] || []"
+            :items="props.items"
             :checkedArr="props.selectedAlgoritms"
             :page="curPage"
             :device="props.device"
             :curAction="props.curAction"
+            :side="props.side"
             @selectAlgoritm="
                 (value: boolean, index: Algoritm) => {
                     emit('selectAlgoritm', value, index);
@@ -112,49 +118,39 @@
             @creatingFinish="(index: number) => emit('creatingFinish', index)"
         />
         <div
-            v-if="pages.length"
+            v-if="pages"
             class="absolute bottom-0 left-[50%] translate-x-[-50%] w-[5.625rem] h-[2.875rem] rounded-t-[8px] bg-[#113351] shadow-[0_0_7px_0_#07243D] flex items-center justify-center gap-1 py-[10px]"
         >
             <ArrowIcon
                 class="rotate-180"
-                :class="[
-                    { disabled: pages.length <= 1 || curPage === 0 },
-                    { 'cursor-pointer': pages.length > 1 && curPage },
-                ]"
-                @click="
-                    () => {
-                        if (curPage !== 0) {
-                            curPage--;
-                        }
-                    }
-                "
+                :class="[{ disabled: pages <= 1 || curPage === 0 }, { 'cursor-pointer': pages > 1 && curPage }]"
+                @click="emit('prevPage')"
             />
             <UiInput
                 :init-value="curPage + 1"
                 :name="'page'"
                 initType="number"
                 class="table-cell w-9 !h-[1.625rem] text-center !px-2"
-                :min-max="[1, pages.length]"
+                :min-max="[1, pages]"
                 :status="pageError ? 'invalid' : 'valid'"
                 :input-type="['int']"
                 :nullable="false"
                 :required="true"
                 @status-changed="pageError = $event === 'invalid' || $event === 'empty'"
-                @value-changed="$event === undefined ? '' : (curPage = $event - 1)"
+                @value-changed="
+                    (v: number | undefined) => {
+                        const value = v === undefined ? '' : v - 1;
+                        emit('pageInput', value);
+                    }
+                "
             />
             <ArrowIcon
                 class=""
                 :class="[
-                    { disabled: pages.length <= 1 || curPage === pages.length - 1 },
-                    { 'cursor-pointer': pages.length > 1 && curPage !== pages.length - 1 },
+                    { disabled: pages <= 1 || curPage === pages - 1 },
+                    { 'cursor-pointer': pages > 1 && curPage !== pages - 1 },
                 ]"
-                @click="
-                    () => {
-                        if (curPage !== pages.length - 1) {
-                            curPage++;
-                        }
-                    }
-                "
+                @click="emit('nextPage', pages)"
             />
         </div>
     </div>
@@ -170,11 +166,14 @@ import AlgoritmsWrapper from '@/components/views/customAlgoritms/AlgoritmsWrappe
 import ArrowIcon from '@/assets/ArrowIcon.vue';
 import type { Device } from '@/stores';
 
+const indexStore = useIndexStore();
 const funcsStore = useFuncsStore();
 
+const { devCapabs } = storeToRefs(indexStore);
 const { funcsNumberPerPage } = storeToRefs(funcsStore);
 
 const props = defineProps<{
+    side: 'l' | 'r';
     items: Algoritm[];
     selectedAlgoritms: Algoritm[];
     isAllChecked: boolean;
@@ -183,12 +182,13 @@ const props = defineProps<{
         | { label: 'conditions'; val: 'udf-cond' }
         | { label: 'actions'; val: 'udf-act' }
         | { label: 'transformations'; val: 'udf-trans' };
+    curPage: number;
     device?: Device;
     needToAddAlgoritm: Boolean;
 }>();
 
 const emit = defineEmits<{
-    (e: 'deleteAlgoritm', indexes: Algoritm[], index: number): void;
+    (e: 'deleteAlgoritm', indexes: Algoritm[], index: number, smallIndex: number): void;
     (e: 'addAlgoritm', index: number, label: string | undefined): void;
     (e: 'selectAlgoritm', value: boolean, index: Algoritm): void;
     (e: 'selectAllAlgoritms', value: boolean): void;
@@ -202,6 +202,9 @@ const emit = defineEmits<{
             | { label: 'actions'; val: 'udf-act' }
             | { label: 'transformations'; val: 'udf-trans' },
     ): void;
+    (e: 'prevPage'): void;
+    (e: 'nextPage', pages: number): void;
+    (e: 'pageInput', page: string | number): void;
 }>();
 
 type Algoritm = { val: 0 | 1 | null; label: string; isCreating?: boolean };
@@ -211,7 +214,7 @@ interface AlgoritmsWrapperInstance {
 }
 const algoritmsWrapperRef = ref<AlgoritmsWrapperInstance | null>(null);
 
-const curPage = ref(0);
+const showCheckboxControlPanel = ref(false);
 const headerInput = ref('');
 const pageError = ref(false);
 const actions: (
@@ -226,22 +229,15 @@ const actions: (
     { label: 'transformations', val: 'udf-trans' },
 ];
 
-const pages = computed<Algoritm[][]>(() => {
-    const arr: Algoritm[][] = [];
-    for (let i = 0; i < props.items.length; i += funcsNumberPerPage.value) {
-        let end;
-        if (i + funcsNumberPerPage.value < props.items.length) {
-            end = i + funcsNumberPerPage.value;
-        } else {
-            end = props.items.length;
-        }
-        arr.push(props.items.filter((el) => el.label.includes(headerInput.value)).slice(i, end));
-    }
-    return arr;
+const pages = computed<number>(() => {
+    const capabs = devCapabs.value[props.device ? props.device.addr : 0];
+    if (!capabs) return 0;
+
+    return Math.ceil(capabs[props.curAction.val] / funcsNumberPerPage.value);
 });
 
-function deleteAlgoritm(indexes: Algoritm[], index: number) {
-    emit('deleteAlgoritm', indexes, index);
+function deleteAlgoritm(indexes: Algoritm[], index: number, smallIndex: number) {
+    emit('deleteAlgoritm', indexes, index, smallIndex);
 }
 
 function addNewAlgoritm(event: Event) {

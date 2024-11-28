@@ -5,6 +5,7 @@
             :class="props.isActive ? 'h-[4.25rem]' : 'h-[3.625rem]'"
         >
             <div
+                v-if="false"
                 class="flex flex-row h-[2.188rem] w-4 shrink-0 items-center rounded transition-[background-color,padding] select-none cursor-pointer on:bg-[#134d7d] mr-8"
                 @click.stop=""
             >
@@ -33,7 +34,7 @@
             >
                 <IButtonIcon
                     :class="
-                        props.item.val
+                        props.item.val || props.item.isCreating
                             ? '[&>path]:fill-[#00D6AF] [&>rect]:fill-[#00D6AF]'
                             : '[&>path]:fill-[#5891C2] [&>rect]:fill-[#5891C2]'
                     "
@@ -51,6 +52,11 @@
                 class="group flex-1 flex text-sm text-[#ADEBFF] h-full cursor-pointer items-center justify-between select-none pr-4"
                 :class="[{ on: props.isOpen }]"
                 @click="emit('oneClick')"
+                @dblclick.stop="
+                    (e: Event) => {
+                        emit('doubleClick', e);
+                    }
+                "
             >
                 {{ props.item.label || '&#8212;' }}
                 <span
@@ -88,6 +94,7 @@
                 :type="props.curAction"
                 :device="props.device"
                 :index="index"
+                :side="props.side"
                 :isCreating="!!props.item.isCreating"
                 @creatingFinish="emit('creatingFinish')"
             />
@@ -112,6 +119,7 @@ const api = indexStore.getApi().api;
 const isAborted = indexStore.getApi().isAborted;
 
 const props = defineProps<{
+    side: 'l' | 'r';
     checked: boolean;
     item: { val: 0 | 1 | null; label: string; isCreating?: boolean };
     index: number;
@@ -129,6 +137,7 @@ const emit = defineEmits<{
     (e: 'selectAlgoritm', value: boolean): void;
     (e: 'deleteAlgoritm'): void;
     (e: 'oneClick'): void;
+    (e: 'doubleClick', event: Event): void;
     (e: 'addAlgoritm', event: Event): void;
     (e: 'creatingFinish'): void;
 }>();

@@ -1,11 +1,13 @@
 import { fileURLToPath, URL } from 'node:url';
 import AutoImport from 'unplugin-auto-import/vite';
-
 import { defineConfig } from 'vite';
 import vue from '@vitejs/plugin-vue';
 
 // https://vitejs.dev/config/
 export default defineConfig({
+    define: {
+        __APP_VERSION__: JSON.stringify(process.env.npm_package_version),
+    },
     base: '',
     plugins: [
         vue(),
@@ -31,7 +33,7 @@ export default defineConfig({
         host: true,
         proxy: {
             '^/(api|user/)': {
-                target: 'http://192.168.0.30',
+                target: 'http://65.21.176.66:49163',
                 configure: (proxy) => {
                     proxy.on('proxyReq', (proxyReq) => {
                         if (proxyReq.method === 'POST') {

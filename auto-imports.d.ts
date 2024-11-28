@@ -31,8 +31,10 @@ declare global {
   const WidgetsPage: (typeof import('./src/views/panel/WidgetsPage.vue'))['default']
   const _: typeof import('./src/plugins/lodash')['_']
   const acceptHMRUpdate: typeof import('pinia')['acceptHMRUpdate']
+  const analogyInterfaces: typeof import('./src/components/views/customAlgoritms/PresetAlgoritmBlocksWrapper/types')['analogyInterfaces']
   const asyncComputed: typeof import('@vueuse/core')['asyncComputed']
   const autoResetRef: typeof import('@vueuse/core')['autoResetRef']
+  const binaryInterfaces: typeof import('./src/components/views/customAlgoritms/PresetAlgoritmBlocksWrapper/types')['binaryInterfaces']
   const cloudModes: typeof import('./src/data/settings')['cloudModes']
   const commonMessages: typeof import('./src/data/common')['commonMessages']
   const computed: typeof import('vue')['computed']
@@ -45,11 +47,12 @@ declare global {
   const createApp: typeof import('vue')['createApp']
   const createBodyState: typeof import('./src/components/views/customAlgoritms/PresetAlgoritmBlocksWrapper/createBodyState')['createBodyState']
   const createConfig: typeof import('./src/components/views/customAlgoritms/PresetAlgoritmBlocksWrapper/createConfig')['createConfig']
+  const createEntityConfig: typeof import('./src/components/views/customAlgoritms/PresetAlgoritmBlocksWrapper/createEntityConfig')['createEntityConfig']
   const createEventHook: typeof import('@vueuse/core')['createEventHook']
   const createGlobalState: typeof import('@vueuse/core')['createGlobalState']
   const createInjectionState: typeof import('@vueuse/core')['createInjectionState']
   const createObjByType: typeof import('./src/components/views/customAlgoritms/PresetAlgoritmBlocksWrapper/createUdfObj')['createObjByType']
-  const createParsedConfig: typeof import('./src/components/views/customAlgoritms/PresetAlgoritmBlocksWrapper/createParsedConfig')['createParsedConfig']
+  const createParsedConfig: typeof import('@/components/views/customAlgoritms/PresetAlgoritmBlocksWrapper/createEntityConfig')['createEntityConfig']
   const createPinia: typeof import('pinia')['createPinia']
   const createReactiveFn: typeof import('@vueuse/core')['createReactiveFn']
   const createReusableTemplate: typeof import('@vueuse/core')['createReusableTemplate']
@@ -378,8 +381,10 @@ declare module 'vue' {
     readonly ORDER: UnwrapRef<typeof import('./src/components/views/customAlgoritms/PresetAlgoritmBlocksWrapper/types')['ORDER']>
     readonly _: UnwrapRef<typeof import('./src/plugins/lodash')['_']>
     readonly acceptHMRUpdate: UnwrapRef<typeof import('pinia')['acceptHMRUpdate']>
+    readonly analogyInterfaces: UnwrapRef<typeof import('./src/components/views/customAlgoritms/PresetAlgoritmBlocksWrapper/types')['analogyInterfaces']>
     readonly asyncComputed: UnwrapRef<typeof import('@vueuse/core')['asyncComputed']>
     readonly autoResetRef: UnwrapRef<typeof import('@vueuse/core')['autoResetRef']>
+    readonly binaryInterfaces: UnwrapRef<typeof import('./src/components/views/customAlgoritms/PresetAlgoritmBlocksWrapper/types')['binaryInterfaces']>
     readonly cloudModes: UnwrapRef<typeof import('./src/data/settings')['cloudModes']>
     readonly commonMessages: UnwrapRef<typeof import('./src/data/common')['commonMessages']>
     readonly computed: UnwrapRef<typeof import('vue')['computed']>
@@ -392,11 +397,11 @@ declare module 'vue' {
     readonly createApp: UnwrapRef<typeof import('vue')['createApp']>
     readonly createBodyState: UnwrapRef<typeof import('./src/components/views/customAlgoritms/PresetAlgoritmBlocksWrapper/createBodyState')['createBodyState']>
     readonly createConfig: UnwrapRef<typeof import('./src/components/views/customAlgoritms/PresetAlgoritmBlocksWrapper/createConfig')['createConfig']>
+    readonly createEntityConfig: UnwrapRef<typeof import('./src/components/views/customAlgoritms/PresetAlgoritmBlocksWrapper/createEntityConfig')['createEntityConfig']>
     readonly createEventHook: UnwrapRef<typeof import('@vueuse/core')['createEventHook']>
     readonly createGlobalState: UnwrapRef<typeof import('@vueuse/core')['createGlobalState']>
     readonly createInjectionState: UnwrapRef<typeof import('@vueuse/core')['createInjectionState']>
     readonly createObjByType: UnwrapRef<typeof import('./src/components/views/customAlgoritms/PresetAlgoritmBlocksWrapper/createUdfObj')['createObjByType']>
-    readonly createParsedConfig: UnwrapRef<typeof import('./src/components/views/customAlgoritms/PresetAlgoritmBlocksWrapper/createParsedConfig')['createParsedConfig']>
     readonly createPinia: UnwrapRef<typeof import('pinia')['createPinia']>
     readonly createReactiveFn: UnwrapRef<typeof import('@vueuse/core')['createReactiveFn']>
     readonly createReusableTemplate: UnwrapRef<typeof import('@vueuse/core')['createReusableTemplate']>
@@ -714,8 +719,10 @@ declare module '@vue/runtime-core' {
     readonly ORDER: UnwrapRef<typeof import('./src/components/views/customAlgoritms/PresetAlgoritmBlocksWrapper/types')['ORDER']>
     readonly _: UnwrapRef<typeof import('./src/plugins/lodash')['_']>
     readonly acceptHMRUpdate: UnwrapRef<typeof import('pinia')['acceptHMRUpdate']>
+    readonly analogyInterfaces: UnwrapRef<typeof import('./src/components/views/customAlgoritms/PresetAlgoritmBlocksWrapper/types')['analogyInterfaces']>
     readonly asyncComputed: UnwrapRef<typeof import('@vueuse/core')['asyncComputed']>
     readonly autoResetRef: UnwrapRef<typeof import('@vueuse/core')['autoResetRef']>
+    readonly binaryInterfaces: UnwrapRef<typeof import('./src/components/views/customAlgoritms/PresetAlgoritmBlocksWrapper/types')['binaryInterfaces']>
     readonly cloudModes: UnwrapRef<typeof import('./src/data/settings')['cloudModes']>
     readonly commonMessages: UnwrapRef<typeof import('./src/data/common')['commonMessages']>
     readonly computed: UnwrapRef<typeof import('vue')['computed']>
@@ -728,11 +735,11 @@ declare module '@vue/runtime-core' {
     readonly createApp: UnwrapRef<typeof import('vue')['createApp']>
     readonly createBodyState: UnwrapRef<typeof import('./src/components/views/customAlgoritms/PresetAlgoritmBlocksWrapper/createBodyState')['createBodyState']>
     readonly createConfig: UnwrapRef<typeof import('./src/components/views/customAlgoritms/PresetAlgoritmBlocksWrapper/createConfig')['createConfig']>
+    readonly createEntityConfig: UnwrapRef<typeof import('./src/components/views/customAlgoritms/PresetAlgoritmBlocksWrapper/createEntityConfig')['createEntityConfig']>
     readonly createEventHook: UnwrapRef<typeof import('@vueuse/core')['createEventHook']>
     readonly createGlobalState: UnwrapRef<typeof import('@vueuse/core')['createGlobalState']>
     readonly createInjectionState: UnwrapRef<typeof import('@vueuse/core')['createInjectionState']>
     readonly createObjByType: UnwrapRef<typeof import('./src/components/views/customAlgoritms/PresetAlgoritmBlocksWrapper/createUdfObj')['createObjByType']>
-    readonly createParsedConfig: UnwrapRef<typeof import('./src/components/views/customAlgoritms/PresetAlgoritmBlocksWrapper/createParsedConfig')['createParsedConfig']>
     readonly createPinia: UnwrapRef<typeof import('pinia')['createPinia']>
     readonly createReactiveFn: UnwrapRef<typeof import('@vueuse/core')['createReactiveFn']>
     readonly createReusableTemplate: UnwrapRef<typeof import('@vueuse/core')['createReusableTemplate']>

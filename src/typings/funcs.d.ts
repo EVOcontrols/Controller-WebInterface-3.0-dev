@@ -59,17 +59,8 @@ export type Body = {
         | 'bin-equal'
         | 'bin-not-equal'
         | 'error'
-        | 'not-error'
-        | 'less'
-        | 'less-eq'
-        | 'more'
-        | 'more-eq'
-        | 'equal'
         | 'nor-equal'
-        | 'bin-equal'
-        | 'bin-not-equal'
-        | 'error'
-        | 'not-error'
+        | 'non-error'
         | '='
         | '+='
         | '-='
@@ -93,7 +84,11 @@ export type Body = {
         | '/'
         | '%'
         | '<<'
-        | '>>';
+        | '>>'
+        | '>'
+        | '<'
+        | '>='
+        | '<=';
     time?: Time;
     hysteresis?: 0;
     delay?: Time;

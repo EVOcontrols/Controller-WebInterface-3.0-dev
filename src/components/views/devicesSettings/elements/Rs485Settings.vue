@@ -30,9 +30,7 @@
                         {{ t('parity') }}
                     </div>
                     <ButtonGroup
-                        :buttons="
-                            modbusParities.map((v) => ({ text: t(`parities.${v}`), value: v }))
-                        "
+                        :buttons="modbusParities.map((v) => ({ text: t(`parities.${v}`), value: v }))"
                         :value="props.settings.parity"
                         additional-classes="px-4"
                         @change="emit('changeParity', $event)"
@@ -57,9 +55,7 @@
                         {{ t('numberingSystem') }}
                     </div>
                     <ButtonGroup
-                        :buttons="
-                            numberingSystems.map((v) => ({ text: v.toUpperCase(), value: v }))
-                        "
+                        :buttons="numberingSystems.map((v) => ({ text: v.toUpperCase(), value: v }))"
                         :value="numberingSystem"
                         additional-classes="px-4"
                         @change="emit('changeNumberingSystem', $event)"
@@ -77,9 +73,7 @@
                     >
                         <div class="table w-max mt-5">
                             <div
-                                v-for="p in rsAdvancedParams[
-                                    props.settings.mode as 'variables' | 'ext-devs'
-                                ]"
+                                v-for="p in rsAdvancedParams[props.settings.mode as 'variables' | 'ext-devs']"
                                 :key="`${props.settings.mode}${p.param}`"
                                 class="table-row h-[3.43rem] align-top last:h-10"
                             >
@@ -89,38 +83,24 @@
                                 <UiInput
                                     :init-value="
                                         isKeyOf(
-                                            props.settings.advanced[
-                                                props.settings.mode as 'variables' | 'ext-devs'
-                                            ],
+                                            props.settings.advanced[props.settings.mode as 'variables' | 'ext-devs'],
                                             p.param,
                                         )
-                                            ? props.settings.advanced[
-                                                  props.settings.mode as 'variables' | 'ext-devs'
-                                              ][p.param]
+                                            ? props.settings.advanced[props.settings.mode as 'variables' | 'ext-devs'][
+                                                  p.param
+                                              ]
                                             : undefined
                                     "
                                     :name="p.param"
                                     initType="number"
                                     class="table-cell w-16 text-center !px-2"
                                     :min-max="[p.min, p.max]"
-                                    :status="
-                                        fieldsInvalidStatuses.has(`modbus-${p.param}`)
-                                            ? 'invalid'
-                                            : 'valid'
-                                    "
+                                    :status="fieldsInvalidStatuses.has(`modbus-${p.param}`) ? 'invalid' : 'valid'"
                                     :input-type="['int']"
                                     @status-changed="
                                         $event === 'invalid' || $event === 'not-allowed'
-                                            ? emit(
-                                                  'toggleInvalidFieldStatus',
-                                                  `modbus-${p.param}`,
-                                                  'add',
-                                              )
-                                            : emit(
-                                                  'toggleInvalidFieldStatus',
-                                                  `modbus-${p.param}`,
-                                                  'delete',
-                                              )
+                                            ? emit('toggleInvalidFieldStatus', `modbus-${p.param}`, 'add')
+                                            : emit('toggleInvalidFieldStatus', `modbus-${p.param}`, 'delete')
                                     "
                                     @value-changed="
                                         (e?: number) => {
@@ -172,7 +152,7 @@ const emit = defineEmits<{
     (e: 'changeParity', parity: T['parity']): void;
     (e: 'changeStop', stop: T['stop']): void;
     (e: 'changeNumberingSystem', numberingSystem: NGCSettings['numberingSystem']): void;
-    (e: 'changeAdvancedParam', param: 'cycle-pause', value?: number): void;
+    (e: 'changeAdvancedParam', param: 'cycle-delay', value?: number): void;
 }>();
 
 const isAdvancedSettingsExpanded = ref(false);
@@ -185,14 +165,14 @@ const rsAdvancedParams = {
         { param: 'wr-tmo', label: 'wr-tmo', min: 0, max: 65535 },
         { param: 'rd-pause', label: 'rd-ddy', min: 0, max: 65535 },
         { param: 'wr-pause', label: 'wr-ddy', min: 0, max: 65535 },
-        { param: 'cycle-pause', label: 'cm-ddy', min: 0, max: 65535 },
+        { param: 'cycle-delay', label: 'cm-ddy', min: 0, max: 65535 },
     ],
     'ext-devs': [
         { param: 'get-tmo', label: 'get-tmo', min: 0, max: 65535 },
         { param: 'set-tmo', label: 'set-tmo', min: 0, max: 65535 },
-        { param: 'ow-scan-tmo', label: 'ow-scan-tmo', min: 0, max: 65535 },
+        { param: '1w-scan-tmo', label: '1w-scan-tmo', min: 0, max: 65535 },
         { param: 'set-cfg-tmo', label: 'set-cfg-tmo', min: 0, max: 65535 },
-        { param: 'cycle-pause', label: 'cycle-pause', min: 0, max: 65535 },
+        { param: 'cycle-delay', label: 'cycle-delay', min: 0, max: 65535 },
     ],
 } as const;
 

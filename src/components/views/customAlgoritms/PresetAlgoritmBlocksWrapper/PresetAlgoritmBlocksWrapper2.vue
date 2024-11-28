@@ -6,7 +6,8 @@
     >
         <div
             v-if="microLoading"
-            class="p-2 flex items-center justify-center absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"
+            class="p-2 flex items-center justify-center fixed top-[22rem]"
+            :class="{ 'left-1/2 -translate-x-1/2 -ml-[4rem]': props.side === 'l', 'right-[3rem]': props.side === 'r' }"
         >
             <span
                 v-html="spinner"
@@ -160,7 +161,7 @@
                                 <div
                                     class="w-full h-full px-[10px] flex items-center transition-colors duration-300 hover:bg-[#163E61]"
                                     :class="shownDropDown.vals.includes(i) ? 'bg-[#163E61]' : ''"
-                                    @click="handleClickSelect(item)"
+                                    @click="handleClickMultiSelect(item)"
                                 >
                                     <div class="w-5 mr-4">
                                         {{ i + 1 }}
@@ -263,6 +264,7 @@ import {
     DropDownItem,
     CurKeyMap,
     BodySave,
+    analogyInterfaces,
 } from './types';
 import {
     $apiGetConfig,
@@ -274,7 +276,7 @@ import {
 } from './api';
 import { getInitCurBody } from './curBody';
 import { createConfig } from './createConfig';
-import { createParsedConfig } from './createParsedConfig';
+import { createEntityConfig } from './createEntityConfig';
 import { createBodyState } from './createBodyState';
 import { createObjByType } from './createUdfObj';
 import { ControllerSettings } from '@/typings/settings';
@@ -285,6 +287,7 @@ const timeoutDev = 10000;
 const funcStore = useFuncsStore();
 
 const props = defineProps<{
+    side: 'l' | 'r';
     type: PropsTypes;
     device?: Device;
     index: number;
@@ -331,8 +334,6 @@ const config = ref<Config[]>([]);
 const curConfigByAddr = ref<ControllerSettings>();
 const configByAddr = ref<Record<string, ControllerSettings>>({});
 
-let initBody = null;
-
 const curBody = ref<Body>();
 
 const ent1 = ref<EntBind[]>([]);
@@ -351,16 +352,37 @@ const ent1WConfig3 = ref<Mode1W[]>([]);
 
 const isUpdating = ref(false);
 
-function modifyTime(obj: any, timeConfig: any, prop: string) {
-    if (obj[prop] && obj[prop].type === 'tim-const' && timeConfig) {
-        const multiplier = timeConfig.btns[1].val === 'ms' ? 1 : timeConfig.btns[1].val === 's' ? 1000 : 60000;
+function modifyTime<T extends Record<string, any>>(
+    obj: T,
+    timeConfig: Config | undefined,
+    prop: string,
+): T | undefined {
+    if (!obj[prop] || obj[prop].type !== 'tim-const' || !timeConfig) return undefined;
 
-        return {
-            ...obj[prop],
-            value: obj[prop].value * multiplier,
-        };
-    }
-    return undefined;
+    const multiplier = timeConfig.btns[1].val === 'ms' ? 1 : timeConfig.btns[1].val === 's' ? 1000 : 60000;
+    return {
+        ...obj[prop],
+        value: obj[prop].value * multiplier,
+    };
+}
+
+function modifyAnalogyValue<T extends Record<string, any>>(obj: T, prop: string): T | undefined {
+    if (!obj[prop] || obj[prop].type !== 'int-const' || !obj.entity || !analogyInterfaces.includes(obj.entity.type))
+        return undefined;
+
+    return {
+        ...obj[prop],
+        value: obj[prop].value * 100,
+    };
+}
+
+function modifyValueWithErrorOperation<T extends Record<string, any>>(obj: T, prop: string): T | undefined {
+    if (!obj[prop] || (obj.operation !== 'error' && obj.operation !== 'non-error')) return undefined;
+
+    return {
+        ...obj[prop],
+        value: 0,
+    };
 }
 
 async function saveData() {
@@ -378,7 +400,7 @@ async function saveData() {
     const maxTimeConfig = config.value.find((el) => el.curKey === CurKeyMap.MaxTime);
     const delayConfig = config.value.find((el) => el.curKey === CurKeyMap.Delay);
     const pauseConfig = config.value.find((el) => el.curKey === CurKeyMap.Pause);
-    const modifiedTime = {
+    const modified = {
         ...obj,
         ...(modifyTime(obj, timeConfig, 'time') && { time: modifyTime(obj, timeConfig, 'time') }),
         ...(modifyTime(obj, minTimeConfig, 'min-time') && {
@@ -393,18 +415,28 @@ async function saveData() {
         ...(modifyTime(obj, pauseConfig, 'pause') && {
             pause: modifyTime(obj, pauseConfig, 'pause'),
         }),
+        ...(modifyAnalogyValue(obj, 'value') && {
+            value: modifyAnalogyValue(obj, 'value'),
+        }),
+        ...(modifyAnalogyValue(obj, 'stop-val') && {
+            'stop-val': modifyAnalogyValue(obj, 'stop-val'),
+        }),
+        ...(modifyValueWithErrorOperation(obj, 'value') && {
+            value: modifyValueWithErrorOperation(obj, 'value'),
+        }),
     };
 
     if (props.type.val === 'udf-act') {
-        body = { ...body, action: modifiedTime };
+        body = { ...body, action: modified };
     } else if (props.type.val === 'udf-cond') {
-        body = { ...body, condition: modifiedTime };
+        body = { ...body, condition: modified };
     } else if (props.type.val === 'udf-trans') {
-        body = { ...body, transform: modifiedTime };
+        body = { ...body, transform: modified };
     } else {
-        body = { ...body, trigger: modifiedTime };
+        body = { ...body, trigger: modified };
     }
 
+    console.warn('save body', body);
     await $apiSaveUdfConfig(body);
     isSaving.value = false;
     initConfig.value = JSON.stringify(config.value);
@@ -606,19 +638,23 @@ function setInputError(configItemIndex: number, inputItemIndex: number, res: boo
     // reRenderLayout();
 }
 
-function handleClickSelect(item: DropDownItem) {
+function handleClickMultiSelect(item: DropDownItem) {
     if (!shownDropDown.value) return;
 
+    const { type, vals } = shownDropDown.value;
+
     const canSelect =
-        (shownDropDown.value.type === 'act' || shownDropDown.value.type === 'cond') &&
-        (shownDropDown.value.vals.length === 0 ||
-            shownDropDown.value.vals.includes(item.i - 1) ||
-            shownDropDown.value.vals.includes(item.i + 1));
+        (type === 'act' || type === 'cond') &&
+        (vals.length === 0 || vals.includes(item.i - 1) || vals.includes(item.i + 1));
+    const isSelected = vals.includes(item.i);
+    const isMiddleElement = isSelected && vals.includes(item.i - 1) && vals.includes(item.i + 1);
 
     if (canSelect) {
-        shownDropDown.value.vals = shownDropDown.value.vals.includes(item.i)
-            ? shownDropDown.value.vals.filter((num) => num !== item.i).sort()
-            : [...shownDropDown.value.vals, item.i].sort();
+        if (isSelected && !isMiddleElement) {
+            shownDropDown.value.vals = vals.filter((num) => num !== item.i).sort();
+        } else if (!isSelected) {
+            shownDropDown.value.vals = [...vals, item.i].sort();
+        }
     } else {
         shownDropDown.value.vals = [item.i];
     }
@@ -815,11 +851,15 @@ async function parseEntity(ent: Ent) {
         await getLabels(entNum, ent.type as UDF);
     }
 
-    const OWConfig = configByAddr.value[ent.device || 0]['1-wire'];
+    const device = ent.device || 0;
+    const mainDevice = props.device?.addr || 0;
+    const isNGC = mainDevice === 0;
+    const deviceId = isNGC ? (device !== mainDevice ? device : mainDevice) : mainDevice;
+    const OWConfig = configByAddr.value[deviceId]['1-wire'];
 
     const entItems = entNum === 1 ? ent1.value : entNum === 2 ? [...ent2.value] : [...ent3.value];
 
-    return createParsedConfig(ent, props.type.val, interfaces[entNum - 1], OWConfig, entItems, t, props.device);
+    return createEntityConfig(ent, props.type.val, interfaces[entNum - 1], OWConfig, entItems, t, props.device);
 }
 
 function getConstBtns(configTime?: Config) {
@@ -867,10 +907,10 @@ async function parseTime(time: Time, title: string): Promise<Config[] | undefine
     // let s = time.value || 0;
     // let newS = s;
     // let units: 'ms' | 's' | 'min';
-    // if (s <= 15000) {
+    // if (s <= 1000) {
     //     units = 'ms';
     //     newS = s / 10;
-    // } else if (s > 15000 && s % 60000 === 0) {
+    // } else if (s > 1000 && s % 60000 === 0) {
     //     units = 'min';
     //     newS = s / 60000;
     // } else {
@@ -1019,7 +1059,6 @@ async function setConfig() {
 function configCreating() {
     const device = props.device?.addr || 0;
     curBody.value = getInitCurBody(props.type.val, device);
-    initBody = curBody.value;
 }
 
 async function configEditing() {
@@ -1028,7 +1067,38 @@ async function configEditing() {
     if (!curBody.value) {
         curBody.value = data.trigger || data.condition || data.action || data.transform;
     }
-    initBody = curBody.value;
+
+    if (
+        curBody.value?.value &&
+        curBody.value.value.type === 'int-const' &&
+        curBody.value?.entity &&
+        analogyInterfaces.includes(curBody.value.entity.type) &&
+        curBody.value.value.value
+    ) {
+        curBody.value = {
+            ...curBody.value,
+            value: {
+                ...curBody.value.value,
+                value: curBody.value.value.value / 100,
+            },
+        };
+    }
+    if (
+        curBody.value?.['stop-val'] &&
+        curBody.value['stop-val'].type === 'int-const' &&
+        curBody.value?.entity &&
+        analogyInterfaces.includes(curBody.value.entity.type) &&
+        curBody.value['stop-val'].value
+    ) {
+        curBody.value = {
+            ...curBody.value,
+            'stop-val': {
+                ...curBody.value['stop-val'],
+                value: curBody.value['stop-val'].value / 100,
+            },
+        };
+    }
+
     initConfig.value = JSON.stringify(config.value);
 }
 

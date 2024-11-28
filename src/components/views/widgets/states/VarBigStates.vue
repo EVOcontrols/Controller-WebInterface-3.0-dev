@@ -40,9 +40,9 @@
                                 ? '\u2013'
                                 : props.w.w.i !== 'bin-var'
                                 ? props.w.w.i === 'tim-var'
-                                    ? s <= 15000
+                                    ? s <= 1000
                                         ? `${s} ${t('ms')}`
-                                        : s > 15000 && s % 60000 === 0
+                                        : s > 1000 && s % 60000 === 0
                                         ? `${s / 60000} ${t('min')}`
                                         : `${s / 1000} ${t('s')}`
                                     : s
@@ -156,9 +156,8 @@ async function handleClick(index: number, s: number | null) {
 watch(
     () => devicesState.value,
     () => {
-        const newState = devicesState.value[props.w.w.d].find(
-            (obj: InterfVal) => obj.type === props.w.w.i,
-        )?.state as number[];
+        const newState = devicesState.value[props.w.w.d].find((obj: InterfVal) => obj.type === props.w.w.i)
+            ?.state as number[];
         state.value = newState ? newState : [...props.w.state];
     },
 );

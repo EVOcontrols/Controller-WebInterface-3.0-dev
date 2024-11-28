@@ -123,6 +123,7 @@ export type Config = {
         subtitle?: string;
         isError: boolean;
         inline?: boolean;
+        disabled?: boolean;
     }[];
     dropDowns: {
         type: DropDownTypes;
@@ -168,6 +169,9 @@ export type BodySave = {
     transform?: any;
     trigger?: any;
 };
+
+export const binaryInterfaces = ['bin-in', 'bin-out', 'bin-var', '1w-rom', 'mb-coil', 'mb-di'];
+export const analogyInterfaces = ['pwm-out', 'adc-in', '1w-sens'];
 
 export const ORDER = [
     '1w-rom',
@@ -218,4 +222,8 @@ export const enum CurKeyMap {
     MinTime = 33,
     MaxTime = 34,
     ComparisonOperation = 45,
+    ComparisonValueLeft = 46,
+    ComparisonValueRight = 47,
+    EnterLeft = 48,
+    EnterRight = 49,
 }
