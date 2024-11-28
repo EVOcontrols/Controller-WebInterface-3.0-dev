@@ -25,9 +25,7 @@ jobs:
           source .env
           set +o allexport
           echo "VITE_INTERFACE_VERSION=$(echo $VITE_INTERFACE_VERSION | tr -d '\r')" >> $GITHUB_ENV
-          echo "VITE_IP=$(echo $VITE_IP | tr -d '\r')" >> $GITHUB_ENV
           echo "Loaded VITE_INTERFACE_VERSION=${VITE_INTERFACE_VERSION}"
-          echo "Loaded VITE_IP=${VITE_IP}"
         shell: bash
 
       - name: Build project
@@ -38,7 +36,7 @@ jobs:
         id: set_zip_name
         run: |
           TIMESTAMP=$(date +%s%3N)
-          ZIP_NAME="dist_${{ env.VITE_INTERFACE_VERSION }}_${{ env.VITE_IP }}_${TIMESTAMP}.zip"
+          ZIP_NAME="dist_${{ env.VITE_INTERFACE_VERSION }}_${TIMESTAMP}"
           echo "ZIP_NAME=$ZIP_NAME" >> $GITHUB_ENV
           echo "::set-output name=zip_name::$ZIP_NAME"
 
