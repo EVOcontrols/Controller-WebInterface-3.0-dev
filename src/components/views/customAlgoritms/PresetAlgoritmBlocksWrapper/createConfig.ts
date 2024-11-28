@@ -2,7 +2,7 @@ import type { Body, Ent, Time } from '@/typings/funcs';
 import { type Config, CurKeyMap, binaryInterfaces, type UDF } from './types';
 import type { Device } from '@/stores';
 
-const readonlyInterfaces = ['1w-rom', '1w-sens', 'bin-in', 'adc-in', 'mb-var'];
+const readonlyInterfaces = ['1w-rom', '1w-sens', 'bin-in', 'adc-in'];
 
 export const createConfig = async (
     curBodyVal: Body,
@@ -807,12 +807,12 @@ async function createPauseConfig(
     cbParseTime: (time: Time, title: string) => Promise<Config[] | undefined>,
     t: (key: string) => string,
 ): Promise<Config[] | null> {
-    if (!curBodyVal['time'] || curBodyVal.type !== 'cycle') {
+    console.log('curBodyVal', curBodyVal);
+    if (!curBodyVal['pause'] || curBodyVal.type !== 'cycle') {
         return null;
     }
 
-    //TODO
-    const configs = await cbParseTime(curBodyVal['time'], t('titles.pause'));
+    const configs = await cbParseTime(curBodyVal['pause'], t('titles.pause'));
     if (!configs || !configs.length) return null;
 
     return configs.map((el) => ({ ...el, curKey: CurKeyMap.Pause }));

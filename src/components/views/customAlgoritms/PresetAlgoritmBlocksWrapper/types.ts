@@ -206,7 +206,6 @@ export const enum CurKeyMap {
     Hysteresis = 27,
     Time = 28,
     Delay = 29,
-    Pause = 29, // todo 29 same delay
     MultiSelect = 30,
     StartStopMode = 31,
     CyclicMode = 32,
@@ -217,4 +216,5 @@ export const enum CurKeyMap {
     ComparisonValueRight = 47,
     EnterLeft = 48,
     EnterRight = 49,
+    Pause = 55,
 }
