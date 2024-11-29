@@ -164,7 +164,8 @@ export type BodySave = {
     trigger?: any;
 };
 
-export const binaryInterfaces = ['bin-in', 'bin-out', 'bin-var', '1w-rom', 'mb-var'];
+export const binaryInterfaces = ['bin-in', 'bin-out', 'bin-var', '1w-rom'];
+export const binaryMBInterfaces = ['coil', 'di'];
 export const analogyInterfaces = ['pwm-out', 'adc-in', '1w-sens'];
 
 export const ORDER = [

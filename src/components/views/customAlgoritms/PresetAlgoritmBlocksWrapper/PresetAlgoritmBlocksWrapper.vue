@@ -1053,6 +1053,7 @@ async function setConfig() {
     const resultConfig = await createConfig(
         curBody.value,
         props.type.val,
+        mbVarTypes.value,
         t,
         parseEntity,
         parseTime,

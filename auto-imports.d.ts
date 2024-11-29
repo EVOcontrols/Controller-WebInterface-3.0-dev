@@ -35,6 +35,7 @@ declare global {
   const asyncComputed: typeof import('@vueuse/core')['asyncComputed']
   const autoResetRef: typeof import('@vueuse/core')['autoResetRef']
   const binaryInterfaces: typeof import('./src/components/views/customAlgoritms/PresetAlgoritmBlocksWrapper/types')['binaryInterfaces']
+  const binaryMBInterfaces: typeof import('./src/components/views/customAlgoritms/PresetAlgoritmBlocksWrapper/types')['binaryMBInterfaces']
   const cloudModes: typeof import('./src/data/settings')['cloudModes']
   const commonMessages: typeof import('./src/data/common')['commonMessages']
   const computed: typeof import('vue')['computed']
@@ -385,6 +386,7 @@ declare module 'vue' {
     readonly asyncComputed: UnwrapRef<typeof import('@vueuse/core')['asyncComputed']>
     readonly autoResetRef: UnwrapRef<typeof import('@vueuse/core')['autoResetRef']>
     readonly binaryInterfaces: UnwrapRef<typeof import('./src/components/views/customAlgoritms/PresetAlgoritmBlocksWrapper/types')['binaryInterfaces']>
+    readonly binaryMBInterfaces: UnwrapRef<typeof import('./src/components/views/customAlgoritms/PresetAlgoritmBlocksWrapper/types')['binaryMBInterfaces']>
     readonly cloudModes: UnwrapRef<typeof import('./src/data/settings')['cloudModes']>
     readonly commonMessages: UnwrapRef<typeof import('./src/data/common')['commonMessages']>
     readonly computed: UnwrapRef<typeof import('vue')['computed']>
@@ -723,6 +725,7 @@ declare module '@vue/runtime-core' {
     readonly asyncComputed: UnwrapRef<typeof import('@vueuse/core')['asyncComputed']>
     readonly autoResetRef: UnwrapRef<typeof import('@vueuse/core')['autoResetRef']>
     readonly binaryInterfaces: UnwrapRef<typeof import('./src/components/views/customAlgoritms/PresetAlgoritmBlocksWrapper/types')['binaryInterfaces']>
+    readonly binaryMBInterfaces: UnwrapRef<typeof import('./src/components/views/customAlgoritms/PresetAlgoritmBlocksWrapper/types')['binaryMBInterfaces']>
     readonly cloudModes: UnwrapRef<typeof import('./src/data/settings')['cloudModes']>
     readonly commonMessages: UnwrapRef<typeof import('./src/data/common')['commonMessages']>
     readonly computed: UnwrapRef<typeof import('vue')['computed']>
