@@ -38,9 +38,7 @@
                     v-else-if="props.command === 'update'"
                     class="w-[21px] h-[21px]"
                 />
-                <div class="flex-1 text-lg text-[#9ADBF6] font-semibold">
-                    {{ t(`${$props.command}.title`) }}
-                </div>
+                <div class="flex-1 text-lg text-[#9ADBF6] font-semibold">{{ t(`${$props.command}.title`) }}</div>
                 <CloseIcon
                     class="cursor-pointer"
                     @click="$emit('close')"

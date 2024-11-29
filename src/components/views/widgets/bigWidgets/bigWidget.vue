@@ -155,6 +155,7 @@ const widget = computed<Widget>(() => {
 async function getIndexes(labelsArr?: string[]) {
     clearTimeout(scanTimer);
     if (isUnmount) return;
+
     try {
         if (props.w.w.bus !== undefined) {
             const r = await api.post('scan_ow_ids', {
