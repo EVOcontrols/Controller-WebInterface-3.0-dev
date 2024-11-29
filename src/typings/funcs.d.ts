@@ -31,7 +31,8 @@ export type EntType =
     | 'mb-ir'
     | 'mb-hr'
     | 'mb-di'
-    | 'mb-coil';
+    | 'mb-coil'
+    | 'mb-var';
 
 export type Time = {
     type: 'tim-const' | 'tim-var';

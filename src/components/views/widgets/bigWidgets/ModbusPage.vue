@@ -1262,6 +1262,10 @@ import ModbusPopUp from '@/components/views/widgets/bigWidgets/ModbusPopUp.vue';
 import PrimaryButton from '@/components/Ui/PrimaryButton.vue';
 import OutlinedButton from '@/components/Ui/OutlinedButton.vue';
 import type { Widget } from '@/stores';
+import { MBTypeWithNone } from '@/components/views/widgets/bigWidgets/types';
+
+const isDev = import.meta.env.DEV;
+const timeoutDev = 10000;
 
 const props = defineProps<{
     w: { w: Widget; state: number[] };
@@ -1618,7 +1622,7 @@ async function getMbInfo() {
             'reg-addr': number[];
         };
         const arr: {
-            type: 'hr' | 'wm-hr' | 'w-hr' | 'm-hr' | 'ir' | 'coil' | 'wm-coil' | 'w-coil' | 'm-coil' | 'di' | 'none';
+            type: MBTypeWithNone;
             'reg-addr': number;
             'dev-addr': number;
             val: number | null | 'err';
@@ -1639,14 +1643,14 @@ async function getMbInfo() {
         }
         fullState.value = [...arr];
         if (getMbInfoTimer !== undefined) {
-            getMbInfoTimer = setTimeout(getMbInfo, 3000);
+            getMbInfoTimer = setTimeout(getMbInfo, isDev ? timeoutDev : 3000);
         }
     } catch (error) {
         if (isAborted.value) {
             return;
         }
         if (getMbInfoTimer !== undefined) {
-            getMbInfoTimer = setTimeout(getMbInfo, 20);
+            getMbInfoTimer = setTimeout(getMbInfo, isDev ? timeoutDev / 5 : 20);
         }
     }
 }

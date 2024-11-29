@@ -853,11 +853,21 @@ async function parseEntity(ent: Ent) {
     const mainDevice = props.device?.addr || 0;
     const isNGC = mainDevice === 0;
     const deviceId = isNGC ? (device !== mainDevice ? device : mainDevice) : mainDevice;
-    const OWConfig = configByAddr.value[deviceId]['1-wire'];
+    const owConfig = configByAddr.value[deviceId]['1-wire'];
+    const mbConfig = configByAddr.value[deviceId]['rs-485'];
 
     const entItems = entNum === 1 ? ent1.value : entNum === 2 ? [...ent2.value] : [...ent3.value];
 
-    return createEntityConfig(ent, props.type.val, interfaces[entNum - 1], OWConfig, entItems, t, props.device);
+    return createEntityConfig(
+        ent,
+        props.type.val,
+        interfaces[entNum - 1],
+        owConfig,
+        mbConfig,
+        entItems,
+        t,
+        props.device,
+    );
 }
 
 function getConstBtns(configTime?: Config) {
