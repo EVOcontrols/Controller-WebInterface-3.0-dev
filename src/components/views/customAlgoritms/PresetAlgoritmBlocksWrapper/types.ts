@@ -72,6 +72,25 @@ export type Interface =
     | 'int-var'
     | 'tim-var';
 
+export type Input = {
+    val: number;
+    min: number;
+    max?: number;
+    subtitle?: string;
+    isError: boolean;
+    inline?: boolean;
+    disabled?: boolean;
+};
+
+export type Btn = {
+    subtitle?: string;
+    isGreen?: boolean;
+    vals: { label: string | number; val: string | number; class?: string }[];
+    val: string | number;
+    inline?: boolean;
+    disabled?: boolean;
+};
+
 export type Config = {
     curKey: number;
     queue: {
@@ -79,14 +98,7 @@ export type Config = {
         index: number;
     }[];
     titles: string[];
-    btns: {
-        subtitle?: string;
-        isGreen?: boolean;
-        vals: { label: string | number; val: string | number; class?: string }[];
-        val: string | number;
-        inline?: boolean;
-        disabled?: boolean;
-    }[];
+    btns: Btn[];
     tabs: {
         vals: { label: string; val: string | number }[];
         val: string | number;
@@ -110,15 +122,7 @@ export type Config = {
             valsArr: string[];
         };
     }[];
-    inputs: {
-        val: number;
-        min: number;
-        max?: number;
-        subtitle?: string;
-        isError: boolean;
-        inline?: boolean;
-        disabled?: boolean;
-    }[];
+    inputs: Input[];
     dropDowns: {
         type: DropDownTypes;
         realType: DropDownRealType;

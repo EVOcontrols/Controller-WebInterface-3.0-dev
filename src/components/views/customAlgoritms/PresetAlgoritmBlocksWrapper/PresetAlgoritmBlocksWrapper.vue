@@ -266,6 +266,8 @@ import {
     BodySave,
     MBTypes,
     analogyInterfaces,
+    Input,
+    Btn,
 } from './types';
 import {
     $apiGetConfig,
@@ -874,7 +876,7 @@ async function parseEntity(ent: Ent) {
     );
 }
 
-function getConstBtns(configTime?: Config) {
+function getConstBtns(configTime?: Config, units = 'ms') {
     const val = configTime?.btns[0].val;
     return [
         {
@@ -890,7 +892,7 @@ function getConstBtns(configTime?: Config) {
                 { label: t('btns.s'), val: 's', class: 'w-[66px] !px-2 !h-8' },
                 { label: t('btns.min'), val: 'min', class: 'w-[66px] !px-2 !h-8' },
             ],
-            val: (val === 'tim-const' && configTime?.btns[1].val) || 'ms',
+            val: (val === 'tim-const' && configTime?.btns[1].val) || units,
             inline: true,
         },
     ];
@@ -911,28 +913,36 @@ function getVarBtns() {
 async function parseTime(time: Time, title: string): Promise<Config[] | undefined> {
     const timeNum = time1.value.length ? (time2.value.length ? 3 : 2) : 1;
     if (!props.device || !curDevCapab.value) return;
+    const isConst = time.type === 'tim-const';
 
-    if (time.type === 'tim-var') {
+    if (!isConst) {
         await getData(timeNum, 'tim-var', curDevCapab.value['tim-var'], props.device.addr, undefined, true);
     }
 
-    // let s = time.value || 0;
-    // let newS = s;
-    // let units: 'ms' | 's' | 'min';
-    // if (s <= 1000) {
-    //     units = 'ms';
-    //     newS = s / 10;
-    // } else if (s > 1000 && s % 60000 === 0) {
-    //     units = 'min';
-    //     newS = s / 60000;
-    // } else {
-    //     units = 's';
-    //     newS = s / 1000;
-    // }
-
+    let inputs: Input[] = [];
+    let btns: Btn[] = getVarBtns();
     const configTime = getConfigTimeByTitle(title);
+
+    if (isConst) {
+        let s = time.value || 0;
+        let newS = s;
+        let units: 'ms' | 's' | 'min';
+        if (s <= 1000) {
+            units = 'ms';
+            newS = s;
+        } else if (s > 1000 && s % 60000 === 0) {
+            units = 'min';
+            newS = s / 60000;
+        } else {
+            units = 's';
+            newS = s / 1000;
+        }
+
+        inputs = [{ val: newS, min: 0, isError: false, inline: true }];
+        btns = getConstBtns(configTime, units);
+    }
+
     const items = timeNum === 1 ? time1.value : timeNum === 2 ? [...time2.value] : [...time3.value];
-    const isConst = time.type === 'tim-const';
     return [
         {
             curKey: configTime?.curKey || CurKeyMap.Time,
@@ -950,18 +960,18 @@ async function parseTime(time: Time, title: string): Promise<Config[] | undefine
                       { name: 'dropDown', index: 0 },
                   ],
             titles: isConst ? [title] : [title, t('titles.object')],
-            btns: isConst ? getConstBtns(configTime) : getVarBtns(),
+            btns,
             tabs: [],
             radioBtns: [],
             checkBoxes: [],
-            inputs: isConst ? [{ val: time.value || 0, min: 0, isError: false, inline: true }] : [],
+            inputs,
             dropDowns: isConst
                 ? []
                 : [
                       {
                           type: 'var',
                           realType: 'tim-var',
-                          items: items,
+                          items,
                           vals: time.index !== undefined ? [time.index] : [],
                       },
                   ],
