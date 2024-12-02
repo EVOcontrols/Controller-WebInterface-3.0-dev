@@ -259,7 +259,7 @@
                 <IButtonIcon
                     v-else-if="props.dropDowns[item.index].type === 'bin'"
                     :class="
-                        true
+                        props.dropDowns[item.index].items[props.dropDowns[item.index]?.vals[0]].val
                             ? '[&>path]:fill-[#00D6AF] [&>rect]:fill-[#00D6AF]'
                             : '[&>path]:fill-[#5891C2] [&>rect]:fill-[#5891C2]'
                     "

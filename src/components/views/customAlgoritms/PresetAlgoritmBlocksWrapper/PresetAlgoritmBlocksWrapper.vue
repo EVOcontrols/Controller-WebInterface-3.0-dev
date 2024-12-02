@@ -98,19 +98,19 @@
         >
             <template #title-icon>
                 <span
-                    v-if="shownDropDown.type === 'obj'"
+                    v-if="shownDropDown?.type === 'obj'"
                     v-html="object"
                 ></span>
                 <IButtonIcon
-                    v-else-if="shownDropDown.type === 'bin'"
+                    v-else-if="shownDropDown?.type === 'bin'"
                     :class="
-                        true
+                        shownDropDown?.items[shownDropDown?.vals[0]].val
                             ? '[&>path]:fill-[#00D6AF] [&>rect]:fill-[#00D6AF]'
                             : '[&>path]:fill-[#5891C2] [&>rect]:fill-[#5891C2]'
                     "
                 />
                 <span
-                    v-else-if="shownDropDown.type === '1w-sens'"
+                    v-else-if="shownDropDown?.type === '1w-sens'"
                     v-html="ow"
                 ></span>
                 <div
