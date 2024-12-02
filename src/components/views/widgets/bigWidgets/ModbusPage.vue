@@ -1616,7 +1616,6 @@ async function getMbInfo() {
     clearTimeout(getMbInfoTimer);
 
     try {
-        console.log('2222222');
         const r = await api.post('get_mb_info', {
             device: props.w.w.d,
             bus: 0,
@@ -1636,7 +1635,8 @@ async function getMbInfo() {
         const curLabels =
             labels.value[props.w.w.d]?.find((el) => el.interf === props.w.w.i)?.val[props.w.w.bus || 0] || [];
         for (let i = 0; i < state.value.length; i++) {
-            if (mbDevs.value.length && mbDevs.value[props.w.w.d][props.w.w.bus || 0].includes(data['dev-addr'][i])) {
+            const validAdresses = mbDevs.value[props.w.w.d][props.w.w.bus || 0];
+            if (mbDevs.value.length && (validAdresses.includes(data['dev-addr'][i]) || data['dev-addr'][i] === 1)) {
                 arr.push({
                     type: data.type[i],
                     'reg-addr': data['reg-addr'][i] as number,
@@ -2169,7 +2169,6 @@ onMounted(() => {
 });
 
 onBeforeUnmount(() => {
-    console.log('onBeforeUnmountonBeforeUnmountonBeforeUnmount');
     isUnmount = true;
     clearTimeout(getMbInfoTimer);
     getMbInfoTimer = undefined;

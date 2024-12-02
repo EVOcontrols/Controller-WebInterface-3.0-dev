@@ -460,7 +460,6 @@ async function getMbInfo() {
     clearTimeout(getMbInfoTimer);
 
     try {
-        console.log('get_mb_info11111');
         const r = await api.post('get_mb_info', {
             device: props.w.w.d,
             bus: 0,
@@ -516,7 +515,6 @@ onMounted(() => {
 });
 
 onBeforeUnmount(() => {
-    console.log('onBeforeUnmount..........');
     isUnmount = true;
     clearTimeout(getMbInfoTimer);
     getMbInfoTimer = undefined;

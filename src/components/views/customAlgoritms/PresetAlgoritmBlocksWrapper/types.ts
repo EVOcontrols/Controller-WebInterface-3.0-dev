@@ -55,7 +55,7 @@ export type Capab = {
     'udf-trig': number;
 };
 
-export type MBTypes = 'coil' | 'ir' | 'hr' | 'di';
+export type MBTypes = 'coil' | 'ir' | 'hr' | 'di' | 'none';
 export type Mode1W = { mode: 'off' | 'sens' | 'rom' | 'gpio' };
 export type ModeMb = { mode: 'off' | 'variables' | 'ext-devs' };
 

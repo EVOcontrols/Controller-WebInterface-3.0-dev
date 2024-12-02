@@ -580,7 +580,6 @@ const filteredCurDevices = computed<{ val: number; label: string }[] | []>(() =>
 });
 
 function handleBtnClick() {
-    console.log('props.command', props.command);
     if (props.command === 'delete') {
         deleteItem();
     } else if (props.command === 'create') {
@@ -645,7 +644,6 @@ async function deleteItem() {
 
 async function createReg() {
     isLoading.value = true;
-    console.log('newRegInputVal.value', newRegInputVal.value);
     if (newRegInputVal.value === null || newRegInputVal.value === '' || choosenDevice.value === null) {
         setTimeout(() => {
             isLoading.value = false;
@@ -663,10 +661,7 @@ async function createReg() {
             newType = ('m-' + newType) as MBTypeWithNone;
         }
     }
-    console.log('newType', newType);
-    console.log('props.state', props.state);
     const index = props.state.findIndex((el) => el.type === 'none');
-    console.log('index', index);
     if (index !== -1) {
         await setData(
             choosenDevice.value,
@@ -676,7 +671,6 @@ async function createReg() {
         );
         const newLabels = props.state.map((el) => el.label || '');
         newLabels[index] = activeLabelInputVal.value;
-        console.log('newLabels', newLabels);
         saveRegLabel(newLabels);
     }
     setTimeout(() => {
@@ -819,7 +813,6 @@ function handlenewRegInput(e: InputEvent) {
         }
     } else {
         const val = parseInt(target.value, 16);
-        console.log(3);
         if (isNaN(val)) {
             newRegInputVal.value = String(0);
         }

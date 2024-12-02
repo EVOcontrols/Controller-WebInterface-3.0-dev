@@ -774,7 +774,11 @@ async function getData(
         const labelsVar = labels.value[addr]?.find((el) => el.interf === type)?.val[bus || 0]; //0-bus
         curLabels = (Array.isArray(labelsVar) ? labelsVar : []) as string[];
         if (type === 'mb-var') {
-            const labelsWithMbType = labelsVar?.map((label, index) => `${mbVarTypes.value[index]} : ${label}`);
+            const labelsWithMbType = labelsVar?.map((label, index) => {
+                const t = mbVarTypes.value[index];
+                const mbType = t === 'none' ? t : t === 'coil' ? t[0].toUpperCase() + t.slice(1) : t.toUpperCase();
+                return `${mbType}: ${label}`;
+            });
             curLabels = (Array.isArray(labelsWithMbType) ? labelsWithMbType : []) as string[];
         }
     }

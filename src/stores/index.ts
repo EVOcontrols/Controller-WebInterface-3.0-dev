@@ -601,7 +601,7 @@ export const useIndexStore = defineStore('indexStore', () => {
             | 'bin-var'
             | 'int-var'
             | 'tim-var',
-        labelsArr: string[] | null,
+        labelsArr: string[],
         bus?: number,
     ) {
         const newArr = [...labels.value];
@@ -611,7 +611,7 @@ export const useIndexStore = defineStore('indexStore', () => {
             newArr[d] = [];
         }
 
-        const labelsVal = labelsArr && labelsArr.length > 0 ? labelsArr : emptyArr;
+        const labelsVal = labelsArr.length > 0 ? labelsArr : emptyArr;
         const obj = { interf, val: [labelsVal] as [string[] | []] };
 
         const interfObj = newArr[d]!.find((el) => el.interf === interf);
