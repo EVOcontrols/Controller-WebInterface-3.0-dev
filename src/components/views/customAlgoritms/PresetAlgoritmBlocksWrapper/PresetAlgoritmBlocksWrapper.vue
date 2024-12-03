@@ -64,11 +64,6 @@
                                 handleDropDownClick(i, itemIndex);
                             }
                         "
-                        @setInputError="
-                            (inputItemIndex: number, res: boolean) => {
-                                setInputError(i, inputItemIndex, res);
-                            }
-                        "
                     />
                 </div>
             </div>
@@ -104,7 +99,7 @@
                 <IButtonIcon
                     v-else-if="shownDropDown?.type === 'bin'"
                     :class="
-                        shownDropDown?.items[shownDropDown?.vals[0]].val
+                        shownDropDown?.items[shownDropDown?.vals[0]]?.val
                             ? '[&>path]:fill-[#00D6AF] [&>rect]:fill-[#00D6AF]'
                             : '[&>path]:fill-[#5891C2] [&>rect]:fill-[#5891C2]'
                     "
@@ -303,19 +298,16 @@ const emit = defineEmits<{
 
 const indexStore = useIndexStore();
 
-const { devices, labels, tempUnit, devCapabs } = storeToRefs(indexStore);
+const { devices, labels, tempUnit, devCapabs, valuesConstRange } = storeToRefs(indexStore);
 const { funcLabels } = storeToRefs(funcStore);
 
 const isSaving = ref(false);
-
 const isLoading = ref(false);
 const microLoading = ref(false);
-
+const inputError = ref(false);
 const isSaveBtnDisabled = ref(true);
 
 const initConfig = ref<string>();
-
-const inputErrors = new Set();
 
 const headerInput = ref('');
 
@@ -474,7 +466,7 @@ async function reRenderLayout() {
 }
 
 function checkConfigToSave() {
-    if (inputErrors.size) {
+    if (inputError.value) {
         isSaveBtnDisabled.value = true;
     } else {
         isSaveBtnDisabled.value = props.isCreating
@@ -486,8 +478,8 @@ function checkConfigToSave() {
 }
 
 async function handleBtnClick(configItemIndex: number, btnsItemIndex: number, val: string | number) {
-    microLoading.value = true;
     if (!config.value) return;
+    microLoading.value = true;
     const prevConfig = [...config.value];
     if (prevConfig[configItemIndex] && prevConfig[configItemIndex].btns[btnsItemIndex]) {
         if (
@@ -510,8 +502,8 @@ async function handleBtnClick(configItemIndex: number, btnsItemIndex: number, va
 }
 
 function handleTabClick(configItemIndex: number, tabsItemIndex: number, val: string | number) {
-    microLoading.value = true;
     if (!config.value) return;
+    microLoading.value = true;
     const prevConfig = [...config.value];
     if (prevConfig[configItemIndex] && prevConfig[configItemIndex].tabs[tabsItemIndex]) {
         prevConfig[configItemIndex].tabs[tabsItemIndex].val = val;
@@ -529,8 +521,8 @@ function handleTabClick(configItemIndex: number, tabsItemIndex: number, val: str
 }
 
 function handleRadioBtnClick(configItemIndex: number, radioBtnsItemIndex: number, val: string) {
-    microLoading.value = true;
     if (!config.value) return;
+    microLoading.value = true;
     const prevConfig = [...config.value];
     if (prevConfig[configItemIndex] && prevConfig[configItemIndex].radioBtns[radioBtnsItemIndex]) {
         prevConfig[configItemIndex].radioBtns[radioBtnsItemIndex].val = val;
@@ -541,8 +533,8 @@ function handleRadioBtnClick(configItemIndex: number, radioBtnsItemIndex: number
 }
 
 function handleDropChange(configItemIndex: number, dropItemIndex: number, vals: number[]) {
-    microLoading.value = true;
     if (!config.value) return;
+    microLoading.value = true;
     const prevConfig = [...config.value];
     if (prevConfig[configItemIndex] && prevConfig[configItemIndex].dropDowns[dropItemIndex]) {
         prevConfig[configItemIndex].dropDowns[dropItemIndex].vals = vals;
@@ -559,8 +551,8 @@ function handleCheckboxClick(
     status: boolean,
     part: 1 | 2,
 ) {
-    microLoading.value = true;
     if (!config.value) return;
+    microLoading.value = true;
     const prevConfig = [...config.value];
     if (prevConfig[configItemIndex] && prevConfig[configItemIndex].checkBoxes[checkboxItemIndex]) {
         if (status) {
@@ -580,8 +572,8 @@ function handleCheckboxClick(
 }
 
 function handleInput(configItemIndex: number, inputItemIndex: number, val: number) {
-    microLoading.value = true;
     if (!config.value) return;
+    microLoading.value = true;
     const prevConfig = [...config.value];
     if (prevConfig[configItemIndex] && prevConfig[configItemIndex].inputs[inputItemIndex]) {
         prevConfig[configItemIndex].inputs[inputItemIndex].val = val;
@@ -592,16 +584,13 @@ function handleInput(configItemIndex: number, inputItemIndex: number, val: numbe
         //     const values =
         //         firstBtn.val === 'tim-const'
         //             ? valuesConstRange.value.find(
-        //                   (obj) =>
-        //                       obj.interf === (((firstBtn.val as string) + secondBtn.val) as string),
+        //                   (obj) => obj.interf === (((firstBtn.val as string) + secondBtn.val) as string),
         //               )?.values
         //             : valuesConstRange.value.find((obj) => obj.interf === firstBtn.val)?.values;
         //
         //     if (prevConfig[configItemIndex].inputs[inputItemIndex]) {
         //         prevConfig[configItemIndex].inputs[inputItemIndex].min = values ? values.min : 0;
-        //         prevConfig[configItemIndex].inputs[inputItemIndex].max = values
-        //             ? values.max
-        //             : 15000;
+        //         prevConfig[configItemIndex].inputs[inputItemIndex].max = values ? values.max : 15000;
         //     }
         // }
 
@@ -623,23 +612,6 @@ function handleDropDownClick(configItemIndex: number, itemIndex: number) {
         configItemIndex: configItemIndex,
         itemIndex: itemIndex,
     };
-}
-
-function setInputError(configItemIndex: number, inputItemIndex: number, res: boolean) {
-    // microLoading.value = true;
-    // if (res) {
-    //     inputErrors.add(configItemIndex + '-' + inputItemIndex);
-    // } else {
-    //     inputErrors.delete(configItemIndex + '-' + inputItemIndex);
-    // }
-    // if (!config.value) return;
-    // const prevConfig = [...config.value];
-    // if (prevConfig[configItemIndex] && prevConfig[configItemIndex].inputs[inputItemIndex]) {
-    //     prevConfig[configItemIndex].inputs[inputItemIndex].isError = res;
-    //     config.value = prevConfig;
-    // }
-    // checkConfigToSave();
-    // reRenderLayout();
 }
 
 function handleClickMultiSelect(item: DropDownItem) {
@@ -925,7 +897,7 @@ async function parseTime(time: Time, title: string): Promise<Config[] | undefine
 
     if (isConst) {
         let s = time.value || 0;
-        let newS = s;
+        let newS;
         let units: 'ms' | 's' | 'min';
         if (s <= 1000) {
             units = 'ms';
@@ -1076,7 +1048,18 @@ async function setConfig() {
     );
 
     config.value = resultConfig.sort();
+    maybeSetErrorInput();
     microLoading.value = false;
+}
+
+function maybeSetErrorInput() {
+    inputError.value = false;
+    config.value.forEach((config) => {
+        config.inputs.forEach((input) => {
+            if (input.isError) inputError.value = true;
+        });
+    });
+    checkConfigToSave();
 }
 
 function configCreating() {

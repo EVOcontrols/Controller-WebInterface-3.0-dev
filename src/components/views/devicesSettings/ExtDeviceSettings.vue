@@ -335,10 +335,9 @@
 </template>
 
 <script lang="ts" setup>
-import type { DeviceWorkState } from '@/typings/settings';
+import type { DeviceWorkState, ExtDevRaw, ExtDeviceSettings } from '@/typings/settings';
 import ManageDevice from './elements/ManageDevice.vue';
 import type { DeviceAddr } from '@/typings/common';
-import type { ExtDeviceSettings } from '@/typings/settings';
 import { _ } from '@/plugins/lodash';
 import UiInput from '@/components/Ui/UiInput.vue';
 import type { PartialDeep } from 'type-fest/source/partial-deep';
@@ -477,15 +476,19 @@ async function setDevState() {
     }
     if (isRebootRequired.value) return;
     try {
-        const list = (await (await api.get('get_ext_devs')).data).list;
-        list[props.deviceIndex - 1] = {
+        const {
+            data: { list: responseList },
+        } = await api.get('get_ext_devs');
+        responseList[props.deviceIndex - 1] = {
             addr: devSettings.value?.slave.addr || props.deviceAddr,
             type: 'NG3-EDIO',
             state: curDevState.value,
         };
-        const r = await api.post('set_ext_devs', {
-            list: list,
+        const list = responseList.map((ext: ExtDevRaw) => {
+            if (ext.type === 'none' || ext.state !== 'no-conn') return ext;
+            return { ...ext, state: 'on' };
         });
+        const r = await api.post('set_ext_devs', { list });
         if (r.status === 200) {
             isMainSaving.value = false;
             emit('changeState', curDevState.value);

@@ -239,7 +239,6 @@
                     :required="true"
                     :debounce-delay="1000"
                     :disabled="props.inputs[item.index].disabled"
-                    @status-changed="emit('setInputError', item.index, $event === 'invalid' || $event === 'empty')"
                     @value-changed="
                         $event === undefined
                             ? emit('handleInput', item.index, 0)
@@ -259,7 +258,7 @@
                 <IButtonIcon
                     v-else-if="props.dropDowns[item.index].type === 'bin'"
                     :class="
-                        props.dropDowns[item.index].items[props.dropDowns[item.index]?.vals[0]].val
+                        props.dropDowns[item.index].items[props.dropDowns[item.index]?.vals[0]]?.val
                             ? '[&>path]:fill-[#00D6AF] [&>rect]:fill-[#00D6AF]'
                             : '[&>path]:fill-[#5891C2] [&>rect]:fill-[#5891C2]'
                     "
@@ -366,7 +365,7 @@ const props = defineProps<{
     }[];
     inputs: {
         val: number;
-        min: number;
+        min?: number;
         max?: number;
         subtitle?: string;
         isError: boolean;
@@ -402,7 +401,6 @@ const emit = defineEmits<{
     (e: 'handleRadioBtnClick', radioBtnsItemIndex: number, val: string): void;
     (e: 'handleInput', inputItemIndex: number, val: number): void;
     (e: 'handleDropDownClick', inputItemIndex: number): void;
-    (e: 'setInputError', inputItemIndex: number, res: boolean): void;
     (e: 'handleCheckboxClick', checkboxItemIndex: number, val: string, status: boolean, part: 1 | 2): void;
 }>();
 

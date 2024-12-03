@@ -3,6 +3,8 @@ import { type Config, CurKeyMap, binaryInterfaces, binaryMBInterfaces, type UDF,
 import type { Device } from '@/stores';
 
 const readonlyInterfaces = ['1w-rom', '1w-sens', 'bin-in', 'adc-in'];
+const intConstMin = -32768;
+const intConstMax = 32767;
 
 export const createConfig = async (
     curBodyVal: Body,
@@ -177,6 +179,7 @@ function createLeftConfigEnter(curBodyVal: Body, typeVal: UDF, t: (key: string) 
         return null;
     }
 
+    const val = curBodyVal.left.value || 0;
     return {
         curKey: CurKeyMap.EnterLeft,
         queue: [
@@ -191,10 +194,8 @@ function createLeftConfigEnter(curBodyVal: Body, typeVal: UDF, t: (key: string) 
         inputs: [
             {
                 subtitle: t('titles.value'),
-                val: curBodyVal['left'].value || 0,
-                min: -32768,
-                max: 32767,
-                isError: false,
+                val,
+                isError: val < intConstMin || val > intConstMax,
             },
         ],
         dropDowns: [],
@@ -251,6 +252,7 @@ function createRightConfigEnter(curBodyVal: Body, typeVal: UDF, t: (key: string)
         return null;
     }
 
+    const val = curBodyVal.right.value || 0;
     return {
         curKey: CurKeyMap.EnterRight,
         queue: [
@@ -265,10 +267,8 @@ function createRightConfigEnter(curBodyVal: Body, typeVal: UDF, t: (key: string)
         inputs: [
             {
                 subtitle: t('titles.value'),
-                val: curBodyVal['right'].value || 0,
-                min: -32768,
-                max: 32767,
-                isError: false,
+                val,
+                isError: val < intConstMin || val > intConstMax,
             },
         ],
         dropDowns: [],
@@ -578,6 +578,7 @@ function createOperationBinConfig(
         curBodyVal['operation'] === 'bin-not-equal' ||
         isBinaryType(curBodyVal.entity.type, mbTypes, curBodyVal.entity.index);
 
+    const valEnter = curBodyVal.value.value || 0;
     return isBinary
         ? {
               curKey: CurKeyMap.Select,
@@ -592,7 +593,7 @@ function createOperationBinConfig(
                           { label: 0, val: 0, class: 'w-[80px]' },
                           { label: 1, val: 1, class: 'w-[80px]' },
                       ],
-                      val: curBodyVal['value'].value || 0,
+                      val: curBodyVal.value.value || 0,
                   },
               ],
               tabs: [],
@@ -615,10 +616,8 @@ function createOperationBinConfig(
               inputs: [
                   {
                       subtitle: t('titles.value'),
-                      val: curBodyVal['value'].value || 0,
-                      min: -32768,
-                      max: 32767,
-                      isError: false,
+                      val: valEnter,
+                      isError: valEnter < intConstMin || valEnter > intConstMax,
                   },
               ],
               dropDowns: [],
@@ -697,6 +696,7 @@ function createIntConstStopValConfig(curBodyVal: Body, typeVal: UDF, t: (key: st
         return null;
     }
 
+    const val = curBodyVal['stop-val'].value || 0;
     return {
         curKey: CurKeyMap.StopValueEnter,
         queue: [
@@ -711,10 +711,8 @@ function createIntConstStopValConfig(curBodyVal: Body, typeVal: UDF, t: (key: st
         inputs: [
             {
                 subtitle: t('titles.value'),
-                val: curBodyVal['stop-val'].value || 0,
-                min: -32768,
-                max: 32767,
-                isError: false,
+                val,
+                isError: val < intConstMin || val > intConstMax,
             },
         ],
         dropDowns: [],
@@ -762,6 +760,7 @@ function createHysteresisConfig(curBodyVal: Body, typeVal: UDF, t: (key: string)
         return null;
     }
 
+    const val = curBodyVal['hysteresis'];
     return {
         curKey: CurKeyMap.Hysteresis,
         queue: [
@@ -773,7 +772,7 @@ function createHysteresisConfig(curBodyVal: Body, typeVal: UDF, t: (key: string)
         tabs: [],
         radioBtns: [],
         checkBoxes: [],
-        inputs: [{ val: curBodyVal['hysteresis'], min: -32768, max: 32767, isError: false, disabled: true }],
+        inputs: [{ val, isError: val < intConstMin || val > intConstMax, disabled: true }],
         dropDowns: [],
     };
 }

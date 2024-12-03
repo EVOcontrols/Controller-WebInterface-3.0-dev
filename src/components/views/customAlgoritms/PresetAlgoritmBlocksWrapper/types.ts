@@ -74,7 +74,7 @@ export type Interface =
 
 export type Input = {
     val: number;
-    min: number;
+    min?: number;
     max?: number;
     subtitle?: string;
     isError: boolean;
