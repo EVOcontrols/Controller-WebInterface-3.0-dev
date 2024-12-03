@@ -153,7 +153,7 @@ import user from '@/assets/img/user.svg?raw';
 import DateTimeInfo from '@/components/DateTimeInfo.vue';
 import SelectedItemLine from '@/components/SelectedItemLine.vue';
 import type { LabelsType, MbType } from '@/typings/files';
-import type { FuncsNumberPerPage } from '@/typings/funcs';
+import { FuncsNumberPerPage, InterfEntType } from '@/typings/funcs';
 import type { DeviceAddr } from '@/typings/common';
 import type { DeviceWorkState } from '@/typings/settings';
 import ModalWrapper from '@/components/ModalWrapper.vue';
@@ -601,7 +601,6 @@ async function setDevicesStates() {
             return;
         }
     }
-    // getDevicesStatesTimer = setTimeout(setDevicesStates, 3000);
     const timeoutProd = isPriorWOpen.value ? timeout.value * 5 : timeout.value;
     const timePause = isDev ? timeoutDev : timeoutProd;
     getDevicesStatesTimer = setTimeout(setDevicesStates, timePause);
@@ -963,81 +962,39 @@ async function getMbDevs(d: number, bus: number) {
     }
 }
 
-async function getLabels(
-    d: number,
-    interf:
-        | '1w-rom'
-        | '1w-sens'
-        | 'bin-in'
-        | 'adc-in'
-        | 'bin-out'
-        | 'pwm-out'
-        | 'mb-var'
-        | 'bin-var'
-        | 'int-var'
-        | 'tim-var',
-    bus?: number,
-) {
-    if (interf === 'mb-var') {
-        if (bus !== undefined) {
-            const reqLabels = await readFile({
-                type: 'labels',
-                device: d,
-                bus: bus,
-                interf: 'mb-var',
-            });
-            if (reqLabels === 'error') {
-                return new Promise(() =>
-                    setTimeout(() => {
-                        getLabels(d, interf, bus);
-                    }, 5),
-                );
-            } else if (reqLabels === 'notFound') {
-                indexStore.setLabels(d, interf, [], bus);
-            } else {
-                const { labels } = reqLabels as LabelsType;
-                indexStore.setLabels(d, interf, labels, bus);
-            }
-            getMbDevs(d, bus || 0);
-            getMbDevsLabels(d, bus || 0);
-        }
-        // const parts = [0, 1, 2, 3];
-        // parts.forEach(async (part) => {
-        //     await getMbDevsLabels(d, bus || 0, part);
-        // });
+async function readLabelsFromFile(d: number, interf: InterfEntType, bus?: number) {
+    const reqLabels = await readFile({
+        type: 'labels',
+        device: d,
+        bus: bus,
+        interf: interf,
+    });
+    if (reqLabels === 'error') {
+        return new Promise(() =>
+            setTimeout(() => {
+                getLabels(d, interf, bus);
+            }, 5),
+        );
+    } else if (reqLabels === 'notFound') {
+        indexStore.setLabels(d, interf, [], bus);
     } else {
-        const reqLabels = await readFile({
-            type: 'labels',
-            device: d,
-            bus: bus,
-            interf: interf,
-        });
-        if (reqLabels === 'error') {
-            return new Promise(() =>
-                setTimeout(() => {
-                    getLabels(d, interf, bus);
-                }, 5),
-            );
-        } else if (reqLabels === 'notFound') {
-            indexStore.setLabels(d, interf, null, bus);
-            return;
-        } else {
-            const { labels } = reqLabels as LabelsType;
-            indexStore.setLabels(d, interf, labels, bus);
-        }
+        const { labels } = reqLabels as LabelsType;
+        indexStore.setLabels(d, interf, labels, bus);
     }
-    // const parts = [];
-    // for (let i = 0; i < Math.ceil(number / labelsFileLength); i += 1) {
-    //     parts.push(i);
-    // }
-    // parts.forEach(async (part) => {
-    //     await getLabelsPart(d, interf, number, part, bus);
-    // });
+}
+
+async function getLabels(d: number, interf: InterfEntType, bus?: number) {
+    await readLabelsFromFile(d, interf, bus);
+
+    if (interf === 'mb-var' && bus !== undefined) {
+        getMbDevs(d, bus || 0);
+        getMbDevsLabels(d, bus || 0);
+    }
 }
 
 onMounted(async () => {
     await getDevices();
-    setDevicesStates();
+    await setDevicesStates();
 });
 
 function setInfo() {
@@ -1097,16 +1054,7 @@ function setInfo() {
                             | { interf: '1w-rom'; bus: number }
                             | { interf: '1w-sens'; bus: number }
                             | '1w-gpio'
-                            | '1w-rom'
-                            | '1w-sens'
-                            | 'adc-in'
-                            | 'bin-in'
-                            | 'bin-out'
-                            | 'bin-var'
-                            | 'int-var'
-                            | 'mb-var'
-                            | 'pwm-out'
-                            | 'tim-var',
+                            | InterfEntType,
                         ],
                     },
                     { state: devicesArr.value[i].devStatus },
@@ -1131,37 +1079,10 @@ function setInfo() {
                         bus: number;
                     }[];
                     el.forEach((elem) => {
-                        getLabels(
-                            i,
-                            interf.value as
-                                | '1w-rom'
-                                | '1w-sens'
-                                | 'bin-in'
-                                | 'adc-in'
-                                | 'bin-out'
-                                | 'pwm-out'
-                                | 'mb-var'
-                                | 'bin-var'
-                                | 'int-var'
-                                | 'tim-var',
-                            elem.bus,
-                        );
+                        getLabels(i, interf.value as InterfEntType, elem.bus);
                     });
                 } else {
-                    getLabels(
-                        i,
-                        interf.value as
-                            | '1w-rom'
-                            | '1w-sens'
-                            | 'bin-in'
-                            | 'adc-in'
-                            | 'bin-out'
-                            | 'pwm-out'
-                            | 'mb-var'
-                            | 'bin-var'
-                            | 'int-var'
-                            | 'tim-var',
-                    );
+                    getLabels(i, interf.value as InterfEntType);
                 }
             });
         }
@@ -1194,7 +1115,7 @@ watch(needToReqData, async () => {
     if (needToReqData.value) {
         devicesArr.value = [];
         await getDevices();
-        setDevicesStates();
+        await setDevicesStates();
         indexStore.setNeedToReqData(false);
     }
 });

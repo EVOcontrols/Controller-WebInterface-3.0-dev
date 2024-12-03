@@ -89,7 +89,7 @@
             ></OutlinedButton>
         </div>
         <CollapseTransition :duration="300">
-            <PresetAlgoritmBlocksWrapper2
+            <PresetAlgoritmBlocksWrapper
                 v-if="props.isOpen"
                 :type="props.curAction"
                 :device="props.device"
@@ -109,7 +109,7 @@ import add from '@/assets/img/add.svg?raw';
 import scrollArrow from '@/assets/img/scroll-arrow.svg?raw';
 import CollapseTransition from '@/components/CollapseTransition.vue';
 import OutlinedButton from '@/components/Ui/OutlinedButton.vue';
-import PresetAlgoritmBlocksWrapper2 from '@/components/views/customAlgoritms/PresetAlgoritmBlocksWrapper/PresetAlgoritmBlocksWrapper2.vue';
+import PresetAlgoritmBlocksWrapper from '@/components/views/customAlgoritms/PresetAlgoritmBlocksWrapper/PresetAlgoritmBlocksWrapper.vue';
 import type { Device } from '@/stores';
 
 const indexStore = useIndexStore();

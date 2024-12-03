@@ -161,7 +161,7 @@ export type NGCSettings = Pick<ControllerSettings, '1-wire' | 'pwm' | 'bin-out' 
 
 export type DeviceWorkState = 'on' | 'off' | 'init' | 'no-conn' | 'error';
 
-export type ExtDevsListRaw = (
+export type ExtDevRaw =
     | {
           type: 'NG3-EDIO';
           addr: Exclude<DeviceAddr, 0>;
@@ -171,8 +171,9 @@ export type ExtDevsListRaw = (
       }
     | {
           type: 'none';
-      }
-)[];
+      };
+
+export type ExtDevsListRaw = ExtDevRaw[];
 
 export type ExtDev = {
     index: number;

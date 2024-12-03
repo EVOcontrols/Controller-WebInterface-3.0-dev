@@ -23,10 +23,7 @@ export type DropDownRealType =
     | 'adc-in'
     | 'bin-out'
     | 'pwm-out'
-    | 'mb-coil'
-    | 'mb-ir'
-    | 'mb-hr'
-    | 'mb-di'
+    | 'mb-var'
     | 'bin-var'
     | 'int-var'
     | 'tim-var'
@@ -58,6 +55,7 @@ export type Capab = {
     'udf-trig': number;
 };
 
+export type MBTypes = 'coil' | 'ir' | 'hr' | 'di' | 'none';
 export type Mode1W = { mode: 'off' | 'sens' | 'rom' | 'gpio' };
 export type ModeMb = { mode: 'off' | 'variables' | 'ext-devs' };
 
@@ -69,14 +67,29 @@ export type Interface =
     | 'adc-in'
     | 'bin-out'
     | 'pwm-out'
-    | 'mb-coil'
-    | 'mb-ir'
-    | 'mb-hr'
-    | 'mb-di'
     | 'mb-var'
     | 'bin-var'
     | 'int-var'
     | 'tim-var';
+
+export type Input = {
+    val: number;
+    min?: number;
+    max?: number;
+    subtitle?: string;
+    isError: boolean;
+    inline?: boolean;
+    disabled?: boolean;
+};
+
+export type Btn = {
+    subtitle?: string;
+    isGreen?: boolean;
+    vals: { label: string | number; val: string | number; class?: string }[];
+    val: string | number;
+    inline?: boolean;
+    disabled?: boolean;
+};
 
 export type Config = {
     curKey: number;
@@ -85,14 +98,7 @@ export type Config = {
         index: number;
     }[];
     titles: string[];
-    btns: {
-        subtitle?: string;
-        isGreen?: boolean;
-        vals: { label: string | number; val: string | number; class?: string }[];
-        val: string | number;
-        inline?: boolean;
-        disabled?: boolean;
-    }[];
+    btns: Btn[];
     tabs: {
         vals: { label: string; val: string | number }[];
         val: string | number;
@@ -116,15 +122,7 @@ export type Config = {
             valsArr: string[];
         };
     }[];
-    inputs: {
-        val: number;
-        min: number;
-        max?: number;
-        subtitle?: string;
-        isError: boolean;
-        inline?: boolean;
-        disabled?: boolean;
-    }[];
+    inputs: Input[];
     dropDowns: {
         type: DropDownTypes;
         realType: DropDownRealType;
@@ -170,7 +168,8 @@ export type BodySave = {
     trigger?: any;
 };
 
-export const binaryInterfaces = ['bin-in', 'bin-out', 'bin-var', '1w-rom', 'mb-coil', 'mb-di'];
+export const binaryInterfaces = ['bin-in', 'bin-out', 'bin-var', '1w-rom'];
+export const binaryMBInterfaces = ['coil', 'di'];
 export const analogyInterfaces = ['pwm-out', 'adc-in', '1w-sens'];
 
 export const ORDER = [
@@ -180,10 +179,7 @@ export const ORDER = [
     'adc-in',
     'bin-out',
     'pwm-out',
-    'mb-coil',
-    'mb-ir',
-    'mb-hr',
-    'mb-di',
+    'mb-var',
     'bin-var',
     'int-var',
     'tim-var',
@@ -215,7 +211,6 @@ export const enum CurKeyMap {
     Hysteresis = 27,
     Time = 28,
     Delay = 29,
-    Pause = 29, // todo 29 same delay
     MultiSelect = 30,
     StartStopMode = 31,
     CyclicMode = 32,
@@ -226,4 +221,5 @@ export const enum CurKeyMap {
     ComparisonValueRight = 47,
     EnterLeft = 48,
     EnterRight = 49,
+    Pause = 55,
 }

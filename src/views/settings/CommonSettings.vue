@@ -940,6 +940,22 @@ function setRebootToast() {
     );
 }
 
+async function getConfig() {
+    await new Promise((resolve) => setTimeout(resolve, 150));
+    try {
+        let r = await api.get<ControllerSettings>('get_config');
+        addrMode.value = r.data.lan['addr-mode'];
+        cloudMode.value = r.data.cloud.mode;
+        setFields(r.data);
+    } catch (error) {
+        setTimeout(getConfig, 150);
+    }
+}
+
+onMounted(async () => {
+    await getConfig();
+});
+
 const { t } = useI18n({
     messages: {
         en: {
@@ -1287,17 +1303,5 @@ const { t } = useI18n({
             },
         },
     },
-});
-
-onMounted(async () => {
-    await new Promise((resolve) => setTimeout(resolve, 150));
-    try {
-        let r = await api.get<ControllerSettings>('get_config');
-        addrMode.value = r.data.lan['addr-mode'];
-        cloudMode.value = r.data.cloud.mode;
-        setFields(r.data);
-    } catch (error) {
-        //
-    }
 });
 </script>

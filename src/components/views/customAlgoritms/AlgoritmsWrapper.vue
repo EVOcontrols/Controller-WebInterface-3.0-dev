@@ -203,7 +203,7 @@ function addAlgoritm(index: number, event: Event) {
 function setActiveLabel(index: number) {
     activeLabel.value = {
         i: index + props.page * funcsNumberPerPage.value,
-        label: curLabels.value[index],
+        label: curLabels.value[index + props.page * funcsNumberPerPage.value],
     };
     isNotMainScrolling.value = true;
     setActiveLabelTop();
