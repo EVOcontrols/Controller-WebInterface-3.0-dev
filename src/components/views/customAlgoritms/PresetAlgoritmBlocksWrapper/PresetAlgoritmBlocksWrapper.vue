@@ -577,23 +577,6 @@ function handleInput(configItemIndex: number, inputItemIndex: number, val: numbe
     const prevConfig = [...config.value];
     if (prevConfig[configItemIndex] && prevConfig[configItemIndex].inputs[inputItemIndex]) {
         prevConfig[configItemIndex].inputs[inputItemIndex].val = val;
-
-        // todo write validate
-        // if (prevConfig[configItemIndex].curKey === CurKeyMap.Time) {
-        //     const [firstBtn, secondBtn] = prevConfig[configItemIndex].btns;
-        //     const values =
-        //         firstBtn.val === 'tim-const'
-        //             ? valuesConstRange.value.find(
-        //                   (obj) => obj.interf === (((firstBtn.val as string) + secondBtn.val) as string),
-        //               )?.values
-        //             : valuesConstRange.value.find((obj) => obj.interf === firstBtn.val)?.values;
-        //
-        //     if (prevConfig[configItemIndex].inputs[inputItemIndex]) {
-        //         prevConfig[configItemIndex].inputs[inputItemIndex].min = values ? values.min : 0;
-        //         prevConfig[configItemIndex].inputs[inputItemIndex].max = values ? values.max : 15000;
-        //     }
-        // }
-
         config.value = prevConfig;
     }
     checkConfigToSave();
@@ -882,7 +865,7 @@ function getVarBtns() {
     ];
 }
 
-async function parseTime(time: Time, title: string): Promise<Config[] | undefined> {
+async function parseTime(time: Time, title: string, isEdit = false): Promise<Config[] | undefined> {
     const timeNum = time1.value.length ? (time2.value.length ? 3 : 2) : 1;
     if (!props.device || !curDevCapab.value) return;
     const isConst = time.type === 'tim-const';
@@ -897,21 +880,24 @@ async function parseTime(time: Time, title: string): Promise<Config[] | undefine
 
     if (isConst) {
         let s = time.value || 0;
-        let newS;
-        let units: 'ms' | 's' | 'min';
-        if (s <= 1000) {
-            units = 'ms';
-            newS = s;
-        } else if (s > 1000 && s % 60000 === 0) {
-            units = 'min';
-            newS = s / 60000;
-        } else {
-            units = 's';
-            newS = s / 1000;
+        let newS = s;
+        let units: 'ms' | 's' | 'min' = 'ms';
+
+        if (isEdit) {
+            if (s <= 1000) {
+                units = 'ms';
+                newS = s;
+            } else if (s > 1000 && s % 60000 === 0) {
+                units = 'min';
+                newS = s / 60000;
+            } else {
+                units = 's';
+                newS = s / 1000;
+            }
         }
 
-        inputs = [{ val: newS, min: 0, isError: false, inline: true }];
         btns = getConstBtns(configTime, units);
+        inputs = [{ val: newS, isError: hasErrorTime(time, btns, newS), inline: true }];
     }
 
     const items = timeNum === 1 ? time1.value : timeNum === 2 ? [...time2.value] : [...time3.value];
@@ -949,6 +935,14 @@ async function parseTime(time: Time, title: string): Promise<Config[] | undefine
                   ],
         },
     ];
+}
+
+function hasErrorTime(time: Time, btns: Btn[], newS: number): boolean {
+    const postfix = btns[1]?.val || 'ms';
+    const constRange = valuesConstRange.value.find((range) => range.interf === time.type + postfix);
+    if (!constRange) return false;
+    const { min, max } = constRange.values;
+    return newS < min || newS > max;
 }
 
 function getConfigTimeByTitle(title: string): Config | undefined {
@@ -1033,7 +1027,7 @@ async function parseMultiSelect(
     ];
 }
 
-async function setConfig() {
+async function setConfig(isEdit = false) {
     if (!curBody.value) return;
 
     const resultConfig = await createConfig(
@@ -1045,6 +1039,7 @@ async function setConfig() {
         parseTime,
         parseMultiSelect,
         props.device,
+        isEdit,
     );
 
     config.value = resultConfig.sort();
@@ -1117,7 +1112,7 @@ async function getConfig() {
         await configEditing();
     }
 
-    await setConfig();
+    await setConfig(true);
     checkConfigToSave();
     setTimeout(
         () => {

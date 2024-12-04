@@ -12,7 +12,7 @@ export const createConfig = async (
     mbTypes: MBTypes[],
     t: (key: string) => string,
     cbParseEntity: (ent: Ent) => Promise<Config[]>,
-    cbParseTime: (time: Time, title: string) => Promise<Config[] | undefined>,
+    cbParseTime: (time: Time, title: string, isEdit?: boolean) => Promise<Config[] | undefined>,
     cbParseMultiSelect: (
         type: 'udf-act' | 'udf-cond',
         idx: number,
@@ -20,6 +20,7 @@ export const createConfig = async (
         logic?: 'and' | 'or',
     ) => Promise<Config[] | undefined>,
     propDevice?: Device,
+    isEdit?: boolean,
 ): Promise<Config[]> => {
     const generators = [
         (curBody: Body) => createInitStateConfig(curBody, t),
@@ -43,15 +44,15 @@ export const createConfig = async (
         (curBody: Body) => createIntConstStopValConfig(curBody, typeVal, t),
         (curBody: Body) => createStopValConfig(curBody, typeVal, cbParseEntity),
         (curBody: Body) => createHysteresisConfig(curBody, typeVal, t),
-        (curBody: Body) => createTimeConfig(curBody, cbParseTime, t),
-        (curBody: Body) => createDelayConfig(curBody, cbParseTime, t),
-        (curBody: Body) => createPauseConfig(curBody, cbParseTime, t),
+        (curBody: Body) => createTimeConfig(curBody, cbParseTime, t, isEdit),
+        (curBody: Body) => createDelayConfig(curBody, cbParseTime, t, isEdit),
+        (curBody: Body) => createPauseConfig(curBody, cbParseTime, t, isEdit),
         (curBody: Body) => createActionMultiSelectConfig(curBody, typeVal, cbParseMultiSelect),
         (curBody: Body) => createConditionMultiSelectConfig(curBody, typeVal, cbParseMultiSelect),
         (curBody: Body) => createStartStopModeConfig(curBody, typeVal, t),
         (curBody: Body) => createCycleModeConfig(curBody, typeVal, t),
-        (curBody: Body) => createMinTimeConfig(curBody, cbParseTime, t),
-        (curBody: Body) => createMaxTimeConfig(curBody, cbParseTime, t),
+        (curBody: Body) => createMinTimeConfig(curBody, cbParseTime, t, isEdit),
+        (curBody: Body) => createMaxTimeConfig(curBody, cbParseTime, t, isEdit),
     ];
 
     const allConfigs: Config[] = [];
@@ -779,14 +780,15 @@ function createHysteresisConfig(curBodyVal: Body, typeVal: UDF, t: (key: string)
 
 async function createTimeConfig(
     curBodyVal: Body,
-    cbParseTime: (time: Time, title: string) => Promise<Config[] | undefined>,
+    cbParseTime: (time: Time, title: string, isEdit?: boolean) => Promise<Config[] | undefined>,
     t: (key: string) => string,
+    isEdit?: boolean,
 ): Promise<Config[] | null> {
     if (!curBodyVal['time']) {
         return null;
     }
 
-    const configs = await cbParseTime(curBodyVal['time'], t('titles.during'));
+    const configs = await cbParseTime(curBodyVal['time'], t('titles.during'), isEdit);
     if (!configs || !configs.length) return null;
 
     return configs;
@@ -794,14 +796,15 @@ async function createTimeConfig(
 
 async function createDelayConfig(
     curBodyVal: Body,
-    cbParseTime: (time: Time, title: string) => Promise<Config[] | undefined>,
+    cbParseTime: (time: Time, title: string, isEdit?: boolean) => Promise<Config[] | undefined>,
     t: (key: string) => string,
+    isEdit?: boolean,
 ): Promise<Config[] | null> {
     if (!curBodyVal['delay']) {
         return null;
     }
 
-    const configs = await cbParseTime(curBodyVal['delay'], t('titles.delay'));
+    const configs = await cbParseTime(curBodyVal['delay'], t('titles.delay'), isEdit);
     if (!configs || !configs.length) return null;
 
     return configs.map((el) => ({ ...el, curKey: CurKeyMap.Delay }));
@@ -809,14 +812,15 @@ async function createDelayConfig(
 
 async function createPauseConfig(
     curBodyVal: Body,
-    cbParseTime: (time: Time, title: string) => Promise<Config[] | undefined>,
+    cbParseTime: (time: Time, title: string, isEdit?: boolean) => Promise<Config[] | undefined>,
     t: (key: string) => string,
+    isEdit?: boolean,
 ): Promise<Config[] | null> {
     if (!curBodyVal['pause'] || curBodyVal.type !== 'cycle') {
         return null;
     }
 
-    const configs = await cbParseTime(curBodyVal['pause'], t('titles.pause'));
+    const configs = await cbParseTime(curBodyVal['pause'], t('titles.pause'), isEdit);
     if (!configs || !configs.length) return null;
 
     return configs.map((el) => ({ ...el, curKey: CurKeyMap.Pause }));
@@ -965,14 +969,15 @@ function createCycleModeConfig(curBodyVal: Body, typeVal: UDF, t: (key: string) 
 
 async function createMinTimeConfig(
     curBodyVal: Body,
-    cbParseTime: (time: Time, title: string) => Promise<Config[] | undefined>,
+    cbParseTime: (time: Time, title: string, isEdit?: boolean) => Promise<Config[] | undefined>,
     t: (key: string) => string,
+    isEdit?: boolean,
 ): Promise<Config[] | null> {
     if (!curBodyVal['min-time']) {
         return null;
     }
 
-    const configs = await cbParseTime(curBodyVal['min-time'], t('titles.minTime'));
+    const configs = await cbParseTime(curBodyVal['min-time'], t('titles.minTime'), isEdit);
     if (!configs || !configs.length) return null;
 
     return configs.map((el) => ({ ...el, curKey: CurKeyMap.MinTime }));
@@ -980,14 +985,15 @@ async function createMinTimeConfig(
 
 async function createMaxTimeConfig(
     curBodyVal: Body,
-    cbParseTime: (time: Time, title: string) => Promise<Config[] | undefined>,
+    cbParseTime: (time: Time, title: string, isEdit?: boolean) => Promise<Config[] | undefined>,
     t: (key: string) => string,
+    isEdit?: boolean,
 ): Promise<Config[] | null> {
     if (!curBodyVal['max-time']) {
         return null;
     }
 
-    const configs = await cbParseTime(curBodyVal['max-time'], t('titles.maxTime'));
+    const configs = await cbParseTime(curBodyVal['max-time'], t('titles.maxTime'), isEdit);
     if (!configs || !configs.length) return null;
 
     return configs.map((el) => ({ ...el, curKey: CurKeyMap.MaxTime }));
