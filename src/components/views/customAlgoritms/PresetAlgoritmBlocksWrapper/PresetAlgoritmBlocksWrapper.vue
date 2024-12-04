@@ -974,10 +974,7 @@ async function parseMultiSelect(
     if (!props.device || !curDevCapab.value) return;
 
     const addr = props.device ? props.device.addr : 0;
-    // if (!funcLabels.value[addr].find((el) => el.name === type)) {
     await getLabels(1, type);
-    // }
-
     await getData(1, type, curDevCapab.value[type], addr, undefined, false, true);
 
     const isAction = type === 'udf-act';

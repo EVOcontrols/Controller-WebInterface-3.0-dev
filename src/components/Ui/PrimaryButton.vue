@@ -5,8 +5,8 @@
             notConnected
                 ? 'bg-[#1B4569] text-[#3E688E]'
                 : props.isDisabled
-                ? 'bg-[#123D61] text-[#3E688E] cursor-auto'
-                : 'bg-[#148ef8] text-[#ADEBFF]  hover:bg-[#3e7df9] active:bg-[#306add]',
+                ? 'bg-[#123D61] text-[#3E688E] cursor-auto pointer-events-none'
+                : 'bg-[#148ef8] text-[#ADEBFF] hover:bg-[#3e7df9] active:bg-[#306add]',
         ]"
     >
         <slot></slot>
