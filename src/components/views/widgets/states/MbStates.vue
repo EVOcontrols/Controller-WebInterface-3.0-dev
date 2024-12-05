@@ -22,7 +22,7 @@
             ref="scrollWrapper"
         >
             <div
-                class="grid gap-1 grid-rows-2 grid-flow-col"
+                class="grid gap-1 grid-rows-2 grid-flow-col justify-start"
                 ref="scrollEl"
             >
                 <div

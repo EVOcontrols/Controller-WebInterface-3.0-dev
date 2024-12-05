@@ -174,7 +174,8 @@ watch(
     () => [chosenDevices.value, devices.value],
     () => {
         console.log('DEVICES!!!!!', devices.value && JSON.parse(JSON.stringify(devices.value)));
-        isAllDevicesChosen.value = chosenDevices.value.length === devices.value.length;
+        const normalDevice = devices.value.filter((device) => device.state !== 'no-conn');
+        isAllDevicesChosen.value = chosenDevices.value.length === normalDevice.length;
     },
 );
 
