@@ -334,7 +334,16 @@ watch(
         if (JSON.stringify(newValue) !== JSON.stringify(oldValue)) {
             const indexCreating = newValue.findIndex((item) => item.isCreating === true);
             openedAlgoritms.value = indexCreating !== -1 ? [indexCreating] : [];
+            activeLabel.value = undefined;
         }
+    },
+);
+watch(
+    () => funcLabels.value,
+    () => {
+        curLabels.value =
+            funcLabels.value[props.device ? props.device.addr : 0].find((el) => el.name === props.curAction.val)?.val ||
+            [];
     },
 );
 

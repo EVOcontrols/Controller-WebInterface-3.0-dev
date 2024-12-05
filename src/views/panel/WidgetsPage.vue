@@ -36,19 +36,9 @@
                     <component
                         :is="w.w.component"
                         v-for="w in widgets.small.sort((a, b) => {
-                            if (a.w.bus !== undefined && b.w.bus !== undefined) {
-                                if (a.w.d === b.w.d) {
-                                    if (a.w.bus > b.w.bus) {
-                                        return 1;
-                                    } else {
-                                        return -1;
-                                    }
-                                } else {
-                                    return 1;
-                                }
-                            } else {
-                                return 1;
-                            }
+                            if (a.w.bus === undefined || b.w.bus === undefined) return 1;
+                            if (a.w.d !== b.w.d) return 1;
+                            return a.w.bus > b.w.bus ? 1 : -1;
                         })"
                         :key="`${w.w.d}.${w.w.i}.${w.w.bus || 0}`"
                         :w="w"

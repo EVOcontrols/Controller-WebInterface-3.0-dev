@@ -6,7 +6,9 @@
                 :key="device.addr"
                 class="device h-6 min-w-[3.25rem] pr-2 flex items-center mr-[6px] rounded text-0.81 font-roboto text-[#ADEBFF] transition-all duration-300 justify-center select-none"
                 :class="[
-                    curDev && curDev.addr === device.addr ? 'bg-[#148ef8]' : 'bg-[#1b4569]',
+                    curDev && curDev.addr === device.addr
+                        ? 'bg-[#148ef8] hover:bg-[#148ef8] cursor-default'
+                        : 'bg-[#1b4569]',
                     ['init', 'no-conn', 'error'].includes(device.state) ? 'pl-[6px]' : 'pl-2',
                     device.state === 'no-conn' ? 'cursor-default' : 'cursor-pointer hover:bg-[#214e76]',
                 ]"
@@ -648,7 +650,10 @@ onBeforeUnmount(() => {
 });
 
 watch(devices, () => {
-    if (!curDev.value) curDev.value = devices.value[0];
+    const firstAvailableDevice = devices.value.find((device) => device.state !== 'no-conn');
+    if (firstAvailableDevice) {
+        curDev.value = firstAvailableDevice;
+    }
 });
 
 watch(funcLabels, () => {

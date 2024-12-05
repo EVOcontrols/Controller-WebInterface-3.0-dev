@@ -649,11 +649,12 @@ async function getMb(ent: EntNum, device: number) {
 async function getDevConfig() {
     if (!config.value.length) isLoading.value = true;
 
-    for (const dev of devices.value) {
-        const data = await $apiGetConfig(dev.addr);
+    for (const device of devices.value) {
+        if (device.state === 'no-conn') continue;
+        const data = await $apiGetConfig(device.addr);
         configByAddr.value = {
             ...configByAddr.value,
-            [dev.addr]: data,
+            [device.addr]: data,
         };
     }
 
