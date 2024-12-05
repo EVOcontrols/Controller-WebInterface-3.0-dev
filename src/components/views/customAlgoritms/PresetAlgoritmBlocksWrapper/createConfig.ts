@@ -1,6 +1,6 @@
 import type { Body, Ent, Time } from '@/typings/funcs';
 import { type Config, CurKeyMap, binaryInterfaces, binaryMBInterfaces, type UDF, type MBTypes } from './types';
-import type { Device } from '@/stores';
+import type { Device } from '@/typings/main';
 
 const readonlyInterfaces = ['1w-rom', '1w-sens', 'bin-in', 'adc-in'];
 const intConstMin = -32768;

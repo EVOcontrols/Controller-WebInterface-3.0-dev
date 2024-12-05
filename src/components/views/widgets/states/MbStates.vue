@@ -245,7 +245,7 @@
 </template>
 
 <script lang="ts" setup>
-import type { Widget } from '@/stores';
+import type { Widget } from '@/typings/main';
 import ArrowIcon from '@/assets/ArrowIcon.vue';
 import { MBType, MBTypeWithNone } from '@/components/views/widgets/bigWidgets/types';
 

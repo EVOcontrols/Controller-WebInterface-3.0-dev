@@ -164,7 +164,7 @@ import DropDown from '@/components/Ui/DropDown.vue';
 import PrimaryButton from '@/components/Ui/PrimaryButton.vue';
 import AlgoritmsWrapper from '@/components/views/customAlgoritms/AlgoritmsWrapper.vue';
 import ArrowIcon from '@/assets/ArrowIcon.vue';
-import type { Device } from '@/stores';
+import type { Device } from '@/typings/main';
 
 const indexStore = useIndexStore();
 const funcsStore = useFuncsStore();

@@ -917,7 +917,7 @@ async function save() {
         });
     } catch (error) {
         toast.error(t('toast.error.header'), t('toast.error.text'));
-        console.log(error);
+        console.error(error);
     }
     isSaving.value = false;
 }

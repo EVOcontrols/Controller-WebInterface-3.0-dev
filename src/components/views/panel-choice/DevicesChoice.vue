@@ -1,6 +1,6 @@
 <template>
     <div class="flex whitespace-nowrap w-full flex-none">
-        <div class="flex flex-1 overflow-hidden w-full flex-none">
+        <div class="flex overflow-hidden w-full flex-none">
             <ArrowIcon
                 v-if="!isStartScrollEl"
                 class="absolute top-[50%] translate-y-[-50%] rotate-180 left-[6px] cursor-pointer"
@@ -21,26 +21,19 @@
                         <div
                             v-for="device in [...new Set(devices)]"
                             :key="device.addr"
-                            class="device h-6 min-w-[4rem] pr-2 flex items-center mr-[6px] rounded text-0.81 font-roboto text-[#ADEBFF] cursor-pointer transition-all duration-300 justify-center select-none"
+                            class="device h-6 min-w-[4rem] pr-2 flex items-center mr-[6px] rounded text-0.81 font-roboto text-[#ADEBFF] transition-all duration-300 justify-center select-none"
                             :class="[
-                                {
-                                    active: chosenDevices.includes(device.addr),
-                                },
-                                ['init', 'no-conn', 'error'].includes(device.state)
-                                    ? 'pl-[6px]'
-                                    : 'pl-2',
+                                chosenDevices.includes(device.addr) ? 'bg-[#148ef8]' : 'bg-[#143959]',
+                                ['init', 'no-conn', 'error'].includes(device.state) ? 'pl-[6px]' : 'pl-2',
+                                device.state === 'no-conn' ? 'cursor-default' : 'cursor-pointer hover:bg-[#214e76]',
                             ]"
                             @mousedown="mousedown"
-                            @mouseup="mouseup(device.addr, $event)"
+                            @mouseup="mouseup(device, $event)"
                             @mouseenter="(e) => $emit('enter', device, e as MouseEvent)"
                             @mouseleave="$emit('leave', device)"
                         >
                             <div
-                                v-if="
-                                    device.addr !== 0 &&
-                                    device.state !== 'on' &&
-                                    device.state !== 'off'
-                                "
+                                v-if="device.addr !== 0 && device.state !== 'on' && device.state !== 'off'"
                                 class="w-[5px] h-[5px] rounded-[50%] mr-[6px]"
                                 :class="[
                                     { 'bg-[#84AFBD]': device.state === 'init' },
@@ -48,11 +41,7 @@
                                     { 'bg-[#FF5A88]': device.state === 'error' },
                                 ]"
                             ></div>
-                            {{
-                                device.addr === 0
-                                    ? 'NGC'
-                                    : device.type.slice(device.type.indexOf('-') + 3)
-                            }}
+                            {{ device.addr === 0 ? 'NGC' : device.type.slice(device.type.indexOf('-') + 3) }}
                         </div>
                     </div>
                 </div>
@@ -72,9 +61,7 @@
                         @change="toggleChooseAllDevices()"
                         :isAllChosen="isAllDevicesChosen"
                     />
-                    <span
-                        class="ml-2 text-sm font-medium leading-none select-none nc:!text-[#426F95] text-[#8DC5F6]'"
-                    >
+                    <span class="ml-2 text-sm font-medium leading-none select-none nc:!text-[#426F95] text-[#8DC5F6]'">
                         {{ t('select') }}
                     </span>
                 </label>
@@ -87,15 +74,10 @@
                         v-if="ngcModbusMode !== 'ext-devs'"
                         class="absolute flex flex-col gap-3 py-4 px-5 w-[270px] h-[130px] bg-[#1B4569] right-5 -top-[116px] rounded-[10px] invisible opacity-0 group-hover:visible group-hover:opacity-100 transition-[visibility,opacity] z-[1]"
                     >
-                        <span class="w-full text-[#A0D5FF] font-semibold text_wrap">{{
-                            t('infoBlock.title')
-                        }}</span>
+                        <span class="w-full text-[#A0D5FF] font-semibold text_wrap">{{ t('infoBlock.title') }}</span>
                         <div class="w-full text-balance text-[#77C3FF] text_wrap">
                             {{ t('infoBlock.text.p1')
-                            }}{{
-                                ngcModbusMode === 'off'
-                                    ? t('infoBlock.text.off')
-                                    : t('infoBlock.text.mb')
+                            }}{{ ngcModbusMode === 'off' ? t('infoBlock.text.off') : t('infoBlock.text.mb')
                             }}{{ t('infoBlock.text.p2') }}
                             <RouterLink :to="{ path: 'settings/devices' }"
                                 ><span class="underline text-[#ADEBFF] font-semibold">
@@ -115,6 +97,7 @@ import { useI18n } from 'vue-i18n';
 import CheckBox from './CheckBox.vue';
 import ArrowIcon from '@/assets/ArrowIcon.vue';
 import SettingsIcon from '@/assets/SettingsIcon.vue';
+import type { Device } from '@/typings/main';
 
 const isAllDevicesChosen = ref(false);
 
@@ -149,8 +132,7 @@ function handleArrowClick(direction: 'toStart' | 'toEnd') {
         wrapper.scrollTo({ left: wrapper.scrollLeft + wrapper.offsetWidth, behavior: 'smooth' });
         isStartScrollEl.value = false;
         isEndScrollEl.value =
-            wrapper.scrollWidth - wrapper.offsetWidth - 20 <=
-            wrapper.scrollLeft + wrapper.offsetWidth;
+            wrapper.scrollWidth - wrapper.offsetWidth - 20 <= wrapper.scrollLeft + wrapper.offsetWidth;
     }
 }
 
@@ -158,19 +140,20 @@ function handleScrollMove() {
     const wrapper = scrollWrapper.value;
     const el = scrollEl.value;
     if (!el || !wrapper || wrapper.offsetWidth === el.offsetWidth) return;
-    isStartScrollEl.value = wrapper.scrollLeft < 20 ? true : false;
-    isEndScrollEl.value =
-        Math.round(wrapper.scrollLeft) > el.offsetWidth - wrapper.offsetWidth - 20 ? true : false;
+    isStartScrollEl.value = wrapper.scrollLeft < 20;
+    isEndScrollEl.value = Math.round(wrapper.scrollLeft) > el.offsetWidth - wrapper.offsetWidth - 20;
 }
 
 function mousedown(e: MouseEvent) {
     mouseupX.value = e.screenX;
 }
 
-function mouseup(device: number, e: MouseEvent) {
+function mouseup(device: Device, e: MouseEvent) {
+    if (device.state === 'no-conn') return;
+
     if (mouseupX.value) {
         if (Math.abs(e.screenX - mouseupX.value) < 20) {
-            indexStore.toggleDevice(device);
+            indexStore.toggleDevice(device.addr);
         }
         mouseupX.value = 0;
     }
@@ -190,6 +173,7 @@ onMounted(() => {
 watch(
     () => [chosenDevices.value, devices.value],
     () => {
+        console.log('DEVICES!!!!!', devices.value && JSON.parse(JSON.stringify(devices.value)));
         isAllDevicesChosen.value = chosenDevices.value.length === devices.value.length;
     },
 );
@@ -231,17 +215,6 @@ const { t } = useI18n({
 </script>
 
 <style lang="postcss" scoped>
-.device {
-    background: #143959;
-    &:hover {
-        background: #214e76;
-    }
-
-    &.active {
-        background: #148ef8;
-    }
-}
-
 .text_wrap {
     text-wrap: wrap;
 }

@@ -1261,7 +1261,7 @@ import IButtonOutIcon from '@/assets/IButtonOutIcon.vue';
 import ModbusPopUp from '@/components/views/widgets/bigWidgets/ModbusPopUp.vue';
 import PrimaryButton from '@/components/Ui/PrimaryButton.vue';
 import OutlinedButton from '@/components/Ui/OutlinedButton.vue';
-import type { Widget } from '@/stores';
+import type { Widget } from '@/typings/main';
 import { MBTypeWithNone } from '@/components/views/widgets/bigWidgets/types';
 
 const isDev = import.meta.env.DEV;

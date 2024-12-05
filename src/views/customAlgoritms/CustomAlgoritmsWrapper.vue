@@ -4,14 +4,18 @@
             <div
                 v-for="device in [...new Set(devices)] as Device[]"
                 :key="device.addr"
-                class="device h-6 min-w-[3.25rem] pr-2 flex items-center mr-[6px] rounded text-0.81 font-roboto text-[#ADEBFF] cursor-pointer transition-all duration-300 justify-center select-none"
+                class="device h-6 min-w-[3.25rem] pr-2 flex items-center mr-[6px] rounded text-0.81 font-roboto text-[#ADEBFF] transition-all duration-300 justify-center select-none"
                 :class="[
-                    {
-                        active: curDev && curDev.addr === device.addr,
-                    },
+                    curDev && curDev.addr === device.addr ? 'bg-[#148ef8]' : 'bg-[#1b4569]',
                     ['init', 'no-conn', 'error'].includes(device.state) ? 'pl-[6px]' : 'pl-2',
+                    device.state === 'no-conn' ? 'cursor-default' : 'cursor-pointer hover:bg-[#214e76]',
                 ]"
-                @click="curDev = device"
+                @click="
+                    () => {
+                        if (device.state === 'no-conn') return;
+                        curDev = device;
+                    }
+                "
                 @mouseenter="(e) => handleMouseEnter(device, e as MouseEvent)"
                 @mouseleave="handleMouseLeave(device)"
             >
@@ -60,7 +64,7 @@
                             : t('noConnection')
                     }}
                 </div>
-                <div>{{ t('addr') }} {{ shownStatus.addr }}</div>
+                <div>{{ t('addr') }} {{ shownStatus.realAddr }}</div>
                 <div>{{ t('firmWare') }} {{ shownStatus.version }}</div>
             </div>
         </div>
@@ -192,7 +196,7 @@
 </template>
 
 <script lang="ts" setup>
-import type { Device } from '@/stores';
+import type { Device } from '@/typings/main';
 import FunctionsBlock from '@/components/views/customAlgoritms/FunctionsBlock.vue';
 import DeleteAlgoritmPopUp from '@/components/views/customAlgoritms/DeleteAlgoritmPopUp.vue';
 import ControlBlock from '@/components/views/customAlgoritms/ControlBlock.vue';
@@ -227,7 +231,7 @@ const curPage2 = ref(0);
 const curDev = ref<Device>(devices.value[0]);
 let showStatusTimer: ReturnType<typeof setTimeout> | undefined;
 let getDataTimer: ReturnType<typeof setTimeout> | undefined;
-const shownStatus = ref<{ serial: string; state: string; addr: number; version: string } | null>(null);
+const shownStatus = ref<{ serial: string; state: string; realAddr: number; version: string } | null>(null);
 const statusFormLeft = ref(0);
 const isMouseOnStatusForm = ref(false);
 const isMouseOnDevice = ref(false);
@@ -262,7 +266,7 @@ const maxTrig = ref(0);
 function handleMouseLeave(device: Device) {
     if (!device.addr) return;
     isMouseOnDevice.value = false;
-    return new Promise((resolve) =>
+    return new Promise(() =>
         setTimeout(() => {
             if (!isMouseOnStatusForm.value) {
                 shownStatus.value = null;
@@ -285,7 +289,7 @@ function handleMouseEnter(device: Device, e: MouseEvent) {
         shownStatus.value = {
             serial: device.serial,
             state: device.state,
-            addr: device.addr,
+            realAddr: device.realAddr,
             version: device.version,
         };
         showStatusInfo.value = false;
@@ -307,7 +311,7 @@ function handleEnter() {
 
 function handleLeave() {
     isMouseOnStatusForm.value = false;
-    return new Promise((resolve) =>
+    return new Promise(() =>
         setTimeout(() => {
             if (!isMouseOnDevice.value) {
                 shownStatus.value = null;
@@ -433,7 +437,7 @@ async function getLabels(type: 'udf-act' | 'udf-cond' | 'udf-trans' | 'udf-trig'
         device: addr,
     });
     if (reqLabels === 'error') {
-        return new Promise((resolve) =>
+        return new Promise(() =>
             setTimeout(() => {
                 getLabels(type, dir);
             }, 5),
@@ -730,19 +734,4 @@ const { t } = useI18n({
     },
 });
 </script>
-<style lang="postcss" scoped>
-.device {
-    background: #1b4569;
-    &:hover {
-        background: #214e76;
-    }
-
-    &.active {
-        background: #148ef8;
-    }
-}
-
-.text_wrap {
-    text-wrap: wrap;
-}
-</style>
+<style lang="postcss" scoped></style>

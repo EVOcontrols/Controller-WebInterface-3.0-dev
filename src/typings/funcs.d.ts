@@ -3,13 +3,13 @@ export type FuncsNumberPerPage = (typeof funcsNumbersPerPage)[number];
 export type InterfEntType =
     | '1w-rom'
     | '1w-sens'
-    | 'bin-in'
     | 'adc-in'
+    | 'bin-in'
     | 'bin-out'
-    | 'pwm-out'
-    | 'mb-var'
     | 'bin-var'
     | 'int-var'
+    | 'mb-var'
+    | 'pwm-out'
     | 'tim-var';
 
 export type Ent = {

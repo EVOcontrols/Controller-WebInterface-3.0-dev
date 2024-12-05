@@ -88,7 +88,7 @@
 </template>
 
 <script lang="ts" setup>
-import type { Widget, InterfVal } from '@/stores';
+import type { Widget, InterfVal } from '@/typings/main';
 import ArrowIcon from '@/assets/ArrowIcon.vue';
 
 const indexStore = useIndexStore();

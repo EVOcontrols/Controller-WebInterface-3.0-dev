@@ -1,66 +1,7 @@
 import type { ControllerDateTime, DeviceAddr, Lang, Toast, UserRole } from '@/typings/common';
 import type { TempUnit, NumberingSystem } from '@/typings/common';
 import type { ControllerSettings, ExtDevsList, ExtDevsListRaw } from '@/typings/settings';
-
-export interface Device {
-    addr: number;
-    type: string;
-    interf: [
-        | { interf: '1w-gpio'; bus: number }
-        | { interf: '1w-rom'; bus: number }
-        | { interf: '1w-sens'; bus: number }
-        | '1w-gpio'
-        | '1w-rom'
-        | '1w-sens'
-        | 'adc-in'
-        | 'bin-in'
-        | 'bin-out'
-        | 'bin-var'
-        | 'int-var'
-        | 'mb-var'
-        | { interf: 'mb-var'; bus: number }
-        | 'pwm-out'
-        | 'tim-var',
-    ];
-    state: 'on' | 'off' | 'init' | 'no-conn' | 'error';
-    serial: string;
-    version: string;
-}
-
-export interface Interf {
-    value:
-        | '1w-gpio'
-        | '1w-rom'
-        | '1w-sens'
-        | 'adc-in'
-        | 'bin-in'
-        | 'bin-out'
-        | 'bin-var'
-        | 'int-var'
-        | 'mb-var'
-        | 'pwm-out'
-        | 'tim-var';
-    label: {
-        ru: string;
-        en: string;
-    };
-}
-
-export interface Widget {
-    d: number;
-    i: string;
-    deviceName: string;
-    component: any;
-    bus?: number;
-}
-
-export interface InterfVal {
-    type: string;
-    device: number;
-    index: number;
-    state: number[] | null[] | [number | null][];
-    bus?: number;
-}
+import type { Capab, Device, DeviceInterf, Interf, InterfVal } from '@/typings/main';
 
 export const useIndexStore = defineStore('indexStore', () => {
     const timeout = ref(500);
@@ -198,25 +139,7 @@ export const useIndexStore = defineStore('indexStore', () => {
 
     const isAddingDev = ref(false);
 
-    const devCapabs = ref<
-        ({
-            '1w-gpio': number;
-            '1w-rom': number;
-            '1w-sens': number;
-            'adc-in': number;
-            'bin-in': number;
-            'bin-out': number;
-            'bin-var': number;
-            'int-var': number;
-            'mb-var': number;
-            'pwm-out': number;
-            'tim-var': number;
-            'udf-act': number;
-            'udf-cond': number;
-            'udf-trans': number;
-            'udf-trig': number;
-        } | null)[]
-    >([]);
+    const devCapabs = ref<(Capab | null)[]>([]);
 
     function setNeedToReqData(res: boolean) {
         needToReqData.value = res;
@@ -291,10 +214,6 @@ export const useIndexStore = defineStore('indexStore', () => {
 
     function setDevices(device: Device) {
         const newArr = [...devices.value];
-        const prevEl = newArr[newArr.length - 1];
-        for (let i = newArr.length; i < device.addr; i++) {
-            newArr.push(prevEl);
-        }
         newArr.push(device);
         devices.value = newArr;
         setSortedDevices();
@@ -304,23 +223,7 @@ export const useIndexStore = defineStore('indexStore', () => {
     function removeOWInterf(device: number, bus: number) {
         const newArr = [...devices.value];
         const newInterf = newArr[device].interf.filter((el) => typeof el === 'string' || el.bus !== bus);
-        newArr[device].interf = newInterf as [
-            | { interf: '1w-gpio'; bus: number }
-            | { interf: '1w-rom'; bus: number }
-            | { interf: '1w-sens'; bus: number }
-            | '1w-gpio'
-            | '1w-rom'
-            | '1w-sens'
-            | 'adc-in'
-            | 'bin-in'
-            | 'bin-out'
-            | 'bin-var'
-            | 'int-var'
-            | 'mb-var'
-            | { interf: 'mb-var'; bus: number }
-            | 'pwm-out'
-            | 'tim-var',
-        ];
+        newArr[device].interf = newInterf as [DeviceInterf];
         devices.value = newArr;
         if (visibleWidgets.value.length) {
             const newWidgets = [...visibleWidgets.value];
@@ -342,23 +245,7 @@ export const useIndexStore = defineStore('indexStore', () => {
         const newArr = [...devices.value];
         const newInterf = newArr[device]?.interf.filter((el) => typeof el === 'string' || el.bus !== 0);
         if (newInterf) {
-            newArr[device].interf = newInterf as [
-                | { interf: '1w-gpio'; bus: number }
-                | { interf: '1w-rom'; bus: number }
-                | { interf: '1w-sens'; bus: number }
-                | '1w-gpio'
-                | '1w-rom'
-                | '1w-sens'
-                | 'adc-in'
-                | 'bin-in'
-                | 'bin-out'
-                | 'bin-var'
-                | 'int-var'
-                | 'mb-var'
-                | { interf: 'mb-var'; bus: number }
-                | 'pwm-out'
-                | 'tim-var',
-            ];
+            newArr[device].interf = newInterf as [DeviceInterf];
             devices.value = newArr;
             if (visibleWidgets.value.length) {
                 const newWidgets = [...visibleWidgets.value];
@@ -400,6 +287,7 @@ export const useIndexStore = defineStore('indexStore', () => {
         } else {
             const arr: number[] = [];
             devices.value.forEach((d) => {
+                if (d.state === 'no-conn') return;
                 arr.push(d.addr);
             });
             chosenDevices.value = [...new Set(arr)];
@@ -785,26 +673,7 @@ export const useIndexStore = defineStore('indexStore', () => {
         isAddingDev.value = res;
     }
 
-    function setDevCapabs(
-        d: number,
-        capabs: {
-            '1w-gpio': number;
-            '1w-rom': number;
-            '1w-sens': number;
-            'adc-in': number;
-            'bin-in': number;
-            'bin-out': number;
-            'bin-var': number;
-            'int-var': number;
-            'mb-var': number;
-            'pwm-out': number;
-            'tim-var': number;
-            'udf-act': number;
-            'udf-cond': number;
-            'udf-trans': number;
-            'udf-trig': number;
-        },
-    ) {
+    function setDevCapabs(d: number, capabs: Capab) {
         const newArr = [...devCapabs.value];
         if (!newArr.length || !newArr[d]) {
             if (d) {

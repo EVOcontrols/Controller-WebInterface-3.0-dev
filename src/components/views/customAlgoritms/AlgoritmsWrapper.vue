@@ -87,7 +87,7 @@
 <script lang="ts" setup>
 import AlgoritmBlock from '@/components/views/customAlgoritms/AlgoritmBlock.vue';
 import spinner from '@/assets/img/spinner-inside-button.svg?raw';
-import type { Device } from '@/stores';
+import type { Device } from '@/typings/main';
 
 const { saveToFile } = useReadWriteFiles();
 

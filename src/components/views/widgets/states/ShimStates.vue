@@ -85,7 +85,7 @@
 </template>
 
 <script lang="ts" setup>
-import type { Widget, InterfVal } from '@/stores';
+import type { Widget, InterfVal } from '@/typings/main';
 import ArrowIcon from '@/assets/ArrowIcon.vue';
 import ShimItem from '@/components/views/widgets/states/ShimItem.vue';
 
@@ -223,10 +223,7 @@ async function changeValue(e: MouseEvent) {
         if (r.data.status === 'ok') {
             const devStates = [...devicesState.value][props.w.w.d];
             const prevStateIndex = devStates.findIndex((el) => el.type === props.w.w.i);
-            if (
-                prevStateIndex !== -1 &&
-                devStates[prevStateIndex].state[activeIndex.value] !== undefined
-            )
+            if (prevStateIndex !== -1 && devStates[prevStateIndex].state[activeIndex.value] !== undefined)
                 devStates[prevStateIndex].state[activeIndex.value] = Math.round(activeValue.value);
             indexStore.setDevicesState(props.w.w.d, [...devStates]);
         }
@@ -263,9 +260,8 @@ watch(
 watch(
     () => devicesState.value,
     () => {
-        const newState = devicesState.value[props.w.w.d].find(
-            (obj: InterfVal) => obj.type === props.w.w.i,
-        )?.state as number[];
+        const newState = devicesState.value[props.w.w.d].find((obj: InterfVal) => obj.type === props.w.w.i)
+            ?.state as number[];
         if (activeIndex.value !== null && activeIndex.value !== undefined && newState) {
             newState[activeIndex.value] = Math.round(activeValue.value);
         }

@@ -1,5 +1,5 @@
 import { type Config, CurKeyMap, binaryInterfaces } from './types';
-import type { Device } from '@/stores';
+import type { Device } from '@/typings/main';
 
 type InterfProp = { interf: string; bus: number };
 

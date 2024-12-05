@@ -1,5 +1,5 @@
 import type { DropDownRealType, EntityForBody } from './types';
-import type { Device } from '@/stores';
+import type { Device } from '@/typings/main';
 
 export const createBodyState = (
     type: DropDownRealType,

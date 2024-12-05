@@ -20,7 +20,7 @@
 </template>
 
 <script lang="ts" setup>
-import type { Widget } from '@/stores';
+import type { Widget } from '@/typings/main';
 import WidgetHeader from '@/components/views/widgets/WidgetHeader.vue';
 import WidgetFooter from '@/components/views/widgets/WidgetFooter.vue';
 import MbStates from '@/components/views/widgets/states/MbStates.vue';
@@ -28,17 +28,7 @@ import MbStates from '@/components/views/widgets/states/MbStates.vue';
 const activeIO = ref<{
     index: number;
     val: {
-        type:
-            | 'hr'
-            | 'wm-hr'
-            | 'w-hr'
-            | 'm-hr'
-            | 'ir'
-            | 'coil'
-            | 'wm-coil'
-            | 'w-coil'
-            | 'm-coil'
-            | 'di';
+        type: 'hr' | 'wm-hr' | 'w-hr' | 'm-hr' | 'ir' | 'coil' | 'wm-coil' | 'w-coil' | 'm-coil' | 'di';
         'reg-addr': number;
         'dev-addr': number;
         val: number | null | 'err';
@@ -49,17 +39,7 @@ const lastActiveIO = ref<{
     index: number;
     newIndex: number;
     val: {
-        type:
-            | 'hr'
-            | 'wm-hr'
-            | 'w-hr'
-            | 'm-hr'
-            | 'ir'
-            | 'coil'
-            | 'wm-coil'
-            | 'w-coil'
-            | 'm-coil'
-            | 'di';
+        type: 'hr' | 'wm-hr' | 'w-hr' | 'm-hr' | 'ir' | 'coil' | 'wm-coil' | 'w-coil' | 'm-coil' | 'di';
         'reg-addr': number;
         'dev-addr': number;
         val: number | null | 'err';
@@ -78,17 +58,7 @@ function setActiveIO(
     index: number,
     newIndex: number,
     s: {
-        type:
-            | 'hr'
-            | 'wm-hr'
-            | 'w-hr'
-            | 'm-hr'
-            | 'ir'
-            | 'coil'
-            | 'wm-coil'
-            | 'w-coil'
-            | 'm-coil'
-            | 'di';
+        type: 'hr' | 'wm-hr' | 'w-hr' | 'm-hr' | 'ir' | 'coil' | 'wm-coil' | 'w-coil' | 'm-coil' | 'di';
         'reg-addr': number;
         'dev-addr': number;
         val: number | null | 'err';

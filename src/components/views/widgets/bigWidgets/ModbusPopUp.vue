@@ -455,7 +455,7 @@ import PrimaryButton from '@/components/Ui/PrimaryButton.vue';
 import OutlinedButton from '@/components/Ui/OutlinedButton.vue';
 import UpdateIcon from '@/assets/UpdateIcon.vue';
 import CloseIcon from '@/assets/CloseIcon.vue';
-import type { Widget } from '@/stores';
+import type { Widget } from '@/typings/main';
 import DropDown from '@/components/Ui/DropDown.vue';
 import type { NumberingSystem } from '@/typings/common';
 import CheckBox from '@/components/views/panel-choice/CheckBox.vue';

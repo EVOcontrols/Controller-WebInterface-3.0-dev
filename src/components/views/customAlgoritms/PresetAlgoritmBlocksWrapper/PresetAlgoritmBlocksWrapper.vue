@@ -238,12 +238,10 @@ import IButtonIcon from '@/assets/IButtonIcon.vue';
 import search from '@/assets/img/search.svg?raw';
 import UiInput from '@/components/Ui/UiInput.vue';
 import info from '@/assets/img/info.svg?raw';
-import type { Device } from '@/stores';
 import spinner from '@/assets/img/spinner-inside-button.svg?raw';
 import type { Body, Ent, Time } from '@/typings/funcs';
 import { translate } from '@/locales/PresetAlgoritmBlocksWrapper';
 import {
-    Capab,
     DropDown,
     Interface,
     Mode1W,
@@ -277,7 +275,8 @@ import { createConfig } from './createConfig';
 import { createEntityConfig } from './createEntityConfig';
 import { createBodyState } from './createBodyState';
 import { createObjByType } from './createUdfObj';
-import { ControllerSettings } from '@/typings/settings';
+import type { ControllerSettings } from '@/typings/settings';
+import type { Capab, Device } from '@/typings/main';
 
 const isDev = import.meta.env.DEV;
 const timeoutDev = 10000;

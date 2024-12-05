@@ -205,7 +205,7 @@ import PrimaryButton from '@/components/Ui/PrimaryButton.vue';
 import OutlinedButton from '@/components/Ui/OutlinedButton.vue';
 import info from '@/assets/img/info.svg?raw';
 import calibrationArrow from '@/assets/img/calibration-arrow.svg?raw';
-import type { Widget, InterfVal } from '@/stores';
+import type { Widget, InterfVal } from '@/typings/main';
 
 const indexStore = useIndexStore();
 

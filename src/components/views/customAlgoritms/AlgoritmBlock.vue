@@ -110,7 +110,7 @@ import scrollArrow from '@/assets/img/scroll-arrow.svg?raw';
 import CollapseTransition from '@/components/CollapseTransition.vue';
 import OutlinedButton from '@/components/Ui/OutlinedButton.vue';
 import PresetAlgoritmBlocksWrapper from '@/components/views/customAlgoritms/PresetAlgoritmBlocksWrapper/PresetAlgoritmBlocksWrapper.vue';
-import type { Device } from '@/stores';
+import type { Device } from '@/typings/main';
 
 const indexStore = useIndexStore();
 

@@ -283,7 +283,7 @@
 
 <script lang="ts" setup>
 import { useI18n } from 'vue-i18n';
-import type { Widget } from '@/stores';
+import type { Widget } from '@/typings/main';
 
 const { saveToFile } = useReadWriteFiles();
 

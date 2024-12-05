@@ -37,24 +37,6 @@ export type DropDownItem = {
     i: number;
 };
 
-export type Capab = {
-    '1w-gpio': number;
-    '1w-rom': number;
-    '1w-sens': number;
-    'adc-in': number;
-    'bin-in': number;
-    'bin-out': number;
-    'bin-var': number;
-    'int-var': number;
-    'mb-var': number;
-    'pwm-out': number;
-    'tim-var': number;
-    'udf-act': number;
-    'udf-cond': number;
-    'udf-trans': number;
-    'udf-trig': number;
-};
-
 export type MBTypes = 'coil' | 'ir' | 'hr' | 'di' | 'none';
 export type Mode1W = { mode: 'off' | 'sens' | 'rom' | 'gpio' };
 export type ModeMb = { mode: 'off' | 'variables' | 'ext-devs' };

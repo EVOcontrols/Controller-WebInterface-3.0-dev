@@ -127,15 +127,11 @@ const visibleValue = computed(() => {
     if (caretPosition.value === null) {
         return doShowDots.value ? dottedValue.value : value.value;
     }
-    const v = doShowDots.value
-        ? new Array(value.value.length).fill('&#0149;')
-        : value.value.split('');
+    const v = doShowDots.value ? new Array(value.value.length).fill('&#0149;') : value.value.split('');
     v.splice(caretPosition.value, 0, '<span class="blinking-cursor"></span>');
     if (caretEnd.value !== null) {
         const cEnd = caretEnd.value <= value.value.length ? caretEnd.value : value.value.length;
-        v[caretPosition.value] = `${
-            v[caretPosition.value] || ''
-        }<span class="text-[#0F304B] bg-[#84B5E3]">`;
+        v[caretPosition.value] = `${v[caretPosition.value] || ''}<span class="text-[#0F304B] bg-[#84B5E3]">`;
         v[cEnd] += '</span>';
     }
     return v.join('');
@@ -171,7 +167,6 @@ watch(isInputFocus, () => {
 });
 
 watch(value, () => {
-    // console.log(value.value, props.initValue);
     if (value.value === props.initValue) return;
     emit('change', value.value);
 });
@@ -216,9 +211,7 @@ function selectEvent() {
     const { selectionStart, selectionEnd } = inputEl.value;
     caretPosition.value = selectionStart;
     caretEnd.value =
-        typeof selectionStart === 'number' &&
-        typeof selectionEnd === 'number' &&
-        selectionStart >= selectionEnd
+        typeof selectionStart === 'number' && typeof selectionEnd === 'number' && selectionStart >= selectionEnd
             ? null
             : selectionEnd;
 }
