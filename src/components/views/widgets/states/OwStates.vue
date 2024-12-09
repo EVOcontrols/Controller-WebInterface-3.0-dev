@@ -21,9 +21,7 @@
                 class="grid min-w-full gap-2"
                 style="grid-template-columns: repeat(auto-fill, 24px)"
                 :style="{
-                    width: props.isBig
-                        ? '100%'
-                        : `${32 * Math.ceil(filteredState.length / 2) - 8}px`,
+                    width: props.isBig ? '100%' : `${32 * Math.ceil(filteredState.length / 2) - 8}px`,
                 }"
                 ref="scrollEl"
             >
@@ -38,9 +36,7 @@
                         @mouseleave="handleMouseLeave"
                     >
                         <IButtonIcon :class="{ active: s.val }" />
-                        <div
-                            class="mt-1 text-0.81 font-medium text-center leading-none text-[#6CB5D3]"
-                        >
+                        <div class="mt-1 text-0.81 font-medium text-center leading-none text-[#6CB5D3]">
                             {{ s.i + 1 }}
                         </div>
                     </div>
@@ -76,7 +72,7 @@
 </template>
 
 <script lang="ts" setup>
-import type { Widget } from '@/stores';
+import type { Widget } from '@/typings/main';
 import IButtonIcon from '@/assets/IButtonIcon.vue';
 import ArrowIcon from '@/assets/ArrowIcon.vue';
 

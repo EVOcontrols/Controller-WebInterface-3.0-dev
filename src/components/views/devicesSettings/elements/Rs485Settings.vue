@@ -1,14 +1,24 @@
 <template>
     <div class="mt-8 border-b border-[#0b3d68] pb-10 w-full">
         <h2 class="font-semibold text-xl leading-[1.2] whitespace-pre mb-[1.125rem]">
-            {{ t('rsSettings') }}
+            {{ t('rsSettings', { counter: getCounter(index) }) }}
         </h2>
         <div class="flex flex-row items-center">
             <div class="text-[#6d9cc5] text-sm leading-[1.143] mr-[0.875rem]">
                 {{ t('portMode') }}
             </div>
             <ButtonGroup
-                :buttons="modbusModes.map((v) => ({ text: t(`portModes.${v}`), value: v }))"
+                :buttons="
+                    modbusModes.map((v) => {
+                        if (v === 'card-reader' && props.settings.mode !== 'card-reader') {
+                            return null;
+                        }
+                        if (v === 'ext-devs' && props.settings.mode !== 'ext-devs') {
+                            return { text: t(`portModes.${v}`), value: v, isDisabled: props.isUseExtDevsNow };
+                        }
+                        return { text: t(`portModes.${v}`), value: v };
+                    })
+                "
                 :value="props.settings.mode"
                 additional-classes="px-4"
                 @change="emit('changeMode', $event)"
@@ -131,7 +141,7 @@
     </div>
 </template>
 
-<script lang="ts" setup generic="T extends NGCSettings['modbus']">
+<script lang="ts" setup generic="T extends NGCSettings['modbuses'][number]">
 import type { NGCSettings } from '@/typings/settings';
 import ButtonGroup from '@/components/Ui/ButtonGroup.vue';
 import InputRange from './InputRange.vue';
@@ -140,7 +150,9 @@ import AdvancedSettingsButton from '@/components/views/devicesSettings/elements/
 import CollapseTransition from '@/components/CollapseTransition.vue';
 
 const props = defineProps<{
-    settings: NGCSettings['modbus'];
+    index: number;
+    isUseExtDevsNow: boolean;
+    settings: NGCSettings['modbuses'][number];
     fieldsInvalidStatuses: Set<string>; // Only fields with 'modbus-' prefix
     numberingSystem: NGCSettings['numberingSystem'];
 }>();
@@ -161,10 +173,10 @@ const advancedSettingsHaveError = computed(() => props.fieldsInvalidStatuses.siz
 
 const rsAdvancedParams = {
     variables: [
-        { param: 'rd-tmo', label: 'rd-tmo', min: 0, max: 65535 },
-        { param: 'wr-tmo', label: 'wr-tmo', min: 0, max: 65535 },
-        { param: 'rd-pause', label: 'rd-ddy', min: 0, max: 65535 },
-        { param: 'wr-pause', label: 'wr-ddy', min: 0, max: 65535 },
+        { param: 'read-tmo', label: 'read-tmo', min: 0, max: 65535 },
+        { param: 'write-tmo', label: 'write-tmo', min: 0, max: 65535 },
+        { param: 'read-delay', label: 'read-delay', min: 0, max: 65535 },
+        { param: 'write-delay', label: 'write-delay', min: 0, max: 65535 },
         { param: 'cycle-delay', label: 'cm-ddy', min: 0, max: 65535 },
     ],
     'ext-devs': [
@@ -174,17 +186,47 @@ const rsAdvancedParams = {
         { param: 'set-cfg-tmo', label: 'set-cfg-tmo', min: 0, max: 65535 },
         { param: 'cycle-delay', label: 'cycle-delay', min: 0, max: 65535 },
     ],
+    'card-reader': [{ param: 'valid-time', label: 'valid-time', min: 0, max: 65535 }],
 } as const;
+
+function getCounter(index: number): string {
+    const { locale } = useI18n();
+    const count = index + 1;
+    if (locale.value === 'ru') {
+        switch (count) {
+            case 1:
+                return 'первой';
+            case 2:
+                return 'второй';
+            case 3:
+                return 'третьей';
+            default:
+                return `${count}`;
+        }
+    }
+
+    switch (count) {
+        case 1:
+            return 'first';
+        case 2:
+            return 'second';
+        case 3:
+            return 'third';
+        default:
+            return `${count}`;
+    }
+}
 
 const { t } = useI18n({
     messages: {
         en: {
-            rsSettings: 'RS485 bus settings',
+            rsSettings: 'RS485 {counter} bus settings',
             portMode: 'Port mode',
             portModes: {
                 off: 'OFF',
                 variables: 'MODBUS VARIABLES',
                 'ext-devs': 'EXTENSION DEVICES',
+                'card-reader': 'CARD READER',
             },
             speed: 'Speed',
             parity: 'Parity',
@@ -197,12 +239,13 @@ const { t } = useI18n({
             numberingSystem: 'Default display \nof registers and values',
         },
         ru: {
-            rsSettings: 'Настройки шины RS485',
+            rsSettings: 'Настройки {counter} шины RS485',
             portMode: 'Режим работы порта',
             portModes: {
                 off: 'ОТКЛЮЧЕН',
                 variables: 'ПЕРЕМЕННЫЕ MODBUS',
                 'ext-devs': 'УСТРОЙСТВА РАСШИРЕНИЯ',
+                'card-reader': 'КАРТРИДЕР',
             },
             speed: 'Скорость',
             parity: 'Четность',

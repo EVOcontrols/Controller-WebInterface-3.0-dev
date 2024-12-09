@@ -14,9 +14,13 @@
             "
         />
         <Rs485Settings
-            :settings="settings.modbus"
+            v-for="(modbus, i) in settings.modbuses"
+            :key="i"
+            :index="i"
+            :settings="modbus"
             :numbering-system="settings.numberingSystem"
             :fields-invalid-statuses="new Set([...fieldsInvalidStatuses].filter((s) => s.startsWith('modbus')))"
+            :isUseExtDevsNow="hasUseExtDevsNow()"
             @toggle-invalid-field-status="
                 (field: string, action: 'add' | 'delete') => {
                     if (action === 'add') {
@@ -26,16 +30,16 @@
                     }
                 }
             "
-            @change-mode="settings.modbus.mode = $event"
-            @change-rate="settings.modbus.rate = $event"
-            @change-parity="settings.modbus.parity = $event"
-            @change-stop="settings.modbus.stop = $event"
+            @change-mode="modbus.mode = $event"
+            @change-rate="modbus.rate = $event"
+            @change-parity="modbus.parity = $event"
+            @change-stop="modbus.stop = $event"
             @change-numbering-system="settings.numberingSystem = $event"
             @change-advanced-param="
                 (param: 'cycle-delay', value: number | undefined) => {
-                    if (!settings || settings.modbus.mode === 'off') return;
-                    const curMode = settings.modbus.mode as 'variables' | 'ext-devs';
-                    settings.modbus.advanced[curMode][param] = value;
+                    if (!settings || modbus.mode === 'off') return;
+                    const curMode = modbus.mode as 'variables' | 'ext-devs';
+                    modbus.advanced[curMode][param] = value;
                 }
             "
         />
@@ -371,26 +375,41 @@ const ignoreUndefined = (value: any) => {
 
 const areThereChanges = computed(() => {
     if (!settings.value || !settingsInit.value) return false;
-    switch (settings.value.modbus.mode) {
-        case 'off':
-            return !isEqualWith(
-                omit(settings.value, `modbus.advanced`),
-                omit(settingsInit.value, `modbus.advanced`),
-                ignoreUndefined,
-            );
-        case 'variables':
-            return !isEqualWith(
-                omit(settings.value, `modbus.advanced.ext-devs`),
-                omit(settingsInit.value, `modbus.advanced.ext-devs`),
-                ignoreUndefined,
-            );
-        case 'ext-devs':
-            return !isEqualWith(
-                omit(settings.value, `modbus.advanced.variables`),
-                omit(settingsInit.value, `modbus.advanced.variables`),
-                ignoreUndefined,
-            );
-    }
+    if (settings.value.modbuses.length !== settingsInit.value.modbuses.length) return true;
+
+    const modbusesChanged = settings.value.modbuses.some((currentModbus, index) => {
+        if (!currentModbus || !settingsInit.value) return false;
+        const initModbus = settingsInit.value.modbuses[index];
+
+        if (!currentModbus || !initModbus) return true;
+
+        switch (currentModbus.mode) {
+            case 'off':
+                return !isEqualWith(omit(currentModbus, ['advanced']), omit(initModbus, ['advanced']), ignoreUndefined);
+            case 'variables':
+                return !isEqualWith(
+                    omit(currentModbus, ['advanced.ext-devs', 'advanced.card-reader']),
+                    omit(initModbus, ['advanced.ext-devs', 'advanced.card-reader']),
+                    ignoreUndefined,
+                );
+            case 'ext-devs':
+                return !isEqualWith(
+                    omit(currentModbus, ['advanced.variables', 'advanced.card-reader']),
+                    omit(initModbus, ['advanced.variables', 'advanced.card-reader']),
+                    ignoreUndefined,
+                );
+            case 'card-reader':
+                return !isEqualWith(
+                    omit(currentModbus, ['advanced.variables', 'advanced.ext-devs']),
+                    omit(initModbus, ['advanced.variables', 'advanced.ext-devs']),
+                    ignoreUndefined,
+                );
+            default:
+                return true;
+        }
+    });
+
+    return modbusesChanged;
 });
 
 const needToSave = computed(() => areThereChanges.value && !fieldsInvalidStatuses.value.size);
@@ -517,26 +536,28 @@ const oneWireBuses = oneWiresModes.map((m) => ({
 function setNgcSettings(data: ControllerSettings) {
     settings.value = {
         ...pick(data, ['1-wire', 'adc-in', 'bin-out', 'pwm']),
-        modbus: {
-            ...pick(data['rs-485'][0], ['rate', 'parity', 'stop', 'mode']),
+        modbuses: data['rs-485'].map((modbus) => ({
+            ...pick(modbus, ['rate', 'parity', 'stop', 'mode']),
             advanced: {
                 variables: {
-                    'cycle-delay':
-                        data['rs-485'][0].mode === 'variables' ? data['rs-485'][0]['cycle-delay'] : undefined,
-                    'rd-pause': data['rs-485'][0].mode === 'variables' ? data['rs-485'][0]['rd-pause'] : undefined,
-                    'rd-tmo': data['rs-485'][0].mode === 'variables' ? data['rs-485'][0]['rd-tmo'] : undefined,
-                    'wr-pause': data['rs-485'][0].mode === 'variables' ? data['rs-485'][0]['wr-pause'] : undefined,
-                    'wr-tmo': data['rs-485'][0].mode === 'variables' ? data['rs-485'][0]['wr-tmo'] : undefined,
+                    'cycle-delay': modbus.mode === 'variables' ? modbus['cycle-delay'] : undefined,
+                    'read-delay': modbus.mode === 'variables' ? modbus['read-delay'] : undefined,
+                    'read-tmo': modbus.mode === 'variables' ? modbus['read-tmo'] : undefined,
+                    'write-delay': modbus.mode === 'variables' ? modbus['write-delay'] : undefined,
+                    'write-tmo': modbus.mode === 'variables' ? modbus['write-tmo'] : undefined,
                 },
                 'ext-devs': {
-                    'cycle-delay': data['rs-485'][0].mode === 'ext-devs' ? data['rs-485'][0]['cycle-delay'] : undefined,
-                    'get-tmo': data['rs-485'][0].mode === 'ext-devs' ? data['rs-485'][0]['get-tmo'] : undefined,
-                    '1w-scan-tmo': data['rs-485'][0].mode === 'ext-devs' ? data['rs-485'][0]['1w-scan-tmo'] : undefined,
-                    'set-cfg-tmo': data['rs-485'][0].mode === 'ext-devs' ? data['rs-485'][0]['set-cfg-tmo'] : undefined,
-                    'set-tmo': data['rs-485'][0].mode === 'ext-devs' ? data['rs-485'][0]['set-tmo'] : undefined,
+                    'cycle-delay': modbus.mode === 'ext-devs' ? modbus['cycle-delay'] : undefined,
+                    'get-tmo': modbus.mode === 'ext-devs' ? modbus['get-tmo'] : undefined,
+                    '1w-scan-tmo': modbus.mode === 'ext-devs' ? modbus['1w-scan-tmo'] : undefined,
+                    'set-cfg-tmo': modbus.mode === 'ext-devs' ? modbus['set-cfg-tmo'] : undefined,
+                    'set-tmo': modbus.mode === 'ext-devs' ? modbus['set-tmo'] : undefined,
+                },
+                'card-reader': {
+                    'valid-time': modbus.mode === 'card-reader' ? modbus['valid-time'] : undefined,
                 },
             },
-        },
+        })),
         numberingSystem: numberingSystem.value,
     };
     isRebootRequired.value = data['reboot-req'];
@@ -562,13 +583,14 @@ async function save() {
             }
         }
     });
-    if (JSON.stringify(current.modbus) !== JSON.stringify(init.modbus)) {
-        settingsToSave['rs-485'] = [];
-        const curMode = current.modbus.mode as 'variables' | 'ext-devs';
-        settingsToSave['rs-485'][0] = {
-            ...pick(current.modbus, ['rate', 'parity', 'stop', 'mode']),
-            ...(current.modbus.mode === 'off' ? {} : current.modbus.advanced[curMode]),
-        };
+    if (JSON.stringify(current.modbuses) !== JSON.stringify(init.modbuses)) {
+        settingsToSave['rs-485'] = current.modbuses.map((modbus) => {
+            const curMode = modbus.mode as 'variables' | 'ext-devs';
+            return {
+                ...pick(modbus, ['rate', 'parity', 'stop', 'mode']),
+                ...(modbus.mode === 'off' ? {} : modbus.advanced[curMode]),
+            };
+        });
     }
     try {
         if (!isEmpty(settingsToSave)) {
@@ -581,27 +603,32 @@ async function save() {
             if (r === 'error') throw '';
             indexStore.setNumberingSystem(current.numberingSystem);
         }
-        if (current.modbus.mode !== init.modbus.mode) {
-            if (current.modbus.mode === 'ext-devs' && init.modbus.mode !== 'ext-devs' && !isRebootRequired) {
-                // await until(rebootingDeviceAddr).toBe(0);
-                // await until(rebootingDeviceAddr).toBe(undefined);
-                const r = await api.get<{ list: ExtDevsListRaw }>('get_ext_devs');
-                indexStore.setExtDevsList(r.data.list);
+
+        for (const [index, modbus] of current.modbuses.entries()) {
+            const initModbus = init.modbuses[index];
+            if (modbus.mode !== initModbus.mode) {
+                if (modbus.mode === 'ext-devs' && initModbus.mode !== 'ext-devs' && !isRebootRequired) {
+                    // await until(rebootingDeviceAddr).toBe(0);
+                    // await until(rebootingDeviceAddr).toBe(undefined);
+                    const r = await api.get<{ list: ExtDevsListRaw }>('get_ext_devs');
+                    indexStore.setExtDevsList(r.data.list);
+                }
+                indexStore.setNGCModbusMode(modbus.mode);
+                const r = await api.get<ControllerSettings>('get_config');
+                setNgcSettings(r.data);
+                const mainDev = devices.value[0];
+                indexStore.setDevicesToInitState();
+                indexStore.setDevicesStateToInitState();
+                indexStore.setOWIdsToInitState();
+                indexStore.setCalibrValsToInitState();
+                indexStore.setMbDevsToInitState();
+                indexStore.setDevices(mainDev);
+                indexStore.toggleDevice(0);
             }
-            indexStore.setNGCModbusMode(current.modbus.mode);
-            const r = await api.get<ControllerSettings>('get_config');
-            setNgcSettings(r.data);
-            const mainDev = devices.value[0];
-            indexStore.setDevicesToInitState();
-            indexStore.setDevicesStateToInitState();
-            indexStore.setOWIdsToInitState();
-            indexStore.setCalibrValsToInitState();
-            indexStore.setMbDevsToInitState();
-            indexStore.setDevices(mainDev);
-            indexStore.toggleDevice(0);
-        } else {
-            settingsInit.value = cloneDeep(settings.value);
         }
+
+        settingsInit.value = cloneDeep(settings.value);
+
         if (settingsToSave['1-wire']) {
             for (let i = 0; i < settingsToSave['1-wire'].length; i++) {
                 if (JSON.stringify(current['1-wire'][i]) !== JSON.stringify(init['1-wire'][i])) {
@@ -614,6 +641,11 @@ async function save() {
         toast.error(t('toast.error.header'), t('toast.error.text'));
     }
     emit('setIsSaving', false);
+}
+
+function hasUseExtDevsNow(): boolean {
+    if (!settings.value) return true;
+    return settings.value.modbuses.some((modbus) => modbus.mode === 'ext-devs');
 }
 
 setNgcSettings(props.controllerSettings);

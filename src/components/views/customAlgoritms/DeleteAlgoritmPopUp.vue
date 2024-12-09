@@ -58,8 +58,8 @@
                         v-html="spinnerInsideButton"
                         class="[&>svg]:w-4 [&>svg>path]:fill-[#ADEBFF] flex items-center justify-center"
                     ></span>
-                    <span v-else>{{ t('delete') }}</span></PrimaryButton
-                >
+                    <span v-else>{{ t('delete') }}</span>
+                </PrimaryButton>
             </div>
         </div>
     </div>

@@ -73,9 +73,7 @@
                         v-html="gears"
                         class="self-center mb-4 [&>svg]:w-12"
                     ></span>
-                    <div
-                        class="text-[#9adbf6] text-sm leading-[1.167] tracking-[0.03em] whitespace-pre"
-                    >
+                    <div class="text-[#9adbf6] text-sm leading-[1.167] tracking-[0.03em] whitespace-pre">
                         <div>
                             {{ t('rebooting1') }}
                         </div>

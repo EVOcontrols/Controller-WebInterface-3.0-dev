@@ -18,9 +18,7 @@
                     class="flex overflow-y-auto w-full scrollbar-4 flex-1"
                     :style="{ height: 'calc(100vh - 410px)' }"
                 >
-                    <div
-                        class="flex flex-col items-center flex-none pt-[10px] px-2 w-full pb-[10px]"
-                    >
+                    <div class="flex flex-col items-center flex-none pt-[10px] px-2 w-full pb-[10px]">
                         <div
                             class="label w-full flex text-[#6CB5D3] items-center transition-colors duration-500 rounded select-none gap-2 min-h-[30px] hover:bg-[#0C2F4D]"
                             v-for="(s, index) in props.w.state"
@@ -34,9 +32,7 @@
                                 <div
                                     class="w-1 h-1 rounded-[50%]"
                                     :class="
-                                        checkedArr?.find(
-                                            (el) => el.dir === 'max' && el.index === index,
-                                        )
+                                        checkedArr?.find((el) => el.dir === 'max' && el.index === index)
                                             ? 'bg-[#00B3CB]'
                                             : 'bg-[#07435D]'
                                     "
@@ -44,9 +40,7 @@
                                 <div
                                     class="w-1 h-1 rounded-[50%]"
                                     :class="
-                                        checkedArr?.find(
-                                            (el) => el.dir === 'min' && el.index === index,
-                                        )
+                                        checkedArr?.find((el) => el.dir === 'min' && el.index === index)
                                             ? 'bg-[#00B3CB]'
                                             : 'bg-[#07435D]'
                                     "
@@ -61,7 +55,7 @@
 </template>
 
 <script lang="ts" setup>
-import type { Widget } from '@/stores';
+import type { Widget } from '@/typings/main';
 import ShimStates from '@/components/views/widgets/states/ShimStates.vue';
 
 const indexStore = useIndexStore();
@@ -132,16 +126,12 @@ async function setValue(index: number, dir: 'min' | 'max', val: number) {
                   };
         const r = await api.post('set_config', reqObj);
         if (r.data.status === 'ok') {
-            const arr = [...calibratedArr.value].filter(
-                (el) => !(el.index === index && el.dir === dir),
-            );
+            const arr = [...calibratedArr.value].filter((el) => !(el.index === index && el.dir === dir));
             calibratedArr.value = [...arr];
             checkedArr.value = [...checkedArr.value, { index: index, dir: dir }];
-            return new Promise((resolve) =>
+            return new Promise(() =>
                 setTimeout(() => {
-                    const arr = [...checkedArr.value].filter(
-                        (el) => !(el.index === index && el.dir === dir),
-                    );
+                    const arr = [...checkedArr.value].filter((el) => !(el.index === index && el.dir === dir));
                     checkedArr.value = [...arr];
                 }, 3000),
             );

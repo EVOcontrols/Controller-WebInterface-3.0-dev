@@ -83,7 +83,7 @@ import OwStates from '@/components/views/widgets/states/OwStates.vue';
 import BigWLabels from '@/components/views/widgets/bigWidgets/BigWLabels.vue';
 import CalibrWidget from '@/components/views/widgets/bigWidgets/CalibrWidget.vue';
 import ModbusPage from '@/components/views/widgets/bigWidgets/ModbusPage.vue';
-import type { Widget } from '@/stores';
+import type { Widget } from '@/typings/main';
 import axios from 'axios';
 
 const indexStore = useIndexStore();
@@ -155,6 +155,7 @@ const widget = computed<Widget>(() => {
 async function getIndexes(labelsArr?: string[]) {
     clearTimeout(scanTimer);
     if (isUnmount) return;
+
     try {
         if (props.w.w.bus !== undefined) {
             const r = await api.post('scan_ow_ids', {

@@ -9,15 +9,9 @@
             <div
                 v-if="props.w.deviceName"
                 class="px-[11px] py-[5px] rounded font-roboto text-xs h-[22px]"
-                :class="
-                    notConnected ? 'bg-[#1B4569] text-[#3E688E]' : 'bg-[#12405b] text-[#42CBF6]'
-                "
+                :class="notConnected ? 'bg-[#1B4569] text-[#3E688E]' : 'bg-[#12405b] text-[#42CBF6]'"
             >
-                {{
-                    props.w.d === 0
-                        ? 'NGC'
-                        : props.w.deviceName.slice(props.w.deviceName.indexOf('-') + 3)
-                }}
+                {{ props.w.d === 0 ? 'NGC' : props.w.deviceName.slice(props.w.deviceName.indexOf('-') + 3) }}
             </div>
         </div>
     </div>
@@ -26,7 +20,7 @@
 <script lang="ts" setup>
 import { useI18n } from 'vue-i18n';
 import SettingsIcon from '@/assets/SettingsIcon.vue';
-import type { Widget, Interf } from '@/stores';
+import type { Widget, Interf } from '@/typings/main';
 
 const props = defineProps<{
     w: Widget;

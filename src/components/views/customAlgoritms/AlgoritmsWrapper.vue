@@ -87,7 +87,7 @@
 <script lang="ts" setup>
 import AlgoritmBlock from '@/components/views/customAlgoritms/AlgoritmBlock.vue';
 import spinner from '@/assets/img/spinner-inside-button.svg?raw';
-import type { Device } from '@/stores';
+import type { Device } from '@/typings/main';
 
 const { saveToFile } = useReadWriteFiles();
 
@@ -203,7 +203,7 @@ function addAlgoritm(index: number, event: Event) {
 function setActiveLabel(index: number) {
     activeLabel.value = {
         i: index + props.page * funcsNumberPerPage.value,
-        label: curLabels.value[index],
+        label: curLabels.value[index + props.page * funcsNumberPerPage.value],
     };
     isNotMainScrolling.value = true;
     setActiveLabelTop();
@@ -334,7 +334,16 @@ watch(
         if (JSON.stringify(newValue) !== JSON.stringify(oldValue)) {
             const indexCreating = newValue.findIndex((item) => item.isCreating === true);
             openedAlgoritms.value = indexCreating !== -1 ? [indexCreating] : [];
+            activeLabel.value = undefined;
         }
+    },
+);
+watch(
+    () => funcLabels.value,
+    () => {
+        curLabels.value =
+            funcLabels.value[props.device ? props.device.addr : 0].find((el) => el.name === props.curAction.val)?.val ||
+            [];
     },
 );
 

@@ -22,9 +22,7 @@
                 class="block bg-[#074a56] rounded-[3px] p-[1px]"
             ></span>
             <span
-                v-else-if="
-                    props.calibratedArr?.find((el) => el.dir === 'max' && el.index === index)
-                "
+                v-else-if="props.calibratedArr?.find((el) => el.dir === 'max' && el.index === index)"
                 class="loader"
             ></span>
             <CalibrArrow
@@ -36,9 +34,7 @@
         <div
             class="flex items-end flex-1 w-1.5 mx-2 overflow-hidden relative rounded-2xl parent z-[1] peer mb-2"
             :class="[
-                props.isBig && props.w.i === 'pwm-out'
-                    ? 'bg-[#063a52] overflow-visible'
-                    : 'bg-[#07435d]',
+                props.isBig && props.w.i === 'pwm-out' ? 'bg-[#063a52] overflow-visible' : 'bg-[#07435d]',
                 { ' cursor-pointer': props.w.i === 'pwm-out' },
             ]"
         >
@@ -46,9 +42,7 @@
                 v-if="!notConnected"
                 class="relative w-full bg-[#00b3cb] transition-all duration-500 rounded-[18px]"
                 :style="{
-                    height: `${
-                        props.activeIndex === props.index ? props.activeValue / 100 : props.s / 100
-                    }%`,
+                    height: `${props.activeIndex === props.index ? props.activeValue / 100 : props.s / 100}%`,
                 }"
             >
                 <div
@@ -72,9 +66,7 @@
                 class="block bg-[#074a56] rounded-[3px] p-[1px]"
             ></span>
             <span
-                v-else-if="
-                    props.calibratedArr?.find((el) => el.dir === 'min' && el.index === index)
-                "
+                v-else-if="props.calibratedArr?.find((el) => el.dir === 'min' && el.index === index)"
                 class="loader"
             ></span>
             <CalibrArrow
@@ -100,7 +92,7 @@
     </div>
 </template>
 <script setup lang="ts">
-import type { Widget } from '@/stores';
+import type { Widget } from '@/typings/main';
 import CalibrArrow from '@/assets/CalibrArrow.vue';
 import check from '@/assets/img/check.svg?raw';
 
@@ -143,12 +135,7 @@ function quickChange(index: number, e: MouseEvent, currentState: number | null) 
         emit('changeActiveIndex', index);
         emit('changeMouseOffset', 0);
         const boundingRect = parent.getBoundingClientRect();
-        emit(
-            'changeRange',
-            boundingRect.y + boundingRect.height,
-            boundingRect.y,
-            boundingRect.height,
-        );
+        emit('changeRange', boundingRect.y + boundingRect.height, boundingRect.y, boundingRect.height);
         emit('changeValue', e);
         document.addEventListener('mousemove', changeValue);
         document.addEventListener(

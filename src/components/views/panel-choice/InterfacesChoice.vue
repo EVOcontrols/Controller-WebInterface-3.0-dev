@@ -51,9 +51,7 @@
                     />
                     <span
                         class="ml-2 text-sm font-medium leading-none select-none nc:!text-426"
-                        :class="
-                            isAllInterfacesChosen ? 'text-8dc' : 'text-578 group-hover:text-8dc'
-                        "
+                        :class="isAllInterfacesChosen ? 'text-8dc' : 'text-578 group-hover:text-8dc'"
                     >
                         {{ t('select') }}
                     </span>
@@ -67,7 +65,7 @@
 import { useI18n } from 'vue-i18n';
 import CheckBox from './CheckBox.vue';
 import ArrowIcon from '@/assets/ArrowIcon.vue';
-import type { Interf } from '@/stores';
+import type { Interf } from '@/typings/main';
 
 const isAllInterfacesChosen = ref(false);
 
@@ -109,9 +107,8 @@ function handleScrollMove() {
     const wrapper = scrollWrapper.value;
     const el = scrollEl.value;
     if (!el || !wrapper) return;
-    isStartScrollEl.value = wrapper.scrollLeft < 20 ? true : false;
-    isEndScrollEl.value =
-        Math.round(wrapper.scrollLeft) > el.offsetWidth - wrapper.offsetWidth - 20 ? true : false;
+    isStartScrollEl.value = wrapper.scrollLeft < 20;
+    isEndScrollEl.value = Math.round(wrapper.scrollLeft) > el.offsetWidth - wrapper.offsetWidth - 20;
 }
 
 function mousedown(e: MouseEvent) {

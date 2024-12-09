@@ -11,7 +11,7 @@
     "compilerOptions": {
         "allowJs": true,
         "verbatimModuleSyntax": false,
-        "noImplicitAny": false
-    },
-    "strict": false
+        "noImplicitAny": false,
+        "strict": true
+    }
 }

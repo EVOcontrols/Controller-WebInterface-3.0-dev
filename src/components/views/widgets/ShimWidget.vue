@@ -25,7 +25,7 @@
 </template>
 
 <script lang="ts" setup>
-import type { Widget } from '@/stores';
+import type { Widget } from '@/typings/main';
 import WidgetHeader from '@/components/views/widgets/WidgetHeader.vue';
 import WidgetFooter from '@/components/views/widgets/WidgetFooter.vue';
 import ShimStates from '@/components/views/widgets/states/ShimStates.vue';

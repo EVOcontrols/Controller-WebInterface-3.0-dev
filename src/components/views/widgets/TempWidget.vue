@@ -26,7 +26,7 @@
 </template>
 
 <script lang="ts" setup>
-import type { Widget, Device } from '@/stores';
+import type { Widget, Device } from '@/typings/main';
 import WidgetHeader from '@/components/views/widgets/WidgetHeader.vue';
 import WidgetFooter from '@/components/views/widgets/WidgetFooter.vue';
 import TempStates from '@/components/views/widgets/states/TempStates.vue';

@@ -31,7 +31,7 @@
 </template>
 
 <script lang="ts" setup>
-import type { Widget } from '@/stores';
+import type { Widget } from '@/typings/main';
 import IButtonIcon from '@/assets/IButtonIcon.vue';
 
 const indexStore = useIndexStore();
@@ -66,8 +66,7 @@ function handleMouseLeave() {
 watch(
     () => devicesState.value,
     () => {
-        const newState = devicesState.value[props.w.w.d].find((obj) => obj.type === props.w.w.i)
-            ?.state as number[];
+        const newState = devicesState.value[props.w.w.d].find((obj) => obj.type === props.w.w.i)?.state as number[];
         state.value = newState ? newState : [...props.w.state];
     },
 );

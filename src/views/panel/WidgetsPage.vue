@@ -36,19 +36,9 @@
                     <component
                         :is="w.w.component"
                         v-for="w in widgets.small.sort((a, b) => {
-                            if (a.w.bus !== undefined && b.w.bus !== undefined) {
-                                if (a.w.d === b.w.d) {
-                                    if (a.w.bus > b.w.bus) {
-                                        return 1;
-                                    } else {
-                                        return -1;
-                                    }
-                                } else {
-                                    return 1;
-                                }
-                            } else {
-                                return 1;
-                            }
+                            if (a.w.bus === undefined || b.w.bus === undefined) return 1;
+                            if (a.w.d !== b.w.d) return 1;
+                            return a.w.bus > b.w.bus ? 1 : -1;
                         })"
                         :key="`${w.w.d}.${w.w.i}.${w.w.bus || 0}`"
                         :w="w"
@@ -71,7 +61,7 @@
 
 <script lang="ts" setup>
 import { useI18n } from 'vue-i18n';
-import type { Widget } from '@/stores';
+import type { Widget, InterfVal } from '@/typings/main';
 import BigWidget from '@/components/views/widgets/bigWidgets/bigWidget.vue';
 import ShimWidget from '@/components/views/widgets/ShimWidget.vue';
 import DiscreteWidget from '@/components/views/widgets/DiscreteWidget.vue';
@@ -79,7 +69,6 @@ import VarWidget from '@/components/views/widgets/VarWidget.vue';
 import TempWidget from '@/components/views/widgets/TempWidget.vue';
 import OwWidget from '@/components/views/widgets/OwWidget.vue';
 import MbWidget from '@/components/views/widgets/MbWidget.vue';
-import type { InterfVal } from '@/stores';
 
 const indexStore = useIndexStore();
 
@@ -119,9 +108,7 @@ const widgets = computed<{
     let big: { w: Widget; state: number[] } | null = null;
     sortedChosenDevices.value.forEach((d: number) => {
         sortedChosenInterfaces.value.forEach((i: string) => {
-            const index = devicesState.value[d]?.findIndex(
-                (interf: InterfVal) => interf.type === i,
-            );
+            const index = devicesState.value[d]?.findIndex((interf: InterfVal) => interf.type === i);
             if (
                 devicesState.value[d] &&
                 index !== -1 &&
@@ -192,27 +179,15 @@ const widgets = computed<{
 const gridClasses = computed<{ all: string; big: string; small: string }>(() => {
     if (window.innerWidth > 1680) {
         return {
-            all: bigWidget.value
-                ? isInitialization.value || isMb.value
-                    ? 'mx-[40px]'
-                    : 'grid grid-cols-2'
-                : '',
+            all: bigWidget.value ? (isInitialization.value || isMb.value ? 'mx-[40px]' : 'grid grid-cols-2') : '',
             small: bigWidget.value ? 'grid grid-cols-2 pr-10' : 'grid grid-cols-4 px-10',
             big: isInitialization.value || isMb.value ? '' : 'ml-10',
         };
     }
     return {
-        all: bigWidget.value
-            ? isInitialization.value || isMb.value
-                ? 'mx-[40px]'
-                : 'grid grid-cols-3'
-            : '',
+        all: bigWidget.value ? (isInitialization.value || isMb.value ? 'mx-[40px]' : 'grid grid-cols-3') : '',
         small: bigWidget.value ? 'grid grid-cols-1 pr-10' : 'grid grid-cols-3 px-10',
-        big: bigWidget.value
-            ? isInitialization.value || isMb.value
-                ? ''
-                : 'col-span-2 ml-10'
-            : '',
+        big: bigWidget.value ? (isInitialization.value || isMb.value ? '' : 'col-span-2 ml-10') : '',
     };
 });
 
@@ -249,9 +224,7 @@ function setMbStatus(w?: Widget) {
 
 function handleScroll() {
     const visibleWidgets = changeVisibleWidgets() || [];
-    indexStore.setVisibleWidgets(
-        widgets.value.big ? [...visibleWidgets, widgets.value.big] : visibleWidgets,
-    );
+    indexStore.setVisibleWidgets(widgets.value.big ? [...visibleWidgets, widgets.value.big] : visibleWidgets);
 }
 
 function changeVisibleWidgets() {
@@ -290,9 +263,7 @@ watch(
     () => [widgets.value.small, widgets.value.big],
     () => {
         const visibleWidgets = changeVisibleWidgets() || [];
-        indexStore.setVisibleWidgets(
-            widgets.value.big ? [...visibleWidgets, widgets.value.big] : visibleWidgets,
-        );
+        indexStore.setVisibleWidgets(widgets.value.big ? [...visibleWidgets, widgets.value.big] : visibleWidgets);
     },
 );
 
@@ -307,13 +278,9 @@ watch(
             }),
         );
         if (chosenDevices.value.length > prevChosenDevices.length) {
-            let prevDev = chosenDevices.value.filter(
-                (x: number) => !prevChosenDevices.includes(x),
-            )[0];
+            let prevDev = chosenDevices.value.filter((x: number) => !prevChosenDevices.includes(x))[0];
             chosenInterfaces.value.forEach((interf: string) => {
-                const index = newItems.findIndex(
-                    (item) => item.w.i === interf && item.w.d === prevDev,
-                );
+                const index = newItems.findIndex((item) => item.w.i === interf && item.w.d === prevDev);
                 if (index === -1) {
                     newItems.push({
                         w: { d: prevDev, i: interf },
@@ -328,9 +295,7 @@ watch(
                 isMb.value = false;
             }
         }
-        indexStore.setVisibleWidgets(
-            widgets.value.big ? [...newItems, widgets.value.big] : newItems,
-        );
+        indexStore.setVisibleWidgets(widgets.value.big ? [...newItems, widgets.value.big] : newItems);
         prevChosenDevices = [...chosenDevices.value];
     },
 );
@@ -346,13 +311,9 @@ watch(
             }),
         );
         if (chosenInterfaces.value.length > prevChosenInterfaces.length) {
-            let prevInterf = chosenInterfaces.value.filter(
-                (x: string) => !prevChosenInterfaces.includes(x),
-            )[0];
+            let prevInterf = chosenInterfaces.value.filter((x: string) => !prevChosenInterfaces.includes(x))[0];
             chosenDevices.value.forEach((d: number) => {
-                const index = newItems.findIndex(
-                    (item) => item.w.d === d && item.w.i === prevInterf,
-                );
+                const index = newItems.findIndex((item) => item.w.d === d && item.w.i === prevInterf);
                 if (index === -1) {
                     newItems.push({
                         w: { d: d, i: prevInterf },
@@ -367,9 +328,7 @@ watch(
                 isMb.value = false;
             }
         }
-        indexStore.setVisibleWidgets(
-            widgets.value.big ? [...newItems, widgets.value.big] : newItems,
-        );
+        indexStore.setVisibleWidgets(widgets.value.big ? [...newItems, widgets.value.big] : newItems);
         prevChosenInterfaces = [...chosenInterfaces.value];
     },
 );

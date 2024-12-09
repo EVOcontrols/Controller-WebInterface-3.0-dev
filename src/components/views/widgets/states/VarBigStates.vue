@@ -71,7 +71,7 @@
 </template>
 
 <script lang="ts" setup>
-import type { InterfVal, Widget } from '@/stores';
+import type { InterfVal, Widget } from '@/typings/main';
 
 const indexStore = useIndexStore();
 

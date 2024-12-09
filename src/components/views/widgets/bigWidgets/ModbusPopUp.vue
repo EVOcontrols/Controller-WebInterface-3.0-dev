@@ -1,15 +1,9 @@
 <template>
-    <div
-        class="fixed top-0 bottom-0 left-0 right-0 z-[4] bg-[#001d34b2] flex items-center justify-center"
-    >
+    <div class="fixed top-0 bottom-0 left-0 right-0 z-[4] bg-[#001d34b2] flex items-center justify-center">
         <div
             class="relative p-6 bg-[#0A2A45] min-w-[480px] rounded-[12px] flex flex-col gap-[18px]"
             :class="
-                props.command === 'delete'
-                    ? 'w-[480px]'
-                    : props.command === 'createReg'
-                    ? 'w-[516px]'
-                    : 'w-[606px]'
+                props.command === 'delete' ? 'w-[480px]' : props.command === 'createReg' ? 'w-[516px]' : 'w-[606px]'
             "
             :style="{ height: 'fit-content' }"
         >
@@ -20,7 +14,7 @@
                 @click.stop
             >
                 <span
-                    class="w-10 flex items-center justify-center rounded-l-[8px] bg-[#1d5377] px-[6px] transition-colors duration-300 h-9 rounded-l-[6px]"
+                    class="w-10 flex items-center justify-center bg-[#1d5377] px-[6px] transition-colors duration-300 h-9 rounded-l-[6px]"
                     >{{ activeLabel.val }}</span
                 >
                 <input
@@ -44,9 +38,7 @@
                     v-else-if="props.command === 'update'"
                     class="w-[21px] h-[21px]"
                 />
-                <div class="flex-1 text-lg text-[#9ADBF6] font-semibold">
-                    {{ t(`${$props.command}.title`) }}
-                </div>
+                <div class="flex-1 text-lg text-[#9ADBF6] font-semibold">{{ t(`${$props.command}.title`) }}</div>
                 <CloseIcon
                     class="cursor-pointer"
                     @click="$emit('close')"
@@ -84,8 +76,7 @@
                                     props.el.type === 'm-coil',
                             },
                             {
-                                ' bg-[#006B83] text-[#01F0FF]':
-                                    props.el.type === 'hr' || props.el.type === 'ir',
+                                ' bg-[#006B83] text-[#01F0FF]': props.el.type === 'hr' || props.el.type === 'ir',
                             },
                         ]"
                     >
@@ -99,9 +90,7 @@
                 v-else-if="props.command === 'update'"
                 class="flex flex-col gap-3"
             >
-                <div
-                    class="w-full h-[38px] bg-[#113351] flex gap-[6px] items-center px-3 rounded-[6px]"
-                >
+                <div class="w-full h-[38px] bg-[#113351] flex gap-[6px] items-center px-3 rounded-[6px]">
                     <span v-html="search"></span>
                     <input
                         class="w-full bg-transparent placeholder:text-[#5183B1] placeholder:select-none"
@@ -127,9 +116,7 @@
                             :key="index"
                             class="group w-full rounded-[6px] flex gap-3 items-center hover:bg-[#163E61] p-[6px] transition-color duration-300"
                             :class="[
-                                activeLabel?.index === index
-                                    ? 'min-h-[68px] h-[68px]'
-                                    : 'min-h-[37px] h-[37px]',
+                                activeLabel?.index === index ? 'min-h-[68px] h-[68px]' : 'min-h-[37px] h-[37px]',
                                 { 'mt-3': !index },
                             ]"
                             ref="scrollEl"
@@ -183,11 +170,7 @@
                     {{ t('create.devAddr') }}
                     <input
                         class="mt-[14px] w-[60px] h-10 rounded-[6px] px-4 placeholder:text-[#5183B1] placeholder:text-sm text-sm"
-                        :class="
-                            invalidDevAddr
-                                ? 'bg-[#4F2046] text-[#F83068]'
-                                : 'bg-[#123A5B] text-[#5183B1]'
-                        "
+                        :class="invalidDevAddr ? 'bg-[#4F2046] text-[#F83068]' : 'bg-[#123A5B] text-[#5183B1]'"
                         type="text"
                         :placeholder="'000'"
                         :value="devAddrInputVal"
@@ -263,14 +246,14 @@
                                 class="rounded-lg h-10 w-[326px] bg-[#0f304b] flex flex-row items-center gap-2 p-2"
                                 @click="onClick"
                             >
-                                <div
+                                <span
                                     class="font-roboto text-[#8dc5f6] w-[50px] h-full rounded bg-[#1B4569] flex items-center justify-center"
                                 >
-                                    {{ curDevices.find((el) => el.val === choosenDevice)?.val }}
-                                </div>
-                                <div class="font-roboto text-[#8dc5f6] text-sm">
-                                    {{ curDevices.find((el) => el.val === choosenDevice)?.label }}
-                                </div>
+                                    {{ curDevices.find((item) => item.val === choosenDevice)?.val }}
+                                </span>
+                                <span class="font-roboto text-[#8dc5f6] text-sm">
+                                    {{ curDevices.find((item) => item.val === choosenDevice)?.label }}
+                                </span>
                             </button>
                         </template>
                         <template #body="{ isOpen, onSelect }">
@@ -282,7 +265,7 @@
                                     <div
                                         v-for="d in curDevices"
                                         :key="d.val"
-                                        class="flex flex-row h-[2.188rem] hover:bg-[#134d7d] shrink-0 items-center pl-2 pr-3 rounded hover:pl-3 transition-[background-color,padding] select-none cursor-pointer on:bg-[#134d7d] items-center gap-2"
+                                        class="flex flex-row h-[2.188rem] hover:bg-[#134d7d] shrink-0 pl-2 pr-3 rounded hover:pl-3 transition-[background-color,padding] select-none cursor-pointer on:bg-[#134d7d] items-center gap-2"
                                         :class="{ on: d.val === choosenDevice }"
                                         @click="
                                             () => {
@@ -321,7 +304,7 @@
                     <div class="flex gap-3 items-center mt-[14px]">
                         <div class="flex">
                             <span
-                                class="select-none h-8 w-16 text-sm font-Roboto flex items-center rounded-l-[8px] flex items-center justify-center"
+                                class="select-none h-8 w-16 text-sm font-Roboto rounded-l-[8px] flex items-center justify-center"
                                 :class="
                                     currentNumberingSystem === 'dec'
                                         ? 'bg-[#023E71] text-[#2B9BFF] select-none'
@@ -331,7 +314,7 @@
                                 >DEC</span
                             >
                             <span
-                                class="select-none h-8 w-16 text-sm font-Roboto flex items-center rounded-r-[8px] flex items-center justify-center"
+                                class="select-none h-8 w-16 text-sm font-Roboto rounded-r-[8px] flex items-center justify-center"
                                 :class="
                                     currentNumberingSystem === 'hex'
                                         ? 'bg-[#023E71] text-[#2B9BFF] select-none'
@@ -352,9 +335,7 @@
                     </div>
                 </div>
                 <div v-if="choosenType === 'coil' || choosenType === 'hr'">
-                    <label
-                        class="flex items-center cursor-pointer nc:cursor-default group mr-[26px]"
-                    >
+                    <label class="flex items-center cursor-pointer nc:cursor-default group mr-[26px]">
                         <check-box
                             @change="() => (newRegWOption = !newRegWOption)"
                             :isAllChosen="newRegWOption"
@@ -366,9 +347,7 @@
                             {{ t('createReg.fields.w') }}
                         </span>
                     </label>
-                    <label
-                        class="flex items-center cursor-pointer nc:cursor-default group mr-[26px]"
-                    >
+                    <label class="flex items-center cursor-pointer nc:cursor-default group mr-[26px]">
                         <check-box
                             @change="() => (newRegMOption = !newRegMOption)"
                             :isAllChosen="newRegMOption"
@@ -398,10 +377,8 @@
                 <PrimaryButton
                     v-if="props.command === 'create' || props.command === 'createReg'"
                     :isDisabled="
-                        ((invalidDevName || invalidDevAddr || !devAddrInputVal) &&
-                            props.command === 'create') ||
-                        (props.command === 'createReg' &&
-                            (newRegInputVal === null || newRegInputVal === ''))
+                        ((invalidDevName || invalidDevAddr || !devAddrInputVal) && props.command === 'create') ||
+                        (props.command === 'createReg' && (newRegInputVal === null || newRegInputVal === ''))
                     "
                     class="w-[110px]"
                     @click="handleBtnClick"
@@ -418,9 +395,7 @@
             v-if="deletedDev !== null"
             class="fixed top-0 bottom-0 left-0 right-0 z-[2] bg-[#001d34b2] flex items-center justify-center"
         >
-            <div
-                class="relative p-6 bg-[#0A2A45] w-[444px] rounded-[12px] flex flex-col gap-[18px]"
-            >
+            <div class="relative p-6 bg-[#0A2A45] w-[444px] rounded-[12px] flex flex-col gap-[18px]">
                 <div class="flex items-center gap-[6px]">
                     <span v-html="done"></span>
                     <div class="flex-1 text-lg text-[#9ADBF6] font-semibold">
@@ -480,10 +455,11 @@ import PrimaryButton from '@/components/Ui/PrimaryButton.vue';
 import OutlinedButton from '@/components/Ui/OutlinedButton.vue';
 import UpdateIcon from '@/assets/UpdateIcon.vue';
 import CloseIcon from '@/assets/CloseIcon.vue';
-import type { Widget } from '@/stores';
+import type { Widget } from '@/typings/main';
 import DropDown from '@/components/Ui/DropDown.vue';
 import type { NumberingSystem } from '@/typings/common';
 import CheckBox from '@/components/views/panel-choice/CheckBox.vue';
+import { MBRegType, MBType, MBTypeWithNone } from '@/components/views/widgets/bigWidgets/types';
 
 const indexStore = useIndexStore();
 
@@ -537,39 +513,18 @@ const isLoading = ref(false);
 const props = defineProps<{
     w: { w: Widget; state: number[] };
     el: {
-        type?:
-            | 'hr'
-            | 'wm-hr'
-            | 'w-hr'
-            | 'm-hr'
-            | 'ir'
-            | 'coil'
-            | 'wm-coil'
-            | 'w-coil'
-            | 'm-coil'
-            | 'di';
+        type?: MBType;
         'reg-addr': number;
         'dev-addr': number;
         val: number | null | 'err';
     } | null;
     newReg?: {
         dev: number;
-        type: 'hr' | 'ir' | 'coil' | 'di';
+        type: MBRegType;
     } | null;
     command?: 'delete' | 'create' | 'update' | 'createReg';
     state: {
-        type:
-            | 'hr'
-            | 'wm-hr'
-            | 'w-hr'
-            | 'm-hr'
-            | 'ir'
-            | 'coil'
-            | 'wm-coil'
-            | 'w-coil'
-            | 'm-coil'
-            | 'di'
-            | 'none';
+        type: MBTypeWithNone;
         'reg-addr': number;
         'dev-addr': number;
         val: number | null | 'err';
@@ -579,9 +534,7 @@ const props = defineProps<{
 
 const choosenDevice = ref<number | null>(props.newReg?.dev || null);
 
-const choosenType = ref<'hr' | 'ir' | 'coil' | 'di' | null>(
-    props.newReg?.type === 'coil' ? 'coil' : props.newReg?.type || null,
-);
+const choosenType = ref<MBRegType | null>(props.newReg?.type === 'coil' ? 'coil' : props.newReg?.type || null);
 
 const curMbDevLabels = computed<string[]>(() => {
     let res: string[] = [];
@@ -621,9 +574,7 @@ const curDevices = computed<{ val: number; label: string }[] | []>(() => {
 const filteredCurDevices = computed<{ val: number; label: string }[] | []>(() => {
     if (updateFilterText.value.length) {
         return curDevices.value.filter(
-            (el) =>
-                el.val.toString().includes(updateFilterText.value) ||
-                el.label.includes(updateFilterText.value),
+            (el) => el.val.toString().includes(updateFilterText.value) || el.label.includes(updateFilterText.value),
         );
     } else return curDevices.value;
 });
@@ -693,101 +644,29 @@ async function deleteItem() {
 
 async function createReg() {
     isLoading.value = true;
-    if (
-        newRegInputVal.value === null ||
-        newRegInputVal.value === '' ||
-        choosenDevice.value === null
-    ) {
+    if (newRegInputVal.value === null || newRegInputVal.value === '' || choosenDevice.value === null) {
         setTimeout(() => {
             isLoading.value = false;
             emit('close');
         }, 750);
         return;
     }
-    let newType:
-        | 'hr'
-        | 'wm-hr'
-        | 'w-hr'
-        | 'm-hr'
-        | 'ir'
-        | 'coil'
-        | 'wm-coil'
-        | 'w-coil'
-        | 'm-coil'
-        | 'di'
-        | 'none' = choosenType.value as
-        | 'hr'
-        | 'wm-hr'
-        | 'w-hr'
-        | 'm-hr'
-        | 'ir'
-        | 'coil'
-        | 'wm-coil'
-        | 'w-coil'
-        | 'm-coil'
-        | 'di'
-        | 'none';
+    let newType: MBTypeWithNone = choosenType.value as MBTypeWithNone;
     if (choosenType.value === 'coil' || choosenType.value === 'hr') {
         if (newRegWOption.value && newRegMOption.value) {
-            newType = ('wm-' + newType) as
-                | 'hr'
-                | 'wm-hr'
-                | 'w-hr'
-                | 'm-hr'
-                | 'ir'
-                | 'coil'
-                | 'wm-coil'
-                | 'w-coil'
-                | 'm-coil'
-                | 'di'
-                | 'none';
+            newType = ('wm-' + newType) as MBTypeWithNone;
         } else if (newRegWOption.value) {
-            newType = ('w-' + newType) as
-                | 'hr'
-                | 'wm-hr'
-                | 'w-hr'
-                | 'm-hr'
-                | 'ir'
-                | 'coil'
-                | 'wm-coil'
-                | 'w-coil'
-                | 'm-coil'
-                | 'di'
-                | 'none';
+            newType = ('w-' + newType) as MBTypeWithNone;
         } else if (newRegMOption.value) {
-            newType = ('m-' + newType) as
-                | 'hr'
-                | 'wm-hr'
-                | 'w-hr'
-                | 'm-hr'
-                | 'ir'
-                | 'coil'
-                | 'wm-coil'
-                | 'w-coil'
-                | 'm-coil'
-                | 'di'
-                | 'none';
+            newType = ('m-' + newType) as MBTypeWithNone;
         }
     }
     const index = props.state.findIndex((el) => el.type === 'none');
     if (index !== -1) {
         await setData(
             choosenDevice.value,
-            currentNumberingSystem.value === 'dec'
-                ? +newRegInputVal.value
-                : parseInt(newRegInputVal.value, 16),
-            newType as
-                | 'hr'
-                | 'wm-hr'
-                | 'w-hr'
-                | 'm-hr'
-                | 'ir'
-                | 'coil'
-                | 'wm-coil'
-                | 'w-coil'
-                | 'm-coil'
-                | 'di'
-                | 'none',
+            currentNumberingSystem.value === 'dec' ? +newRegInputVal.value : parseInt(newRegInputVal.value, 16),
+            newType as MBTypeWithNone,
             index,
         );
         const newLabels = props.state.map((el) => el.label || '');
@@ -896,11 +775,7 @@ function setActiveLabelTop() {
 
 function handleLabelInput(e: InputEvent) {
     const target = e.target as HTMLInputElement;
-    if (
-        !target ||
-        (!activeLabel.value && !(props.command === 'create' || props.command === 'createReg'))
-    )
-        return;
+    if (!target || (!activeLabel.value && !(props.command === 'create' || props.command === 'createReg'))) return;
     activeLabelInputVal.value = target.value;
     if (props.command === 'create') {
         invalidDevName.value = curMbDevLabels.value.includes(activeLabelInputVal.value.trim());
@@ -938,7 +813,6 @@ function handlenewRegInput(e: InputEvent) {
         }
     } else {
         const val = parseInt(target.value, 16);
-        console.log(3);
         if (isNaN(val)) {
             newRegInputVal.value = String(0);
         }
@@ -1007,9 +881,7 @@ function handleDeviceDelete(el: { val: number; label: string }) {
 async function handleDeleteDevBtnClick() {
     if (!deletedDev.value) return;
     isLoading.value = true;
-    const devs = [...mbDevs.value[props.w.w.d][props.w.w.bus || 0]].filter(
-        (el) => el !== deletedDev.value?.val,
-    );
+    const devs = [...mbDevs.value[props.w.w.d][props.w.w.bus || 0]].filter((el) => el !== deletedDev.value?.val);
     for await (const el of props.state) {
         if (el['dev-addr'] === deletedDev.value?.val) {
             await setData(el['dev-addr'], el['reg-addr'], 'none');
@@ -1023,31 +895,12 @@ async function handleDeleteDevBtnClick() {
     }, 750);
 }
 
-async function setData(
-    dev: number,
-    reg: number,
-    type:
-        | 'none'
-        | 'di'
-        | 'ir'
-        | 'coil'
-        | 'wm-coil'
-        | 'w-coil'
-        | 'm-coil'
-        | 'hr'
-        | 'wm-hr'
-        | 'w-hr'
-        | 'm-hr',
-    propIndex?: number,
-) {
+async function setData(dev: number, reg: number, type: MBTypeWithNone, propIndex?: number) {
     try {
         const index =
             propIndex !== undefined
                 ? propIndex
-                : props.state.findIndex(
-                      (el) =>
-                          el['dev-addr'] === dev && el['reg-addr'] === reg && el.type !== 'none',
-                  );
+                : props.state.findIndex((el) => el['dev-addr'] === dev && el['reg-addr'] === reg && el.type !== 'none');
         if (index !== -1) {
             const r = await api.post('set_mb_info', {
                 device: props.w.w.d,
@@ -1095,8 +948,7 @@ const { t } = useI18n({
             update: {
                 title: 'Редактирование устройств',
                 popUpText: 'Вы действительно хотите удалить устройство?',
-                attentionText:
-                    'Внимание! Все переменные MODBUS, связанные с этим устройством будут удалены.',
+                attentionText: 'Внимание! Все переменные MODBUS, связанные с этим устройством будут удалены.',
             },
             create: {
                 title: 'Добавить устройство',
@@ -1136,8 +988,7 @@ const { t } = useI18n({
             update: {
                 title: 'Editing devices',
                 popUpText: 'Are you sure you want to delete the device?',
-                attentionText:
-                    'Attention! All MODBUS variables associated with this device will be deleted.',
+                attentionText: 'Attention! All MODBUS variables associated with this device will be deleted.',
             },
             create: {
                 title: 'Add device',

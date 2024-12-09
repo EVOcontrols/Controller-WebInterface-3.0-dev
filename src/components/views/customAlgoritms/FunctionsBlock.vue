@@ -25,9 +25,9 @@
                         class="rounded-lg h-10 w-[326px] bg-[#0f304b] flex flex-row items-center gap-2 p-2"
                         @click="onClick"
                     >
-                        <div class="font-roboto text-[#8dc5f6] text-sm pl-[7px]">
+                        <span class="font-roboto text-[#8dc5f6] text-sm pl-[7px]">
                             {{ t(`actions.${curAction.label}`) }}
-                        </div>
+                        </span>
                     </button>
                 </template>
                 <template #body="{ isOpen, onSelect }">
@@ -164,7 +164,7 @@ import DropDown from '@/components/Ui/DropDown.vue';
 import PrimaryButton from '@/components/Ui/PrimaryButton.vue';
 import AlgoritmsWrapper from '@/components/views/customAlgoritms/AlgoritmsWrapper.vue';
 import ArrowIcon from '@/assets/ArrowIcon.vue';
-import type { Device } from '@/stores';
+import type { Device } from '@/typings/main';
 
 const indexStore = useIndexStore();
 const funcsStore = useFuncsStore();

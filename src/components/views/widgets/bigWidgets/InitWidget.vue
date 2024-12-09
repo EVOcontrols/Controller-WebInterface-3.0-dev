@@ -25,8 +25,7 @@
                                 <span
                                     class="h-9 px-4 text-sm font-Roboto flex items-center rounded-l-[8px]"
                                     :class="
-                                        itemsStatuses[index] === null ||
-                                        itemsStatuses[index] === undefined
+                                        itemsStatuses[index] === null || itemsStatuses[index] === undefined
                                             ? 'bg-[#023E71] text-[#2B9BFF]'
                                             : 'bg-[#0F304B] text-[#5F93C2] cursor-pointer'
                                     "
@@ -65,15 +64,10 @@
                                     :class="[
                                         { 'bg-[#0D424D]': props.w.w.i === 'bin-out' },
                                         {
-                                            'bg-[#185385]': [
-                                                'pw-out',
-                                                'int-var',
-                                                'tim-var',
-                                            ].includes(props.w.w.i),
+                                            'bg-[#185385]': ['pw-out', 'int-var', 'tim-var'].includes(props.w.w.i),
                                         },
                                         {
-                                            '!bg-[#5C2345] !text-[#F83068]':
-                                                isInvalidData === index,
+                                            '!bg-[#5C2345] !text-[#F83068]': isInvalidData === index,
                                         },
                                     ]"
                                 >
@@ -84,11 +78,7 @@
                                         <IButtonOutIcon
                                             class="cursor-pointer"
                                             :isHovered="hoveredBinOutItem === index"
-                                            :isActive="
-                                                itemsStatuses[index] !== 'const'
-                                                    ? !!itemsStatuses[index]
-                                                    : !!0
-                                            "
+                                            :isActive="itemsStatuses[index] !== 'const' ? !!itemsStatuses[index] : !!0"
                                             @mouseenter="handleMouseEnter(index)"
                                             @mouseleave="handleMouseLeave"
                                             @click="handleBinOutClick(index)"
@@ -110,15 +100,9 @@
                                             type="text"
                                             :maxlength="5"
                                             :value="
-                                                String(
-                                                    itemsStatuses[index]
-                                                        ? Number(itemsStatuses[index]) / 100
-                                                        : 0,
-                                                )
+                                                String(itemsStatuses[index] ? Number(itemsStatuses[index]) / 100 : 0)
                                             "
-                                            @input="
-                                                (event) => handleInput(event as InputEvent, index)
-                                            "
+                                            @input="(event) => handleInput(event as InputEvent, index)"
                                         />%
                                     </div>
                                     <div
@@ -128,8 +112,7 @@
                                         <span
                                             class="cursor-pointer text-[#97FFE7] text-sm min-w-[73px] h-full rounded-l-[6px] font-roboto flex items-center justify-center"
                                             :class="[
-                                                itemsStatuses[index] !== 'const' &&
-                                                !!itemsStatuses[index]
+                                                itemsStatuses[index] !== 'const' && !!itemsStatuses[index]
                                                     ? 'bg-[#176F6F]'
                                                     : 'bg-[#0D424D]',
                                                 { 'cursor-pointer': !itemsStatuses[index] },
@@ -140,8 +123,7 @@
                                         <span
                                             class="text-[#97FFE7] text-sm min-w-[73px] h-full rounded-r-[6px] font-roboto flex items-center justify-center"
                                             :class="[
-                                                itemsStatuses[index] === 'const' ||
-                                                !itemsStatuses[index]
+                                                itemsStatuses[index] === 'const' || !itemsStatuses[index]
                                                     ? 'bg-[#176F6F]'
                                                     : 'bg-[#0D424D]',
                                                 { 'cursor-pointer': itemsStatuses[index] },
@@ -160,25 +142,15 @@
                                             :class="{ '!text-[#F83068]': isInvalidData === index }"
                                             type="string"
                                             :maxlength="6"
-                                            :value="
-                                                String(
-                                                    itemsStatuses[index]
-                                                        ? Number(itemsStatuses[index])
-                                                        : 0,
-                                                )
-                                            "
-                                            @input="
-                                                (event) => handleInput(event as InputEvent, index)
-                                            "
+                                            :value="String(itemsStatuses[index] ? Number(itemsStatuses[index]) : 0)"
+                                            @input="(event) => handleInput(event as InputEvent, index)"
                                         />
                                     </div>
                                     <div
                                         v-else-if="props.w.w.i === 'tim-var'"
                                         class="h-full"
                                     >
-                                        <div
-                                            class="h-full w-[4.5rem] flex items-center justify-start px-3"
-                                        >
+                                        <div class="h-full w-[4.5rem] flex items-center justify-start px-3">
                                             <input
                                                 v-focus="[isInvalidData === index, index]"
                                                 class="w-full flex-1 bg-transparent h-full text-[#8DC5F6] text-[#8DC5F6] text-end transition-colors duration-300"
@@ -186,17 +158,8 @@
                                                     '!text-[#F83068]': isInvalidData === index,
                                                 }"
                                                 type="number"
-                                                :value="
-                                                    String(
-                                                        itemsStatuses[index]
-                                                            ? Number(itemsStatuses[index])
-                                                            : 0,
-                                                    )
-                                                "
-                                                @input="
-                                                    (event) =>
-                                                        handleInput(event as InputEvent, index)
-                                                "
+                                                :value="String(itemsStatuses[index] ? Number(itemsStatuses[index]) : 0)"
+                                                @input="(event) => handleInput(event as InputEvent, index)"
                                             />
                                         </div>
                                     </div>
@@ -234,7 +197,7 @@
 import { useI18n } from 'vue-i18n';
 import PrimaryButton from '@/components/Ui/PrimaryButton.vue';
 import OutlinedButton from '@/components/Ui/OutlinedButton.vue';
-import type { Widget } from '@/stores';
+import type { Widget } from '@/typings/main';
 import IButtonOutIcon from '@/assets/IButtonOutIcon.vue';
 
 const indexStore = useIndexStore();
@@ -276,8 +239,7 @@ const curLabels = computed<[string | undefined]>(() => {
 
 async function getEntInit() {
     try {
-        const quant = devicesState.value[props.w.w.d].find((el) => el.type === props.w.w.i)?.state
-            .length;
+        const quant = devicesState.value[props.w.w.d].find((el) => el.type === props.w.w.i)?.state.length;
         if (!quant) return;
         const r = await api.post('get_ent_init', {
             type: props.w.w.i,
