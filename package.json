@@ -1,6 +1,6 @@
 {
     "name": "controller-web-interface-v.3",
-    "version": "3.0.2-a.3",
+    "version": "3.0.2-a.4",
     "private": true,
     "scripts": {
         "dev": "vite",
