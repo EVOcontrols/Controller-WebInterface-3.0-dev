@@ -318,7 +318,7 @@ const order = ORDER;
 
 const mbVarTypes = ref<MBTypes[]>([]);
 const cur1WConfig = ref<Mode1W[]>([]);
-const curMbConfig = ref<ModeMb[]>([]);
+const curMbConfig = ref<ModeMb>([]);
 
 const interfaces1 = ref<Interface[]>([]);
 const interfaces2 = ref<Interface[]>([]);
@@ -650,7 +650,7 @@ async function getDevConfig() {
     if (!config.value.length) isLoading.value = true;
 
     for (const device of devices.value) {
-        if (device.state === 'no-conn') continue;
+        if (['error', 'no-conn', 'off'].includes(device.state)) continue;
         const data = await $apiGetConfig(device.addr);
         configByAddr.value = {
             ...configByAddr.value,
@@ -661,7 +661,7 @@ async function getDevConfig() {
     const data = await $apiGetConfig(props.device?.addr);
     curConfigByAddr.value = data;
     cur1WConfig.value = data['1-wire'] as Mode1W[];
-    curMbConfig.value = data['rs-485'] as ModeMb[];
+    curMbConfig.value = data['rs-485'] as ModeMb;
 }
 
 async function getEntConfig(ent: EntNum) {

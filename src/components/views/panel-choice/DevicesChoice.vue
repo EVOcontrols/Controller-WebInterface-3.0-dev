@@ -25,7 +25,9 @@
                             :class="[
                                 chosenDevices.includes(device.addr) ? 'bg-[#148ef8]' : 'bg-[#143959]',
                                 ['init', 'no-conn', 'error'].includes(device.state) ? 'pl-[6px]' : 'pl-2',
-                                device.state === 'no-conn' ? 'cursor-default' : 'cursor-pointer hover:bg-[#214e76]',
+                                ['error', 'no-conn', 'off'].includes(device.state)
+                                    ? 'cursor-default'
+                                    : 'cursor-pointer hover:bg-[#214e76]',
                             ]"
                             @mousedown="mousedown"
                             @mouseup="mouseup(device, $event)"
@@ -149,7 +151,7 @@ function mousedown(e: MouseEvent) {
 }
 
 function mouseup(device: Device, e: MouseEvent) {
-    if (device.state === 'no-conn') return;
+    if (['error', 'no-conn', 'off'].includes(device.state)) return;
 
     if (mouseupX.value) {
         if (Math.abs(e.screenX - mouseupX.value) < 20) {
@@ -173,8 +175,7 @@ onMounted(() => {
 watch(
     () => [chosenDevices.value, devices.value],
     () => {
-        console.log('DEVICES!!!!!', devices.value && JSON.parse(JSON.stringify(devices.value)));
-        const normalDevice = devices.value.filter((device) => device.state !== 'no-conn');
+        const normalDevice = devices.value.filter((device) => !['error', 'no-conn', 'off'].includes(device.state));
         isAllDevicesChosen.value = chosenDevices.value.length === normalDevice.length;
     },
 );

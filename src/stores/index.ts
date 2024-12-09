@@ -287,7 +287,7 @@ export const useIndexStore = defineStore('indexStore', () => {
         } else {
             const arr: number[] = [];
             devices.value.forEach((d) => {
-                if (d.state === 'no-conn') return;
+                if (['error', 'no-conn', 'off'].includes(d.state)) return;
                 arr.push(d.addr);
             });
             chosenDevices.value = [...new Set(arr)];

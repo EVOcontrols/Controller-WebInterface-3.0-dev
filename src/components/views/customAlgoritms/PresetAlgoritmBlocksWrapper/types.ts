@@ -1,3 +1,5 @@
+import type { ControllerSettings } from '@/typings/settings';
+
 export type UDF = 'udf-act' | 'udf-cond' | 'udf-trans' | 'udf-trig';
 
 export type PropsTypes =
@@ -39,7 +41,7 @@ export type DropDownItem = {
 
 export type MBTypes = 'coil' | 'ir' | 'hr' | 'di' | 'none';
 export type Mode1W = { mode: 'off' | 'sens' | 'rom' | 'gpio' };
-export type ModeMb = { mode: 'off' | 'variables' | 'ext-devs' };
+export type ModeMb = ControllerSettings['rs-485'];
 
 export type Interface =
     | '1w-rom'

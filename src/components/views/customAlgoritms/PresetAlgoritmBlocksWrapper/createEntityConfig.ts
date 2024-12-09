@@ -19,7 +19,7 @@ export const createEntityConfig = (
     typeVal: UDF,
     interfaces: Interface[],
     OWConfig: Mode1W[],
-    mbConfig: ModeMb[],
+    mbConfig: ModeMb,
     entItems: EntBind[],
     t: (key: string) => string,
     propDevice?: Device,
@@ -151,7 +151,7 @@ function createBusConfig(
     entType: EntType,
     typeVal: UDF,
     OWConfig: Mode1W[],
-    mbConfig: ModeMb[],
+    mbConfig: ModeMb,
     t: (key: string) => string,
     entBus?: number,
     entDevice?: number,
@@ -160,7 +160,7 @@ function createBusConfig(
 
     let buses: Bus[] = [];
 
-    const addBuses = (config: Mode1W[] | ModeMb[]) => {
+    const addBuses = (config: Mode1W[] | ModeMb) => {
         return config.map((el, index) => ({
             val: `${el.mode.substring(0, 3)}${index}`,
             label: `${t('tabs.bus')}${index + 1}`,

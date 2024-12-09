@@ -8,6 +8,6 @@ export const rtcSources = ['ntp', 'gsm', 'cloud'] as const;
 
 export const oneWiresModes = ['off', 'rom', 'sens'] as const;
 
-export const modbusModes = ['off', 'variables', 'ext-devs'] as const;
+export const modbusModes = ['off', 'variables', 'ext-devs', 'card-reader'] as const;
 
 export const modbusParities = ['none', 'even', 'odd'] as const;

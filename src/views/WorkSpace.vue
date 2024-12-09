@@ -783,7 +783,9 @@ async function getExtDevs() {
         indexStore.setExtDevsList(list as ExtDevsListRaw);
         const newList = list.map((device, i) => ({ ...device, index: i + 1 }));
         const devices = newList.filter(({ type, state }) => type !== 'none' && state === 'on');
-        const noConnDev = newList.filter(({ type, state }) => type !== 'none' && state === 'no-conn');
+        const noConnDev = newList.filter(
+            ({ type, state }) => type !== 'none' && ['error', 'no-conn', 'off'].includes(state),
+        );
         noConnDev.forEach((device) => {
             const deviceInfo: Device = {
                 addr: device.index, // index!
@@ -1023,6 +1025,7 @@ function setInfo() {
             serial: device.serial,
             version: device.version,
         };
+        console.warn('add', deviceInfo);
         indexStore.setDevices(deviceInfo);
         interfaces.value.forEach((interf: Interf) => {
             const interfValue = device[interf.value];

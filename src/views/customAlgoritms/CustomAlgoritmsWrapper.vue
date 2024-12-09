@@ -10,11 +10,13 @@
                         ? 'bg-[#148ef8] hover:bg-[#148ef8] cursor-default'
                         : 'bg-[#1b4569]',
                     ['init', 'no-conn', 'error'].includes(device.state) ? 'pl-[6px]' : 'pl-2',
-                    device.state === 'no-conn' ? 'cursor-default' : 'cursor-pointer hover:bg-[#214e76]',
+                    ['error', 'no-conn', 'off'].includes(device.state)
+                        ? 'cursor-default'
+                        : 'cursor-pointer hover:bg-[#214e76]',
                 ]"
                 @click="
                     () => {
-                        if (device.state === 'no-conn') return;
+                        if (['error', 'no-conn', 'off'].includes(device.state)) return;
                         curDev = device;
                     }
                 "
@@ -532,7 +534,7 @@ async function getData() {
     const quantRight = getQuantity(curActionRight.value.val);
 
     if (!quantLeft || !quantRight) {
-        retryGetData(20);
+        retryGetData(50);
         return;
     }
 
@@ -565,11 +567,11 @@ async function getData() {
         algoritms1.value = mapToAlgoritms(data.entities[0].state, curLabelsLeft, leftIndex);
         algoritms2.value = mapToAlgoritms(data.entities[1].state, curLabelsRight, rightIndex);
 
-        retryGetData(isDev ? timeoutDev / 2 : 1000);
+        retryGetData(isDev ? timeoutDev / 2 : 2000);
     } catch (error) {
         if (isAborted.value) return;
 
-        retryGetData(isDev ? timeoutDev / 2 : 20);
+        retryGetData(isDev ? timeoutDev / 2 : 50);
     }
 }
 
@@ -650,7 +652,7 @@ onBeforeUnmount(() => {
 });
 
 watch(devices, () => {
-    const firstAvailableDevice = devices.value.find((device) => device.state !== 'no-conn');
+    const firstAvailableDevice = devices.value.find((device) => !['error', 'no-conn', 'off'].includes(device.state));
     if (firstAvailableDevice) {
         curDev.value = firstAvailableDevice;
     }

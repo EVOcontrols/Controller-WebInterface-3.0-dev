@@ -1,5 +1,10 @@
 <template>
     <div>
+        <span
+            v-if="isLoading"
+            v-html="spinner"
+            class="self-center mb-4 [&>svg]:w-[5rem] [&>svg>path]:fill-[#148ef8] fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"
+        ></span>
         <ManageDevice
             :is-reboot-required="false"
             :device-addr="deviceIndex as DeviceAddr"
@@ -346,6 +351,7 @@ import CollapseTransition from '@/components/CollapseTransition.vue';
 import ButtonGroup from '@/components/Ui/ButtonGroup.vue';
 import AdvancedSettingsButton from '@/components/views/devicesSettings/elements/AdvancedSettingsButton.vue';
 import type { InputFieldStatus } from '@/typings/common';
+import spinner from '@/assets/img/spinner-inside-button.svg?raw';
 
 const props = defineProps<{
     deviceIndex: number;
@@ -353,6 +359,8 @@ const props = defineProps<{
     deviceState: DeviceWorkState;
     saveTrigger: number;
 }>();
+
+const isLoading = ref(false);
 
 const devSettings = ref<ExtDeviceSettings>();
 
@@ -450,20 +458,21 @@ const needToSave = computed(() => {
     return areThereChanges.value && !fieldsInvalidStatuses.value.size;
 });
 
-async function getCongig() {
+async function getConfig() {
     if (props.deviceState === 'on') {
         try {
-            const r = await api.post('get_ext_cfg', {
-                device: props.deviceIndex,
-            });
-            devSettings.value = r.data as ExtDeviceSettings;
+            isLoading.value = true;
+            const { data } = await api.post('get_ext_cfg', { device: props.deviceIndex });
+            devSettings.value = data as ExtDeviceSettings;
             devSettingsInit.value = cloneDeep(devSettings.value);
+            console.log('devSettings.value', devSettings.value);
+            isLoading.value = false;
         } catch (error) {
             if (isAborted.value) {
                 return;
             }
             setTimeout(() => {
-                getCongig();
+                getConfig();
             }, 5);
         }
     }
@@ -636,20 +645,29 @@ function waitForOnStatus() {
 }
 
 onMounted(async () => {
-    getCongig();
+    getConfig();
 });
 
 watch(
     () => [props.deviceState, props.deviceIndex],
-    () =>
+    () => {
         setTimeout(() => {
             if (props.deviceState === 'on') {
-                getCongig();
+                getConfig();
             }
-        }, 1000),
+        }, 1000);
+    },
 );
 
 watch(() => props.saveTrigger, save);
+watch(
+    () => props.deviceIndex,
+    (newVal, oldVal) => {
+        if (newVal !== oldVal) {
+            curDevState.value = props.deviceState;
+        }
+    },
+);
 
 watch([isMainSaving, isOptionsSaving], () => {
     if (!isMainSaving.value && !isOptionsSaving.value) {
@@ -689,6 +707,7 @@ const { t } = useI18n({
                 off: 'OFF',
                 variables: 'MODBUS VARIABLES',
                 'ext-devs': 'EXTENSION DEVICES',
+                'card-reader': 'CARD READER',
             },
             speed: 'Speed',
             parity: 'Parity',
@@ -717,6 +736,7 @@ const { t } = useI18n({
                 off: 'ОТКЛЮЧЕН',
                 variables: 'ПЕРЕМЕННЫЕ MODBUS',
                 'ext-devs': 'УСТРОЙСТВА РАСШИРЕНИЯ',
+                'card-reader': 'КАРТРИДЕР',
             },
             speed: 'Скорость',
             parity: 'Четность',
