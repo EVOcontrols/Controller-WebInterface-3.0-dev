@@ -52,17 +52,9 @@ watch(notConnected, () => {
     if (rebootingDeviceAddr.value === 0) return;
     if (notConnected.value) {
         if (isInterfaceStarted.value) {
-            notConnectedToastId = toast.warning(
-                t('msg.disconnected.header'),
-                t('msg.disconnected.text'),
-                0,
-            );
+            notConnectedToastId = toast.warning(t('msg.disconnected.header'), t('msg.disconnected.text'), 0);
         } else {
-            notConnectedToastId = toast.warning(
-                t('msg.notStarted.header'),
-                t('msg.notStarted.text'),
-                0,
-            );
+            notConnectedToastId = toast.warning(t('msg.notStarted.header'), t('msg.notStarted.text'), 0);
         }
     } else {
         if (notConnectedToastId) {
