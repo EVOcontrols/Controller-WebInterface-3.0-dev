@@ -245,6 +245,27 @@
                             : emit('handleInput', item.index, $event)
                     "
                 />
+                <div
+                    v-if="props.inputs[item.index].isError && props.inputs[item.index].placeholderErrorMinMax?.length"
+                    class="text-sm h-[14px] text-[#F83068] absolute w-max"
+                    :class="
+                        props.inputs[item.index].inline
+                            ? 'bottom-[-15px] left-0'
+                            : 'top-[50%] left-[150px] translate-y-1/2'
+                    "
+                >
+                    {{
+                        `${t('error.text')}${props.inputs[item.index].placeholderErrorMinMax?.[0]}${t(
+                            'error.separator',
+                        )}${props.inputs[item.index].placeholderErrorMinMax?.[1]}`
+                    }}
+                </div>
+                <div
+                    v-if="props.inputs[item.index].isError && props.inputs[item.index].placeholderErrorMultiplicity"
+                    class="text-sm h-[14px] text-[#F83068] absolute left-0 bottom-[-15px] w-max"
+                >
+                    {{ t('error.multiplicity') }}
+                </div>
             </div>
             <div
                 v-else-if="item.name === 'dropDown' && props.dropDowns[item.index]"
@@ -371,6 +392,8 @@ const props = defineProps<{
         isError: boolean;
         inline?: boolean;
         disabled?: boolean;
+        placeholderErrorMinMax?: [number, number];
+        placeholderErrorMultiplicity?: boolean;
     }[];
     dropDowns: {
         type: 'bin' | 'obj' | '1w-sens' | 'var' | 'act' | 'cond';
@@ -424,11 +447,21 @@ const { t } = useI18n({
             select: 'Select ',
             obj: 'object',
             actions: 'actions',
+            error: {
+                text: 'Enter a value between ',
+                separator: ' and ',
+                multiplicity: 'Value in ms must be a multiple of 10',
+            },
         },
         ru: {
             select: 'Выберите ',
             obj: 'объект',
             actions: 'действия',
+            error: {
+                text: 'Введите значение от ',
+                separator: ' до ',
+                multiplicity: 'Значение в ms должно быть кратно 10',
+            },
         },
     },
 });

@@ -900,7 +900,16 @@ async function parseTime(time: Time, title: string, isEdit = false): Promise<Con
         }
 
         btns = getConstBtns(configTime, units);
-        inputs = [{ val: newS, isError: hasErrorTime(time, btns, newS), inline: true }];
+        const error = hasErrorTime(time, btns, newS);
+        inputs = [
+            {
+                val: newS,
+                isError: !!error,
+                inline: true,
+                ...(Array.isArray(error) && { placeholderErrorMinMax: error }),
+                ...(typeof error === 'boolean' && error && { placeholderErrorMultiplicity: error }),
+            },
+        ];
     }
 
     const items = timeNum === 1 ? time1.value : timeNum === 2 ? [...time2.value] : [...time3.value];
@@ -940,12 +949,13 @@ async function parseTime(time: Time, title: string, isEdit = false): Promise<Con
     ];
 }
 
-function hasErrorTime(time: Time, btns: Btn[], newS: number): boolean {
+function hasErrorTime(time: Time, btns: Btn[], newS: number): [number, number] | boolean {
     const postfix = btns[1]?.val || 'ms';
     const constRange = valuesConstRange.value.find((range) => range.interf === time.type + postfix);
+    if (postfix === 'ms' && time.value && !(time.value % 10 === 0)) return true;
     if (!constRange) return false;
     const { min, max } = constRange.values;
-    return newS < min || newS > max;
+    return newS < min || newS > max ? [min, max] : false;
 }
 
 function getConfigTimeByTitle(title: string): Config | undefined {

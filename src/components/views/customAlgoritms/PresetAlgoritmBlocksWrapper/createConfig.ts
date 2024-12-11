@@ -197,6 +197,7 @@ function createLeftConfigEnter(curBodyVal: Body, typeVal: UDF, t: (key: string) 
                 subtitle: t('titles.value'),
                 val,
                 isError: val < intConstMin || val > intConstMax,
+                placeholderErrorMinMax: [intConstMin, intConstMax],
             },
         ],
         dropDowns: [],
@@ -270,6 +271,7 @@ function createRightConfigEnter(curBodyVal: Body, typeVal: UDF, t: (key: string)
                 subtitle: t('titles.value'),
                 val,
                 isError: val < intConstMin || val > intConstMax,
+                placeholderErrorMinMax: [intConstMin, intConstMax],
             },
         ],
         dropDowns: [],
@@ -619,6 +621,7 @@ function createOperationBinConfig(
                       subtitle: t('titles.value'),
                       val: valEnter,
                       isError: valEnter < intConstMin || valEnter > intConstMax,
+                      placeholderErrorMinMax: [intConstMin, intConstMax],
                   },
               ],
               dropDowns: [],
@@ -714,6 +717,7 @@ function createIntConstStopValConfig(curBodyVal: Body, typeVal: UDF, t: (key: st
                 subtitle: t('titles.value'),
                 val,
                 isError: val < intConstMin || val > intConstMax,
+                placeholderErrorMinMax: [intConstMin, intConstMax],
             },
         ],
         dropDowns: [],
@@ -773,7 +777,14 @@ function createHysteresisConfig(curBodyVal: Body, typeVal: UDF, t: (key: string)
         tabs: [],
         radioBtns: [],
         checkBoxes: [],
-        inputs: [{ val, isError: val < intConstMin || val > intConstMax, disabled: true }],
+        inputs: [
+            {
+                val,
+                isError: val < intConstMin || val > intConstMax,
+                disabled: true,
+                placeholderErrorMinMax: [intConstMin, intConstMax],
+            },
+        ],
         dropDowns: [],
     };
 }

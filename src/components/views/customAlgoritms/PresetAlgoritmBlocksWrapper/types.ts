@@ -64,6 +64,8 @@ export type Input = {
     isError: boolean;
     inline?: boolean;
     disabled?: boolean;
+    placeholderErrorMinMax?: [number, number];
+    placeholderErrorMultiplicity?: boolean;
 };
 
 export type Btn = {
