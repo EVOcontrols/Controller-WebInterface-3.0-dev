@@ -601,11 +601,14 @@ function handleClickMultiSelect(item: DropDownItem) {
 
     const { type, vals } = shownDropDown.value;
 
-    const canSelect =
-        (type === 'act' || type === 'cond') &&
-        (vals.length === 0 || vals.includes(item.i - 1) || vals.includes(item.i + 1));
     const isSelected = vals.includes(item.i);
     const isMiddleElement = isSelected && vals.includes(item.i - 1) && vals.includes(item.i + 1);
+    const canSelect =
+        (type === 'act' || type === 'cond') &&
+        (vals.length === 0 ||
+            vals.includes(item.i - 1) ||
+            vals.includes(item.i + 1) ||
+            (isSelected && vals.length === 1));
 
     if (canSelect) {
         if (isSelected && !isMiddleElement) {
