@@ -73,15 +73,8 @@
             ></span>
             <PrimaryButton
                 class="w-[3.25rem] h-[2.5rem] flex items-center justify-center relative group"
-                :is-disabled="
-                    !!props.needToAddAlgoritm ||
-                    props.items.filter((el) => el.val !== null).length === props.items.length
-                "
-                @click="
-                    (e: Event) => {
-                        addNewAlgoritm(e);
-                    }
-                "
+                :is-disabled="!!props.needToAddAlgoritm"
+                @click="addNewAlgoritm()"
             >
                 <span
                     v-html="add"
@@ -170,6 +163,9 @@ import type { Device } from '@/typings/main';
 const indexStore = useIndexStore();
 const funcsStore = useFuncsStore();
 
+const { api } = useApiStore();
+const isAborted = indexStore.getApi().isAborted;
+
 const { devCapabs } = storeToRefs(indexStore);
 const { funcsNumberPerPage } = storeToRefs(funcsStore);
 
@@ -211,7 +207,7 @@ const emit = defineEmits<{
 type Algoritm = { val: 0 | 1 | null; label: string; isCreating?: boolean };
 
 interface AlgoritmsWrapperInstance {
-    changeLabel: (index: number, e: Event, isCreating?: boolean) => void;
+    changeLabel: (index: number, isCreating?: boolean) => void;
 }
 const algoritmsWrapperRef = ref<AlgoritmsWrapperInstance | null>(null);
 
@@ -241,10 +237,53 @@ function deleteAlgoritm(indexes: Algoritm[], index: number, smallIndex: number) 
     emit('deleteAlgoritm', indexes, index, smallIndex);
 }
 
-function addNewAlgoritm(event: Event) {
+function waitForItemsLoad(indexOnPage: number, maxAttempts = 100, interval = 200) {
+    let attempts = 0;
+    let timerId: ReturnType<typeof setTimeout> | null = null;
+
+    const checkItems = () => {
+        if (props.items.length) {
+            if (timerId) clearTimeout(timerId);
+            algoritmsWrapperRef.value?.changeLabel(indexOnPage, true);
+        } else if (attempts < maxAttempts) {
+            attempts++;
+            timerId = setTimeout(checkItems, interval);
+        } else {
+            console.error(`Failed to load elements within ${maxAttempts} attempts with interval ${interval}`);
+        }
+    };
+
+    timerId = setTimeout(checkItems, interval);
+}
+
+async function automaticGoToPage() {
+    try {
+        const { data } = await api.post('get_ent_state', {
+            entities: [
+                {
+                    type: props.curAction.val,
+                    device: props.device ? props.device.addr : 0,
+                },
+            ],
+        });
+        const { state } = data.entities[0];
+        const firstEmptyIndex = state.findIndex((el: number | null) => el === null);
+        const pageNumber = Math.floor(firstEmptyIndex / funcsNumberPerPage.value);
+        const indexOnPage = firstEmptyIndex % funcsNumberPerPage.value;
+        emit('pageInput', pageNumber);
+        waitForItemsLoad(indexOnPage);
+    } catch (error) {
+        if (isAborted.value) return;
+        setTimeout(automaticGoToPage, 40);
+    }
+}
+
+function addNewAlgoritm() {
     const index = props.items.findIndex((el) => el.val === null);
-    if (algoritmsWrapperRef.value) {
-        algoritmsWrapperRef.value.changeLabel(index, event, true);
+    if (index !== -1) {
+        algoritmsWrapperRef.value?.changeLabel(index, true);
+    } else {
+        automaticGoToPage();
     }
 }
 

@@ -465,7 +465,6 @@ async function getConfig() {
             const { data } = await api.post('get_ext_cfg', { device: props.deviceIndex });
             devSettings.value = data as ExtDeviceSettings;
             devSettingsInit.value = cloneDeep(devSettings.value);
-            console.log('devSettings.value', devSettings.value);
             isLoading.value = false;
         } catch (error) {
             if (isAborted.value) {

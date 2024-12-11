@@ -36,12 +36,8 @@
                         }
                     "
                     @oneClick="handleClick(i)"
-                    @doubleClick="
-                        (e: Event) => {
-                            handleDblClick(i, e);
-                        }
-                    "
-                    @addAlgoritm="(event) => addAlgoritm(i, event)"
+                    @doubleClick="handleDblClick(i)"
+                    @addAlgoritm="addAlgoritm(i)"
                     @creatingFinish="handleCreatingFinish(i)"
                 />
             </div>
@@ -141,8 +137,8 @@ function deleteAlgoritm(indexes: Algoritm[], index: number, smallIndex: number) 
     emit('deleteAlgoritm', indexes, index, smallIndex);
 }
 
-function handleDblClick(index: number, event: Event) {
-    changeLabel(index, event);
+function handleDblClick(index: number) {
+    changeLabel(index);
 }
 
 function handleClick(i: number) {
@@ -175,9 +171,7 @@ function toggleOpenedAlgoritms(i: number) {
     }
 }
 
-function changeLabel(index: number, e: Event, isCreating?: boolean) {
-    const target = e.target as HTMLElement;
-    if (target.closest('.modal')) return;
+function changeLabel(index: number, isCreating?: boolean) {
     setActiveLabel(index);
     setActiveLabelTop();
 
@@ -196,8 +190,8 @@ function changeLabel(index: number, e: Event, isCreating?: boolean) {
     }, 20);
 }
 
-function addAlgoritm(index: number, event: Event) {
-    changeLabel(index, event, true);
+function addAlgoritm(index: number) {
+    changeLabel(index, true);
 }
 
 function setActiveLabel(index: number) {
