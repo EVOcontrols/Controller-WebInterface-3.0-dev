@@ -521,8 +521,17 @@ function retryGetData(timeout: number) {
     }, timeout);
 }
 
-function mapToAlgoritms(state: any, labels: string[], correctiveIndex: number): Algoritm[] {
-    return state.map((val: Val, idx: number) => ({ val, label: labels[idx + correctiveIndex] || '' }));
+function mapToAlgoritms(state: any, labels: string[], correctiveIndex: number, algoritmsCopy?: Algoritm[]): Algoritm[] {
+    const indexCreating = algoritmsCopy?.findIndex((item) => item.isCreating === true);
+
+    return state.map((val: Val, idx: number) => {
+        const isCreating = idx === indexCreating;
+        return {
+            val: isCreating ? 0 : val,
+            label: labels[idx + correctiveIndex] || '',
+            ...(isCreating && { isCreating }),
+        };
+    });
 }
 
 async function getData() {
@@ -565,7 +574,9 @@ async function getData() {
             ],
         });
         algoritms1.value = mapToAlgoritms(data.entities[0].state, curLabelsLeft, leftIndex);
+        algoritms1Copy.value = mapToAlgoritms(data.entities[0].state, curLabelsLeft, leftIndex, algoritms1Copy.value);
         algoritms2.value = mapToAlgoritms(data.entities[1].state, curLabelsRight, rightIndex);
+        algoritms2Copy.value = mapToAlgoritms(data.entities[1].state, curLabelsRight, rightIndex, algoritms2Copy.value);
 
         retryGetData(isDev ? timeoutDev / 2 : 2000);
     } catch (error) {
