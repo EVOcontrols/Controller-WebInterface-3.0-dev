@@ -484,7 +484,12 @@ async function getMbInfo() {
         setEndArrowState();
 
         if (!isUnmount) {
-            getMbInfoTimer = setTimeout(getMbInfo, isDev ? timeoutDev / 2 : 1000);
+            getMbInfoTimer = setTimeout(
+                () => {
+                    getMbInfo();
+                },
+                isDev ? timeoutDev / 2 : 1500,
+            );
         }
     } catch (error) {
         if (isAborted.value || isUnmount) {
@@ -496,7 +501,7 @@ async function getMbInfo() {
                 () => {
                     getMbInfo();
                 },
-                isDev ? timeoutDev / 5 : 5,
+                isDev ? timeoutDev / 5 : 40,
             );
         }
     }

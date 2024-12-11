@@ -1,5 +1,10 @@
 <template>
     <div class="w-full h-full flex flex-col overflow-hidden">
+        <span
+            v-if="activeMenuItem === 'panel' && !isFirstFetchComplete"
+            v-html="spinner"
+            class="self-center mb-4 [&>svg]:w-[5rem] [&>svg>path]:fill-[#148ef8] fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-[1]"
+        ></span>
         <div class="h-[5.063rem] !min-h-[5.063rem] bg-[#092740] flex flex-row w-full items-center">
             <RouterLink
                 :to="{ name: 'widgets' }"
@@ -205,13 +210,28 @@ const isAborted = indexStore.getApi().isAborted;
 const menuItems = ['panel', 'presetAlgoritms', 'customAlgoritms', 'settings'] as const;
 
 const isScreenBlocked = ref(false);
+const isFirstFetchComplete = ref(false);
 
 let blockScreenTimer = 0;
 
+type ReqArr = {
+    type: string;
+    device: number;
+    index: number;
+    quantity: number;
+    bus?: number;
+};
+type Widget = {
+    d: number;
+    i: string;
+    bus?: number;
+};
+type InterfWithBus = { val: number; bus: number };
+
 type DeviceInfo = {
-    '1w-gpio': { val: number; bus: number }[] | number;
-    '1w-rom': { val: number; bus: number }[] | number;
-    '1w-sens': { val: number; bus: number }[] | number;
+    '1w-gpio': InterfWithBus[] | number;
+    '1w-rom': InterfWithBus[] | number;
+    '1w-sens': InterfWithBus[] | number;
     'adc-in': number;
     addr: number;
     'bin-in': number;
@@ -223,7 +243,7 @@ type DeviceInfo = {
     index: number;
     'int-var': number;
     'mb-iface': number;
-    'mb-var': { val: number; bus: number }[] | number;
+    'mb-var': InterfWithBus[] | number;
     message: string;
     'ow-iface': number;
     'pwm-out': number;
@@ -398,104 +418,11 @@ if (isAuth.value) {
     indexStore.setIsInterfaceStarted(true);
 }
 
-const { t } = useI18n({
-    messages: {
-        en: {
-            logout: 'Log out',
-            menuItems: {
-                panel: 'Control panel',
-                presetAlgoritms: 'Preset algoritms',
-                customAlgoritms: 'Custom Algorithms',
-                settings: 'System settings',
-            },
-            initializing: 'Extension device #{index} initializing, please wait...',
-            longQuery: 'Query took longer than expected. Please wait...',
-            admin: 'Administrator',
-            user: 'User',
-            infoBlock: {
-                title: 'Editing the list of expansion devices is not possible.',
-                text: {
-                    p1: 'RS485 NGC bus ',
-                    off: 'disabled. ',
-                    mb: 'is in “Modbus variables” mode. ',
-                    p2: 'Click ',
-                    link: 'here ',
-                    p3: 'to go to the bus operating mode settings.',
-                },
-            },
-            toast: {
-                success: 'Saved',
-                error: {
-                    header: 'Error',
-                    text: 'Check entered values',
-                },
-                reboot: {
-                    rebootRequired: 'Reboot required',
-                    press: 'Press',
-                    here: 'here',
-                    forReboot: 'for reboot',
-                },
-            },
-        },
-        ru: {
-            logout: 'Выйти',
-            menuItems: {
-                panel: 'Панель управления',
-                presetAlgoritms: 'Предустановленные алгоритмы',
-                customAlgoritms: 'Пользовательские алгоритмы',
-                settings: 'Настройки системы',
-            },
-            initializing: 'Идет инициализация устройства расширения #{index}, пожалуйста подождите...',
-            longQuery: 'Запрос занял больше времени, чем ожидалось. Пожалуйста, подождите...',
-            admin: 'Администратор',
-            user: 'Пользователь',
-            infoBlock: {
-                title: 'Редактирование списка устройств расширения невозможно.',
-                text: {
-                    p1: 'Шина RS485 NGC ',
-                    off: 'отключена. ',
-                    mb: 'находится в режиме “переменные Modbus". ',
-                    p2: 'Нажмите ',
-                    link: 'сюда ',
-                    p3: 'для перехода к настройкам режима работы шины.',
-                },
-            },
-            toast: {
-                success: 'Сохранено',
-                error: {
-                    header: 'Ошибка',
-                    text: 'Проверьте введённые значения',
-                },
-                reboot: {
-                    rebootRequired: 'Требуется перезагрузка',
-                    press: 'Нажмите',
-                    here: 'сюда',
-                    forReboot: 'для перезагрузки',
-                },
-            },
-        },
-    },
-});
-
-async function getEntState(
-    device: number,
-    filteredReqArr: {
-        type: string;
-        device: number;
-        index: number;
-        quantity: number;
-        bus?: number;
-    }[],
-) {
-    // if (!window.location.pathname.includes('panel')) {
-    if (!window.location.hash.includes('panel')) {
-        return;
-    }
+async function getEntState(device: number, filteredReqArr: ReqArr[]) {
+    if (!window.location.hash.includes('panel')) return;
     try {
-        const r = await api.post('get_ent_state', {
-            entities: filteredReqArr,
-        });
-        const state = await r.data.entities;
+        const { data } = await api.post('get_ent_state', { entities: filteredReqArr });
+        const state = data.entities;
         const newState = state.filter((el: any) => Array.isArray(el.state));
         indexStore.setDevicesState(device, newState);
     } catch (error) {
@@ -508,101 +435,106 @@ async function getEntState(
             getEntState(device, filteredReqArr);
         }, timeout);
     }
+    hasFirsFetchComplete();
 }
 
 async function setDevicesStates() {
     try {
         if (activeMenuItem.value !== 'panel') return;
         const el = devices.value.find((el: Device) => el.state === 'init');
-        for (let index = 0; index < devices.value.length; index += 1) {
-            if (
-                ((!el &&
-                    chosenDevices.value.includes(devices.value[index].addr) &&
-                    devices.value[index].state !== 'init' &&
-                    devices.value[index].state !== 'no-conn' &&
-                    devices.value[index].state !== 'error') ||
-                    (chosenDevices.value.includes(devices.value[index].addr) && index === 0)) &&
-                !devices.value.slice(0, index).filter((elem: Device) => elem.addr === devices.value[index].addr).length
-            ) {
-                const reqArr: {
-                    type: string;
-                    device: number;
-                    index: number;
-                    quantity: number;
-                    bus?: number;
-                }[] = [];
-                for (const i of devices.value[index].interf) {
-                    if (typeof i === 'string') {
-                        reqArr.push({
-                            type: i,
-                            device: devices.value[index].addr,
-                            index: 0,
-                            quantity: devicesArr.value[index][i] as number,
-                        });
-                    } else {
-                        const interfArr = devicesArr.value[index][i.interf] as {
-                            val: number;
-                            bus: number;
-                        }[];
-                        if ((interfArr[i.bus] && interfArr[i.bus].val) || (interfArr[0] && interfArr[0].val)) {
-                            reqArr.push({
-                                type: i.interf,
-                                device: devices.value[index].addr,
-                                index: 0,
-                                quantity: interfArr[i.bus] ? interfArr[i.bus].val : interfArr[0].val,
-                                bus: i.bus,
-                            });
-                        }
-                    }
-                }
-                let filteredReqArr;
-                if (visibleWidgets.value[index] && visibleWidgets.value[index].length !== 0) {
-                    filteredReqArr = reqArr.filter((el) => {
-                        return visibleWidgets.value[index].find(
-                            (w: {
-                                w: {
-                                    d: number;
-                                    i: string;
-                                    bus?: number;
-                                };
-                            }) => {
-                                return w.w.d === el.device && w.w.i === el.type;
-                            },
-                        );
+
+        for (const [index, device] of devices.value.entries()) {
+            const isChosenDevice = chosenDevices.value.includes(device.addr);
+            const isInitialized = device.state !== 'init' && device.state !== 'no-conn' && device.state !== 'error';
+            const isFirstChosenDevice = isChosenDevice && index === 0;
+
+            if (!((!el && isChosenDevice && isInitialized) || isFirstChosenDevice)) continue;
+            if (devices.value.slice(0, index).some((elem: Device) => elem.addr === device.addr)) continue;
+
+            const reqArr: ReqArr[] = [];
+            for (const i of device.interf) {
+                if (typeof i === 'string') {
+                    reqArr.push({
+                        type: i,
+                        device: device.addr,
+                        index: 0,
+                        quantity: devicesArr.value[index][i] as number,
                     });
                 } else {
-                    let numbOfVisibleW = 0;
-                    visibleWidgets.value.forEach(
-                        (
-                            el: {
-                                w: {
-                                    d: number;
-                                    i: string;
-                                    bus?: number;
-                                };
-                            }[],
-                        ) => (numbOfVisibleW += el.length),
-                    );
-                    filteredReqArr = numbOfVisibleW ? [] : reqArr;
-                }
-                if (filteredReqArr.length) {
-                    if (filteredReqArr.length > 8) {
-                        getEntState(devicesArr.value[index].index, filteredReqArr.slice(0, 8));
-                        getEntState(devicesArr.value[index].index, filteredReqArr.slice(8));
-                    } else {
-                        getEntState(devicesArr.value[index].index, filteredReqArr);
+                    const interfArr = devicesArr.value[index][i.interf] as InterfWithBus[];
+                    const val = interfArr[i.bus]?.val || interfArr[0]?.val;
+                    if (val) {
+                        reqArr.push({
+                            type: i.interf,
+                            device: device.addr,
+                            index: 0,
+                            quantity: val,
+                            bus: i.bus,
+                        });
                     }
                 }
             }
+
+            const widgets = visibleWidgets.value[index];
+            let filteredReqArr;
+            if (widgets && widgets.length !== 0) {
+                filteredReqArr = reqArr.filter((el) => {
+                    return widgets.find((w: { w: Widget }) => {
+                        return w.w.d === el.device && w.w.i === el.type;
+                    });
+                });
+            } else {
+                let numbOfVisibleW = 0;
+                visibleWidgets.value.forEach((el: { w: Widget }[]) => (numbOfVisibleW += el.length));
+                filteredReqArr = numbOfVisibleW ? [] : reqArr;
+            }
+            if (!filteredReqArr.length) continue;
+
+            if (filteredReqArr.length > 8) {
+                getEntState(devicesArr.value[index].index, filteredReqArr.slice(0, 8));
+                getEntState(devicesArr.value[index].index, filteredReqArr.slice(8));
+            } else {
+                getEntState(devicesArr.value[index].index, filteredReqArr);
+            }
         }
+        hasFirsFetchComplete();
     } catch (error) {
         if (isAborted.value) {
             return;
         }
     }
-    const timeoutProd = isPriorWOpen.value ? timeout.value * 5 : timeout.value;
-    const timePause = isDev ? timeoutDev : timeoutProd;
-    getDevicesStatesTimer = setTimeout(setDevicesStates, timePause);
+
+    if (isFirstFetchComplete.value) {
+        const timeoutProd = isPriorWOpen.value ? timeout.value * 5 : timeout.value;
+        const timePause = isDev ? timeoutDev : timeoutProd;
+        getDevicesStatesTimer = setTimeout(setDevicesStates, timePause);
+    }
+}
+
+function hasFirsFetchComplete() {
+    if (isFirstFetchComplete.value) return;
+
+    const devicesInterfString: DeviceInfo[] = [];
+    devicesArr.value.forEach((d) => {
+        devicesInterfString.push({
+            'bin-in': d['bin-in'],
+            'pwm-out': d['pwm-out'],
+            'bin-var': d['bin-var'],
+            'int-var': d['int-var'],
+            'tim-var': d['tim-var'],
+            addr: d['addr'],
+            index: d['index'],
+        } as DeviceInfo);
+    });
+    const result = devicesInterfString.every((d) => {
+        const storeDevice = indexStore.devicesState.find((storeDev) => storeDev[0]?.device === d.index);
+        if (!storeDevice) return false;
+        return storeDevice.length >= Object.keys(d).length - 2;
+    });
+    if (result && devicesArr.value.length && !isFirstFetchComplete.value) {
+        isFirstFetchComplete.value = true;
+        setDevicesStates();
+    }
 }
 
 async function getOWIds(
@@ -642,7 +574,7 @@ async function checkMb(d: number, mb: { mode: 'off' | 'variables' }[]) {
         const arr = [...devicesArr.value];
         const device = devicesArr.value.find((dev) => dev.index === d);
         if (device) {
-            const res: { val: number; bus: number }[] = [];
+            const res: InterfWithBus[] = [];
             for (let j = 0; j < mbArr.length; j++) {
                 const val = arr[d]['mb-var'] as number;
                 res.push({ val: val, bus: mbArr[j].bus });
@@ -676,7 +608,7 @@ async function checkOWs(d: number, ow: { mode: 'off' | 'sens' | 'rom' | 'gpio' }
         if (device) {
             Object.keys(device).forEach((i) => {
                 if (i.includes('1w-') && owArr !== null) {
-                    const res: { val: number; bus: number }[] = [];
+                    const res: InterfWithBus[] = [];
                     const interf = i as '1w-sens' | '1w-rom' | '1w-gpio';
                     for (let j = 0; j < owArr.length; j++) {
                         if (owArr.filter((elem) => elem.interf === i).length) {
@@ -981,11 +913,6 @@ async function getLabels(d: number, interf: InterfEntType, bus?: number) {
     }
 }
 
-onMounted(async () => {
-    await getDevices();
-    await setDevicesStates();
-});
-
 function setInfo() {
     for (const [i, device] of devicesArr.value.entries()) {
         if (devices.value.findIndex((obj: Device) => obj.addr === device.index) !== -1) continue;
@@ -999,7 +926,7 @@ function setInfo() {
             if (interf.value.includes('1w-')) {
                 if (typeof interfValue === 'number') break;
 
-                const interfList = interfValue as { val: number; bus: number }[];
+                const interfList = interfValue as InterfWithBus[];
                 const interfDetails = interfList.map((el) => ({
                     interf: interf.value,
                     bus: el.bus,
@@ -1025,22 +952,18 @@ function setInfo() {
             serial: device.serial,
             version: device.version,
         };
-        console.warn('add', deviceInfo);
         indexStore.setDevices(deviceInfo);
         interfaces.value.forEach((interf: Interf) => {
             const interfValue = device[interf.value];
             // let number;
             // if (typeof interfValue === 'object') {
-            //     const el = interfValue as {
-            //         val: number;
-            //         bus: number;
-            //     }[];
+            //     const el = interfValue as InterfWithBus[];
             //     // number = el.val;
             // } else {
             //     number = interfValue as number;
             // }
             if (typeof interfValue === 'object') {
-                const el = interfValue as { val: number; bus: number }[];
+                const el = interfValue as InterfWithBus[];
                 el.forEach((elem) => {
                     getLabels(i, interf.value as InterfEntType, elem.bus);
                 });
@@ -1058,6 +981,7 @@ watch(
     () => devicesArr.value,
     () => {
         setInfo();
+        setDevicesStates();
     },
 );
 
@@ -1088,11 +1012,95 @@ watch(extDeviceInInitIndex, () => {
     }
 });
 
+onMounted(async () => {
+    await getDevices();
+    await setDevicesStates();
+});
+
 onBeforeUnmount(() => {
     clearTimeout(getDevicesStatesTimer);
     getDevicesStatesTimer = undefined;
     clearTimeout(getExtStatusesTimer);
     getExtStatusesTimer = undefined;
+});
+
+const { t } = useI18n({
+    messages: {
+        en: {
+            logout: 'Log out',
+            menuItems: {
+                panel: 'Control panel',
+                presetAlgoritms: 'Preset algoritms',
+                customAlgoritms: 'Custom Algorithms',
+                settings: 'System settings',
+            },
+            initializing: 'Extension device #{index} initializing, please wait...',
+            longQuery: 'Query took longer than expected. Please wait...',
+            admin: 'Administrator',
+            user: 'User',
+            infoBlock: {
+                title: 'Editing the list of expansion devices is not possible.',
+                text: {
+                    p1: 'RS485 NGC bus ',
+                    off: 'disabled. ',
+                    mb: 'is in “Modbus variables” mode. ',
+                    p2: 'Click ',
+                    link: 'here ',
+                    p3: 'to go to the bus operating mode settings.',
+                },
+            },
+            toast: {
+                success: 'Saved',
+                error: {
+                    header: 'Error',
+                    text: 'Check entered values',
+                },
+                reboot: {
+                    rebootRequired: 'Reboot required',
+                    press: 'Press',
+                    here: 'here',
+                    forReboot: 'for reboot',
+                },
+            },
+        },
+        ru: {
+            logout: 'Выйти',
+            menuItems: {
+                panel: 'Панель управления',
+                presetAlgoritms: 'Предустановленные алгоритмы',
+                customAlgoritms: 'Пользовательские алгоритмы',
+                settings: 'Настройки системы',
+            },
+            initializing: 'Идет инициализация устройства расширения #{index}, пожалуйста подождите...',
+            longQuery: 'Запрос занял больше времени, чем ожидалось. Пожалуйста, подождите...',
+            admin: 'Администратор',
+            user: 'Пользователь',
+            infoBlock: {
+                title: 'Редактирование списка устройств расширения невозможно.',
+                text: {
+                    p1: 'Шина RS485 NGC ',
+                    off: 'отключена. ',
+                    mb: 'находится в режиме “переменные Modbus". ',
+                    p2: 'Нажмите ',
+                    link: 'сюда ',
+                    p3: 'для перехода к настройкам режима работы шины.',
+                },
+            },
+            toast: {
+                success: 'Сохранено',
+                error: {
+                    header: 'Ошибка',
+                    text: 'Проверьте введённые значения',
+                },
+                reboot: {
+                    rebootRequired: 'Требуется перезагрузка',
+                    press: 'Нажмите',
+                    here: 'сюда',
+                    forReboot: 'для перезагрузки',
+                },
+            },
+        },
+    },
 });
 </script>
 <style scoped>
