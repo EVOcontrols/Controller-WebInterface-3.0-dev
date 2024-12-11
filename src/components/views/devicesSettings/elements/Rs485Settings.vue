@@ -9,15 +9,14 @@
             </div>
             <ButtonGroup
                 :buttons="
-                    modbusModes.map((v) => {
-                        if (v === 'card-reader' && props.settings.mode !== 'card-reader') {
-                            return null;
-                        }
-                        if (v === 'ext-devs' && props.settings.mode !== 'ext-devs') {
-                            return { text: t(`portModes.${v}`), value: v, isDisabled: props.isUseExtDevsNow };
-                        }
-                        return { text: t(`portModes.${v}`), value: v };
-                    })
+                    modbusModes
+                        .filter((el) => el !== 'card-reader' || props.settings.mode === 'card-reader')
+                        .map((v) => ({
+                            text: t(`portModes.${v}`),
+                            value: v,
+                            isDisabled:
+                                v === 'ext-devs' && props.settings.mode !== 'ext-devs' ? props.isUseExtDevsNow : false,
+                        }))
                 "
                 :value="props.settings.mode"
                 additional-classes="px-4"

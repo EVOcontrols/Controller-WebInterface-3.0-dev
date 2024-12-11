@@ -98,7 +98,7 @@
                         <ButtonGroup
                             :buttons="
                                 modbusModes
-                                    .filter((el) => el !== 'ext-devs')
+                                    .filter((el) => !['ext-devs', 'card-reader'].includes(el))
                                     .map((v) => ({ text: t(`portModes.${v}`), value: v }))
                             "
                             :value="devSettings['rs-485'][0].mode"
@@ -127,7 +127,7 @@
                             {{ t('speed') }}
                         </div>
                         <InputRange
-                            :value="devSettings['rs-485'][0].rate"
+                            :value="devSettings['rs-485'][0].rate || 0"
                             @change="devSettings['rs-485'][0].rate = $event"
                         />
                     </div>
@@ -539,6 +539,12 @@ async function save(count: number = 0) {
         (['rs-485'] as const).forEach((k) => {
             if (isKeyOfBoth(current, init, k) && !isEqual(current[k], init[k])) {
                 settingsToSave[k] = [current[k][0]] as any;
+            }
+
+            if (init[k][0].mode === 'off' && current[k][0].mode === 'variables') {
+                settingsToSave[k] = (settingsToSave[k] ?? []).map((item: any) => {
+                    return Object.fromEntries(Object.entries(item).filter(([, value]) => value !== 0));
+                });
             }
         });
         (['1-wire'] as const).forEach((k) => {
