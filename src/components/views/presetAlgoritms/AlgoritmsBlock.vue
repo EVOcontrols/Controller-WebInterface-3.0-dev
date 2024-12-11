@@ -3,9 +3,7 @@
         class="relative flex flex-col"
         :style="{ width: 'calc(50% - 10px)' }"
     >
-        <h1
-            class="font-semibold text-[#8dc5f6] text-[1.625rem] leading-[1.192] tracking-[0.02em] mb-5"
-        >
+        <h1 class="font-semibold text-[#8dc5f6] text-[1.625rem] leading-[1.192] tracking-[0.02em] mb-5">
             {{ t('title') }}
         </h1>
         <div class="bg-[#092740] rounded-[6px] p-[15px] flex gap-2 relative mb-4">

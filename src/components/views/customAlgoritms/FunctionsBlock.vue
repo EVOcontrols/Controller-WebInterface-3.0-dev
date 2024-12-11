@@ -119,10 +119,10 @@
         />
         <div
             v-if="pages"
-            class="absolute bottom-0 left-[50%] translate-x-[-50%] w-[5.625rem] h-[2.875rem] rounded-t-[8px] bg-[#113351] shadow-[0_0_7px_0_#07243D] flex items-center justify-center gap-1 py-[10px]"
+            class="absolute bottom-0 left-[50%] translate-x-[-50%] w-[6.625rem] h-[2.875rem] rounded-t-[8px] bg-[#113351] shadow-[0_0_7px_0_#07243D] flex items-center justify-center gap-1 py-[10px]"
         >
             <ArrowIcon
-                class="rotate-180"
+                class="rotate-180 min-w-[15px]"
                 :class="[{ disabled: pages <= 1 || curPage === 0 }, { 'cursor-pointer': pages > 1 && curPage }]"
                 @click="emit('prevPage')"
             />
@@ -144,8 +144,9 @@
                     }
                 "
             />
+            <span class="w-[100px] flex justify-center items-center">/ {{ pages }}</span>
             <ArrowIcon
-                class=""
+                class="min-w-[15px]"
                 :class="[
                     { disabled: pages <= 1 || curPage === pages - 1 },
                     { 'cursor-pointer': pages > 1 && curPage !== pages - 1 },
