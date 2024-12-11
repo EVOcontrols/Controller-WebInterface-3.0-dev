@@ -45,7 +45,7 @@ const props = withDefaults(
         notAllowedValues?: (number | string)[];
         placeholder?: string;
         disabled?: boolean;
-        inputType?: ('ip' | 'url')[] | ['int'] | ['latitude'] | ['longitude'] | ['string'];
+        inputType?: ('ip' | 'url')[] | ['int'] | ['float'] | ['latitude'] | ['longitude'] | ['string'];
         nullable?: U;
         debounceDelay?: number;
     }>(),
@@ -161,6 +161,10 @@ function valueChangedHandler() {
             return;
         }
         if (props.inputType?.[0] === 'int' && parseInt(v).toString() !== v) {
+            setStatus('invalid');
+            return;
+        }
+        if (props.inputType?.[0] === 'float' && parseFloat(v).toString() !== v) {
             setStatus('invalid');
             return;
         }

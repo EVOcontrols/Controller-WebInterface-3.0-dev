@@ -884,10 +884,10 @@ async function parseTime(time: Time, title: string, isEdit = false): Promise<Con
         let units: 'ms' | 's' | 'min' = 'ms';
 
         if (isEdit) {
-            if (s <= 1000) {
+            if (s < 1000) {
                 units = 'ms';
                 newS = s;
-            } else if (s > 1000 && s % 60000 === 0) {
+            } else if (s >= 1000 && s % 60000 === 0) {
                 units = 'min';
                 newS = s / 60000;
             } else {

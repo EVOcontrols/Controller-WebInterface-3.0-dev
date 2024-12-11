@@ -234,7 +234,7 @@
                     class="table-cell w-16 !h-8 text-center !px-2"
                     :min-max="[props.inputs[item.index].min, props.inputs[item.index].max]"
                     :status="props.inputs[item.index].isError ? 'invalid' : 'valid'"
-                    :input-type="['int']"
+                    :input-type="['float']"
                     :nullable="false"
                     :required="true"
                     :debounce-delay="1000"
