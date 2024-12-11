@@ -3,7 +3,7 @@ import axios, { AxiosError, type InternalAxiosRequestConfig } from 'axios';
 export function useApi() {
     const indexStore = useIndexStore();
 
-    const { authToken, notConnected, rebootingDeviceAddr, ip } = storeToRefs(indexStore);
+    const { notConnected, rebootingDeviceAddr, ip } = storeToRefs(indexStore);
 
     const route = useRoute();
 
@@ -50,9 +50,7 @@ export function useApi() {
                 // url: isUser
                 //     ? `http://192.168.1.99${config.url}`
                 //     : `http://192.168.1.99/api/v3/${config.url}`,
-                url: isUser
-                    ? `http://${ip.value}${config.url}`
-                    : `http://${ip.value}/api/v3/${config.url}`,
+                url: isUser ? `http://${ip.value}${config.url}` : `http://${ip.value}/api/v3/${config.url}`,
                 // url: isUser
                 //     ? `http://10.8.0.1:49163${config.url}`
                 //     : `http://10.8.0.1:49163/api/v3/${config.url}`,
@@ -84,7 +82,7 @@ export function useApi() {
             if (response.data.status === 'error') {
                 if (response.data.code === 18 && route.name !== 'login') {
                     indexStore.setIsAuth(undefined);
-                    router.push({ name: 'login' });
+                    router.push({ name: 'login' }).catch(console.error);
                 } else {
                     isFree = true;
                     throw new Error();
@@ -96,11 +94,7 @@ export function useApi() {
             return response;
         },
         async (error: AxiosError) => {
-            if (
-                error.code === 'ETIMEDOUT' ||
-                error.code === 'ERR_NETWORK' ||
-                error.response?.status === 500
-            ) {
+            if (error.code === 'ETIMEDOUT' || error.code === 'ERR_NETWORK' || error.response?.status === 500) {
                 if (!notConnected.value && rebootingDeviceAddr.value !== 0) {
                     indexStore.setIsNotConnected(true);
                 } else {
