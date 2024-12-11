@@ -1,5 +1,17 @@
 export type FuncsNumberPerPage = (typeof funcsNumbersPerPage)[number];
 
+export type InterfEntType =
+    | '1w-rom'
+    | '1w-sens'
+    | 'adc-in'
+    | 'bin-in'
+    | 'bin-out'
+    | 'bin-var'
+    | 'int-var'
+    | 'mb-var'
+    | 'pwm-out'
+    | 'tim-var';
+
 export type Ent = {
     type: EntType;
     value?: number;
@@ -14,24 +26,16 @@ export type EntType =
     | 'error'
     | 'prev-value'
     | 'int-const'
-    | 'bin-in'
-    | 'bin-out'
-    | 'adc-in'
-    | 'pwm-out'
-    | 'int-var'
-    | 'bin-var'
-    | 'tim-var'
     | 'udf-trig'
     | 'udf-cond'
     | 'udf-act'
     | 'udf-trans'
-    | '1w-rom'
-    | '1w-sens'
     | '1w-gpio'
     | 'mb-ir'
     | 'mb-hr'
     | 'mb-di'
-    | 'mb-coil';
+    | 'mb-coil'
+    | InterfEntType;
 
 export type Time = {
     type: 'tim-const' | 'tim-var';

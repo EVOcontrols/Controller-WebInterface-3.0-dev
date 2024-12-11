@@ -36,12 +36,8 @@
                         }
                     "
                     @oneClick="handleClick(i)"
-                    @doubleClick="
-                        (e: Event) => {
-                            handleDblClick(i, e);
-                        }
-                    "
-                    @addAlgoritm="(event) => addAlgoritm(i, event)"
+                    @doubleClick="handleDblClick(i)"
+                    @addAlgoritm="addAlgoritm(i)"
                     @creatingFinish="handleCreatingFinish(i)"
                 />
             </div>
@@ -87,7 +83,7 @@
 <script lang="ts" setup>
 import AlgoritmBlock from '@/components/views/customAlgoritms/AlgoritmBlock.vue';
 import spinner from '@/assets/img/spinner-inside-button.svg?raw';
-import type { Device } from '@/stores';
+import type { Device } from '@/typings/main';
 
 const { saveToFile } = useReadWriteFiles();
 
@@ -141,8 +137,8 @@ function deleteAlgoritm(indexes: Algoritm[], index: number, smallIndex: number) 
     emit('deleteAlgoritm', indexes, index, smallIndex);
 }
 
-function handleDblClick(index: number, event: Event) {
-    changeLabel(index, event);
+function handleDblClick(index: number) {
+    changeLabel(index);
 }
 
 function handleClick(i: number) {
@@ -175,9 +171,7 @@ function toggleOpenedAlgoritms(i: number) {
     }
 }
 
-function changeLabel(index: number, e: Event, isCreating?: boolean) {
-    const target = e.target as HTMLElement;
-    if (target.closest('.modal')) return;
+function changeLabel(index: number, isCreating?: boolean) {
     setActiveLabel(index);
     setActiveLabelTop();
 
@@ -196,14 +190,14 @@ function changeLabel(index: number, e: Event, isCreating?: boolean) {
     }, 20);
 }
 
-function addAlgoritm(index: number, event: Event) {
-    changeLabel(index, event, true);
+function addAlgoritm(index: number) {
+    changeLabel(index, true);
 }
 
 function setActiveLabel(index: number) {
     activeLabel.value = {
         i: index + props.page * funcsNumberPerPage.value,
-        label: curLabels.value[index],
+        label: curLabels.value[index + props.page * funcsNumberPerPage.value],
     };
     isNotMainScrolling.value = true;
     setActiveLabelTop();
@@ -334,7 +328,16 @@ watch(
         if (JSON.stringify(newValue) !== JSON.stringify(oldValue)) {
             const indexCreating = newValue.findIndex((item) => item.isCreating === true);
             openedAlgoritms.value = indexCreating !== -1 ? [indexCreating] : [];
+            activeLabel.value = undefined;
         }
+    },
+);
+watch(
+    () => funcLabels.value,
+    () => {
+        curLabels.value =
+            funcLabels.value[props.device ? props.device.addr : 0].find((el) => el.name === props.curAction.val)?.val ||
+            [];
     },
 );
 

@@ -136,7 +136,7 @@
 import draggable from 'vuedraggable';
 import CloseIcon from '@/components/toast/CloseIcon.vue';
 import { useI18n } from 'vue-i18n';
-import type { Widget } from '@/stores';
+import type { Widget } from '@/typings/main';
 import type { TempUnit } from '@/typings/common';
 
 interface DraggedContext {

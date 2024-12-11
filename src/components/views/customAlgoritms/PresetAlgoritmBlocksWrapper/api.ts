@@ -23,7 +23,7 @@ const fetchWithRetries = async <T>(
                 }, timeout);
             });
         } else {
-            console.error('ERR: Failed to fetch data after multiple attempts');
+            console.error(`ERR: Failed to fetch data after ${RETRIES_DEFAULT} attempts`);
             return null;
         }
     }
@@ -79,5 +79,5 @@ export const $apiSaveUdfConfig = async (body: BodySave) => {
     return fetchWithRetries(async () => {
         const { data } = await api.post('set_udf_cfg', body);
         return data;
-    }, 10);
+    });
 };

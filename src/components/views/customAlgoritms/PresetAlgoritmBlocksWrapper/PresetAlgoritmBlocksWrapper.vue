@@ -64,11 +64,6 @@
                                 handleDropDownClick(i, itemIndex);
                             }
                         "
-                        @setInputError="
-                            (inputItemIndex: number, res: boolean) => {
-                                setInputError(i, inputItemIndex, res);
-                            }
-                        "
                     />
                 </div>
             </div>
@@ -98,19 +93,19 @@
         >
             <template #title-icon>
                 <span
-                    v-if="shownDropDown.type === 'obj'"
+                    v-if="shownDropDown?.type === 'obj'"
                     v-html="object"
                 ></span>
                 <IButtonIcon
-                    v-else-if="shownDropDown.type === 'bin'"
+                    v-else-if="shownDropDown?.type === 'bin'"
                     :class="
-                        true
+                        shownDropDown?.items[shownDropDown?.vals[0]]?.val
                             ? '[&>path]:fill-[#00D6AF] [&>rect]:fill-[#00D6AF]'
                             : '[&>path]:fill-[#5891C2] [&>rect]:fill-[#5891C2]'
                     "
                 />
                 <span
-                    v-else-if="shownDropDown.type === '1w-sens'"
+                    v-else-if="shownDropDown?.type === '1w-sens'"
                     v-html="ow"
                 ></span>
                 <div
@@ -243,12 +238,10 @@ import IButtonIcon from '@/assets/IButtonIcon.vue';
 import search from '@/assets/img/search.svg?raw';
 import UiInput from '@/components/Ui/UiInput.vue';
 import info from '@/assets/img/info.svg?raw';
-import type { Device } from '@/stores';
 import spinner from '@/assets/img/spinner-inside-button.svg?raw';
 import type { Body, Ent, Time } from '@/typings/funcs';
 import { translate } from '@/locales/PresetAlgoritmBlocksWrapper';
 import {
-    Capab,
     DropDown,
     Interface,
     Mode1W,
@@ -264,7 +257,10 @@ import {
     DropDownItem,
     CurKeyMap,
     BodySave,
+    MBTypes,
     analogyInterfaces,
+    Input,
+    Btn,
 } from './types';
 import {
     $apiGetConfig,
@@ -279,7 +275,8 @@ import { createConfig } from './createConfig';
 import { createEntityConfig } from './createEntityConfig';
 import { createBodyState } from './createBodyState';
 import { createObjByType } from './createUdfObj';
-import { ControllerSettings } from '@/typings/settings';
+import type { ControllerSettings } from '@/typings/settings';
+import type { Capab, Device } from '@/typings/main';
 
 const isDev = import.meta.env.DEV;
 const timeoutDev = 10000;
@@ -300,19 +297,16 @@ const emit = defineEmits<{
 
 const indexStore = useIndexStore();
 
-const { devices, labels, tempUnit, devCapabs } = storeToRefs(indexStore);
+const { devices, labels, tempUnit, devCapabs, valuesConstRange } = storeToRefs(indexStore);
 const { funcLabels } = storeToRefs(funcStore);
 
 const isSaving = ref(false);
-
 const isLoading = ref(false);
 const microLoading = ref(false);
-
+const inputError = ref(false);
 const isSaveBtnDisabled = ref(true);
 
 const initConfig = ref<string>();
-
-const inputErrors = new Set();
 
 const headerInput = ref('');
 
@@ -322,8 +316,9 @@ const curDevCapab = ref<Capab>();
 
 const order = ORDER;
 
+const mbVarTypes = ref<MBTypes[]>([]);
 const cur1WConfig = ref<Mode1W[]>([]);
-const curMbConfig = ref<ModeMb[]>([]);
+const curMbConfig = ref<ModeMb>([]);
 
 const interfaces1 = ref<Interface[]>([]);
 const interfaces2 = ref<Interface[]>([]);
@@ -470,7 +465,7 @@ async function reRenderLayout() {
 }
 
 function checkConfigToSave() {
-    if (inputErrors.size) {
+    if (inputError.value) {
         isSaveBtnDisabled.value = true;
     } else {
         isSaveBtnDisabled.value = props.isCreating
@@ -482,8 +477,8 @@ function checkConfigToSave() {
 }
 
 async function handleBtnClick(configItemIndex: number, btnsItemIndex: number, val: string | number) {
-    microLoading.value = true;
     if (!config.value) return;
+    microLoading.value = true;
     const prevConfig = [...config.value];
     if (prevConfig[configItemIndex] && prevConfig[configItemIndex].btns[btnsItemIndex]) {
         if (
@@ -506,8 +501,8 @@ async function handleBtnClick(configItemIndex: number, btnsItemIndex: number, va
 }
 
 function handleTabClick(configItemIndex: number, tabsItemIndex: number, val: string | number) {
-    microLoading.value = true;
     if (!config.value) return;
+    microLoading.value = true;
     const prevConfig = [...config.value];
     if (prevConfig[configItemIndex] && prevConfig[configItemIndex].tabs[tabsItemIndex]) {
         prevConfig[configItemIndex].tabs[tabsItemIndex].val = val;
@@ -525,8 +520,8 @@ function handleTabClick(configItemIndex: number, tabsItemIndex: number, val: str
 }
 
 function handleRadioBtnClick(configItemIndex: number, radioBtnsItemIndex: number, val: string) {
-    microLoading.value = true;
     if (!config.value) return;
+    microLoading.value = true;
     const prevConfig = [...config.value];
     if (prevConfig[configItemIndex] && prevConfig[configItemIndex].radioBtns[radioBtnsItemIndex]) {
         prevConfig[configItemIndex].radioBtns[radioBtnsItemIndex].val = val;
@@ -537,8 +532,8 @@ function handleRadioBtnClick(configItemIndex: number, radioBtnsItemIndex: number
 }
 
 function handleDropChange(configItemIndex: number, dropItemIndex: number, vals: number[]) {
-    microLoading.value = true;
     if (!config.value) return;
+    microLoading.value = true;
     const prevConfig = [...config.value];
     if (prevConfig[configItemIndex] && prevConfig[configItemIndex].dropDowns[dropItemIndex]) {
         prevConfig[configItemIndex].dropDowns[dropItemIndex].vals = vals;
@@ -555,8 +550,8 @@ function handleCheckboxClick(
     status: boolean,
     part: 1 | 2,
 ) {
-    microLoading.value = true;
     if (!config.value) return;
+    microLoading.value = true;
     const prevConfig = [...config.value];
     if (prevConfig[configItemIndex] && prevConfig[configItemIndex].checkBoxes[checkboxItemIndex]) {
         if (status) {
@@ -576,31 +571,11 @@ function handleCheckboxClick(
 }
 
 function handleInput(configItemIndex: number, inputItemIndex: number, val: number) {
-    microLoading.value = true;
     if (!config.value) return;
+    microLoading.value = true;
     const prevConfig = [...config.value];
     if (prevConfig[configItemIndex] && prevConfig[configItemIndex].inputs[inputItemIndex]) {
         prevConfig[configItemIndex].inputs[inputItemIndex].val = val;
-
-        // todo write validate
-        // if (prevConfig[configItemIndex].curKey === CurKeyMap.Time) {
-        //     const [firstBtn, secondBtn] = prevConfig[configItemIndex].btns;
-        //     const values =
-        //         firstBtn.val === 'tim-const'
-        //             ? valuesConstRange.value.find(
-        //                   (obj) =>
-        //                       obj.interf === (((firstBtn.val as string) + secondBtn.val) as string),
-        //               )?.values
-        //             : valuesConstRange.value.find((obj) => obj.interf === firstBtn.val)?.values;
-        //
-        //     if (prevConfig[configItemIndex].inputs[inputItemIndex]) {
-        //         prevConfig[configItemIndex].inputs[inputItemIndex].min = values ? values.min : 0;
-        //         prevConfig[configItemIndex].inputs[inputItemIndex].max = values
-        //             ? values.max
-        //             : 15000;
-        //     }
-        // }
-
         config.value = prevConfig;
     }
     checkConfigToSave();
@@ -621,33 +596,19 @@ function handleDropDownClick(configItemIndex: number, itemIndex: number) {
     };
 }
 
-function setInputError(configItemIndex: number, inputItemIndex: number, res: boolean) {
-    // microLoading.value = true;
-    // if (res) {
-    //     inputErrors.add(configItemIndex + '-' + inputItemIndex);
-    // } else {
-    //     inputErrors.delete(configItemIndex + '-' + inputItemIndex);
-    // }
-    // if (!config.value) return;
-    // const prevConfig = [...config.value];
-    // if (prevConfig[configItemIndex] && prevConfig[configItemIndex].inputs[inputItemIndex]) {
-    //     prevConfig[configItemIndex].inputs[inputItemIndex].isError = res;
-    //     config.value = prevConfig;
-    // }
-    // checkConfigToSave();
-    // reRenderLayout();
-}
-
 function handleClickMultiSelect(item: DropDownItem) {
     if (!shownDropDown.value) return;
 
     const { type, vals } = shownDropDown.value;
 
-    const canSelect =
-        (type === 'act' || type === 'cond') &&
-        (vals.length === 0 || vals.includes(item.i - 1) || vals.includes(item.i + 1));
     const isSelected = vals.includes(item.i);
     const isMiddleElement = isSelected && vals.includes(item.i - 1) && vals.includes(item.i + 1);
+    const canSelect =
+        (type === 'act' || type === 'cond') &&
+        (vals.length === 0 ||
+            vals.includes(item.i - 1) ||
+            vals.includes(item.i + 1) ||
+            (isSelected && vals.length === 1));
 
     if (canSelect) {
         if (isSelected && !isMiddleElement) {
@@ -676,29 +637,34 @@ async function getMb(ent: EntNum, device: number) {
     const data = await $apiGetMbInfo(device);
     const interfaces = ent === 1 ? interfaces1.value : ent === 2 ? interfaces2.value : interfaces3.value;
 
-    const mbTypes = ['co', 'ir', 'hr', 'di']; // todo coil or co?
+    const mbTypes = ['coil', 'ir', 'hr', 'di'];
     mbTypes.forEach((mbType) => {
         if (data.type.includes(mbType)) {
-            interfaces.push(`mb-${mbType}` as Interface);
+            interfaces.push('mb-var');
         }
     });
+
+    if (interfaces.includes('mb-var')) {
+        mbVarTypes.value = data.type;
+    }
 }
 
 async function getDevConfig() {
     if (!config.value.length) isLoading.value = true;
 
-    for (const dev of devices.value) {
-        const data = await $apiGetConfig(dev.addr);
+    for (const device of devices.value) {
+        if (['error', 'no-conn', 'off'].includes(device.state)) continue;
+        const data = await $apiGetConfig(device.addr);
         configByAddr.value = {
             ...configByAddr.value,
-            [dev.addr]: data,
+            [device.addr]: data,
         };
     }
 
     const data = await $apiGetConfig(props.device?.addr);
     curConfigByAddr.value = data;
     cur1WConfig.value = data['1-wire'] as Mode1W[];
-    curMbConfig.value = data['rs-485'] as ModeMb[];
+    curMbConfig.value = data['rs-485'] as ModeMb;
 }
 
 async function getEntConfig(ent: EntNum) {
@@ -767,6 +733,14 @@ async function getData(
         const addr = props.device ? (props.device.addr === 0 ? device || 0 : props.device.addr) : 0;
         const labelsVar = labels.value[addr]?.find((el) => el.interf === type)?.val[bus || 0]; //0-bus
         curLabels = (Array.isArray(labelsVar) ? labelsVar : []) as string[];
+        if (type === 'mb-var') {
+            const labelsWithMbType = labelsVar?.map((label, index) => {
+                const t = mbVarTypes.value[index];
+                const mbType = t === 'none' ? t : t === 'coil' ? t[0].toUpperCase() + t.slice(1) : t.toUpperCase();
+                return `${mbType}: ${label}`;
+            });
+            curLabels = (Array.isArray(labelsWithMbType) ? labelsWithMbType : []) as string[];
+        }
     }
 
     data.entities[0].state !== 'err' &&
@@ -812,30 +786,18 @@ async function parseEntity(ent: Ent) {
         await getInterfaces(entNum, ent.device);
     }
 
-    // const ent1WConfigs = [ent1WConfig1.value, ent1WConfig2.value, ent1WConfig3.value];
     const interfaces = [interfaces1.value, interfaces2.value, interfaces3.value];
 
     const invalidTypes = ['none', 'error', 'int-const'];
     if (!invalidTypes.includes(ent.type) && curDevCapab.value) {
-        // const ent1WConfigLength = ent1WConfigs[entNum - 1].length;
-
-        // if (!ent1WConfigLength && ent.device !== undefined) {
-        //     await getEntConfig(entNum, ent.device);
-        // }
-
-        const mbTypes = ['mb-coil', 'mb-ir', 'mb-hr', 'mb-di'];
-        const keyCapab = mbTypes.includes(ent.type) ? 'mb-var' : (ent.type as EntType);
-        let quant = curDevCapab.value[keyCapab];
-
+        let quant = curDevCapab.value[ent.type as EntType];
         const addr = props.device && props.device.addr;
         const isValidUdfType = props.type.val === 'udf-act' || props.type.val === 'udf-cond';
         if (ent.device !== undefined && (addr || (!addr && isValidUdfType))) {
             const deviceId = addr === 0 ? ent.device : addr || ent.device;
             const capabs = devCapabs.value[deviceId];
             if (capabs) {
-                const isMb = mbTypes.includes(ent.type);
-                const indexDevCapab = isMb ? 'mb-var' : (ent.type as EntType);
-                quant = capabs[indexDevCapab] || quant;
+                quant = capabs[ent.type as EntType] || quant;
             }
         }
 
@@ -855,14 +817,24 @@ async function parseEntity(ent: Ent) {
     const mainDevice = props.device?.addr || 0;
     const isNGC = mainDevice === 0;
     const deviceId = isNGC ? (device !== mainDevice ? device : mainDevice) : mainDevice;
-    const OWConfig = configByAddr.value[deviceId]['1-wire'];
+    const owConfig = configByAddr.value[deviceId]['1-wire'];
+    const mbConfig = configByAddr.value[deviceId]['rs-485'];
 
     const entItems = entNum === 1 ? ent1.value : entNum === 2 ? [...ent2.value] : [...ent3.value];
 
-    return createEntityConfig(ent, props.type.val, interfaces[entNum - 1], OWConfig, entItems, t, props.device);
+    return createEntityConfig(
+        ent,
+        props.type.val,
+        interfaces[entNum - 1],
+        owConfig,
+        mbConfig,
+        entItems,
+        t,
+        props.device,
+    );
 }
 
-function getConstBtns(configTime?: Config) {
+function getConstBtns(configTime?: Config, units = 'ms') {
     const val = configTime?.btns[0].val;
     return [
         {
@@ -878,7 +850,7 @@ function getConstBtns(configTime?: Config) {
                 { label: t('btns.s'), val: 's', class: 'w-[66px] !px-2 !h-8' },
                 { label: t('btns.min'), val: 'min', class: 'w-[66px] !px-2 !h-8' },
             ],
-            val: (val === 'tim-const' && configTime?.btns[1].val) || 'ms',
+            val: (val === 'tim-const' && configTime?.btns[1].val) || units,
             inline: true,
         },
     ];
@@ -896,31 +868,51 @@ function getVarBtns() {
     ];
 }
 
-async function parseTime(time: Time, title: string): Promise<Config[] | undefined> {
+async function parseTime(time: Time, title: string, isEdit = false): Promise<Config[] | undefined> {
     const timeNum = time1.value.length ? (time2.value.length ? 3 : 2) : 1;
     if (!props.device || !curDevCapab.value) return;
+    const isConst = time.type === 'tim-const';
 
-    if (time.type === 'tim-var') {
+    if (!isConst) {
         await getData(timeNum, 'tim-var', curDevCapab.value['tim-var'], props.device.addr, undefined, true);
     }
 
-    // let s = time.value || 0;
-    // let newS = s;
-    // let units: 'ms' | 's' | 'min';
-    // if (s <= 1000) {
-    //     units = 'ms';
-    //     newS = s / 10;
-    // } else if (s > 1000 && s % 60000 === 0) {
-    //     units = 'min';
-    //     newS = s / 60000;
-    // } else {
-    //     units = 's';
-    //     newS = s / 1000;
-    // }
-
+    let inputs: Input[] = [];
+    let btns: Btn[] = getVarBtns();
     const configTime = getConfigTimeByTitle(title);
+
+    if (isConst) {
+        let s = time.value || 0;
+        let newS = s;
+        let units: 'ms' | 's' | 'min' = 'ms';
+
+        if (isEdit) {
+            if (s < 1000) {
+                units = 'ms';
+                newS = s;
+            } else if (s >= 1000 && s % 60000 === 0) {
+                units = 'min';
+                newS = s / 60000;
+            } else {
+                units = 's';
+                newS = s / 1000;
+            }
+        }
+
+        btns = getConstBtns(configTime, units);
+        const error = hasErrorTime(time, btns, newS);
+        inputs = [
+            {
+                val: newS,
+                isError: !!error,
+                inline: true,
+                ...(Array.isArray(error) && { placeholderErrorMinMax: error }),
+                ...(typeof error === 'boolean' && error && { placeholderErrorMultiplicity: error }),
+            },
+        ];
+    }
+
     const items = timeNum === 1 ? time1.value : timeNum === 2 ? [...time2.value] : [...time3.value];
-    const isConst = time.type === 'tim-const';
     return [
         {
             curKey: configTime?.curKey || CurKeyMap.Time,
@@ -938,23 +930,32 @@ async function parseTime(time: Time, title: string): Promise<Config[] | undefine
                       { name: 'dropDown', index: 0 },
                   ],
             titles: isConst ? [title] : [title, t('titles.object')],
-            btns: isConst ? getConstBtns(configTime) : getVarBtns(),
+            btns,
             tabs: [],
             radioBtns: [],
             checkBoxes: [],
-            inputs: isConst ? [{ val: time.value || 0, min: 0, isError: false, inline: true }] : [],
+            inputs,
             dropDowns: isConst
                 ? []
                 : [
                       {
                           type: 'var',
                           realType: 'tim-var',
-                          items: items,
+                          items,
                           vals: time.index !== undefined ? [time.index] : [],
                       },
                   ],
         },
     ];
+}
+
+function hasErrorTime(time: Time, btns: Btn[], newS: number): [number, number] | boolean {
+    const postfix = btns[1]?.val || 'ms';
+    const constRange = valuesConstRange.value.find((range) => range.interf === time.type + postfix);
+    if (postfix === 'ms' && time.value && !(time.value % 10 === 0)) return true;
+    if (!constRange) return false;
+    const { min, max } = constRange.values;
+    return newS < min || newS > max ? [min, max] : false;
 }
 
 function getConfigTimeByTitle(title: string): Config | undefined {
@@ -986,10 +987,7 @@ async function parseMultiSelect(
     if (!props.device || !curDevCapab.value) return;
 
     const addr = props.device ? props.device.addr : 0;
-    // if (!funcLabels.value[addr].find((el) => el.name === type)) {
     await getLabels(1, type);
-    // }
-
     await getData(1, type, curDevCapab.value[type], addr, undefined, false, true);
 
     const isAction = type === 'udf-act';
@@ -1039,21 +1037,34 @@ async function parseMultiSelect(
     ];
 }
 
-async function setConfig() {
+async function setConfig(isEdit = false) {
     if (!curBody.value) return;
 
     const resultConfig = await createConfig(
         curBody.value,
         props.type.val,
+        mbVarTypes.value,
         t,
         parseEntity,
         parseTime,
         parseMultiSelect,
         props.device,
+        isEdit,
     );
 
     config.value = resultConfig.sort();
+    maybeSetErrorInput();
     microLoading.value = false;
+}
+
+function maybeSetErrorInput() {
+    inputError.value = false;
+    config.value.forEach((config) => {
+        config.inputs.forEach((input) => {
+            if (input.isError) inputError.value = true;
+        });
+    });
+    checkConfigToSave();
 }
 
 function configCreating() {
@@ -1111,7 +1122,7 @@ async function getConfig() {
         await configEditing();
     }
 
-    await setConfig();
+    await setConfig(true);
     checkConfigToSave();
     setTimeout(
         () => {

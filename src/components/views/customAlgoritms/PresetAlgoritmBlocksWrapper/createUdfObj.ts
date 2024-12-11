@@ -1,5 +1,5 @@
 import { type Config, CurKeyMap, binaryInterfaces } from './types';
-import type { Device } from '@/stores';
+import type { Device } from '@/typings/main';
 
 type InterfProp = { interf: string; bus: number };
 
@@ -31,6 +31,7 @@ function createObjUdfAct(config: Config[], propDevice?: Device) {
     const stopValDevice = config.find((el) => el.curKey === CurKeyMap.StopValueDevice);
     const stopValObject = config.find((el) => el.curKey === CurKeyMap.StopValueObject);
     const stopValBus = config.find((el) => el.curKey === CurKeyMap.StopValueBus);
+    const pause = config.find((el) => el.curKey === CurKeyMap.Pause);
 
     const ent = createEntity(interfType, device, object, bus, propDevice);
     let obj = {
@@ -111,7 +112,7 @@ function createObjUdfAct(config: Config[], propDevice?: Device) {
     } else if (interfaceRight?.radioBtns[0].val === 'cycle') {
         const curObj = {
             time: configureTime(time),
-            pause: configureTime(time),
+            pause: configureTime(pause),
             direction: cyclicMode?.btns[1].val || 'to-max',
             infinite: cyclicMode?.btns[0].val === 'yes',
             'stop-on-trig': startStopMode?.checkBoxes[0][2].valsArr.includes('triggerNoMatches'),

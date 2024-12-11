@@ -1,5 +1,10 @@
 <template>
     <div>
+        <span
+            v-if="isLoading"
+            v-html="spinner"
+            class="self-center mb-4 [&>svg]:w-[5rem] [&>svg>path]:fill-[#148ef8] fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"
+        ></span>
         <ManageDevice
             :is-reboot-required="false"
             :device-addr="deviceIndex as DeviceAddr"
@@ -93,7 +98,7 @@
                         <ButtonGroup
                             :buttons="
                                 modbusModes
-                                    .filter((el) => el !== 'ext-devs')
+                                    .filter((el) => !['ext-devs', 'card-reader'].includes(el))
                                     .map((v) => ({ text: t(`portModes.${v}`), value: v }))
                             "
                             :value="devSettings['rs-485'][0].mode"
@@ -122,7 +127,7 @@
                             {{ t('speed') }}
                         </div>
                         <InputRange
-                            :value="devSettings['rs-485'][0].rate"
+                            :value="devSettings['rs-485'][0].rate || 0"
                             @change="devSettings['rs-485'][0].rate = $event"
                         />
                     </div>
@@ -335,10 +340,9 @@
 </template>
 
 <script lang="ts" setup>
-import type { DeviceWorkState } from '@/typings/settings';
+import type { DeviceWorkState, ExtDevRaw, ExtDeviceSettings } from '@/typings/settings';
 import ManageDevice from './elements/ManageDevice.vue';
 import type { DeviceAddr } from '@/typings/common';
-import type { ExtDeviceSettings } from '@/typings/settings';
 import { _ } from '@/plugins/lodash';
 import UiInput from '@/components/Ui/UiInput.vue';
 import type { PartialDeep } from 'type-fest/source/partial-deep';
@@ -347,6 +351,7 @@ import CollapseTransition from '@/components/CollapseTransition.vue';
 import ButtonGroup from '@/components/Ui/ButtonGroup.vue';
 import AdvancedSettingsButton from '@/components/views/devicesSettings/elements/AdvancedSettingsButton.vue';
 import type { InputFieldStatus } from '@/typings/common';
+import spinner from '@/assets/img/spinner-inside-button.svg?raw';
 
 const props = defineProps<{
     deviceIndex: number;
@@ -354,6 +359,8 @@ const props = defineProps<{
     deviceState: DeviceWorkState;
     saveTrigger: number;
 }>();
+
+const isLoading = ref(false);
 
 const devSettings = ref<ExtDeviceSettings>();
 
@@ -451,20 +458,20 @@ const needToSave = computed(() => {
     return areThereChanges.value && !fieldsInvalidStatuses.value.size;
 });
 
-async function getCongig() {
+async function getConfig() {
     if (props.deviceState === 'on') {
         try {
-            const r = await api.post('get_ext_cfg', {
-                device: props.deviceIndex,
-            });
-            devSettings.value = r.data as ExtDeviceSettings;
+            isLoading.value = true;
+            const { data } = await api.post('get_ext_cfg', { device: props.deviceIndex });
+            devSettings.value = data as ExtDeviceSettings;
             devSettingsInit.value = cloneDeep(devSettings.value);
+            isLoading.value = false;
         } catch (error) {
             if (isAborted.value) {
                 return;
             }
             setTimeout(() => {
-                getCongig();
+                getConfig();
             }, 5);
         }
     }
@@ -477,15 +484,19 @@ async function setDevState() {
     }
     if (isRebootRequired.value) return;
     try {
-        const list = (await (await api.get('get_ext_devs')).data).list;
-        list[props.deviceIndex - 1] = {
+        const {
+            data: { list: responseList },
+        } = await api.get('get_ext_devs');
+        responseList[props.deviceIndex - 1] = {
             addr: devSettings.value?.slave.addr || props.deviceAddr,
             type: 'NG3-EDIO',
             state: curDevState.value,
         };
-        const r = await api.post('set_ext_devs', {
-            list: list,
+        const list = responseList.map((ext: ExtDevRaw) => {
+            if (ext.type === 'none' || ext.state !== 'no-conn') return ext;
+            return { ...ext, state: 'on' };
         });
+        const r = await api.post('set_ext_devs', { list });
         if (r.status === 200) {
             isMainSaving.value = false;
             emit('changeState', curDevState.value);
@@ -527,6 +538,12 @@ async function save(count: number = 0) {
         (['rs-485'] as const).forEach((k) => {
             if (isKeyOfBoth(current, init, k) && !isEqual(current[k], init[k])) {
                 settingsToSave[k] = [current[k][0]] as any;
+            }
+
+            if (init[k][0].mode === 'off' && current[k][0].mode === 'variables') {
+                settingsToSave[k] = (settingsToSave[k] ?? []).map((item: any) => {
+                    return Object.fromEntries(Object.entries(item).filter(([, value]) => value !== 0));
+                });
             }
         });
         (['1-wire'] as const).forEach((k) => {
@@ -633,20 +650,29 @@ function waitForOnStatus() {
 }
 
 onMounted(async () => {
-    getCongig();
+    getConfig();
 });
 
 watch(
     () => [props.deviceState, props.deviceIndex],
-    () =>
+    () => {
         setTimeout(() => {
             if (props.deviceState === 'on') {
-                getCongig();
+                getConfig();
             }
-        }, 1000),
+        }, 1000);
+    },
 );
 
 watch(() => props.saveTrigger, save);
+watch(
+    () => props.deviceIndex,
+    (newVal, oldVal) => {
+        if (newVal !== oldVal) {
+            curDevState.value = props.deviceState;
+        }
+    },
+);
 
 watch([isMainSaving, isOptionsSaving], () => {
     if (!isMainSaving.value && !isOptionsSaving.value) {
@@ -686,6 +712,7 @@ const { t } = useI18n({
                 off: 'OFF',
                 variables: 'MODBUS VARIABLES',
                 'ext-devs': 'EXTENSION DEVICES',
+                'card-reader': 'CARD READER',
             },
             speed: 'Speed',
             parity: 'Parity',
@@ -714,6 +741,7 @@ const { t } = useI18n({
                 off: 'ОТКЛЮЧЕН',
                 variables: 'ПЕРЕМЕННЫЕ MODBUS',
                 'ext-devs': 'УСТРОЙСТВА РАСШИРЕНИЯ',
+                'card-reader': 'КАРТРИДЕР',
             },
             speed: 'Скорость',
             parity: 'Четность',

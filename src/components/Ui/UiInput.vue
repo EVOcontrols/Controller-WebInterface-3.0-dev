@@ -45,7 +45,7 @@ const props = withDefaults(
         notAllowedValues?: (number | string)[];
         placeholder?: string;
         disabled?: boolean;
-        inputType?: ('ip' | 'url')[] | ['int'] | ['latitude'] | ['longitude'] | ['string'];
+        inputType?: ('ip' | 'url')[] | ['int'] | ['float'] | ['latitude'] | ['longitude'] | ['string'];
         nullable?: U;
         debounceDelay?: number;
     }>(),
@@ -164,6 +164,10 @@ function valueChangedHandler() {
             setStatus('invalid');
             return;
         }
+        if (props.inputType?.[0] === 'float' && parseFloat(v).toString() !== v) {
+            setStatus('invalid');
+            return;
+        }
         if (props.name.includes('port') && +v > 65535) {
             setStatus('invalid');
             return;
@@ -203,7 +207,6 @@ watch(
     () => props.initValue,
     (v) => {
         if (v === lastInitValue) return;
-        // console.log('valueChangedHandler', v, lastInitValue, typeof v, typeof lastInitValue);
         value.value = v?.toString() || '';
     },
 );

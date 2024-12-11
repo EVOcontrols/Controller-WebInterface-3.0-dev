@@ -29,7 +29,7 @@
             class="relative h-[45px] flex items-center px-3 font-medium w-full overflow-hidden border-b-[2px] border-[#1D4162]"
         >
             <div class="flex whitespace-nowrap w-full flex-none">
-                <div class="flex flex-1 overflow-hidden w-full flex-none">
+                <div class="flex overflow-hidden w-full flex-none">
                     <ArrowIcon
                         v-if="!isStartScrollEl"
                         class="absolute top-[50%] translate-y-[-50%] rotate-180 left-[6px] cursor-pointer"
@@ -112,7 +112,7 @@
             >
                 <div
                     v-dragscroll.y
-                    class="flex overflow-y-auto w-full scrollbar-4 flex-1 flex-col px-4 items-center flex-none"
+                    class="flex overflow-y-auto w-full scrollbar-4 flex-col px-4 items-center flex-none"
                     :style="{
                         height: 'calc(100vh - 460px)',
                     }"
@@ -140,7 +140,7 @@
                         >
                             <div
                                 v-if="activeLabel?.i === i && JSON.stringify(activeLabel.state) === JSON.stringify(el)"
-                                class="activeLabel h-[68px] bg-[#092E4B] -ml-2 pl-4 pr-[18px] flex items-center justify-center flex gap-2"
+                                class="activeLabel h-[68px] bg-[#092E4B] -ml-2 pl-4 pr-[18px] items-center justify-center flex gap-2"
                                 :style="{ width: 'calc(100% + 16px)' }"
                             >
                                 <input
@@ -252,7 +252,7 @@
                                 Discrete inputs
                             </div>
                             <div
-                                class="w-full flex text-[#6CB5D3] items-center transition-colors duration-500 select-none pt-5 flex flex-col"
+                                class="w-full text-[#6CB5D3] items-center transition-colors duration-500 select-none pt-5 flex flex-col"
                                 v-for="(s, index) in diArr"
                                 :key="index"
                             >
@@ -325,7 +325,7 @@
                                 Coils
                             </div>
                             <div
-                                class="w-full flex text-[#6CB5D3] items-center transition-colors duration-500 select-none pt-5 flex flex-col"
+                                class="w-full text-[#6CB5D3] items-center transition-colors duration-500 select-none pt-5 flex flex-col"
                                 v-for="(s, index) in coilArr"
                                 :key="index"
                             >
@@ -452,7 +452,7 @@
                                 Input registers
                             </div>
                             <div
-                                class="w-full flex text-[#6CB5D3] items-center transition-colors duration-500 select-none pt-5 flex flex-col"
+                                class="w-full text-[#6CB5D3] items-center transition-colors duration-500 select-none pt-5 flex flex-col"
                                 v-for="(s, index) in irArr"
                                 :key="index"
                             >
@@ -546,7 +546,7 @@
                                 Holding registers
                             </div>
                             <div
-                                class="w-full flex text-[#6CB5D3] items-center transition-colors duration-500 select-none pt-5 flex flex-col"
+                                class="w-full text-[#6CB5D3] items-center transition-colors duration-500 select-none pt-5 flex flex-col"
                                 v-for="(s, index) in hrArr"
                                 :key="index"
                             >
@@ -801,7 +801,7 @@
                                             activeLabel?.i === i &&
                                             JSON.stringify(activeLabel.state) === JSON.stringify(el)
                                         "
-                                        class="activeLabel h-[68px] bg-[#092E4B] -ml-2 pl-4 pr-[18px] flex items-center justify-center flex gap-2"
+                                        class="activeLabel h-[68px] bg-[#092E4B] -ml-2 pl-4 pr-[18px] items-center justify-center flex gap-2"
                                         :style="{ width: 'calc(100% + 16px)' }"
                                     >
                                         <input
@@ -940,7 +940,7 @@
                                             activeLabel?.i === i &&
                                             JSON.stringify(activeLabel.state) === JSON.stringify(el)
                                         "
-                                        class="activeLabel h-[68px] bg-[#092E4B] -ml-2 pl-4 pr-[28px] flex items-center justify-center flex gap-4"
+                                        class="activeLabel h-[68px] bg-[#092E4B] -ml-2 pl-4 pr-[28px] items-center justify-center flex gap-4"
                                         :style="{ width: 'calc(100% + 16px)' }"
                                     >
                                         <input
@@ -1208,7 +1208,7 @@
         >
             <div class="flex">
                 <span
-                    class="select-none h-[22px] w-16 text-sm font-Roboto flex items-center rounded-l-[8px] flex items-center justify-center"
+                    class="select-none h-[22px] w-16 text-sm font-Roboto rounded-l-[8px] flex items-center justify-center"
                     :class="
                         curNumberingSystem === 'dec'
                             ? 'bg-[#023E71] text-[#2B9BFF] select-none'
@@ -1218,7 +1218,7 @@
                     >DEC</span
                 >
                 <span
-                    class="select-none h-[22px] w-16 text-sm font-Roboto flex items-center rounded-r-[8px] flex items-center justify-center"
+                    class="select-none h-[22px] w-16 text-sm font-Roboto rounded-r-[8px] flex items-center justify-center"
                     :class="
                         curNumberingSystem === 'hex'
                             ? 'bg-[#023E71] text-[#2B9BFF] select-none'
@@ -1261,7 +1261,11 @@ import IButtonOutIcon from '@/assets/IButtonOutIcon.vue';
 import ModbusPopUp from '@/components/views/widgets/bigWidgets/ModbusPopUp.vue';
 import PrimaryButton from '@/components/Ui/PrimaryButton.vue';
 import OutlinedButton from '@/components/Ui/OutlinedButton.vue';
-import type { Widget } from '@/stores';
+import type { Widget } from '@/typings/main';
+import { MBTypeWithNone } from '@/components/views/widgets/bigWidgets/types';
+
+const isDev = import.meta.env.DEV;
+const timeoutDev = 10000;
 
 const props = defineProps<{
     w: { w: Widget; state: number[] };
@@ -1282,8 +1286,9 @@ const { saveToFile } = useReadWriteFiles();
 const api = indexStore.getApi().api;
 
 const isAborted = indexStore.getApi().isAborted;
+let isUnmount = false;
 
-let getMbInfoTimer: ReturnType<typeof setTimeout> | undefined | null = null;
+let getMbInfoTimer: ReturnType<typeof setTimeout> | undefined;
 
 const isStartScrollEl = ref(true);
 
@@ -1607,6 +1612,9 @@ const curDevs = computed<number[]>(() => {
 });
 
 async function getMbInfo() {
+    if (isUnmount) return;
+    clearTimeout(getMbInfoTimer);
+
     try {
         const r = await api.post('get_mb_info', {
             device: props.w.w.d,
@@ -1618,7 +1626,7 @@ async function getMbInfo() {
             'reg-addr': number[];
         };
         const arr: {
-            type: 'hr' | 'wm-hr' | 'w-hr' | 'm-hr' | 'ir' | 'coil' | 'wm-coil' | 'w-coil' | 'm-coil' | 'di' | 'none';
+            type: MBTypeWithNone;
             'reg-addr': number;
             'dev-addr': number;
             val: number | null | 'err';
@@ -1627,7 +1635,8 @@ async function getMbInfo() {
         const curLabels =
             labels.value[props.w.w.d]?.find((el) => el.interf === props.w.w.i)?.val[props.w.w.bus || 0] || [];
         for (let i = 0; i < state.value.length; i++) {
-            if (mbDevs.value.length && mbDevs.value[props.w.w.d][props.w.w.bus || 0].includes(data['dev-addr'][i])) {
+            const validAdresses = mbDevs.value[props.w.w.d][props.w.w.bus || 0];
+            if (mbDevs.value.length && (validAdresses.includes(data['dev-addr'][i]) || data['dev-addr'][i] === 1)) {
                 arr.push({
                     type: data.type[i],
                     'reg-addr': data['reg-addr'][i] as number,
@@ -1638,15 +1647,15 @@ async function getMbInfo() {
             }
         }
         fullState.value = [...arr];
-        if (getMbInfoTimer !== undefined) {
-            getMbInfoTimer = setTimeout(getMbInfo, 3000);
+        if (!isUnmount) {
+            getMbInfoTimer = setTimeout(getMbInfo, isDev ? timeoutDev : 3000);
         }
     } catch (error) {
         if (isAborted.value) {
             return;
         }
-        if (getMbInfoTimer !== undefined) {
-            getMbInfoTimer = setTimeout(getMbInfo, 20);
+        if (!isUnmount) {
+            getMbInfoTimer = setTimeout(getMbInfo, isDev ? timeoutDev / 5 : 20);
         }
     }
 }
@@ -1671,8 +1680,8 @@ function handleScrollMove() {
     const wrapper = scrollWrapper.value;
     const el = scrollEl.value;
     if (!el || !wrapper || wrapper.offsetWidth === el.offsetWidth) return;
-    isStartScrollEl.value = wrapper.scrollLeft < 20 ? true : false;
-    isEndScrollEl.value = Math.round(wrapper.scrollLeft) > el.offsetWidth - wrapper.offsetWidth - 20 ? true : false;
+    isStartScrollEl.value = wrapper.scrollLeft < 20;
+    isEndScrollEl.value = Math.round(wrapper.scrollLeft) > el.offsetWidth - wrapper.offsetWidth - 20;
 }
 
 function mousedown(e: MouseEvent) {
@@ -2041,7 +2050,7 @@ function closePopUp() {
 
 function handleRegLabelClick(type: 'di' | 'coil' | 'ir' | 'hr', index: number, i: number) {
     if (!tableWrapper.value || !di.value || !coil.value || !ir.value || !hr.value) return;
-    let top = 0; // 70 - height of table header; 30 - hight of table line;
+    let top; // 70 - height of table header; 30 - hight of table line;
     let n = i;
     if (type === 'di') {
         for (let j = 0; j < index; j++) {
@@ -2107,14 +2116,13 @@ async function getEntInit() {
     try {
         const quant = devicesState.value[props.w.w.d].find((el) => el.type === props.w.w.i)?.state.length;
         if (!quant) return;
-        const r = await api.post('get_ent_init', {
+        const res = await api.post('get_ent_init', {
             type: props.w.w.i,
             device: props.w.w.d,
             index: 0,
             quantity: quant,
         });
-        const res = await r.data.state;
-        itemsStatuses.value = res;
+        itemsStatuses.value = await res.data.state;
     } catch (error) {
         if (isAborted.value) {
             return;
@@ -2161,7 +2169,8 @@ onMounted(() => {
 });
 
 onBeforeUnmount(() => {
-    clearTimeout(getMbInfoTimer as number | undefined);
+    isUnmount = true;
+    clearTimeout(getMbInfoTimer);
     getMbInfoTimer = undefined;
 });
 

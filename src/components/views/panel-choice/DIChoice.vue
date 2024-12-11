@@ -1,9 +1,7 @@
 <template>
     <transition name="height-margin-delay-300">
         <div class="relative mx-10">
-            <div
-                class="h-16 bg-[#092740] mt-4 rounded-xl flex items-center px-3 font-medium w-full overflow-hidden"
-            >
+            <div class="h-16 bg-[#092740] mt-4 rounded-xl flex items-center px-3 font-medium w-full overflow-hidden">
                 <transition name="translate">
                     <DevicesChoice
                         class="w-full"
@@ -50,7 +48,7 @@
                                 : t('noConnection')
                         }}
                     </div>
-                    <div>{{ t('addr') }} {{ shownStatus.addr }}</div>
+                    <div>{{ t('addr') }} {{ shownStatus.realAddr }}</div>
                     <div>{{ t('firmWare') }} {{ shownStatus.version }}</div>
                 </div>
             </div>
@@ -61,7 +59,7 @@
 <script lang="ts" setup>
 import DevicesChoice from './DevicesChoice.vue';
 import InterfacesChoice from './InterfacesChoice.vue';
-import type { Device } from '@/stores';
+import type { Device } from '@/typings/main';
 
 defineProps<{
     activeMenuItem: string;
@@ -69,9 +67,7 @@ defineProps<{
 
 let showStatusTimer: ReturnType<typeof setTimeout> | undefined;
 
-const shownStatus = ref<{ serial: string; state: string; addr: number; version: string } | null>(
-    null,
-);
+const shownStatus = ref<{ serial: string; state: string; realAddr: number; version: string } | null>(null);
 
 const statusFormLeft = ref(28);
 
@@ -84,7 +80,7 @@ const showStatusInfo = ref(false);
 function handleMouseLeave(device: Device) {
     if (!device.addr) return;
     isMouseOnDevice.value = false;
-    return new Promise((resolve) =>
+    return new Promise(() =>
         setTimeout(() => {
             if (!isMouseOnStatusForm.value) {
                 shownStatus.value = null;
@@ -107,7 +103,7 @@ function handleMouseEnter(device: Device, e: MouseEvent) {
         shownStatus.value = {
             serial: device.serial,
             state: device.state,
-            addr: device.addr,
+            realAddr: device.realAddr,
             version: device.version,
         };
         showStatusInfo.value = false;
@@ -129,7 +125,7 @@ function handleEnter() {
 
 function handleLeave() {
     isMouseOnStatusForm.value = false;
-    return new Promise((resolve) =>
+    return new Promise(() =>
         setTimeout(() => {
             if (!isMouseOnDevice.value) {
                 shownStatus.value = null;

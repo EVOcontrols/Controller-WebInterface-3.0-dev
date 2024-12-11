@@ -58,10 +58,10 @@ export type ControllerSettings = {
     } & (
         | {
               mode: 'variables';
-              'rd-tmo'?: number;
-              'wr-tmo'?: number;
-              'rd-pause'?: number;
-              'wr-pause'?: number;
+              'read-tmo'?: number;
+              'write-tmo'?: number;
+              'read-delay'?: number;
+              'write-delay'?: number;
               'cycle-delay'?: number;
           }
         | {
@@ -74,6 +74,10 @@ export type ControllerSettings = {
           }
         | {
               mode: 'off';
+          }
+        | {
+              mode: 'card-reader';
+              'valid-time'?: number;
           }
     ))[];
     'adc-in': {
@@ -143,25 +147,31 @@ export type CommonSettingsFields = {
     }[keyof CommonControllerSettings[P]][][];
 };
 
-export type NGCSettings = Pick<ControllerSettings, '1-wire' | 'pwm' | 'bin-out' | 'adc-in'> & {
-    modbus: Pick<ControllerSettings['modbus'][number], 'rate' | 'parity' | 'stop' | 'mode'> & {
-        advanced: {
-            variables: Omit<
-                Extract<ControllerSettings['modbus'][number], { mode: 'variables' }>,
-                'rate' | 'parity' | 'stop' | 'mode'
-            >;
-            'ext-devs': Omit<
-                Extract<ControllerSettings['modbus'][number], { mode: 'ext-devs' }>,
-                'rate' | 'parity' | 'stop' | 'mode'
-            >;
-        };
+export type Modbus = Pick<ControllerSettings['modbus'][number], 'rate' | 'parity' | 'stop' | 'mode'> & {
+    advanced: {
+        variables: Omit<
+            Extract<ControllerSettings['modbus'][number], { mode: 'variables' }>,
+            'rate' | 'parity' | 'stop' | 'mode'
+        >;
+        'ext-devs': Omit<
+            Extract<ControllerSettings['modbus'][number], { mode: 'ext-devs' }>,
+            'rate' | 'parity' | 'stop' | 'mode'
+        >;
+        'card-reader': Omit<
+            Extract<ControllerSettings['modbus'][number], { mode: 'card-reader' }>,
+            'rate' | 'parity' | 'stop' | 'mode'
+        >;
     };
+};
+
+export type NGCSettings = Pick<ControllerSettings, '1-wire' | 'pwm' | 'bin-out' | 'adc-in'> & {
+    modbuses: Modbus[];
     numberingSystem: NumberingSystem;
 };
 
 export type DeviceWorkState = 'on' | 'off' | 'init' | 'no-conn' | 'error';
 
-export type ExtDevsListRaw = (
+export type ExtDevRaw =
     | {
           type: 'NG3-EDIO';
           addr: Exclude<DeviceAddr, 0>;
@@ -171,8 +181,9 @@ export type ExtDevsListRaw = (
       }
     | {
           type: 'none';
-      }
-)[];
+      };
+
+export type ExtDevsListRaw = ExtDevRaw[];
 
 export type ExtDev = {
     index: number;
@@ -203,6 +214,24 @@ export type ExtDeviceSettings = {
               'read-delay': number;
               'write-delay': number;
               'cycle-delay': number;
+          }
+        | {
+              mode: 'ext-devs';
+              parity: (typeof modbusParities)[number];
+              rate: number;
+              stop: 1 | 2;
+              'get-tmo': number;
+              'set-tmo': number;
+              '1w-scan-tmo': number;
+              'set-cfg-tmo': number;
+              'cycle-delay': number;
+          }
+        | {
+              mode: 'card-reader';
+              parity: (typeof modbusParities)[number];
+              rate: number;
+              stop: 1 | 2;
+              'valid-time'?: number;
           }
         | { mode: 'off' }
     )[];

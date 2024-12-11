@@ -51,9 +51,9 @@
                                 ? '\u2013'
                                 : props.w.w.i !== 'bin-var'
                                 ? props.w.w.i === 'tim-var'
-                                    ? s <= 1000
+                                    ? s < 1000
                                         ? `${s} ${t('ms')}`
-                                        : s > 1000 && s % 60000 === 0
+                                        : s >= 1000 && s % 60000 === 0
                                         ? `${s / 60000} ${t('min')}`
                                         : `${s / 1000} ${t('s')}`
                                     : s
@@ -88,7 +88,7 @@
 </template>
 
 <script lang="ts" setup>
-import type { Widget, InterfVal } from '@/stores';
+import type { Widget, InterfVal } from '@/typings/main';
 import ArrowIcon from '@/assets/ArrowIcon.vue';
 
 const indexStore = useIndexStore();

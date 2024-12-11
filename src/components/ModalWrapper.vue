@@ -12,14 +12,10 @@
                     class="bg-[#0c314f] shadow-[0_0_1.375rem_0_#082135] p-6 flex flex-col"
                     :class="[widthClass, roundedClass]"
                 >
-                    <div
-                        class="flex flex-row justify-between items-center border-b border-[#2c5982] pb-3.5"
-                    >
+                    <div class="flex flex-row justify-between items-center border-b border-[#2c5982] pb-3.5">
                         <div class="flex items-center gap-x-2">
                             <slot name="title-icon"></slot>
-                            <h2
-                                class="font-semibold text-[#9adbf6] text-lg leading-[1.167] tracking-[0.03em]"
-                            >
+                            <h2 class="font-semibold text-[#9adbf6] text-lg leading-[1.167] tracking-[0.03em]">
                                 <slot name="title"></slot>
                             </h2>
                         </div>

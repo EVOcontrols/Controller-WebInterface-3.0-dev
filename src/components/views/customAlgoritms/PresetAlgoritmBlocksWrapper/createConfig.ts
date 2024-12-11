@@ -1,15 +1,18 @@
 import type { Body, Ent, Time } from '@/typings/funcs';
-import { type Config, CurKeyMap, binaryInterfaces, type UDF } from './types';
-import type { Device } from '@/stores';
+import { type Config, CurKeyMap, binaryInterfaces, binaryMBInterfaces, type UDF, type MBTypes } from './types';
+import type { Device } from '@/typings/main';
 
-const readonlyInterfaces = ['1w-rom', '1w-sens', 'bin-in', 'adc-in', 'mb-ir', 'mb-di'];
+const readonlyInterfaces = ['1w-rom', '1w-sens', 'bin-in', 'adc-in'];
+const intConstMin = -32768;
+const intConstMax = 32767;
 
 export const createConfig = async (
     curBodyVal: Body,
     typeVal: UDF,
+    mbTypes: MBTypes[],
     t: (key: string) => string,
     cbParseEntity: (ent: Ent) => Promise<Config[]>,
-    cbParseTime: (time: Time, title: string) => Promise<Config[] | undefined>,
+    cbParseTime: (time: Time, title: string, isEdit?: boolean) => Promise<Config[] | undefined>,
     cbParseMultiSelect: (
         type: 'udf-act' | 'udf-cond',
         idx: number,
@@ -17,6 +20,7 @@ export const createConfig = async (
         logic?: 'and' | 'or',
     ) => Promise<Config[] | undefined>,
     propDevice?: Device,
+    isEdit?: boolean,
 ): Promise<Config[]> => {
     const generators = [
         (curBody: Body) => createInitStateConfig(curBody, t),
@@ -34,21 +38,21 @@ export const createConfig = async (
         (curBody: Body) => createBitOperationConfig(curBody, typeVal, t),
         (curBody: Body) => createActionConfig(curBody, typeVal, t, propDevice),
         (curBody: Body) => createComparisonValConfig(curBody, typeVal, t),
-        (curBody: Body) => createOperationBinConfig(curBody, typeVal, t),
+        (curBody: Body) => createOperationBinConfig(curBody, typeVal, mbTypes, t),
         (curBody: Body) => createValueConfig(curBody, cbParseEntity),
         (curBody: Body) => createStopValueConfig(curBody, typeVal, t),
         (curBody: Body) => createIntConstStopValConfig(curBody, typeVal, t),
         (curBody: Body) => createStopValConfig(curBody, typeVal, cbParseEntity),
         (curBody: Body) => createHysteresisConfig(curBody, typeVal, t),
-        (curBody: Body) => createTimeConfig(curBody, cbParseTime, t),
-        (curBody: Body) => createDelayConfig(curBody, cbParseTime, t),
-        (curBody: Body) => createPauseConfig(curBody, cbParseTime, t),
+        (curBody: Body) => createTimeConfig(curBody, cbParseTime, t, isEdit),
+        (curBody: Body) => createDelayConfig(curBody, cbParseTime, t, isEdit),
+        (curBody: Body) => createPauseConfig(curBody, cbParseTime, t, isEdit),
         (curBody: Body) => createActionMultiSelectConfig(curBody, typeVal, cbParseMultiSelect),
         (curBody: Body) => createConditionMultiSelectConfig(curBody, typeVal, cbParseMultiSelect),
         (curBody: Body) => createStartStopModeConfig(curBody, typeVal, t),
         (curBody: Body) => createCycleModeConfig(curBody, typeVal, t),
-        (curBody: Body) => createMinTimeConfig(curBody, cbParseTime, t),
-        (curBody: Body) => createMaxTimeConfig(curBody, cbParseTime, t),
+        (curBody: Body) => createMinTimeConfig(curBody, cbParseTime, t, isEdit),
+        (curBody: Body) => createMaxTimeConfig(curBody, cbParseTime, t, isEdit),
     ];
 
     const allConfigs: Config[] = [];
@@ -176,6 +180,7 @@ function createLeftConfigEnter(curBodyVal: Body, typeVal: UDF, t: (key: string) 
         return null;
     }
 
+    const val = curBodyVal.left.value || 0;
     return {
         curKey: CurKeyMap.EnterLeft,
         queue: [
@@ -190,10 +195,9 @@ function createLeftConfigEnter(curBodyVal: Body, typeVal: UDF, t: (key: string) 
         inputs: [
             {
                 subtitle: t('titles.value'),
-                val: curBodyVal['left'].value || 0,
-                min: -32768,
-                max: 32767,
-                isError: false,
+                val,
+                isError: val < intConstMin || val > intConstMax,
+                placeholderErrorMinMax: [intConstMin, intConstMax],
             },
         ],
         dropDowns: [],
@@ -250,6 +254,7 @@ function createRightConfigEnter(curBodyVal: Body, typeVal: UDF, t: (key: string)
         return null;
     }
 
+    const val = curBodyVal.right.value || 0;
     return {
         curKey: CurKeyMap.EnterRight,
         queue: [
@@ -264,10 +269,9 @@ function createRightConfigEnter(curBodyVal: Body, typeVal: UDF, t: (key: string)
         inputs: [
             {
                 subtitle: t('titles.value'),
-                val: curBodyVal['right'].value || 0,
-                min: -32768,
-                max: 32767,
-                isError: false,
+                val,
+                isError: val < intConstMin || val > intConstMax,
+                placeholderErrorMinMax: [intConstMin, intConstMax],
             },
         ],
         dropDowns: [],
@@ -559,7 +563,12 @@ function createComparisonValConfig(curBodyVal: Body, typeVal: UDF, t: (key: stri
     };
 }
 
-function createOperationBinConfig(curBodyVal: Body, typeVal: UDF, t: (key: string) => string): Config | null {
+function createOperationBinConfig(
+    curBodyVal: Body,
+    typeVal: UDF,
+    mbTypes: MBTypes[],
+    t: (key: string) => string,
+): Config | null {
     if (!curBodyVal['value'] || curBodyVal['value']['type'] !== 'int-const' || !curBodyVal.entity) {
         return null;
     }
@@ -570,8 +579,9 @@ function createOperationBinConfig(curBodyVal: Body, typeVal: UDF, t: (key: strin
     const isBinary =
         curBodyVal['operation'] === 'bin-equal' ||
         curBodyVal['operation'] === 'bin-not-equal' ||
-        binaryInterfaces.includes(curBodyVal.entity.type);
+        isBinaryType(curBodyVal.entity.type, mbTypes, curBodyVal.entity.index);
 
+    const valEnter = curBodyVal.value.value || 0;
     return isBinary
         ? {
               curKey: CurKeyMap.Select,
@@ -586,7 +596,7 @@ function createOperationBinConfig(curBodyVal: Body, typeVal: UDF, t: (key: strin
                           { label: 0, val: 0, class: 'w-[80px]' },
                           { label: 1, val: 1, class: 'w-[80px]' },
                       ],
-                      val: curBodyVal['value'].value || 0,
+                      val: curBodyVal.value.value || 0,
                   },
               ],
               tabs: [],
@@ -609,10 +619,9 @@ function createOperationBinConfig(curBodyVal: Body, typeVal: UDF, t: (key: strin
               inputs: [
                   {
                       subtitle: t('titles.value'),
-                      val: curBodyVal['value'].value || 0,
-                      min: -32768,
-                      max: 32767,
-                      isError: false,
+                      val: valEnter,
+                      isError: valEnter < intConstMin || valEnter > intConstMax,
+                      placeholderErrorMinMax: [intConstMin, intConstMax],
                   },
               ],
               dropDowns: [],
@@ -691,6 +700,7 @@ function createIntConstStopValConfig(curBodyVal: Body, typeVal: UDF, t: (key: st
         return null;
     }
 
+    const val = curBodyVal['stop-val'].value || 0;
     return {
         curKey: CurKeyMap.StopValueEnter,
         queue: [
@@ -705,10 +715,9 @@ function createIntConstStopValConfig(curBodyVal: Body, typeVal: UDF, t: (key: st
         inputs: [
             {
                 subtitle: t('titles.value'),
-                val: curBodyVal['stop-val'].value || 0,
-                min: -32768,
-                max: 32767,
-                isError: false,
+                val,
+                isError: val < intConstMin || val > intConstMax,
+                placeholderErrorMinMax: [intConstMin, intConstMax],
             },
         ],
         dropDowns: [],
@@ -756,6 +765,7 @@ function createHysteresisConfig(curBodyVal: Body, typeVal: UDF, t: (key: string)
         return null;
     }
 
+    const val = curBodyVal['hysteresis'];
     return {
         curKey: CurKeyMap.Hysteresis,
         queue: [
@@ -767,21 +777,29 @@ function createHysteresisConfig(curBodyVal: Body, typeVal: UDF, t: (key: string)
         tabs: [],
         radioBtns: [],
         checkBoxes: [],
-        inputs: [{ val: curBodyVal['hysteresis'], min: -32768, max: 32767, isError: false, disabled: true }],
+        inputs: [
+            {
+                val,
+                isError: val < intConstMin || val > intConstMax,
+                disabled: true,
+                placeholderErrorMinMax: [intConstMin, intConstMax],
+            },
+        ],
         dropDowns: [],
     };
 }
 
 async function createTimeConfig(
     curBodyVal: Body,
-    cbParseTime: (time: Time, title: string) => Promise<Config[] | undefined>,
+    cbParseTime: (time: Time, title: string, isEdit?: boolean) => Promise<Config[] | undefined>,
     t: (key: string) => string,
+    isEdit?: boolean,
 ): Promise<Config[] | null> {
     if (!curBodyVal['time']) {
         return null;
     }
 
-    const configs = await cbParseTime(curBodyVal['time'], t('titles.during'));
+    const configs = await cbParseTime(curBodyVal['time'], t('titles.during'), isEdit);
     if (!configs || !configs.length) return null;
 
     return configs;
@@ -789,14 +807,15 @@ async function createTimeConfig(
 
 async function createDelayConfig(
     curBodyVal: Body,
-    cbParseTime: (time: Time, title: string) => Promise<Config[] | undefined>,
+    cbParseTime: (time: Time, title: string, isEdit?: boolean) => Promise<Config[] | undefined>,
     t: (key: string) => string,
+    isEdit?: boolean,
 ): Promise<Config[] | null> {
     if (!curBodyVal['delay']) {
         return null;
     }
 
-    const configs = await cbParseTime(curBodyVal['delay'], t('titles.delay'));
+    const configs = await cbParseTime(curBodyVal['delay'], t('titles.delay'), isEdit);
     if (!configs || !configs.length) return null;
 
     return configs.map((el) => ({ ...el, curKey: CurKeyMap.Delay }));
@@ -804,15 +823,15 @@ async function createDelayConfig(
 
 async function createPauseConfig(
     curBodyVal: Body,
-    cbParseTime: (time: Time, title: string) => Promise<Config[] | undefined>,
+    cbParseTime: (time: Time, title: string, isEdit?: boolean) => Promise<Config[] | undefined>,
     t: (key: string) => string,
+    isEdit?: boolean,
 ): Promise<Config[] | null> {
-    if (!curBodyVal['time'] || curBodyVal.type !== 'cycle') {
+    if (!curBodyVal['pause'] || curBodyVal.type !== 'cycle') {
         return null;
     }
 
-    //TODO
-    const configs = await cbParseTime(curBodyVal['time'], t('titles.pause'));
+    const configs = await cbParseTime(curBodyVal['pause'], t('titles.pause'), isEdit);
     if (!configs || !configs.length) return null;
 
     return configs.map((el) => ({ ...el, curKey: CurKeyMap.Pause }));
@@ -961,14 +980,15 @@ function createCycleModeConfig(curBodyVal: Body, typeVal: UDF, t: (key: string) 
 
 async function createMinTimeConfig(
     curBodyVal: Body,
-    cbParseTime: (time: Time, title: string) => Promise<Config[] | undefined>,
+    cbParseTime: (time: Time, title: string, isEdit?: boolean) => Promise<Config[] | undefined>,
     t: (key: string) => string,
+    isEdit?: boolean,
 ): Promise<Config[] | null> {
     if (!curBodyVal['min-time']) {
         return null;
     }
 
-    const configs = await cbParseTime(curBodyVal['min-time'], t('titles.minTime'));
+    const configs = await cbParseTime(curBodyVal['min-time'], t('titles.minTime'), isEdit);
     if (!configs || !configs.length) return null;
 
     return configs.map((el) => ({ ...el, curKey: CurKeyMap.MinTime }));
@@ -976,14 +996,15 @@ async function createMinTimeConfig(
 
 async function createMaxTimeConfig(
     curBodyVal: Body,
-    cbParseTime: (time: Time, title: string) => Promise<Config[] | undefined>,
+    cbParseTime: (time: Time, title: string, isEdit?: boolean) => Promise<Config[] | undefined>,
     t: (key: string) => string,
+    isEdit?: boolean,
 ): Promise<Config[] | null> {
     if (!curBodyVal['max-time']) {
         return null;
     }
 
-    const configs = await cbParseTime(curBodyVal['max-time'], t('titles.maxTime'));
+    const configs = await cbParseTime(curBodyVal['max-time'], t('titles.maxTime'), isEdit);
     if (!configs || !configs.length) return null;
 
     return configs.map((el) => ({ ...el, curKey: CurKeyMap.MaxTime }));
@@ -1027,4 +1048,12 @@ function shouldHideValue(curBodyVal: Body, typeVal: UDF): boolean {
         curBodyVal['operation'] &&
         (curBodyVal['operation'] === 'error' || curBodyVal['operation'] === 'non-error')
     );
+}
+
+function isBinaryType(type: string, mbTypes: MBTypes[], index?: number) {
+    if (type === 'mb-var' && typeof index === 'number') {
+        const mbType = mbTypes[index];
+        return binaryMBInterfaces.includes(mbType);
+    }
+    return binaryInterfaces.includes(type);
 }

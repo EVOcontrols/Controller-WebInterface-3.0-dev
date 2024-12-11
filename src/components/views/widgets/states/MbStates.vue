@@ -22,7 +22,7 @@
             ref="scrollWrapper"
         >
             <div
-                class="grid gap-1 grid-rows-2 grid-flow-col"
+                class="grid gap-1 grid-rows-2 grid-flow-col justify-start"
                 ref="scrollEl"
             >
                 <div
@@ -107,11 +107,7 @@
                         v-if="s.type === 'di'"
                         class="w-full flex flex-col items-center justify-between"
                         :class="
-                            s.val === null
-                                ? 'text-[#3E688E]'
-                                : s.val === 'err'
-                                ? 'text-[#F83068]'
-                                : 'text-[#35FED0]'
+                            s.val === null ? 'text-[#3E688E]' : s.val === 'err' ? 'text-[#F83068]' : 'text-[#35FED0]'
                         "
                     >
                         <div
@@ -123,26 +119,17 @@
                         <div class="w-full flex items-center justify-between">
                             <span>RO</span>
                             <span class="uppercase">{{
-                                numberingSystem === 'dec'
-                                    ? s['reg-addr']
-                                    : s['reg-addr'].toString(16)
+                                numberingSystem === 'dec' ? s['reg-addr'] : s['reg-addr'].toString(16)
                             }}</span>
                         </div>
                     </div>
                     <div
                         v-else-if="
-                            s.type === 'coil' ||
-                            s.type === 'wm-coil' ||
-                            s.type === 'w-coil' ||
-                            s.type === 'm-coil'
+                            s.type === 'coil' || s.type === 'wm-coil' || s.type === 'w-coil' || s.type === 'm-coil'
                         "
                         class="w-full flex items-center justify-between"
                         :class="
-                            s.val === null
-                                ? 'text-[#3E688E]'
-                                : s.val === 'err'
-                                ? 'text-[#F83068]'
-                                : 'text-[#35FED0]'
+                            s.val === null ? 'text-[#3E688E]' : s.val === 'err' ? 'text-[#F83068]' : 'text-[#35FED0]'
                         "
                     >
                         <div
@@ -167,11 +154,7 @@
                                 {{ s.val ? t('on') : t('off') }}
                             </div>
                             <div class="h-[12px] uppercase">
-                                {{
-                                    numberingSystem === 'dec'
-                                        ? s['reg-addr']
-                                        : s['reg-addr'].toString(16)
-                                }}
+                                {{ numberingSystem === 'dec' ? s['reg-addr'] : s['reg-addr'].toString(16) }}
                             </div>
                         </div>
                         <div
@@ -199,25 +182,15 @@
                                 {{ t('error') }}
                             </div>
                             <div class="h-[12px] uppercase">
-                                {{
-                                    numberingSystem === 'dec'
-                                        ? s['reg-addr']
-                                        : s['reg-addr'].toString(16)
-                                }}
+                                {{ numberingSystem === 'dec' ? s['reg-addr'] : s['reg-addr'].toString(16) }}
                             </div>
                         </div>
                     </div>
                     <div
-                        v-else-if="
-                            s.type === 'ir' || s.type === 'hr' || 'wm-hr' || ' w-hr' || 'm-hr'
-                        "
+                        v-else-if="s.type === 'ir' || s.type === 'hr' || 'wm-hr' || ' w-hr' || 'm-hr'"
                         class="w-full flex items-center justify-between"
                         :class="
-                            s.val === null
-                                ? 'text-[#3E688E]'
-                                : s.val === 'err'
-                                ? 'text-[#F83068]'
-                                : 'text-[#01F0FF]'
+                            s.val === null ? 'text-[#3E688E]' : s.val === 'err' ? 'text-[#F83068]' : 'text-[#01F0FF]'
                         "
                     >
                         <div class="flex flex-col justify-end gap-[6px]">
@@ -225,13 +198,7 @@
                                 {{ s.type === 'm-hr' || s.type === 'wm-hr' ? 'M' : '' }}
                             </div>
                             <div class="h-[12px]">
-                                {{
-                                    s.type === 'ir'
-                                        ? 'RO'
-                                        : s.type === 'w-hr' || s.type === 'wm-hr'
-                                        ? 'WO'
-                                        : 'RW'
-                                }}
+                                {{ s.type === 'ir' ? 'RO' : s.type === 'w-hr' || s.type === 'wm-hr' ? 'WO' : 'RW' }}
                             </div>
                         </div>
                         <div class="flex flex-col items-end justify-end gap-[6px]">
@@ -254,11 +221,7 @@
                                 -
                             </div>
                             <div class="h-[12px] uppercase">
-                                {{
-                                    numberingSystem === 'dec'
-                                        ? s['reg-addr']
-                                        : s['reg-addr'].toString(16)
-                                }}
+                                {{ numberingSystem === 'dec' ? s['reg-addr'] : s['reg-addr'].toString(16) }}
                             </div>
                         </div>
                     </div>
@@ -282,14 +245,19 @@
 </template>
 
 <script lang="ts" setup>
-import type { Widget } from '@/stores';
+import type { Widget } from '@/typings/main';
 import ArrowIcon from '@/assets/ArrowIcon.vue';
+import { MBType, MBTypeWithNone } from '@/components/views/widgets/bigWidgets/types';
+
+const isDev = import.meta.env.DEV;
+const timeoutDev = 10000;
 
 const indexStore = useIndexStore();
 
 const { api } = useApiStore();
 
 const isAborted = indexStore.getApi().isAborted;
+let isUnmount = false;
 
 const { notConnected, devicesState, numberingSystem, mbDevs } = storeToRefs(indexStore);
 
@@ -315,17 +283,7 @@ const props = defineProps<{
     activeIO?: {
         index: number;
         val: {
-            type:
-                | 'hr'
-                | 'wm-hr'
-                | 'w-hr'
-                | 'm-hr'
-                | 'ir'
-                | 'coil'
-                | 'wm-coil'
-                | 'w-coil'
-                | 'm-coil'
-                | 'di';
+            type: MBType;
             'reg-addr': number;
             'dev-addr': number;
             val: number | null | 'err';
@@ -334,17 +292,7 @@ const props = defineProps<{
     lastActiveIO?: {
         index: number;
         val: {
-            type:
-                | 'hr'
-                | 'wm-hr'
-                | 'w-hr'
-                | 'm-hr'
-                | 'ir'
-                | 'coil'
-                | 'wm-coil'
-                | 'w-coil'
-                | 'm-coil'
-                | 'di';
+            type: MBType;
             'reg-addr': number;
             'dev-addr': number;
             val: number | null | 'err';
@@ -358,18 +306,7 @@ const state = ref<(number | null | 'err')[]>([...props.w.state]);
 
 const fullState = ref<
     {
-        type:
-            | 'hr'
-            | 'wm-hr'
-            | 'w-hr'
-            | 'm-hr'
-            | 'ir'
-            | 'coil'
-            | 'wm-coil'
-            | 'w-coil'
-            | 'm-coil'
-            | 'di'
-            | 'none';
+        type: MBTypeWithNone;
         'reg-addr': number;
         'dev-addr': number;
         val: number | null | 'err';
@@ -378,17 +315,7 @@ const fullState = ref<
 
 const curState = computed<
     | {
-          type:
-              | 'hr'
-              | 'wm-hr'
-              | 'w-hr'
-              | 'm-hr'
-              | 'ir'
-              | 'coil'
-              | 'wm-coil'
-              | 'w-coil'
-              | 'm-coil'
-              | 'di';
+          type: MBType;
           'reg-addr': number;
           'dev-addr': number;
           val: number | null | 'err';
@@ -396,17 +323,7 @@ const curState = computed<
     | []
 >(() => {
     return fullState.value.filter((el) => el.type !== 'none') as {
-        type:
-            | 'hr'
-            | 'wm-hr'
-            | 'w-hr'
-            | 'm-hr'
-            | 'ir'
-            | 'coil'
-            | 'wm-coil'
-            | 'w-coil'
-            | 'm-coil'
-            | 'di';
+        type: MBType;
         'reg-addr': number;
         'dev-addr': number;
         val: number | null | 'err';
@@ -419,17 +336,7 @@ const emit = defineEmits<{
         index: number,
         newIndex: number,
         s: {
-            type:
-                | 'hr'
-                | 'wm-hr'
-                | 'w-hr'
-                | 'm-hr'
-                | 'ir'
-                | 'coil'
-                | 'wm-coil'
-                | 'w-coil'
-                | 'm-coil'
-                | 'di';
+            type: MBType;
             'reg-addr': number;
             'dev-addr': number;
             val: number | null | 'err';
@@ -441,17 +348,7 @@ const emit = defineEmits<{
 function handleMouseEnter(
     index: number,
     s: {
-        type:
-            | 'hr'
-            | 'wm-hr'
-            | 'w-hr'
-            | 'm-hr'
-            | 'ir'
-            | 'coil'
-            | 'wm-coil'
-            | 'w-coil'
-            | 'm-coil'
-            | 'di';
+        type: MBType;
         'reg-addr': number;
         'dev-addr': number;
         val: number | null | 'err';
@@ -509,17 +406,7 @@ function handleScrollMove() {
 async function handleClick(
     index: number,
     s: {
-        type:
-            | 'hr'
-            | 'wm-hr'
-            | 'w-hr'
-            | 'm-hr'
-            | 'ir'
-            | 'coil'
-            | 'wm-coil'
-            | 'w-coil'
-            | 'm-coil'
-            | 'di';
+        type: MBType;
         'reg-addr': number;
         'dev-addr': number;
         val: number | null | 'err';
@@ -563,63 +450,61 @@ async function handleClick(
 watch(
     () => devicesState.value,
     () => {
-        const newState = devicesState.value[props.w.w.d].find((obj) => obj.type === props.w.w.i)
-            ?.state as number[];
+        const newState = devicesState.value[props.w.w.d].find((obj) => obj.type === props.w.w.i)?.state as number[];
         state.value = newState ? newState : [...props.w.state];
     },
 );
 
 async function getMbInfo() {
-    // if (window.location.pathname.includes('panel')) {
-    if (window.location.hash.includes('panel')) {
-        try {
-            const r = await api.post('get_mb_info', {
-                device: props.w.w.d,
-                bus: 0,
-            });
-            const data = (await r.data) as {
-                type: [
-                    | 'hr'
-                    | 'wm-hr'
-                    | 'w-hr'
-                    | 'm-hr'
-                    | 'di'
-                    | 'coil'
-                    | 'wm-coil'
-                    | 'w-coil'
-                    | 'm-coil'
-                    | 'ir'
-                    | 'none',
-                ];
-                'dev-addr': number[];
-                'reg-addr': number[];
-            };
-            const arr = [];
-            for (let i = 0; i < state.value.length; i += 1) {
-                if (mbDevs.value[props.w.w.d][props.w.w.bus || 0].includes(data['dev-addr'][i])) {
-                    arr.push({
-                        type: data.type[i],
-                        'reg-addr': data['reg-addr'][i] as number,
-                        'dev-addr': data['dev-addr'][i] as number,
-                        val: state.value[i],
-                    });
-                }
+    if (isUnmount || !window.location.hash.includes('panel')) return;
+    clearTimeout(getMbInfoTimer);
+
+    try {
+        const r = await api.post('get_mb_info', {
+            device: props.w.w.d,
+            bus: 0,
+        });
+        const data = (await r.data) as {
+            type: [MBTypeWithNone];
+            'dev-addr': number[];
+            'reg-addr': number[];
+        };
+        const arr = [];
+        for (let i = 0; i < state.value.length; i += 1) {
+            if (mbDevs.value[props.w.w.d][props.w.w.bus || 0].includes(data['dev-addr'][i])) {
+                arr.push({
+                    type: data.type[i],
+                    'reg-addr': data['reg-addr'][i] as number,
+                    'dev-addr': data['dev-addr'][i] as number,
+                    val: state.value[i],
+                });
             }
-            fullState.value = [...arr];
-            setEndArrowState();
-        } catch (error) {
-            if (isAborted.value) {
-                return;
-            }
-            return new Promise(
-                (resolve) =>
-                    (getMbInfoTimer = setTimeout(() => {
-                        getMbInfo();
-                    }, 5)),
+        }
+        fullState.value = [...arr];
+        setEndArrowState();
+
+        if (!isUnmount) {
+            getMbInfoTimer = setTimeout(
+                () => {
+                    getMbInfo();
+                },
+                isDev ? timeoutDev / 2 : 1500,
+            );
+        }
+    } catch (error) {
+        if (isAborted.value || isUnmount) {
+            return;
+        }
+
+        if (!isUnmount) {
+            getMbInfoTimer = setTimeout(
+                () => {
+                    getMbInfo();
+                },
+                isDev ? timeoutDev / 5 : 40,
             );
         }
     }
-    getMbInfoTimer = setTimeout(getMbInfo, 1000);
 }
 
 function setEndArrowState() {
@@ -635,6 +520,7 @@ onMounted(() => {
 });
 
 onBeforeUnmount(() => {
+    isUnmount = true;
     clearTimeout(getMbInfoTimer);
     getMbInfoTimer = undefined;
 });

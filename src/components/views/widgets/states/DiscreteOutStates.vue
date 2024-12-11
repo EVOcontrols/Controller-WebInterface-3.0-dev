@@ -33,7 +33,7 @@
 </template>
 
 <script lang="ts" setup>
-import type { Widget } from '@/stores';
+import type { Widget } from '@/typings/main';
 import IButtonOutIcon from '@/assets/IButtonOutIcon.vue';
 
 const indexStore = useIndexStore();
@@ -98,8 +98,7 @@ async function handleClick(index: number, s: number) {
 watch(
     () => devicesState.value,
     () => {
-        const newState = devicesState.value[props.w.w.d].find((obj) => obj.type === props.w.w.i)
-            ?.state as number[];
+        const newState = devicesState.value[props.w.w.d].find((obj) => obj.type === props.w.w.i)?.state as number[];
         state.value = newState ? newState : [...props.w.state];
     },
 );

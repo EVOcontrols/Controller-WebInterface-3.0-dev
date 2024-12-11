@@ -15,9 +15,7 @@
                 :class="styles"
                 >{{ t('device')
                 }}{{
-                    props.activeIO.val && typeof props.activeIO.val == 'object'
-                        ? props.activeIO.val['dev-addr']
-                        : ''
+                    props.activeIO.val && typeof props.activeIO.val == 'object' ? props.activeIO.val['dev-addr'] : ''
                 }}</span
             >
             <div
@@ -38,16 +36,9 @@
             class="rounded p-[6px]"
             :class="styles"
             v-if="
-                ![
-                    'bin-in',
-                    'bin-out',
-                    'int-var',
-                    'bin-var',
-                    'tim-var',
-                    '1w-sens',
-                    '1w-rom',
-                    'mb-var',
-                ].includes(props.w.i)
+                !['bin-in', 'bin-out', 'int-var', 'bin-var', 'tim-var', '1w-sens', '1w-rom', 'mb-var'].includes(
+                    props.w.i,
+                )
             "
             >{{ activeIOVal ? activeIOVal / 100 : '0' }}%</span
         >
@@ -80,7 +71,7 @@
                 {{
                     props.activeIO.val && typeof props.activeIO.val == 'object'
                         ? props.activeIO.val.type?.includes('coil')
-                            ? 'co'
+                            ? 'coil'
                             : props.activeIO.val.type?.includes('hr')
                             ? 'hr'
                             : props.activeIO.val.type
@@ -92,11 +83,7 @@
     <div
         v-else
         class="h-[3.125rem] border-t border-[#1D4162] px-4 flex items-center"
-        :class="
-            props.isInfoVisible || props.isCalibration || props.isMb
-                ? 'justify-between'
-                : 'justify-end'
-        "
+        :class="props.isInfoVisible || props.isCalibration || props.isMb ? 'justify-between' : 'justify-end'"
     >
         <div
             class="relative group"
@@ -174,19 +161,10 @@
         </div>
         <div class="flex">
             <OutlinedButton
-                v-if="
-                    isBig &&
-                    !['bin-in', 'mb-var'].includes(props.w.i) &&
-                    !props.isCalibration &&
-                    !props.isPriorWOpen
-                "
+                v-if="isBig && !['bin-in', 'mb-var'].includes(props.w.i) && !props.isCalibration && !props.isPriorWOpen"
                 @click="
                     $emit(
-                        props.w.i === 'adc-in'
-                            ? 'calibr'
-                            : ['1w-sens', '1w-rom'].includes(props.w.i)
-                            ? 'scan'
-                            : 'init',
+                        props.w.i === 'adc-in' ? 'calibr' : ['1w-sens', '1w-rom'].includes(props.w.i) ? 'scan' : 'init',
                     )
                 "
                 class="mr-2 min-w-[84px]"
@@ -199,15 +177,9 @@
                 {{ t('scanning') }}
                 <div class="spinner-box">
                     <div class="flex items-center justify-center gap-1">
-                        <div
-                            class="pulse-bubble-1 w-[5px] h-[5px] rounded-[50%] bg-[#4799E2]"
-                        ></div>
-                        <div
-                            class="pulse-bubble-2 w-[5px] h-[5px] rounded-[50%] bg-[#4799E2]"
-                        ></div>
-                        <div
-                            class="pulse-bubble-3 w-[5px] h-[5px] rounded-[50%] bg-[#4799E2]"
-                        ></div>
+                        <div class="pulse-bubble-1 w-[5px] h-[5px] rounded-[50%] bg-[#4799E2]"></div>
+                        <div class="pulse-bubble-2 w-[5px] h-[5px] rounded-[50%] bg-[#4799E2]"></div>
+                        <div class="pulse-bubble-3 w-[5px] h-[5px] rounded-[50%] bg-[#4799E2]"></div>
                     </div>
                 </div>
             </div>
@@ -233,12 +205,11 @@ import PrimaryButton from '@/components/Ui/PrimaryButton.vue';
 import OutlinedButton from '@/components/Ui/OutlinedButton.vue';
 import info from '@/assets/img/info.svg?raw';
 import calibrationArrow from '@/assets/img/calibration-arrow.svg?raw';
-import type { Widget, InterfVal } from '@/stores';
+import type { Widget, InterfVal } from '@/typings/main';
 
 const indexStore = useIndexStore();
 
-const { devicesState, tempUnit, curNumberingSystem, labels, mbDevsLabels } =
-    storeToRefs(indexStore);
+const { devicesState, tempUnit, curNumberingSystem, labels, mbDevsLabels } = storeToRefs(indexStore);
 
 const props = defineProps<{
     isInfoVisible: boolean;
@@ -247,17 +218,7 @@ const props = defineProps<{
         val:
             | number
             | {
-                  type:
-                      | 'hr'
-                      | 'wm-hr'
-                      | 'w-hr'
-                      | 'm-hr'
-                      | 'ir'
-                      | 'coil'
-                      | 'wm-coil'
-                      | 'w-coil'
-                      | 'm-coil'
-                      | 'di';
+                  type: 'hr' | 'wm-hr' | 'w-hr' | 'm-hr' | 'ir' | 'coil' | 'wm-coil' | 'w-coil' | 'm-coil' | 'di';
                   'reg-addr': number;
                   'dev-addr': number;
                   val: number | null | 'err';
@@ -317,9 +278,7 @@ const curMbDevLabel = computed<string | undefined>(() => {
 const styles = computed<string>(() => {
     if (['bin-in', 'bin-out'].includes(props.w.i)) {
         if (!props.activeIO) return '';
-        return props.activeIO.val
-            ? 'bg-[#074a56] text-[#00D6AF]'
-            : 'border border-[#2A5D73] text-[#2A5D73]';
+        return props.activeIO.val ? 'bg-[#074a56] text-[#00D6AF]' : 'border border-[#2A5D73] text-[#2A5D73]';
     } else if (['int-var', 'bin-var'].includes(props.w.i)) {
         return 'bg-[#234764] text-[#8DC5F6]';
     } else if (
@@ -342,9 +301,7 @@ const styles = computed<string>(() => {
             ? 'bg-[#176F6F] text-[#35FED0]'
             : 'bg-[#0D424D] text-[#35FED0]';
     } else if (props.w.i === '1w-sens') {
-        return props.activeIO && props.activeIO.val
-            ? 'bg-[#4d4242] text-[#EB8246]'
-            : 'bg-[#123f66] text-[#35A1FF]';
+        return props.activeIO && props.activeIO.val ? 'bg-[#4d4242] text-[#EB8246]' : 'bg-[#123f66] text-[#35A1FF]';
     } else {
         return 'bg-[#07435c] text-[#00b3cb]';
     }
@@ -363,9 +320,7 @@ watch(
     () => devicesState.value,
     () => {
         if (!props.activeIO) return;
-        const newState = devicesState.value[props.w.d].find(
-            (obj: InterfVal) => obj.type === props.w.i,
-        )?.state;
+        const newState = devicesState.value[props.w.d].find((obj: InterfVal) => obj.type === props.w.i)?.state;
         if (newState) {
             activeIOVal.value = newState[props.activeIO.index] as number;
         }

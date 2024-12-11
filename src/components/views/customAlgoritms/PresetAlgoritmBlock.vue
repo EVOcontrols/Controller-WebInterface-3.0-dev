@@ -234,18 +234,38 @@
                     class="table-cell w-16 !h-8 text-center !px-2"
                     :min-max="[props.inputs[item.index].min, props.inputs[item.index].max]"
                     :status="props.inputs[item.index].isError ? 'invalid' : 'valid'"
-                    :input-type="['int']"
+                    :input-type="['float']"
                     :nullable="false"
                     :required="true"
                     :debounce-delay="1000"
                     :disabled="props.inputs[item.index].disabled"
-                    @status-changed="emit('setInputError', item.index, $event === 'invalid' || $event === 'empty')"
                     @value-changed="
                         $event === undefined
                             ? emit('handleInput', item.index, 0)
                             : emit('handleInput', item.index, $event)
                     "
                 />
+                <div
+                    v-if="props.inputs[item.index].isError && props.inputs[item.index].placeholderErrorMinMax?.length"
+                    class="text-sm h-[14px] text-[#F83068] absolute w-max"
+                    :class="
+                        props.inputs[item.index].inline
+                            ? 'bottom-[-15px] left-0'
+                            : 'top-[50%] left-[150px] translate-y-1/2'
+                    "
+                >
+                    {{
+                        `${t('error.text')}${props.inputs[item.index].placeholderErrorMinMax?.[0]}${t(
+                            'error.separator',
+                        )}${props.inputs[item.index].placeholderErrorMinMax?.[1]}`
+                    }}
+                </div>
+                <div
+                    v-if="props.inputs[item.index].isError && props.inputs[item.index].placeholderErrorMultiplicity"
+                    class="text-sm h-[14px] text-[#F83068] absolute left-0 bottom-[-15px] w-max"
+                >
+                    {{ t('error.multiplicity') }}
+                </div>
             </div>
             <div
                 v-else-if="item.name === 'dropDown' && props.dropDowns[item.index]"
@@ -259,7 +279,7 @@
                 <IButtonIcon
                     v-else-if="props.dropDowns[item.index].type === 'bin'"
                     :class="
-                        true
+                        props.dropDowns[item.index].items[props.dropDowns[item.index]?.vals[0]]?.val
                             ? '[&>path]:fill-[#00D6AF] [&>rect]:fill-[#00D6AF]'
                             : '[&>path]:fill-[#5891C2] [&>rect]:fill-[#5891C2]'
                     "
@@ -366,12 +386,14 @@ const props = defineProps<{
     }[];
     inputs: {
         val: number;
-        min: number;
+        min?: number;
         max?: number;
         subtitle?: string;
         isError: boolean;
         inline?: boolean;
         disabled?: boolean;
+        placeholderErrorMinMax?: [number, number];
+        placeholderErrorMultiplicity?: boolean;
     }[];
     dropDowns: {
         type: 'bin' | 'obj' | '1w-sens' | 'var' | 'act' | 'cond';
@@ -383,10 +405,7 @@ const props = defineProps<{
             | 'adc-in'
             | 'bin-out'
             | 'pwm-out'
-            | 'mb-coil'
-            | 'mb-ir'
-            | 'mb-hr'
-            | 'mb-di'
+            | 'mb-var'
             | 'bin-var'
             | 'int-var'
             | 'tim-var'
@@ -405,7 +424,6 @@ const emit = defineEmits<{
     (e: 'handleRadioBtnClick', radioBtnsItemIndex: number, val: string): void;
     (e: 'handleInput', inputItemIndex: number, val: number): void;
     (e: 'handleDropDownClick', inputItemIndex: number): void;
-    (e: 'setInputError', inputItemIndex: number, res: boolean): void;
     (e: 'handleCheckboxClick', checkboxItemIndex: number, val: string, status: boolean, part: 1 | 2): void;
 }>();
 
@@ -429,11 +447,21 @@ const { t } = useI18n({
             select: 'Select ',
             obj: 'object',
             actions: 'actions',
+            error: {
+                text: 'Enter a value between ',
+                separator: ' and ',
+                multiplicity: 'Value in ms must be a multiple of 10',
+            },
         },
         ru: {
             select: 'Выберите ',
             obj: 'объект',
             actions: 'действия',
+            error: {
+                text: 'Введите значение от ',
+                separator: ' до ',
+                multiplicity: 'Значение в ms должно быть кратно 10',
+            },
         },
     },
 });

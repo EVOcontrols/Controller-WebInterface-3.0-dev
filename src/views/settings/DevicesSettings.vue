@@ -35,7 +35,7 @@
                                                 }
                                             "
                                         >
-                                            <div
+                                            <span
                                                 v-if="
                                                     device.addr !== 0 && device.state !== 'on' && device.state !== 'off'
                                                 "
@@ -45,7 +45,7 @@
                                                     { 'bg-[#3E688E]': device.state === 'no-conn' },
                                                     { 'bg-[#FF5A88]': device.state === 'error' },
                                                 ]"
-                                            ></div>
+                                            ></span>
                                             {{
                                                 device.addr > 0
                                                     ? fullDevs.findIndex((el) => el.serial === device.serial) !== -1
@@ -521,46 +521,46 @@
                     <div class="mb-3 rounded-[6px] bg-[#092740] flex gap-2 justify-center p-2">
                         <div
                             class="relative rounded bg-[#1B4569] h-6 px-[10px] flex items-center text-[#8DC5F6]"
-                            :class="{ 'pl-[20px]': !['on', 'off'].includes(deletingDev.state) }"
+                            :class="{ 'pl-[20px]': !['on', 'off'].includes(deletingDev?.state) }"
                         >
                             <div
                                 class="absolute w-[5px] h-[5px] rounded-[50%] left-[10px] top-[9px]"
                                 :class="[
-                                    { 'bg-[#84AFBD]': deletingDev.state === 'init' },
-                                    { 'bg-[#3E688E]': deletingDev.state === 'no-conn' },
-                                    { 'bg-[#FF5A88]': deletingDev.state === 'error' },
+                                    { 'bg-[#84AFBD]': deletingDev?.state === 'init' },
+                                    { 'bg-[#3E688E]': deletingDev?.state === 'no-conn' },
+                                    { 'bg-[#FF5A88]': deletingDev?.state === 'error' },
                                 ]"
                             ></div>
-                            {{ 'IO ' + deletingDev.index }}
+                            {{ 'IO ' + deletingDev?.index }}
                         </div>
                         <div
                             class="bg-[#1B4569] rounded-[10px] py-4 px-6 text-sm text-[#8DC5F6] leading-[100%] flex flex-col gap-1"
                         >
-                            <div>ID: {{ deletingDev.serial }}</div>
+                            <div>ID: {{ deletingDev?.serial }}</div>
                             <div class="relative">
                                 <div
                                     class="absolute w-[5px] h-[5px] rounded-[50%] left-[-11px] top-[5px]"
                                     :class="[
-                                        { 'bg-[#84AFBD]': deletingDev.state === 'init' },
-                                        { 'bg-[#3E688E]': deletingDev.state === 'no-conn' },
-                                        { 'bg-[#FF5A88]': deletingDev.state === 'error' },
+                                        { 'bg-[#84AFBD]': deletingDev?.state === 'init' },
+                                        { 'bg-[#3E688E]': deletingDev?.state === 'no-conn' },
+                                        { 'bg-[#FF5A88]': deletingDev?.state === 'error' },
                                     ]"
                                 ></div>
                                 {{ t('confirm.status') }}
                                 {{
-                                    deletingDev.state === 'init'
+                                    deletingDev?.state === 'init'
                                         ? t('confirm.init')
-                                        : deletingDev.state === 'error'
+                                        : deletingDev?.state === 'error'
                                         ? t('confirm.error')
-                                        : deletingDev.state === 'on'
+                                        : deletingDev?.state === 'on'
                                         ? t('confirm.on')
-                                        : deletingDev.state === 'off'
+                                        : deletingDev?.state === 'off'
                                         ? t('confirm.off')
                                         : t('confirm.noConnection')
                                 }}
                             </div>
-                            <div>{{ t('confirm.addr') }} {{ deletingDev.addr }}</div>
-                            <div>{{ t('confirm.firmWare') }} {{ deletingDev.version }}</div>
+                            <div>{{ t('confirm.addr') }} {{ deletingDev?.addr }}</div>
+                            <div>{{ t('confirm.firmWare') }} {{ deletingDev?.version }}</div>
                         </div>
                     </div>
                     <div class="rounded-[6px] px-[14px] py-2 bg-[#7D183C85] flex gap-2 items-center">
@@ -606,21 +606,21 @@
                 <div class="text-sm text-[#8DC5F6] mb-[14px]">{{ t('adding.fields.addr') }}</div>
                 <div class="mb-3 rounded-[6px] flex gap-2 items-center">
                     <UiInput
-                        :init-value="addingDev.addr.toString()"
+                        :init-value="addingDev?.addr.toString()"
                         :name="'newAddr'"
                         :init-type="'string'"
                         class="table-cell !rounded min-w-[60px] w-[60px] text-center !px-[10px] !h-[42px] bg-[#1B4569]"
                         :status="
-                            addingDev.addr &&
+                            addingDev?.addr &&
                             !extDevs.find((el) => {
                                 if (addingDev) {
-                                    return el.addr === addingDev.addr;
+                                    return el.addr === addingDev?.addr;
                                 } else {
                                     return false;
                                 }
                             }) &&
-                            addingDev.addr >= 1 &&
-                            addingDev.addr <= 247 &&
+                            addingDev?.addr >= 1 &&
+                            addingDev?.addr <= 247 &&
                             scanDevs &&
                             scanDevs.find((el) => {
                                 return addingDev && el.addr === addingDev.addr;
@@ -664,11 +664,7 @@
                     </div>
                 </div>
                 <div class="text-sm text-[#8DC5F6] mb-[14px]">{{ t('adding.fields.type') }}</div>
-                <div
-                    class="mb-3 rounded-[6px] bg-[#092740] flex items-center justify-center w-[38px] h-6 rounded bg-[#184a6a]"
-                >
-                    IO
-                </div>
+                <div class="mb-3 flex items-center justify-center w-[38px] h-6 rounded bg-[#184a6a]">IO</div>
                 <div class="text-sm text-[#8DC5F6] mb-[14px]">{{ t('adding.fields.state') }}</div>
                 <div class="flex gap-2">
                     <div
@@ -720,12 +716,12 @@
             <template #content>
                 <div class="mb-3 rounded-[6px] bg-[#092740] flex gap-2 p-2 items-center">
                     <UiInput
-                        :init-value="curAddingDev.addr.toString()"
+                        :init-value="curAddingDev?.addr.toString()"
                         :name="'newAddr'"
                         :init-type="'string'"
                         class="table-cell !rounded min-w-[50px] w-[50px] text-center !px-[10px] !h-6"
                         :status="
-                            curAddingDev.addr &&
+                            curAddingDev?.addr &&
                             !extDevs.find((el) => {
                                 if (curAddingDev) {
                                     return el.addr === curAddingDev.addr;
@@ -733,8 +729,8 @@
                                     return false;
                                 }
                             }) &&
-                            curAddingDev.addr >= 1 &&
-                            curAddingDev.addr <= 247
+                            curAddingDev?.addr >= 1 &&
+                            curAddingDev?.addr <= 247
                                 ? 'valid'
                                 : 'invalid'
                         "
@@ -846,7 +842,7 @@ import add from '@/assets/img/add.svg?raw';
 import approve from '@/assets/img/approve.svg?raw';
 import info from '@/assets/img/info.svg?raw';
 import UiInput from '@/components/Ui/UiInput.vue';
-import type { Device } from '@/stores';
+import type { Device } from '@/typings/main';
 import draggable from 'vuedraggable';
 import IButtonOutIcon from '@/assets/IButtonOutIcon.vue';
 import spinner from '@/assets/img/arrow-spinner.svg?raw';
@@ -872,91 +868,14 @@ const isAborted = indexStore.getApi().isAborted;
 
 const { extDevsList, ngcModbusMode, devices, isAddingDev, extDeviceInInitState } = storeToRefs(indexStore);
 
-const fullDevs = computed<
-    {
-        addr: number;
-        type: string;
-        interf: [
-            | { interf: '1w-gpio'; bus: number }
-            | { interf: '1w-rom'; bus: number }
-            | { interf: '1w-sens'; bus: number }
-            | '1w-gpio'
-            | '1w-rom'
-            | '1w-sens'
-            | 'adc-in'
-            | 'bin-in'
-            | 'bin-out'
-            | 'bin-var'
-            | 'int-var'
-            | 'mb-var'
-            | { interf: 'mb-var'; bus: number }
-            | 'pwm-out'
-            | 'tim-var',
-        ];
-        state: 'on' | 'off' | 'init' | 'no-conn' | 'error';
-        serial: string;
-        version: string;
-        index?: number;
-    }[]
->(() => {
+const fullDevs = computed<(Device & { index?: number })[]>(() => {
     if (extDevsList.value) {
-        const arr: {
-            addr: number;
-            type: string;
-            interf: [
-                | { interf: '1w-gpio'; bus: number }
-                | { interf: '1w-rom'; bus: number }
-                | { interf: '1w-sens'; bus: number }
-                | '1w-gpio'
-                | '1w-rom'
-                | '1w-sens'
-                | 'adc-in'
-                | 'bin-in'
-                | 'bin-out'
-                | 'bin-var'
-                | 'int-var'
-                | 'mb-var'
-                | { interf: 'mb-var'; bus: number }
-                | 'pwm-out'
-                | 'tim-var',
-            ];
-            state: 'on' | 'off' | 'init' | 'no-conn' | 'error';
-            serial: string;
-            version: string;
-            index?: number;
-        }[] = [];
+        const arr: (Device & { index?: number })[] = [];
         devices.value.forEach((d: Device) => {
             if (!arr.find((el) => el.serial === d.serial)) arr.push(d);
         });
         extDevsList.value.forEach((d: ExtDev) => {
-            if (!arr.find((el) => el.serial === d.serial))
-                arr.push(
-                    d as {
-                        addr: number;
-                        type: string;
-                        interf: [
-                            | { interf: '1w-gpio'; bus: number }
-                            | { interf: '1w-rom'; bus: number }
-                            | { interf: '1w-sens'; bus: number }
-                            | '1w-gpio'
-                            | '1w-rom'
-                            | '1w-sens'
-                            | 'adc-in'
-                            | 'bin-in'
-                            | 'bin-out'
-                            | 'bin-var'
-                            | 'int-var'
-                            | 'mb-var'
-                            | { interf: 'mb-var'; bus: number }
-                            | 'pwm-out'
-                            | 'tim-var',
-                        ];
-                        state: 'on' | 'off' | 'init' | 'no-conn' | 'error';
-                        serial: string;
-                        version: string;
-                        index?: number;
-                    },
-                );
+            if (!arr.find((el) => el.serial === d.serial)) arr.push(d as Device & { index?: number });
         });
         return [
             ...arr.filter((el) => {
@@ -964,31 +883,7 @@ const fullDevs = computed<
             }),
         ];
     } else {
-        return [...devices.value] as {
-            addr: number;
-            type: string;
-            interf: [
-                | { interf: '1w-gpio'; bus: number }
-                | { interf: '1w-rom'; bus: number }
-                | { interf: '1w-sens'; bus: number }
-                | '1w-gpio'
-                | '1w-rom'
-                | '1w-sens'
-                | 'adc-in'
-                | 'bin-in'
-                | 'bin-out'
-                | 'bin-var'
-                | 'int-var'
-                | 'mb-var'
-                | { interf: 'mb-var'; bus: number }
-                | 'pwm-out'
-                | 'tim-var',
-            ];
-            state: 'on' | 'off' | 'init' | 'no-conn' | 'error';
-            serial: string;
-            version: string;
-            index?: number;
-        }[];
+        return [...devices.value] as (Device & { index?: number })[];
     }
 });
 
@@ -1038,31 +933,7 @@ let devsTimer: ReturnType<typeof setTimeout> | undefined;
 
 const hoveredItem = ref(-1);
 
-const deletingDev = ref<{
-    addr: number;
-    type: string;
-    interf: [
-        | { interf: '1w-gpio'; bus: number }
-        | { interf: '1w-rom'; bus: number }
-        | { interf: '1w-sens'; bus: number }
-        | '1w-gpio'
-        | '1w-rom'
-        | '1w-sens'
-        | 'adc-in'
-        | 'bin-in'
-        | 'bin-out'
-        | 'bin-var'
-        | 'int-var'
-        | 'mb-var'
-        | { interf: 'mb-var'; bus: number }
-        | 'pwm-out'
-        | 'tim-var',
-    ];
-    state: 'on' | 'off' | 'init' | 'no-conn' | 'error';
-    serial: string;
-    version: string;
-    index: number;
-}>();
+const deletingDev = ref<Device & { index: number }>();
 
 const isDeleting = ref(false);
 
@@ -1094,33 +965,7 @@ const addingStudy = ref(0);
 
 const isInit = ref(false);
 
-const extDevs = ref<
-    {
-        addr: number;
-        type: string;
-        interf: [
-            | { interf: '1w-gpio'; bus: number }
-            | { interf: '1w-rom'; bus: number }
-            | { interf: '1w-sens'; bus: number }
-            | '1w-gpio'
-            | '1w-rom'
-            | '1w-sens'
-            | 'adc-in'
-            | 'bin-in'
-            | 'bin-out'
-            | 'bin-var'
-            | 'int-var'
-            | 'mb-var'
-            | { interf: 'mb-var'; bus: number }
-            | 'pwm-out'
-            | 'tim-var',
-        ];
-        state: 'on' | 'off' | 'init' | 'no-conn' | 'error';
-        serial: string;
-        version: string;
-        index?: number;
-    }[]
->([]);
+const extDevs = ref<(Device & { index?: number })[]>([]);
 
 watch(
     extDevsList,

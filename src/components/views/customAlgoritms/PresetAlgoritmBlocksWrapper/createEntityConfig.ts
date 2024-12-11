@@ -1,6 +1,6 @@
-import { Config, ORDER, UDF, Interface, Mode1W, EntBind, DropDownRealType, CurKeyMap } from './types';
+import { Config, ORDER, UDF, Interface, Mode1W, EntBind, DropDownRealType, CurKeyMap, ModeMb } from './types';
 import type { Ent, EntType } from '@/typings/funcs';
-import type { Device } from '@/stores';
+import type { Device } from '@/typings/main';
 
 const invalidType = ['none', 'error', 'udf-trig', 'udf-cond', 'udf-act', 'udf-trans', 'int-const'];
 const order = ORDER;
@@ -19,6 +19,7 @@ export const createEntityConfig = (
     typeVal: UDF,
     interfaces: Interface[],
     OWConfig: Mode1W[],
+    mbConfig: ModeMb,
     entItems: EntBind[],
     t: (key: string) => string,
     propDevice?: Device,
@@ -35,7 +36,7 @@ export const createEntityConfig = (
         resultConfig.push(interfaceConfig);
     }
 
-    const busConfig = createBusConfig(ent.type, typeVal, OWConfig, t, ent.bus, ent.device);
+    const busConfig = createBusConfig(ent.type, typeVal, OWConfig, mbConfig, t, ent.bus, ent.device);
     if (busConfig) {
         resultConfig.push(busConfig);
     }
@@ -150,16 +151,28 @@ function createBusConfig(
     entType: EntType,
     typeVal: UDF,
     OWConfig: Mode1W[],
+    mbConfig: ModeMb,
     t: (key: string) => string,
     entBus?: number,
     entDevice?: number,
 ): Config | null {
     if (entBus === undefined || entDevice === undefined) return null;
 
-    const buses: Bus[] = [];
-    OWConfig.forEach((el, index) => {
-        buses.push({ val: `${el.mode}${index}`, label: `${t('tabs.bus')}${index + 1}` });
-    });
+    let buses: Bus[] = [];
+
+    const addBuses = (config: Mode1W[] | ModeMb) => {
+        return config.map((el, index) => ({
+            val: `${el.mode.substring(0, 3)}${index}`,
+            label: `${t('tabs.bus')}${index + 1}`,
+        }));
+    };
+
+    if (entType === 'mb-var') {
+        buses = addBuses(mbConfig);
+    } else if (['1w-sens', '1w-rom'].includes(entType)) {
+        buses = addBuses(OWConfig);
+    }
+
     const vals = buses
         .filter((bus) => bus.val.slice(0, bus.val.length - 1) === entType.slice(3))
         .map((bus) => {
